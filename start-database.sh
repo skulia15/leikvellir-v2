@@ -53,3 +53,4 @@ docker run -d \
   -e POSTGRES_DB=leikvellir_v2 \
   -p "$DB_PORT":5432 \
   docker.io/postgres && echo "Database container '$DB_CONTAINER_NAME' was successfully created"
+# echo "Database URL: postgresql://postgres:$DB_PASSWORD@localhost:$DB_PORT/leikvellir_v2"
