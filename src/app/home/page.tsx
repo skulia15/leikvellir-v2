@@ -68,18 +68,14 @@ export default function Home() {
 
   return (
     <HydrateClient>
-      <main>
-        <NavigationBar />
-
-        <div className="flex flex-col gap-2">
-          <GoogleMap />
-          <PlaygroundDrawer>
-            {playgroundsMock.map((card) => (
-              <PlaygroundCard key={card.title} card={card} />
-            ))}
-          </PlaygroundDrawer>
-        </div>
-      </main>
+      <div className="flex flex-col gap-2">
+        <GoogleMap />
+        <PlaygroundDrawer>
+          {playgroundsMock.map((card) => (
+            <PlaygroundCard key={card.title} card={card} />
+          ))}
+        </PlaygroundDrawer>
+      </div>
     </HydrateClient>
   );
 }
