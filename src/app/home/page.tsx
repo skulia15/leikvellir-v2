@@ -1,8 +1,7 @@
 // TODO: only use client in client components, not this page
 import { GoogleMap } from "../_components/map";
 
-import NavigationBar from "../_components/navigation-bar";
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient } from "~/trpc/server";
 import PlaygroundCard from "../_components/playground-card";
 import PlaygroundDrawer from "../_components/playground-drawer";
 
