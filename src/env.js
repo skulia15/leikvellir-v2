@@ -34,7 +34,6 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
-    // TODO: add to vercel
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string(),
   },
 

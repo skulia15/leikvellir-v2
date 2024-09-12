@@ -9,6 +9,9 @@ import {
   text,
   timestamp,
   varchar,
+  doublePrecision,
+  boolean,
+  json,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -37,7 +40,33 @@ export const posts = createTable(
   },
   (example) => ({
     createdByIdIdx: index("created_by_idx").on(example.createdById),
-    nameIndex: index("name_idx").on(example.name),
+    nameIndex: index("post_title_idx").on(example.name),
+  }),
+);
+
+export const playgrounds = createTable(
+  "playground",
+  {
+    id: serial("id").primaryKey(),
+    title: varchar("name", { length: 256 }),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    publiclyAccessible: boolean("publicly_accessible").notNull().default(true),
+    toddlerFriendly: boolean("toddler_friendly").notNull().default(false),
+    coverImage: varchar("cover_image", { length: 512 }), // Cover image URL
+    images: json("images").$type<string[]>().default([]), // JSON array of image URLs
+    createdById: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (example) => ({
+    titleIdx: index("playground_title_idx").on(example.title),
   }),
 );
 
