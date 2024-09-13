@@ -43,10 +43,10 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const playground = await ctx.db.query.playgrounds.findMany({
+    const playgrounds = await ctx.db.query.playgrounds.findMany({
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
     });
 
-    return playground ?? null;
+    return playgrounds ?? null;
   }),
 });

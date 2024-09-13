@@ -5,15 +5,15 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import Image from "next/image";
+import { Playground } from "~/types";
 
 // TODO: Remove this type use trpc for types instead, like posts is doing
-type Card = {
-  title: string;
-  description: string;
-  image: string;
-};
 
-export default function PlaygroundCard({ card }: { card: Card }) {
+export default function PlaygroundCard({
+  playground,
+}: {
+  playground: Playground;
+}) {
   return (
     <Card className="border-0 py-2">
       <CardContent className="py-0">
@@ -25,8 +25,19 @@ export default function PlaygroundCard({ card }: { card: Card }) {
             height={80}
           />
           <div>
-            <CardTitle className="text-xl">{card.title}</CardTitle>
-            <CardDescription>{card.description}</CardDescription>
+            <CardTitle className="text-xl">{playground.title}</CardTitle>
+            <CardDescription>
+              <div>
+                {playground.toddlerFriendly
+                  ? "Toddler Friendly"
+                  : "Not Toddler Friendly"}
+              </div>
+              <div>
+                {playground.publiclyAccessible
+                  ? "Publicly Accessible"
+                  : "Not Publicly Accessible"}
+              </div>
+            </CardDescription>
           </div>
         </div>
       </CardContent>

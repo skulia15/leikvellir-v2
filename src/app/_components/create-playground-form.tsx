@@ -4,112 +4,131 @@ import { api } from "~/trpc/react";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
+import { PlaygroundInput } from "~/types";
+
+const initialPlaygroundState: PlaygroundInput = {
+  title: "",
+  latitude: 0.0,
+  longitude: 0.0,
+  publiclyAccessible: true,
+  toddlerFriendly: false,
+  coverImage: "",
+  images: [],
+};
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
 
+  const [playground, setPlayground] = useState<PlaygroundInput>(
+    initialPlaygroundState,
+  );
+
   const createPlayground = api.playground.create.useMutation({
     onSuccess: async () => {
       await utils.playground.invalidate();
-      setTitle("");
-      setLongitude(0.0);
-      setLatitude(0.0);
-      setPubliclyAccessible(true);
-      setToddlerFriendly(false);
-      setCoverImage("");
-      setImages([]);
+      setPlayground(initialPlaygroundState);
     },
   });
 
-  const [title, setTitle] = useState("");
-  const [longitude, setLongitude] = useState(0.0);
-  const [latitude, setLatitude] = useState(0.0);
-  const [publiclyAccessible, setPubliclyAccessible] = useState(true);
-  const [toddlerFriendly, setToddlerFriendly] = useState(false);
-  const [coverImage, setCoverImage] = useState("");
-  const [images, setImages] = useState([]);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setPlayground((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "number"
+            ? parseFloat(value)
+            : value,
+    }));
+  };
 
   return (
     <>
       {/* Form that creates a new playground */}
+      {/* TODO: Use better form library */}
+      {/* TODO: Use form validation for required fields, lat, lng format, etc. */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           createPlayground.mutate({
-            title,
-            latitude,
-            longitude,
-            publiclyAccessible,
-            toddlerFriendly,
-            coverImage,
-            images,
+            ...playground,
+            coverImage: playground.coverImage ?? undefined, // Convert null to undefined
+            images: playground.images ?? undefined, // Convert null to undefined
           });
         }}
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-4"
       >
-        <Label htmlFor="titleInput">Title</Label>
-        <Input
-          id="titleInput"
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setTitle(e.target.value)
-          }
-          className="w-full border-neutral-600 px-4 py-2 text-black"
-        />
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            name="title"
+            type="text"
+            placeholder="Title"
+            value={playground.title}
+            onChange={handleInputChange}
+            className="w-full border-neutral-600 px-4 py-2 text-black"
+          />
+        </div>
+        <div>
+          <Label htmlFor="latitude">Latitude</Label>
+          <Input
+            id="latitude"
+            name="latitude"
+            type="number"
+            step="any"
+            placeholder="Latitude"
+            value={playground.latitude}
+            onChange={handleInputChange}
+            className="w-full border-neutral-600 px-4 py-2 text-black"
+          />
+        </div>
 
-        <Label htmlFor="latitudeInput">Latitude</Label>
-        <Input
-          id="latitudeInput"
-          type="text"
-          placeholder="Latitude"
-          value={latitude}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setLatitude(+e.target.value)
-          }
-          className="w-full border-neutral-600 px-4 py-2 text-black"
-        />
+        <div>
+          <Label htmlFor="longitude">Longitude</Label>
+          <Input
+            id="longitude"
+            name="longitude"
+            type="number"
+            step="any"
+            placeholder="Longitude"
+            value={playground.longitude}
+            onChange={handleInputChange}
+            className="w-full border-neutral-600 px-4 py-2 text-black"
+          />
+        </div>
 
-        <Label htmlFor="longitudeInput">Longitude</Label>
-        <Input
-          id="longitudeInput"
-          type="text"
-          placeholder="Longitude"
-          value={longitude}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setLongitude(+e.target.value)
-          }
-          className="w-full border-neutral-600 px-4 py-2 text-black"
-        />
+        <div className="mt-4 flex flex-row gap-3">
+          <Input
+            id="publiclyAccessible"
+            name="publiclyAccessible"
+            type="checkbox"
+            checked={playground.publiclyAccessible}
+            onChange={handleInputChange}
+            className="h-4 w-4 border-2 border-black bg-white/10"
+          />
+          <Label htmlFor="publiclyAccessible">Publicly Accessible</Label>
+        </div>
 
-        <Label htmlFor="publiclyAccessibleInput">Publicly Accessible</Label>
-        <Input
-          id="publiclyAccessibleInput"
-          type="checkbox"
-          checked={publiclyAccessible}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPubliclyAccessible(e.target.checked)
-          }
-          className="h-4 w-4 border-2 border-black bg-white/10"
-        />
+        <div className="flex flex-row gap-3">
+          <Input
+            id="toddlerFriendly"
+            name="toddlerFriendly"
+            type="checkbox"
+            checked={playground.toddlerFriendly}
+            onChange={handleInputChange}
+            className="h-4 w-4 border-2 border-black bg-white/10"
+          />
+          <Label htmlFor="toddlerFriendly">Toddler Friendly</Label>
+        </div>
 
-        <Label htmlFor="toddlerFriendlyInput">Toddler Friendly</Label>
-        <Input
-          id="toddlerFriendlyInput"
-          type="checkbox"
-          checked={toddlerFriendly}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setToddlerFriendly(e.target.checked)
-          }
-          className="h-4 w-4 border-2 border-black bg-white/10"
-        />
         {/* coverImage input */}
         {/* images input */}
 
         <Button
           type="submit"
-          className="px-10 py-3 font-semibold transition hover:bg-zinc-900/20"
+          className="mt-6 px-10 py-3 font-semibold transition hover:bg-zinc-900/20"
           disabled={createPlayground.isPending}
         >
           {createPlayground.isPending ? "Submitting..." : "Submit"}

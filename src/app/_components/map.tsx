@@ -17,7 +17,6 @@ export function GoogleMap() {
     <APIProvider
       // TODO: Hide API key
       apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-      onLoad={() => console.log("Maps API has loaded.")}
     >
       <div className="h-screen">
         <Map

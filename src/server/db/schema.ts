@@ -48,7 +48,7 @@ export const playgrounds = createTable(
   "playground",
   {
     id: serial("id").primaryKey(),
-    title: varchar("name", { length: 256 }),
+    title: varchar("name", { length: 256 }).notNull(),
     latitude: doublePrecision("latitude").notNull(),
     longitude: doublePrecision("longitude").notNull(),
     publiclyAccessible: boolean("publicly_accessible").notNull().default(true),
