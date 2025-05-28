@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import Image from "next/image";
-import { Playground } from "~/types";
+import { type Playground } from "~/types";
 
 // TODO: Remove this type use trpc for types instead, like posts is doing
 

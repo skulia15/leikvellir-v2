@@ -1,6 +1,6 @@
 "use client";
 import { api } from "~/trpc/react";
-import { Playground } from "~/types";
+import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
 
 export default function PlaygroundList() {

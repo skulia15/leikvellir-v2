@@ -7,8 +7,10 @@ const config = {
   plugins: ["@typescript-eslint", "drizzle"],
   extends: [
     "next/core-web-vitals",
+    "next/typescript",
     "plugin:@typescript-eslint/recommended-type-checked",
     "plugin:@typescript-eslint/stylistic-type-checked",
+    "prettier",
   ],
   overrides: [
     {

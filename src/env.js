@@ -23,8 +23,17 @@ export const env = createEnv({
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
       process.env.VERCEL ? z.string() : z.string().url(),
     ),
-    DISCORD_CLIENT_ID: z.string(),
-    DISCORD_CLIENT_SECRET: z.string(),
+    // Make Discord credentials optional in development for mock auth
+    DISCORD_CLIENT_ID:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
+    DISCORD_CLIENT_SECRET:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
+    // Flag to enable mock authentication in development
+    ENABLE_MOCK_AUTH: z.string().optional().default("false"),
   },
 
   /**
@@ -48,6 +57,7 @@ export const env = createEnv({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
+    ENABLE_MOCK_AUTH: process.env.ENABLE_MOCK_AUTH,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
   },

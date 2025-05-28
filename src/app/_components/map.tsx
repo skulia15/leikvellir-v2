@@ -3,7 +3,7 @@
 import {
   APIProvider,
   Map,
-  MapCameraChangedEvent,
+  type MapCameraChangedEvent,
 } from "@vis.gl/react-google-maps";
 import { env } from "~/env";
 
@@ -18,7 +18,7 @@ export function GoogleMap() {
       // TODO: Hide API key
       apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
     >
-      <div className="h-screen">
+      <div className="h-[calc(100vh-5rem)]">
         <Map
           defaultZoom={15}
           defaultCenter={center}

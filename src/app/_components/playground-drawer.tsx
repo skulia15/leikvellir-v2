@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { Sheet, SheetRef } from "react-modal-sheet";
+import { Sheet, type SheetRef } from "react-modal-sheet";
 export default function PlaygroundDrawer({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
