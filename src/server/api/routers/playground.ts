@@ -7,6 +7,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { playgrounds } from "~/server/db/schema";
+import { CreatePlaygroundSchema, PlaygroundNotFoundError } from "~/types";
 
 export const playgroundRouter = createTRPCRouter({
   hello: publicProcedure
@@ -18,28 +19,23 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   create: protectedProcedure
-    .input(
-      z.object({
-        title: z.string().min(1),
-        latitude: z.number(),
-        longitude: z.number(),
-        publiclyAccessible: z.boolean().default(true),
-        toddlerFriendly: z.boolean().default(false),
-        coverImage: z.string().optional(),
-        images: z.array(z.string()).optional(), // Accepts an array of image URLs
-      }),
-    )
+    .input(CreatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(playgrounds).values({
-        title: input.title,
-        latitude: input.latitude,
-        longitude: input.longitude,
-        publiclyAccessible: input.publiclyAccessible,
-        toddlerFriendly: input.toddlerFriendly,
-        coverImage: input.coverImage,
-        images: input.images,
-        createdById: ctx.session.user.id,
-      });
+      const [newPlayground] = await ctx.db
+        .insert(playgrounds)
+        .values({
+          title: input.title,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          publiclyAccessible: input.publiclyAccessible,
+          toddlerFriendly: input.toddlerFriendly,
+          coverImage: input.coverImage ?? null,
+          images: input.images ?? null,
+          createdById: ctx.session.user.id,
+        })
+        .returning();
+
+      return newPlayground;
     }),
 
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -49,4 +45,18 @@ export const playgroundRouter = createTRPCRouter({
 
     return playgrounds ?? null;
   }),
+
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const playground = await ctx.db.query.playgrounds.findFirst({
+        where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
+      });
+
+      if (!playground) {
+        throw new PlaygroundNotFoundError(input.id);
+      }
+
+      return playground;
+    }),
 });
