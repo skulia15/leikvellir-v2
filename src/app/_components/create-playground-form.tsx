@@ -28,13 +28,10 @@ import ImageUpload from "~/components/ui/image-upload";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
-import { type z } from "zod";
 import { api } from "~/trpc/react";
-import { CreatePlaygroundSchema } from "~/types";
+import { CreatePlaygroundSchema, type CreatePlaygroundInput } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
 import { toast } from "sonner";
-
-type CreatePlaygroundFormData = z.infer<typeof CreatePlaygroundSchema>;
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
@@ -43,8 +40,7 @@ export function CreatePlaygroundForm() {
     "map",
   );
 
-  const form = useForm<CreatePlaygroundFormData>({
-    // @ts-expect-error - zodResolver is not typed correctly
+  const form = useForm<CreatePlaygroundInput>({
     resolver: zodResolver(CreatePlaygroundSchema),
     mode: "onChange",
     defaultValues: {
@@ -72,7 +68,7 @@ export function CreatePlaygroundForm() {
     },
   });
 
-  const onSubmit = (data: CreatePlaygroundFormData) => {
+  const onSubmit = (data: CreatePlaygroundInput) => {
     console.log("Submitting form with data:", data);
     console.log("Images in form data:", data.images);
 

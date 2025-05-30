@@ -56,8 +56,7 @@ export const CreatePlaygroundSchema = z.object({
           return false;
         }
       }, "Must be a valid URL or upload path"),
-    )
-    .default([]),
+    ),
 });
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
