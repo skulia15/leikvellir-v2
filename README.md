@@ -14,6 +14,26 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Image support (cover image + gallery)
 - **User Authentication**: Secure login system using NextAuth.js
 - **Mock Authentication**: Development mode with test users (no OAuth setup required)
+- **User Management System**: Complete role-based access control
+  - User roles: `user`, `admin`, `super_admin`
+  - Auto-promotion of first user to super admin
+  - Admin can ban/unban users with reasons
+  - Super admin can promote/demote user roles
+  - Permission-based UI and API access
+- **Admin Panel**: Comprehensive administration interface
+  - User management dashboard (super admin only)
+  - Playground review and approval system
+  - Role-based navigation and features
+  - Admin mode toggle with persistent state
+- **Image Upload System**: File upload functionality for playgrounds
+  - Multiple image support per playground
+  - Admin cover image selection during review
+  - Drag-and-drop interface with validation
+- **Playground Submission System**: Public submission with admin approval
+  - Form validation with React Hook Form + Zod
+  - Status tracking (pending, approved, rejected)
+  - Admin review with edit capabilities
+  - Rejection reasons and feedback
 - **Type-Safe API**: End-to-end type safety with tRPC
 - **Form Validation**: React Hook Form with Zod validation
 - **Responsive Design Foundation**: Mobile-first approach with Tailwind CSS
@@ -21,58 +41,49 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 🚧 In Progress
 
-- Interactive Map View
-  - An interactive map where users can see all nearby playgrounds, with markers showing different types (e.g., shaded, fenced, toddler-friendly).
-- Image upload functionality
-- Playground detail pages
-- Admin panel for playground management
-- Error handling and loading states
+- Interactive Map View improvements
+  - Enhanced markers showing different playground types (shaded, fenced, toddler-friendly)
+- Playground detail pages with comprehensive information
+- Error handling and loading states optimization
 - Responsive layout optimization
 - Multi-language support (Icelandic/English)
-- clearly define features and properies
 
 ### 📋 Planned Features
 
-- Playground Search Functionality
-  - Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds.
-  - Filter by Distance: Option to filter results based on distance from the user’s location.
-  - Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children).
-  - filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
-- Playground Details Page
-  - Name and Address: Basic information for each playground.
-  - Directions/Navigation: Integration with Google Maps or another mapping service to provide directions.
-  - Photos of the Playground: To help parents visualize the playground and its equipment.
-  - Age Suitability: Clearly stated age range recommendations.
-  - if playground is publicly accessible or not
-  - if playground is part of school, preschool grounds and therefore only publicly accessible after school hours
-  - Facilities Information: Details on available amenities (e.g., bathrooms, benches, shade, parking).
-  - Safety Features: Information about fencing, soft ground, and other safety considerations.
-  - list of available playground equipment and activities
-    - Possibly add AI-Vision to determine what type of playground equipment is present in uploaded photos - (not for general users)
-- Playground reporting system (broken equipment, safety hazards) -submit information to hafnafjarðarbær - broken equipment, dirty, etc - optionally attach image.
-- Google Maps directions integration
-- include a list of football, basketball or tennis courts (and more)
-- User-contributed playground reviews
-- Advanced filtering (age groups, equipment types)
-- Public submission system
-  - submit images
-- Admin should be able to approve sumbissions
-- admin should be able to update and delete playground entries.
-- admin should be able to remove users
-- SEO
-- Accessibility
-- Dark Theme
-- Mobile app (future consideration)
-- Event Listings
-  - Include a calendar of events for activities happening at the playgrounds (e.g., community gatherings, special kids’ events).
-
-### Future Optimization
-
-1. Image Optimization
-2. Cloud Storage Migration of images
-3. Image Transforms
-   - Generate thumbnails automatically
-   - Create different sizes for different devices - doesnt nextjs already handle this?
+- **Playground Search Functionality**
+  - Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
+  - Filter by Distance: Option to filter results based on distance from the user's location - DONE
+  - Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
+  - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
+- **Enhanced Playground Details**
+  - Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
+  - Facilities Information: Details on available amenities (e.g., bathrooms, benches, shade, parking)
+  - Safety Features: Information about fencing, soft ground, and other safety considerations
+  - List of available playground equipment and activities
+  - AI-Vision to determine playground equipment types from uploaded photos (admin feature)
+- **Community Features**
+  - User-contributed playground reviews and ratings
+  - Check-in system for playgrounds
+  - Star rating system for playgrounds
+  - Credits system for user submissions
+- **Reporting System**
+  - Playground issue reporting (broken equipment, safety hazards)
+  - Direct submission to Hafnarfjörður municipality
+  - Image attachment for reports
+- **Advanced Features**
+  - List nearby playgrounds by distance from user location - DONE
+  - Sort by rating or other criteria
+  - Include football, basketball, tennis courts and other facilities
+  - Event listings and calendar integration
+  - Google Maps directions integration - DONE
+- **Technical Improvements**
+  - SEO optimization
+  - Accessibility enhancements
+  - Dark theme support
+  - Production monitoring and logging
+  - Traffic tracking (PostHog integration)
+  - Cloud storage migration for images
+  - Automated image optimization and thumbnails
 
 ## 🛠️ Tech Stack
 

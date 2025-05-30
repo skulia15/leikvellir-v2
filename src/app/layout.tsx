@@ -5,7 +5,6 @@ import { Fira_Sans } from "next/font/google";
 import { type Metadata } from "next";
 import { Toaster } from "sonner";
 
-import { TRPCReactProvider } from "~/trpc/react";
 import { AppErrorBoundary } from "~/components/ui/error-boundary";
 import NavigationBar from "./_components/navigation-bar";
 import { getServerAuthSession } from "~/server/auth";
@@ -33,13 +32,11 @@ export default async function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${firaSans.variable}`}>
       <body className="min-h-screen bg-background">
         <Providers session={session}>
-          <NavigationBar />
           <AppErrorBoundary>
-            <TRPCReactProvider>
-              <main className="pt-16">
-                <div id="app-container">{children}</div>
-              </main>
-            </TRPCReactProvider>
+            <NavigationBar />
+            <main className="pt-16">
+              <div id="app-container">{children}</div>
+            </main>
           </AppErrorBoundary>
           <Toaster />
         </Providers>

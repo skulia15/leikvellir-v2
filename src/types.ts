@@ -1,6 +1,9 @@
 // types.ts
 import { z } from "zod";
 
+// User role types
+export type UserRole = "user" | "admin" | "super_admin";
+
 // Branded types for coordinates
 export type Latitude = number & { __brand: "latitude" };
 export type Longitude = number & { __brand: "longitude" };
@@ -20,6 +23,25 @@ export const CoordinatesSchema = z.object({
 });
 
 export type ValidatedCoordinates = z.infer<typeof CoordinatesSchema>;
+
+// User management schemas
+export const UpdateUserRoleSchema = z.object({
+  userId: z.string(),
+  role: z.enum(["user", "admin", "super_admin"]),
+});
+
+export const BanUserSchema = z.object({
+  userId: z.string(),
+  reason: z.string().min(1, "Ban reason is required"),
+});
+
+export const UnbanUserSchema = z.object({
+  userId: z.string(),
+});
+
+export type UpdateUserRoleInput = z.infer<typeof UpdateUserRoleSchema>;
+export type BanUserInput = z.infer<typeof BanUserSchema>;
+export type UnbanUserInput = z.infer<typeof UnbanUserSchema>;
 
 // Comprehensive playground creation schema
 export const CreatePlaygroundSchema = z.object({

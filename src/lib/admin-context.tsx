@@ -2,10 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { api } from "~/trpc/react";
 
 interface AdminContextType {
     isAdminMode: boolean;
     toggleAdminMode: () => void;
+    canAccessAdmin: boolean;
+    userRole: string | null;
+    isLoading: boolean;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -14,23 +18,41 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [isAdminMode, setIsAdminMode] = useState(false);
     const { data: session, status } = useSession();
 
-    // Load admin mode from localStorage on mount, but only if user is authenticated
+    // Fetch current user data including role from database
+    const { data: currentUser, isLoading: userLoading } = api.users.getCurrentUser.useQuery(
+        undefined,
+        {
+            enabled: status === "authenticated" && !!session?.user,
+            retry: false,
+        }
+    );
+
+    const userRole = currentUser?.role ?? null;
+    const canAccessAdmin = status === "authenticated" &&
+        !!session?.user &&
+        !!currentUser &&
+        (currentUser.role === "admin" || currentUser.role === "super_admin") &&
+        !currentUser.isBanned;
+
+    const isLoading = status === "loading" || (status === "authenticated" && userLoading);
+
+    // Load admin mode from localStorage on mount, but only if user has admin permissions
     useEffect(() => {
-        if (status === "authenticated" && session?.user) {
+        if (status === "authenticated" && session?.user && canAccessAdmin && currentUser) {
             const savedAdminMode = localStorage.getItem("adminMode");
             if (savedAdminMode === "true") {
                 setIsAdminMode(true);
             }
         } else {
-            // Clear admin mode if user is not authenticated
+            // Clear admin mode if user doesn't have admin permissions
             setIsAdminMode(false);
             localStorage.removeItem("adminMode");
         }
-    }, [session, status]);
+    }, [session, status, canAccessAdmin, currentUser]);
 
     const toggleAdminMode = () => {
-        // Only allow toggling if user is authenticated
-        if (status !== "authenticated" || !session?.user) {
+        // Only allow toggling if user has admin permissions
+        if (status !== "authenticated" || !session?.user || !canAccessAdmin || !currentUser) {
             return;
         }
 
@@ -40,7 +62,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AdminContext.Provider value={{ isAdminMode, toggleAdminMode }}>
+        <AdminContext.Provider value={{
+            isAdminMode,
+            toggleAdminMode,
+            canAccessAdmin,
+            userRole,
+            isLoading
+        }}>
             {children}
         </AdminContext.Provider>
     );

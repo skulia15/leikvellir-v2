@@ -31,6 +31,13 @@ export const playgroundStatusEnum = pgEnum("playground_status", [
   "rejected"
 ]);
 
+// Enum for user roles
+export const userRoleEnum = pgEnum("user_role", [
+  "user",
+  "admin",
+  "super_admin"
+]);
+
 export const posts = createTable(
   "post",
   {
@@ -96,6 +103,11 @@ export const users = createTable("user", {
     withTimezone: true,
   }).default(sql`CURRENT_TIMESTAMP`),
   image: varchar("image", { length: 255 }),
+  role: userRoleEnum("role").notNull().default("user"),
+  isBanned: boolean("is_banned").notNull().default(false),
+  bannedAt: timestamp("banned_at", { withTimezone: true }),
+  bannedById: varchar("banned_by", { length: 255 }), // Will reference users.id but removing circular ref for now
+  banReason: text("ban_reason"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -22,7 +22,7 @@ interface NavigationBarClientProps {
 }
 
 export default function NavigationBarClient({ session }: NavigationBarClientProps) {
-    const { isAdminMode, toggleAdminMode } = useAdmin();
+    const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
 
     const getInitials = (name: string) => {
         return name
@@ -54,10 +54,10 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                     </Link>
 
                     {/* Admin Mode Indicator */}
-                    {session && isAdminMode && (
+                    {session && isAdminMode && !isLoading && (
                         <Badge variant="destructive" className="ml-2">
                             <ShieldCheck className="mr-1 h-3 w-3" />
-                            Admin Mode
+                            {userRole === "super_admin" ? "Super Admin" : "Admin"} Mode
                         </Badge>
                     )}
                 </div>
@@ -90,7 +90,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                 <span>Add Playground</span>
                             </Link>
 
-                            {isAdminMode && (
+                            {!isLoading && isAdminMode && canAccessAdmin && (
                                 <>
                                     <Link
                                         href="/admin"
@@ -106,6 +106,15 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <ClipboardCheck className="h-4 w-4" />
                                         <span>Review</span>
                                     </Link>
+                                    {userRole === "super_admin" && (
+                                        <Link
+                                            href="/admin/users"
+                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                        >
+                                            <Users className="h-4 w-4" />
+                                            <span>Users</span>
+                                        </Link>
+                                    )}
                                 </>
                             )}
                         </>
@@ -161,19 +170,21 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
-                                            <DropdownMenuItem onClick={toggleAdminMode}>
-                                                {isAdminMode ? (
-                                                    <>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        <span>Switch to User Mode</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <ShieldCheck className="mr-2 h-4 w-4" />
-                                                        <span>Switch to Admin Mode</span>
-                                                    </>
-                                                )}
-                                            </DropdownMenuItem>
+                                            {!isLoading && canAccessAdmin && (
+                                                <DropdownMenuItem onClick={toggleAdminMode}>
+                                                    {isAdminMode ? (
+                                                        <>
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            <span>Switch to User Mode</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                                            <span>Switch to Admin Mode</span>
+                                                        </>
+                                                    )}
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>
@@ -253,7 +264,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                     <span>Add Playground</span>
                                                 </Link>
                                             </DropdownMenuItem>
-                                            {isAdminMode && (
+                                            {!isLoading && isAdminMode && canAccessAdmin && (
                                                 <>
                                                     <DropdownMenuItem asChild>
                                                         <Link
@@ -273,24 +284,37 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             <span>Review</span>
                                                         </Link>
                                                     </DropdownMenuItem>
+                                                    {userRole === "super_admin" && (
+                                                        <DropdownMenuItem asChild>
+                                                            <Link
+                                                                href="/admin/users"
+                                                                className="flex items-center"
+                                                            >
+                                                                <Users className="mr-2 h-4 w-4" />
+                                                                <span>Users</span>
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                    )}
                                                 </>
                                             )}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
-                                            <DropdownMenuItem onClick={toggleAdminMode}>
-                                                {isAdminMode ? (
-                                                    <>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        <span>Switch to User Mode</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <ShieldCheck className="mr-2 h-4 w-4" />
-                                                        <span>Switch to Admin Mode</span>
-                                                    </>
-                                                )}
-                                            </DropdownMenuItem>
+                                            {!isLoading && canAccessAdmin && (
+                                                <DropdownMenuItem onClick={toggleAdminMode}>
+                                                    {isAdminMode ? (
+                                                        <>
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            <span>Switch to User Mode</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                                            <span>Switch to Admin Mode</span>
+                                                        </>
+                                                    )}
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>

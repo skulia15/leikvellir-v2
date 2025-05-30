@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { AdminProvider } from "~/lib/admin-context";
+import { TRPCReactProvider } from "~/trpc/react";
 import { type Session } from "next-auth";
 
 interface ProvidersProps {
@@ -12,9 +13,11 @@ interface ProvidersProps {
 export function Providers({ children, session }: ProvidersProps) {
     return (
         <SessionProvider session={session}>
-            <AdminProvider>
-                {children}
-            </AdminProvider>
+            <TRPCReactProvider>
+                <AdminProvider>
+                    {children}
+                </AdminProvider>
+            </TRPCReactProvider>
         </SessionProvider>
     );
 } 
