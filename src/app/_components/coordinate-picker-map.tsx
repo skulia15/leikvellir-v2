@@ -74,6 +74,12 @@ export function CoordinatePickerMap({
           mapId="coordinate-picker-map"
           className="h-full w-full rounded-md"
           gestureHandling="cooperative"
+          mapTypeControl={false}
+          fullscreenControl={false}
+          streetViewControl={false}
+          zoomControl={true}
+          scaleControl={false}
+          cameraControl={false}
         >
           <AdvancedMarker
             position={markerPosition}

@@ -2,15 +2,15 @@
 import { beforeEach, describe, it, vi } from "vitest";
 
 // Mock database
-const mockDb = {
-  insert: vi.fn(),
-  query: {
-    playgrounds: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-    },
-  },
-};
+// const mockDb = {
+//   insert: vi.fn(),
+//   query: {
+//     playgrounds: {
+//       findMany: vi.fn(),
+//       findFirst: vi.fn(),
+//     },
+//   },
+// };
 
 describe.skip("Playground tRPC Router", () => {
   // Skipping tRPC API tests as they require complex database and environment mocking

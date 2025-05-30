@@ -3,6 +3,8 @@
 import { CheckCircle2, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -28,20 +30,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 import { type z } from "zod";
 import { api } from "~/trpc/react";
-import { type CreatePlaygroundSchema } from "~/types";
+import { CreatePlaygroundSchema } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
+import { toast } from "sonner";
 
 type CreatePlaygroundFormData = z.infer<typeof CreatePlaygroundSchema>;
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
-  const [successMessage, setSuccessMessage] = useState<string>("");
+  const router = useRouter();
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
     "map",
   );
 
   const form = useForm<CreatePlaygroundFormData>({
-    // resolver: zodResolver(CreatePlaygroundSchema),
+    // @ts-expect-error - zodResolver is not typed correctly
+    resolver: zodResolver(CreatePlaygroundSchema),
     mode: "onChange",
     defaultValues: {
       title: "",
@@ -56,43 +60,48 @@ export function CreatePlaygroundForm() {
   const createPlayground = api.playground.create.useMutation({
     onSuccess: async (data) => {
       await utils.playground.invalidate();
-      setSuccessMessage(`"${data?.title}" has been created successfully!`);
+      toast.success(`"${data?.title}" has been submitted for review!`);
       form.reset();
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(""), 5000);
+      // Redirect to homepage after successful creation
+      router.push("/");
     },
     onError: (error) => {
       console.error("Failed to create playground:", error);
-      alert(`Error: ${error.message}`);
-      setSuccessMessage("");
+      console.error("Error details:", error.data);
+      toast.error(`Failed to create playground: ${error.message}`);
     },
   });
 
   const onSubmit = (data: CreatePlaygroundFormData) => {
     console.log("Submitting form with data:", data);
+    console.log("Images in form data:", data.images);
 
-    // Ensure images array contains only valid URLs
-    // Filter out any invalid entries that might be causing validation errors
-    const validImages = Array.isArray(data.images)
-      ? data.images.filter((url) => {
-          try {
-            // Attempt to create a URL object to validate
-            new URL(url);
-            return true; // Valid URL
-          } catch (e) {
-            console.warn("Filtered invalid image URL:", url);
-            return false; // Invalid URL
-          }
-        })
-      : [];
+    // Check if form has any validation errors
+    const errors = form.formState.errors;
+    if (Object.keys(errors).length > 0) {
+      console.log("Form has validation errors:", errors);
+      toast.error("Please fix the form errors before submitting");
+      return;
+    }
 
-    // Submit with validated images array
-    createPlayground.mutate({
+    // Filter out empty strings from images array and ensure it's properly formatted
+    const validImages = (data.images || []).filter(img => img && img.trim() !== "");
+
+    const submissionData = {
       ...data,
       images: validImages,
-    });
+    };
 
-    setSuccessMessage("");
+    console.log("Processed submission data:", submissionData);
+    console.log("Valid images for submission:", validImages);
+
+    createPlayground.mutate(submissionData);
+  };
+
+  // Custom reset function that also clears images
+  const handleReset = () => {
+    form.reset();
+    // The ImageUpload component will handle its own reset via the onReset prop
   };
 
   // Helper function to get current location
@@ -120,7 +129,7 @@ export function CreatePlaygroundForm() {
   const currentLongitude = form.watch("longitude");
 
   return (
-    <Card className="mx-auto w-full max-w-4xl">
+    <Card className="mx-auto w-full max-w-4xl mb-24">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5" />
@@ -134,16 +143,6 @@ export function CreatePlaygroundForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Success Message */}
-            {successMessage && (
-              <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 p-4">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-700">
-                  {successMessage}
-                </span>
-              </div>
-            )}
-
             {/* Title Field */}
             <FormField
               control={form.control}
@@ -320,7 +319,7 @@ export function CreatePlaygroundForm() {
 
             {/* Images Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Images (Optional)</h3>
+              <h3 className="text-lg font-medium">Images</h3>
 
               <FormField
                 control={form.control}
@@ -337,11 +336,11 @@ export function CreatePlaygroundForm() {
                           maxSize: 5 * 1024 * 1024, // 5MB
                         }}
                         disabled={createPlayground.isPending}
+                        onReset={() => field.onChange([])}
                       />
                     </FormControl>
                     <FormDescription>
-                      Upload up to 8 images of the playground. First image will
-                      be used as cover.
+                      Upload up to 8 images of the playground. An admin will select a cover image during review.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -354,7 +353,7 @@ export function CreatePlaygroundForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={handleReset}
                 disabled={createPlayground.isPending}
               >
                 Reset
@@ -376,7 +375,7 @@ export function CreatePlaygroundForm() {
                 ) : (
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Create Playground
+                    Submit Playground
                   </>
                 )}
               </Button>

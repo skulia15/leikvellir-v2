@@ -1,9 +1,9 @@
 // components/ui/image-upload.tsx
 "use client";
 
-import React, { useCallback, useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { X, Upload, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { X, Upload, AlertCircle, CheckCircle2, Loader2, Star } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "~/components/ui/button";
@@ -27,6 +27,11 @@ interface ImageUploadProps {
   config?: Partial<ImageUploadConfig>;
   className?: string;
   disabled?: boolean;
+  onReset?: () => void; // New prop for reset functionality
+  // Cover image selection props
+  coverImage?: string | null;
+  onCoverImageChange?: (url: string | null) => void;
+  showCoverSelection?: boolean;
 }
 
 export function ImageUpload({
@@ -35,6 +40,10 @@ export function ImageUpload({
   config = {},
   className,
   disabled = false,
+  onReset,
+  coverImage,
+  onCoverImageChange,
+  showCoverSelection = false,
 }: ImageUploadProps) {
   const finalConfig = useMemo(
     () => ({ ...DEFAULT_UPLOAD_CONFIG, ...config }),
@@ -47,11 +56,55 @@ export function ImageUpload({
   >(new Map());
   const [errors, setErrors] = useState<string[]>([]);
 
+  // Use ref to track current URLs for concurrent uploads
+  const currentUrlsRef = useRef<string[]>(value);
+
+  // Update ref when value changes
+  useEffect(() => {
+    currentUrlsRef.current = value;
+  }, [value]);
+
   // Filter out empty strings and invalid URLs from the value array
   const validUrls = useMemo(
     () => value.filter((url) => url && url.trim() !== ""),
     [value],
   );
+
+  // Clean up successful uploads that are now in validUrls
+  useEffect(() => {
+    const filesToRemove: string[] = [];
+
+    files.forEach((file) => {
+      const progress = uploadProgress.get(file.id);
+      if (progress?.state === "success" && progress.url && validUrls.includes(progress.url)) {
+        filesToRemove.push(file.id);
+      }
+    });
+
+    if (filesToRemove.length > 0) {
+      setFiles((prev) => prev.filter((file) => !filesToRemove.includes(file.id)));
+      setUploadProgress((prev) => {
+        const updated = new Map(prev);
+        filesToRemove.forEach((fileId) => updated.delete(fileId));
+        return updated;
+      });
+    }
+  }, [validUrls, files, uploadProgress]);
+
+  // Reset function exposed to parent
+  const resetUpload = useCallback(() => {
+    // Clear local state
+    setFiles([]);
+    setUploadProgress(new Map());
+    setErrors([]);
+    // Call parent reset if provided
+    if (onReset) {
+      onReset();
+    } else {
+      // Fallback to clearing form value
+      onChange([]);
+    }
+  }, [onReset, onChange]);
 
   // Create file preview objects
   const createFileWithPreview = useCallback((file: File): FileWithPreview => {
@@ -65,6 +118,8 @@ export function ImageUpload({
   // Upload individual file with progress tracking
   const uploadFile = useCallback(
     async (file: FileWithPreview) => {
+      console.log(`🚀 Starting upload for file: ${file.name} (ID: ${file.id})`);
+
       const progressInfo: UploadProgress = {
         fileId: file.id,
         progress: 0,
@@ -102,6 +157,19 @@ export function ImageUpload({
               xhr.responseText,
             ) as unknown as UploadResponse;
             if (response.success && response.url) {
+              console.log(`✅ Upload successful for ${file.name}: ${response.url}`);
+              console.log(`📋 Current URLs before adding: [${currentUrlsRef.current.join(', ')}]`);
+
+              // Add URL to form value - use functional state update to avoid race conditions
+              const newUrl = response.url;
+              const updatedUrls = [...currentUrlsRef.current, newUrl];
+              onChange(updatedUrls);
+              // Update the ref immediately
+              currentUrlsRef.current = updatedUrls;
+
+              console.log(`📋 Current URLs after adding: [${updatedUrls.join(', ')}]`);
+
+              // Set upload to success state instead of immediately removing
               setUploadProgress((prev) => {
                 const updated = new Map(prev);
                 updated.set(file.id, {
@@ -113,8 +181,22 @@ export function ImageUpload({
                 return updated;
               });
 
-              // Add URL to form value
-              onChange([...value, response.url]);
+              // Auto-select first image as cover if none selected and cover selection is enabled
+              if (showCoverSelection && !coverImage && onCoverImageChange) {
+                console.log(`🏆 Auto-selecting cover image: ${response.url}`);
+                onCoverImageChange(response.url);
+              }
+
+              // Clean up successful upload after a brief delay to allow UI to update
+              setTimeout(() => {
+                console.log(`🧹 Cleaning up UI for ${file.name}`);
+                setFiles((prev) => prev.filter((f) => f.id !== file.id));
+                setUploadProgress((prev) => {
+                  const updated = new Map(prev);
+                  updated.delete(file.id);
+                  return updated;
+                });
+              }, 1000); // 1 second delay
             } else {
               throw new Error(response.error ?? "Upload failed");
             }
@@ -153,7 +235,7 @@ export function ImageUpload({
         });
       }
     },
-    [onChange, value],
+    [onChange, value, showCoverSelection, coverImage, onCoverImageChange],
   );
 
   // Handle file drop/selection
@@ -176,11 +258,14 @@ export function ImageUpload({
         }
 
         // Check if adding these files would exceed the limit
-        const totalFiles = files.length + validUrls.length + valid.length;
-        if (totalFiles > finalConfig.maxFiles) {
+        const currentUploaded = validUrls.length;
+        const currentPending = files.length;
+        const totalAfterUpload = currentUploaded + currentPending + valid.length;
+
+        if (totalAfterUpload > finalConfig.maxFiles) {
           setErrors((prev) => [
             ...prev,
-            `Maximum ${finalConfig.maxFiles} files allowed`,
+            `Maximum ${finalConfig.maxFiles} files allowed. Currently have ${currentUploaded + currentPending} files.`,
           ]);
           return;
         }
@@ -229,7 +314,13 @@ export function ImageUpload({
 
     // If file was successfully uploaded, remove from form value
     if (progress?.url) {
-      onChange(value.filter((url) => url !== progress.url));
+      const newUrls = value.filter((url) => url !== progress.url);
+      onChange(newUrls);
+
+      // If removed image was the cover, clear cover selection
+      if (showCoverSelection && coverImage === progress.url && onCoverImageChange) {
+        onCoverImageChange(null);
+      }
     }
 
     // Remove from local state
@@ -242,9 +333,41 @@ export function ImageUpload({
   };
 
   // Remove existing uploaded image
-  const removeExistingImage = (url: string) => {
-    onChange(value.filter((existingUrl) => existingUrl !== url));
+  const removeExistingImage = async (url: string) => {
+    // Extract filename from URL for deletion
+    const filename = url.split('/').pop();
+    if (filename && url.startsWith('/uploads/playgrounds/')) {
+      try {
+        await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        console.warn('Failed to delete file from server:', error);
+        // Don't block the UI operation if file deletion fails
+      }
+    }
+
+    const newUrls = value.filter((existingUrl) => existingUrl !== url);
+    onChange(newUrls);
+
+    // If removed image was the cover, clear cover selection
+    if (showCoverSelection && coverImage === url && onCoverImageChange) {
+      onCoverImageChange(null);
+    }
   };
+
+  // Handle cover image selection
+  const selectCoverImage = (url: string) => {
+    if (showCoverSelection && onCoverImageChange) {
+      onCoverImageChange(coverImage === url ? null : url);
+    }
+  };
+
+  // Calculate total uploaded images correctly
+  const totalUploadedImages = validUrls.length;
+
+  // Get all available images (just the validUrls since successful uploads are removed from files)
+  const allAvailableImages = validUrls;
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
@@ -297,119 +420,70 @@ export function ImageUpload({
         </div>
       )}
 
-      {/* Existing Images */}
-      {validUrls.length > 0 && (
+      {/* Unified Images Grid */}
+      {allAvailableImages.length > 0 && (
         <div>
-          <h4 className="mb-3 text-sm font-medium">Uploaded Images</h4>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {validUrls.map((url, index) => (
-              <div key={url} className="group relative">
-                <div className="relative aspect-square overflow-hidden rounded-lg border">
-                  <Image
-                    src={url}
-                    alt={`Uploaded image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    className="absolute right-2 top-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-                    onClick={() => removeExistingImage(url)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-medium">
+              {showCoverSelection ? "Images & Cover Selection" : "Uploaded Images"}
+            </h4>
+            {showCoverSelection && coverImage && (
+              <p className="text-xs text-muted-foreground">
+                Click an image to set as cover
+              </p>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Files Being Uploaded */}
-      {files.length > 0 && (
-        <div>
-          <h4 className="mb-3 text-sm font-medium">Uploading Images</h4>
-          <div className="space-y-4">
-            {files.map((file) => {
-              const progress = uploadProgress.get(file.id);
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {allAvailableImages.map((url, index) => {
+              const isCover = showCoverSelection && coverImage === url;
               return (
-                <div key={file.id} className="rounded-lg border p-4">
-                  <div className="flex items-start gap-4">
-                    {/* Image Preview */}
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border">
-                      <Image
-                        src={file.preview}
-                        alt={file.name}
-                        fill
-                        className="object-cover"
-                        sizes="64px"
-                      />
-                    </div>
+                <div key={url} className="group relative">
+                  <div
+                    className={cn(
+                      "relative aspect-square overflow-hidden rounded-lg border transition-all",
+                      showCoverSelection && "cursor-pointer hover:ring-2 hover:ring-primary",
+                      isCover && "ring-2 ring-primary shadow-md"
+                    )}
+                    onClick={() => selectCoverImage(url)}
+                  >
+                    <Image
+                      src={url}
+                      alt={`Image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
 
-                    {/* File Info and Progress */}
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
-
-                        {/* Status Icon */}
-                        <div className="flex shrink-0 items-center gap-2">
-                          {progress?.state === "uploading" && (
-                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                          )}
-                          {progress?.state === "success" && (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          )}
-                          {progress?.state === "error" && (
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                          )}
-
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                            onClick={() => removeFile(file.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                    {/* Cover indicator */}
+                    {isCover && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                        <div className="bg-primary text-primary-foreground rounded-full p-2">
+                          <Star className="h-4 w-4 fill-current" />
                         </div>
                       </div>
+                    )}
 
-                      {/* Progress Bar */}
-                      {progress && progress.state === "uploading" && (
-                        <div className="space-y-1">
-                          <Progress value={progress.progress} className="h-2" />
-                          <p className="text-xs text-muted-foreground">
-                            {progress.progress}% uploaded
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Error Message */}
-                      {progress?.state === "error" && (
-                        <p className="text-xs text-destructive">
-                          {progress.error}
-                        </p>
-                      )}
-
-                      {/* Success Message */}
-                      {progress?.state === "success" && (
-                        <p className="text-xs text-green-600">
-                          Upload complete
-                        </p>
-                      )}
-                    </div>
+                    {/* Remove button */}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute right-2 top-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeExistingImage(url);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
+
+                  {/* Image label */}
+                  {isCover && (
+                    <p className="mt-1 text-center text-xs font-medium text-primary">
+                      Cover Image
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -417,13 +491,95 @@ export function ImageUpload({
         </div>
       )}
 
+      {/* Files Being Uploaded */}
+      {files.some(f => {
+        const state = uploadProgress.get(f.id)?.state;
+        return state === "uploading" || state === "success";
+      }) && (
+          <div>
+            <h4 className="mb-3 text-sm font-medium">Uploading Images</h4>
+            <div className="space-y-4">
+              {files
+                .filter(f => {
+                  const state = uploadProgress.get(f.id)?.state;
+                  return state === "uploading" || state === "success";
+                })
+                .map((file) => {
+                  const progress = uploadProgress.get(file.id);
+                  return (
+                    <div key={file.id} className="rounded-lg border p-4">
+                      <div className="flex items-start gap-4">
+                        {/* Image Preview */}
+                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border">
+                          <Image
+                            src={file.preview}
+                            alt={file.name}
+                            fill
+                            className="object-cover"
+                            sizes="64px"
+                          />
+                        </div>
+
+                        {/* File Info and Progress */}
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">
+                                {file.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatFileSize(file.size)}
+                              </p>
+                            </div>
+
+                            {/* Status Icon */}
+                            <div className="flex shrink-0 items-center gap-2">
+                              {progress?.state === "uploading" && (
+                                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                              )}
+                              {progress?.state === "success" && (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              )}
+
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0"
+                                onClick={() => removeFile(file.id)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar or Success Message */}
+                          {progress?.state === "uploading" && (
+                            <div className="space-y-1">
+                              <Progress value={progress.progress} className="h-2" />
+                              <p className="text-xs text-muted-foreground">
+                                {progress.progress}% uploaded
+                              </p>
+                            </div>
+                          )}
+                          {progress?.state === "success" && (
+                            <p className="text-xs text-green-600">
+                              Upload complete! Moving to gallery...
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
       {/* Upload Stats */}
       {(validUrls.length > 0 || files.length > 0) && (
         <div className="text-xs text-muted-foreground">
-          {validUrls.length +
-            files.filter((f) => uploadProgress.get(f.id)?.state === "success")
-              .length}{" "}
-          of {finalConfig.maxFiles} images uploaded
+          {totalUploadedImages} of {finalConfig.maxFiles} images uploaded
         </div>
       )}
     </div>

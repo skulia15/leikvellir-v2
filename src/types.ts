@@ -10,6 +10,9 @@ export type Coordinates = {
   longitude: Longitude;
 };
 
+// Playground status enum
+export type PlaygroundStatus = "pending" | "approved" | "rejected";
+
 // Zod schema for runtime validation of coordinates
 export const CoordinatesSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -30,15 +33,29 @@ export const CreatePlaygroundSchema = z.object({
   images: z
     .array(
       z.string().refine((str) => {
-        // Accept either a valid URL or a relative path starting with /
-        try {
-          new URL(str); // Will throw if not a valid absolute URL
-          return true;
-        } catch (e) {
-          // Check if it's a valid relative path
-          return str.startsWith("/uploads/");
+        // Accept empty strings (they'll be filtered out)
+        if (!str || str.trim() === '') {
+          return true; // Let the frontend filter these out
         }
-      }, "Must be a valid URL or path"),
+
+        // Accept uploaded image paths
+        if (str.startsWith("/uploads/playgrounds/")) {
+          return true;
+        }
+
+        // Accept other valid upload paths
+        if (str.startsWith("/uploads/")) {
+          return true;
+        }
+
+        // Accept valid absolute URLs
+        try {
+          new URL(str);
+          return true;
+        } catch (_e) {
+          return false;
+        }
+      }, "Must be a valid URL or upload path"),
     )
     .default([]),
 });
@@ -57,13 +74,34 @@ export type Playground = {
   toddlerFriendly: boolean;
   coverImage: string | null;
   images: string[] | null;
+  status: PlaygroundStatus;
+  reviewedById: string | null;
+  reviewedAt: Date | null;
+  rejectionReason: string | null;
 };
 
 // PlaygroundInput type used specifically for form submissions
 export type PlaygroundInput = Omit<
   Playground,
-  "id" | "createdById" | "createdAt" | "updatedAt"
+  "id" | "createdById" | "createdAt" | "updatedAt" | "status" | "reviewedById" | "reviewedAt" | "rejectionReason"
 >;
+
+// Review decision schema
+export const ReviewPlaygroundSchema = z.object({
+  id: z.number(),
+  action: z.enum(["approve", "reject"]),
+  rejectionReason: z.string().optional(),
+  // Allow editing playground details during review
+  title: z.string().min(1).max(256).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  publiclyAccessible: z.boolean().optional(),
+  toddlerFriendly: z.boolean().optional(),
+  coverImage: z.string().nullable().optional(),
+  images: z.array(z.string()).optional(),
+});
+
+export type ReviewPlaygroundInput = z.infer<typeof ReviewPlaygroundSchema>;
 
 // Custom error types
 export class PlaygroundNotFoundError extends Error {

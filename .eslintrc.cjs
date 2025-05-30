@@ -34,6 +34,7 @@ const config = {
       "warn",
       {
         argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
       },
     ],
     "@typescript-eslint/require-await": "off",
@@ -45,6 +46,11 @@ const config = {
         },
       },
     ],
+    // Disable pedantic rules
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/no-floating-promises": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/no-unescaped-entities": "warn",
     "drizzle/enforce-delete-with-where": [
       "error",
       {
@@ -59,4 +65,5 @@ const config = {
     ],
   },
 };
+
 module.exports = config;

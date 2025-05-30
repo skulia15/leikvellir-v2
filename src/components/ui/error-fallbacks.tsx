@@ -20,7 +20,7 @@ export function DefaultErrorFallback({
   reset: () => void;
 }) {
   return (
-    <Card className="mx-auto w-full max-w-lg">
+    <Card className="mx-auto w-full max-w-lg mt-20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <AlertCircle className="h-5 w-5" />

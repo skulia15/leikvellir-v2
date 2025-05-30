@@ -12,6 +12,7 @@ import {
   doublePrecision,
   boolean,
   json,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -22,6 +23,13 @@ import { type AdapterAccount } from "next-auth/adapters";
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
 export const createTable = pgTableCreator((name) => `leikvellir_v2_${name}`);
+
+// Enum for playground submission status
+export const playgroundStatusEnum = pgEnum("playground_status", [
+  "pending",
+  "approved",
+  "rejected"
+]);
 
 export const posts = createTable(
   "post",
@@ -55,6 +63,11 @@ export const playgrounds = createTable(
     toddlerFriendly: boolean("toddler_friendly").notNull().default(false),
     coverImage: varchar("cover_image", { length: 512 }), // Cover image URL
     images: json("images").$type<string[]>().default([]), // JSON array of image URLs
+    status: playgroundStatusEnum("status").notNull().default("pending"), // Submission status
+    reviewedById: varchar("reviewed_by", { length: 255 })
+      .references(() => users.id), // Admin who reviewed the submission
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }), // When it was reviewed
+    rejectionReason: text("rejection_reason"), // Reason for rejection (if rejected)
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
@@ -67,6 +80,7 @@ export const playgrounds = createTable(
   },
   (example) => ({
     titleIdx: index("playground_title_idx").on(example.title),
+    statusIdx: index("playground_status_idx").on(example.status),
   }),
 );
 
