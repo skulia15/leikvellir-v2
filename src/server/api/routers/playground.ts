@@ -29,8 +29,8 @@ export const playgroundRouter = createTRPCRouter({
           longitude: input.longitude,
           publiclyAccessible: input.publiclyAccessible,
           toddlerFriendly: input.toddlerFriendly,
-          coverImage: input.coverImage ?? null,
-          images: input.images ?? null,
+          coverImage: input.images[0] ?? null, // First image as cover
+          images: input.images,
           createdById: ctx.session.user.id,
         })
         .returning();

@@ -27,12 +27,20 @@ export const CreatePlaygroundSchema = z.object({
   ...CoordinatesSchema.shape,
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
-  coverImage: z
-    .string()
-    .url("Must be a valid URL")
-    .optional()
-    .or(z.literal("")),
-  images: z.array(z.string().url("Must be a valid URL")).optional(),
+  images: z
+    .array(
+      z.string().refine((str) => {
+        // Accept either a valid URL or a relative path starting with /
+        try {
+          new URL(str); // Will throw if not a valid absolute URL
+          return true;
+        } catch (e) {
+          // Check if it's a valid relative path
+          return str.startsWith("/uploads/");
+        }
+      }, "Must be a valid URL or path"),
+    )
+    .default([]),
 });
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;

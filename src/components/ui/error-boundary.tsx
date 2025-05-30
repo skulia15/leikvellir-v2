@@ -1,15 +1,7 @@
 "use client";
 
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "./button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./card";
+import { DefaultErrorFallback } from "./error-fallbacks";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -20,61 +12,6 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-}
-
-// Default error fallback component
-function DefaultErrorFallback({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}) {
-  return (
-    <Card className="mx-auto w-full max-w-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <AlertTriangle className="h-5 w-5" />
-          Something went wrong
-        </CardTitle>
-        <CardDescription>
-          An unexpected error occurred. Please try refreshing the page or
-          contact support if the problem persists.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {process.env.NODE_ENV === "development" && (
-          <details className="rounded border p-2 text-sm">
-            <summary className="cursor-pointer font-medium">
-              Error Details
-            </summary>
-            <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
-              {error.message}
-              {error.stack && (
-                <>
-                  {"\n\n"}
-                  {error.stack}
-                </>
-              )}
-            </pre>
-          </details>
-        )}
-        <div className="flex gap-2">
-          <Button
-            onClick={reset}
-            variant="default"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </Button>
-          <Button onClick={() => window.location.reload()} variant="outline">
-            Reload Page
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 export class ErrorBoundary extends Component<
@@ -124,7 +61,7 @@ export function useErrorHandler() {
   return (error: Error, errorInfo?: ErrorInfo) => {
     console.error("Error caught by error handler:", error, errorInfo);
 
-    // In a real app, you might want to:
+    // TODO: In a real app I will
     // - Send error to monitoring service
     // - Show a toast notification
     // - Log to analytics
@@ -147,4 +84,80 @@ export function withErrorBoundary<P extends object>(
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName ?? Component.name})`;
 
   return WrappedComponent;
+}
+
+// Predefined error boundary wrappers for common use cases
+// These components handle error logging internally to avoid server component issues
+
+export function AppErrorBoundary({ children }: { children: ReactNode }) {
+  return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error("Application error:", error, errorInfo);
+        // In production, send to error monitoring service
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+export function FormErrorBoundary({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+}) {
+  return (
+    <ErrorBoundary
+      fallback={fallback}
+      onError={(error, errorInfo) => {
+        console.error("Form component error:", error, errorInfo);
+        // Could send to error monitoring service with form-specific context
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+export function MapErrorBoundary({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+}) {
+  return (
+    <ErrorBoundary
+      fallback={fallback}
+      onError={(error, errorInfo) => {
+        console.error("Map component error:", error, errorInfo);
+        // Could send specific map errors to monitoring service
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+export function DataErrorBoundary({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+}) {
+  return (
+    <ErrorBoundary
+      fallback={fallback}
+      onError={(error, errorInfo) => {
+        console.error("Data loading error:", error, errorInfo);
+        // Could send specific data loading errors to monitoring service
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }

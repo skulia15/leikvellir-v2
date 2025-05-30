@@ -1,8 +1,9 @@
-import { LogOut, Shrub, Plus, Menu, User } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { Button } from "~/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import Image from "next/image";
 import { getServerAuthSession } from "~/server/auth";
 
 export default async function NavigationBar() {
@@ -30,20 +30,39 @@ export default async function NavigationBar() {
     <nav className="fixed left-0 right-0 top-0 z-50 border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center space-x-2">
-          <Link href="/" className="transition-colors hover:text-primary/80">
-            <Image src="/icon.png" alt="Leikvellir" width={32} height={32} />
-            <h1 className="text-xl font-bold text-primary">Leikvellir</h1>
+          <Link
+            href="/"
+            className="flex items-center transition-colors hover:text-primary/80"
+          >
+            <Image
+              src="/icon.png"
+              alt="Leikvellir"
+              width={78}
+              height={78}
+              className="mr-2"
+            />
+            <h1 className="text-xl font-bold text-primary xl:text-2xl">
+              Leikvellir
+            </h1>
           </Link>
         </div>
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center space-x-6 md:flex">
           <Link
-            href="/home"
+            href="/"
             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Shrub className="h-4 w-4" />
-            <span>Playgrounds</span>
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Link>
+
+          <Link
+            href="/playgrounds"
+            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <List className="h-4 w-4" />
+            <span>All Playgrounds</span>
           </Link>
 
           {session && (
@@ -66,7 +85,11 @@ export default async function NavigationBar() {
                 <div className="flex items-center space-x-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={session.user?.image ?? ""}
+                      src={
+                        session.user?.image && session.user.image.trim() !== ""
+                          ? session.user.image
+                          : undefined
+                      }
                       alt={session.user?.name ?? ""}
                     />
                     <AvatarFallback className="text-xs">
@@ -104,7 +127,12 @@ export default async function NavigationBar() {
                     <Button variant="ghost" size="sm" className="p-0">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={session.user?.image ?? ""}
+                          src={
+                            session.user?.image &&
+                            session.user.image.trim() !== ""
+                              ? session.user.image
+                              : undefined
+                          }
                           alt={session.user?.name ?? ""}
                         />
                         <AvatarFallback className="text-xs">
@@ -139,9 +167,15 @@ export default async function NavigationBar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
-                        <Link href="/home" className="flex items-center">
-                          <Shrub className="mr-2 h-4 w-4" />
-                          <span>Playgrounds</span>
+                        <Link href="/" className="flex items-center">
+                          <Home className="mr-2 h-4 w-4" />
+                          <span>Home</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/playgrounds" className="flex items-center">
+                          <List className="mr-2 h-4 w-4" />
+                          <span>All Playgrounds</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -191,9 +225,15 @@ export default async function NavigationBar() {
                   <DropdownMenuContent className="w-56" align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
-                        <Link href="/home" className="flex items-center">
-                          <Shrub className="mr-2 h-4 w-4" />
-                          <span>Playgrounds</span>
+                        <Link href="/" className="flex items-center">
+                          <Home className="mr-2 h-4 w-4" />
+                          <span>Home</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/playgrounds" className="flex items-center">
+                          <List className="mr-2 h-4 w-4" />
+                          <span>All Playgrounds</span>
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuGroup>

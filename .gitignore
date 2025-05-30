@@ -46,3 +46,7 @@ yarn-error.log*
 # idea files
 .idea
 .cursor/rules/*
+
+# uploaded files (keep directory structure but ignore uploaded content)
+/public/uploads/**/*
+!/public/uploads/**/.gitkeep

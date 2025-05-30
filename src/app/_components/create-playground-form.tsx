@@ -1,14 +1,18 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   Form,
   FormControl,
@@ -18,34 +22,33 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import ImageUpload from "~/components/ui/image-upload";
+import { Input } from "~/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
+import { type z } from "zod";
 import { api } from "~/trpc/react";
-import { CreatePlaygroundSchema, type CreatePlaygroundInput } from "~/types";
+import { type CreatePlaygroundSchema } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
+
+type CreatePlaygroundFormData = z.infer<typeof CreatePlaygroundSchema>;
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
-    "manual",
+    "map",
   );
 
-  const form = useForm<CreatePlaygroundInput>({
-    resolver: zodResolver(CreatePlaygroundSchema),
+  const form = useForm<CreatePlaygroundFormData>({
+    // resolver: zodResolver(CreatePlaygroundSchema),
+    mode: "onChange",
     defaultValues: {
       title: "",
-      latitude: 64.071, // Default to Reykjavik
+      latitude: 64.071, // TODO: default to Hafnarfjörður
       longitude: -21.954,
       publiclyAccessible: true,
       toddlerFriendly: false,
-      coverImage: "",
       images: [],
     },
   });
@@ -60,12 +63,35 @@ export function CreatePlaygroundForm() {
     },
     onError: (error) => {
       console.error("Failed to create playground:", error);
+      alert(`Error: ${error.message}`);
       setSuccessMessage("");
     },
   });
 
-  const onSubmit = (data: CreatePlaygroundInput) => {
-    createPlayground.mutate(data);
+  const onSubmit = (data: CreatePlaygroundFormData) => {
+    console.log("Submitting form with data:", data);
+
+    // Ensure images array contains only valid URLs
+    // Filter out any invalid entries that might be causing validation errors
+    const validImages = Array.isArray(data.images)
+      ? data.images.filter((url) => {
+          try {
+            // Attempt to create a URL object to validate
+            new URL(url);
+            return true; // Valid URL
+          } catch (e) {
+            console.warn("Filtered invalid image URL:", url);
+            return false; // Invalid URL
+          }
+        })
+      : [];
+
+    // Submit with validated images array
+    createPlayground.mutate({
+      ...data,
+      images: validImages,
+    });
+
     setSuccessMessage("");
   };
 
@@ -298,18 +324,24 @@ export function CreatePlaygroundForm() {
 
               <FormField
                 control={form.control}
-                name="coverImage"
+                name="images"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cover Image URL</FormLabel>
+                    <FormLabel>Playground Images</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://example.com/playground-image.jpg"
-                        {...field}
+                      <ImageUpload
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        config={{
+                          maxFiles: 8,
+                          maxSize: 5 * 1024 * 1024, // 5MB
+                        }}
+                        disabled={createPlayground.isPending}
                       />
                     </FormControl>
                     <FormDescription>
-                      Main image that will be displayed for this playground
+                      Upload up to 8 images of the playground. First image will
+                      be used as cover.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -331,6 +363,10 @@ export function CreatePlaygroundForm() {
                 type="submit"
                 disabled={createPlayground.isPending}
                 className="min-w-32"
+                onClick={() => {
+                  console.log("Submit button clicked!");
+                  // This is to debug - the form's onSubmit should still handle the actual submission
+                }}
               >
                 {createPlayground.isPending ? (
                   <>

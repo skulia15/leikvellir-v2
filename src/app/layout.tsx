@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
-import { ErrorBoundary } from "~/components/ui/error-boundary";
+import { AppErrorBoundary } from "~/components/ui/error-boundary";
 import NavigationBar from "./_components/navigation-bar";
 
 export const metadata: Metadata = {
@@ -21,18 +21,13 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable}`}>
       <body className="min-h-screen bg-background">
         <NavigationBar />
-        <ErrorBoundary
-          onError={(error, errorInfo) => {
-            // In production, you might want to send this to an error monitoring service
-            console.error("Application error:", error, errorInfo);
-          }}
-        >
+        <AppErrorBoundary>
           <TRPCReactProvider>
             <main className="pt-20">
               <div id="app-container">{children}</div>
             </main>
           </TRPCReactProvider>
-        </ErrorBoundary>
+        </AppErrorBoundary>
       </body>
     </html>
   );
