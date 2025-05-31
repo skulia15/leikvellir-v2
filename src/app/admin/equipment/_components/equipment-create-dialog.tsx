@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Loader2, Package, Plus } from "lucide-react";
@@ -64,7 +64,7 @@ export default function EquipmentCreateDialog({
         defaultValues: {
             nameEnglish: "",
             nameIcelandic: "",
-            category: category as any || "core_equipment",
+            category: (category as CreateEquipmentInput["category"]) || "core_equipment",
             description: "",
             image: "",
         },

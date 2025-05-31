@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Check, ChevronDown, Package } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Package } from "lucide-react";
+import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Badge } from "~/components/ui/badge";
@@ -146,7 +147,6 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                         value.includes(eq.id)
                     ).length;
                     const allCategorySelected = categorySelectedCount === categoryEquipment.length;
-                    const someCategorySelected = categorySelectedCount > 0 && !allCategorySelected;
 
                     return (
                         <Collapsible
@@ -198,9 +198,11 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     {item.image && (
-                                                        <img
+                                                        <Image
                                                             src={item.image}
                                                             alt={item.nameEnglish}
+                                                            width={32}
+                                                            height={32}
                                                             className="w-8 h-8 rounded object-cover"
                                                         />
                                                     )}

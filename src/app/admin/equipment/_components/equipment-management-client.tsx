@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, RotateCcw, Package } from "lucide-react";
+import { Pencil, Trash2, RotateCcw, Package } from "lucide-react";
+import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -48,7 +49,7 @@ export default function EquipmentManagementClient({
     const deleteMutation = api.equipment.delete.useMutation({
         onSuccess: () => {
             toast.success("Equipment deleted successfully");
-            refetch();
+            void refetch();
         },
         onError: (error) => {
             toast.error(error.message || "Failed to delete equipment");
@@ -58,7 +59,7 @@ export default function EquipmentManagementClient({
     const restoreMutation = api.equipment.restore.useMutation({
         onSuccess: () => {
             toast.success("Equipment restored successfully");
-            refetch();
+            void refetch();
         },
         onError: (error) => {
             toast.error(error.message || "Failed to restore equipment");
@@ -72,12 +73,20 @@ export default function EquipmentManagementClient({
 
     const handleDelete = async (equipment: Equipment) => {
         if (confirm(`Are you sure you want to delete "${equipment.nameEnglish}"?`)) {
-            await deleteMutation.mutateAsync({ id: equipment.id });
+            try {
+                await deleteMutation.mutateAsync({ id: equipment.id });
+            } catch (_error) {
+                // Error handling is already done in the mutation onError
+            }
         }
     };
 
     const handleRestore = async (equipment: Equipment) => {
-        await restoreMutation.mutateAsync({ id: equipment.id });
+        try {
+            await restoreMutation.mutateAsync({ id: equipment.id });
+        } catch (_error) {
+            // Error handling is already done in the mutation onError
+        }
     };
 
     // Group equipment by category
@@ -174,9 +183,11 @@ export default function EquipmentManagementClient({
                                             </TableCell>
                                             <TableCell>
                                                 {item.image ? (
-                                                    <img
+                                                    <Image
                                                         src={item.image}
                                                         alt={item.nameEnglish}
+                                                        width={48}
+                                                        height={48}
                                                         className="w-12 h-12 rounded object-cover"
                                                     />
                                                 ) : (

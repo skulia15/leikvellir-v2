@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Clock, MapPin, User, Eye, Check, X, Edit } from "lucide-react";
+import { Clock, MapPin, User, Check, Edit } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -24,9 +23,8 @@ interface ReviewPlaygroundsClientProps {
 }
 
 export default function ReviewPlaygroundsClient({
-    initialData,
+    initialData: _initialData,
 }: ReviewPlaygroundsClientProps) {
-    const router = useRouter();
     const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
     const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
 
@@ -36,7 +34,7 @@ export default function ReviewPlaygroundsClient({
     const reviewMutation = api.playground.review.useMutation({
         onSuccess: () => {
             toast.success("Playground reviewed successfully");
-            refetch();
+            void refetch();
             setIsReviewDialogOpen(false);
             setSelectedPlayground(null);
         },
@@ -46,10 +44,14 @@ export default function ReviewPlaygroundsClient({
     });
 
     const handleQuickApprove = async (playground: Playground) => {
-        await reviewMutation.mutateAsync({
-            id: playground.id,
-            action: "approve",
-        });
+        try {
+            await reviewMutation.mutateAsync({
+                id: playground.id,
+                action: "approve",
+            });
+        } catch (_error) {
+            // Error handling is already done in the mutation onError
+        }
     };
 
     const handleReview = (playground: Playground) => {
