@@ -1,0 +1,220 @@
+import { eq } from "drizzle-orm";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { equipment } from "~/server/db/schema";
+import { CreateEquipmentSchema, UpdateEquipmentSchema, DeleteEquipmentSchema, type EquipmentCategory } from "~/types";
+import { TRPCError } from "@trpc/server";
+import { users } from "~/server/db/schema";
+
+export const equipmentRouter = createTRPCRouter({
+    // Get all active equipment (public)
+    getAll: publicProcedure.query(async ({ ctx }) => {
+        return await ctx.db.query.equipment.findMany({
+            where: eq(equipment.isActive, true),
+            orderBy: [equipment.category, equipment.nameEnglish],
+        });
+    }),
+
+    // Get all equipment including inactive (admin only)
+    getAllAdmin: protectedProcedure.query(async ({ ctx }) => {
+        // Check if user is admin or super admin
+        const currentUser = await ctx.db.query.users.findFirst({
+            where: eq(users.id, ctx.session.user.id),
+        });
+
+        if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+            throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "Only admins can access all equipment",
+            });
+        }
+
+        return await ctx.db.query.equipment.findMany({
+            orderBy: [equipment.category, equipment.nameEnglish],
+        });
+    }),
+
+    // Get equipment by category (public)
+    getByCategory: publicProcedure
+        .input(CreateEquipmentSchema.pick({ category: true }))
+        .query(async ({ ctx, input }) => {
+            return await ctx.db.query.equipment.findMany({
+                where: eq(equipment.category, input.category),
+                orderBy: [equipment.nameEnglish],
+            });
+        }),
+
+    // Get single equipment by ID (public)
+    getById: publicProcedure
+        .input(DeleteEquipmentSchema)
+        .query(async ({ ctx, input }) => {
+            const equipmentItem = await ctx.db.query.equipment.findFirst({
+                where: eq(equipment.id, input.id),
+            });
+
+            if (!equipmentItem) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Equipment not found",
+                });
+            }
+
+            return equipmentItem;
+        }),
+
+    // Create equipment (admin only)
+    create: protectedProcedure
+        .input(CreateEquipmentSchema)
+        .mutation(async ({ ctx, input }) => {
+            // Check if user is admin or super admin
+            const currentUser = await ctx.db.query.users.findFirst({
+                where: eq(users.id, ctx.session.user.id),
+            });
+
+            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Only admins can create equipment",
+                });
+            }
+
+            const newEquipment = await ctx.db
+                .insert(equipment)
+                .values({
+                    nameEnglish: input.nameEnglish,
+                    nameIcelandic: input.nameIcelandic,
+                    category: input.category,
+                    description: input.description || null,
+                    image: input.image || null,
+                })
+                .returning();
+
+            return newEquipment[0];
+        }),
+
+    // Update equipment (admin only)
+    update: protectedProcedure
+        .input(UpdateEquipmentSchema)
+        .mutation(async ({ ctx, input }) => {
+            // Check if user is admin or super admin
+            const currentUser = await ctx.db.query.users.findFirst({
+                where: eq(users.id, ctx.session.user.id),
+            });
+
+            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Only admins can update equipment",
+                });
+            }
+
+            // Check if equipment exists
+            const existingEquipment = await ctx.db.query.equipment.findFirst({
+                where: eq(equipment.id, input.id),
+            });
+
+            if (!existingEquipment) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Equipment not found",
+                });
+            }
+
+            const updateData: Partial<{
+                nameEnglish: string;
+                nameIcelandic: string;
+                category: EquipmentCategory;
+                description: string | null;
+                image: string | null;
+            }> = {};
+
+            if (input.nameEnglish !== undefined) updateData.nameEnglish = input.nameEnglish;
+            if (input.nameIcelandic !== undefined) updateData.nameIcelandic = input.nameIcelandic;
+            if (input.category !== undefined) updateData.category = input.category;
+            if (input.description !== undefined) updateData.description = input.description;
+            if (input.image !== undefined) updateData.image = input.image;
+
+            const updatedEquipment = await ctx.db
+                .update(equipment)
+                .set(updateData)
+                .where(eq(equipment.id, input.id))
+                .returning();
+
+            return updatedEquipment[0];
+        }),
+
+    // Delete equipment (soft delete - admin only)
+    delete: protectedProcedure
+        .input(DeleteEquipmentSchema)
+        .mutation(async ({ ctx, input }) => {
+            // Check if user is admin or super admin
+            const currentUser = await ctx.db.query.users.findFirst({
+                where: eq(users.id, ctx.session.user.id),
+            });
+
+            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Only admins can delete equipment",
+                });
+            }
+
+            // Check if equipment exists
+            const existingEquipment = await ctx.db.query.equipment.findFirst({
+                where: eq(equipment.id, input.id),
+            });
+
+            if (!existingEquipment) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Equipment not found",
+                });
+            }
+
+            // Soft delete by setting isActive to false
+            const deletedEquipment = await ctx.db
+                .update(equipment)
+                .set({ isActive: false })
+                .where(eq(equipment.id, input.id))
+                .returning();
+
+            return deletedEquipment[0];
+        }),
+
+    // Restore equipment (admin only)
+    restore: protectedProcedure
+        .input(DeleteEquipmentSchema)
+        .mutation(async ({ ctx, input }) => {
+            // Check if user is admin or super admin
+            const currentUser = await ctx.db.query.users.findFirst({
+                where: eq(users.id, ctx.session.user.id),
+            });
+
+            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Only admins can restore equipment",
+                });
+            }
+
+            // Check if equipment exists
+            const existingEquipment = await ctx.db.query.equipment.findFirst({
+                where: eq(equipment.id, input.id),
+            });
+
+            if (!existingEquipment) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Equipment not found",
+                });
+            }
+
+            // Restore by setting isActive to true
+            const restoredEquipment = await ctx.db
+                .update(equipment)
+                .set({ isActive: true })
+                .where(eq(equipment.id, input.id))
+                .returning();
+
+            return restoredEquipment[0];
+        }),
+}); 

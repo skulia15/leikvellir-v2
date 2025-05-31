@@ -7,7 +7,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { playgrounds } from "~/server/db/schema";
+import { playgrounds, playgroundEquipment } from "~/server/db/schema";
 import { CreatePlaygroundSchema, PlaygroundNotFoundError, ReviewPlaygroundSchema } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 
@@ -19,6 +19,7 @@ const UpdatePlaygroundSchema = z.object({
   longitude: z.number().min(-180).max(180),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
+  equipmentIds: z.array(z.number()).default([]),
   coverImage: z.string().nullable().optional(),
   images: z.array(z.string()),
 });
@@ -38,9 +39,11 @@ export const playgroundRouter = createTRPCRouter({
       console.log("🏗️ Creating playground with input:", {
         ...input,
         images: input.images,
-        imageCount: input.images?.length ?? 0
+        imageCount: input.images?.length ?? 0,
+        equipmentCount: input.equipmentIds?.length ?? 0
       });
 
+      // Create playground first
       const [newPlayground] = await ctx.db
         .insert(playgrounds)
         .values({
@@ -56,12 +59,27 @@ export const playgroundRouter = createTRPCRouter({
         })
         .returning();
 
+      if (!newPlayground) {
+        throw new Error("Failed to create playground");
+      }
+
+      // Add equipment relationships if any equipment selected
+      if (input.equipmentIds && input.equipmentIds.length > 0) {
+        const equipmentRelations = input.equipmentIds.map(equipmentId => ({
+          playgroundId: newPlayground.id,
+          equipmentId: equipmentId,
+        }));
+
+        await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+      }
+
       console.log("✅ Playground created successfully:", {
         id: newPlayground?.id,
         title: newPlayground?.title,
         images: newPlayground?.images,
         coverImage: newPlayground?.coverImage,
-        imageCount: newPlayground?.images?.length ?? 0
+        imageCount: newPlayground?.images?.length ?? 0,
+        equipmentCount: input.equipmentIds?.length ?? 0
       });
 
       return newPlayground;
@@ -70,7 +88,7 @@ export const playgroundRouter = createTRPCRouter({
   update: protectedProcedure
     .input(UpdatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateData } = input;
+      const { id, equipmentIds, ...updateData } = input;
 
       // Get the current playground to compare image changes
       const currentPlayground = await ctx.db.query.playgrounds.findFirst({
@@ -81,6 +99,7 @@ export const playgroundRouter = createTRPCRouter({
         throw new PlaygroundNotFoundError(id);
       }
 
+      // Update playground data
       const [updatedPlayground] = await ctx.db
         .update(playgrounds)
         .set({
@@ -92,6 +111,24 @@ export const playgroundRouter = createTRPCRouter({
 
       if (!updatedPlayground) {
         throw new PlaygroundNotFoundError(id);
+      }
+
+      // Update equipment relationships
+      if (equipmentIds !== undefined) {
+        // Remove existing equipment relationships
+        await ctx.db
+          .delete(playgroundEquipment)
+          .where(eq(playgroundEquipment.playgroundId, id));
+
+        // Add new equipment relationships if any
+        if (equipmentIds.length > 0) {
+          const equipmentRelations = equipmentIds.map(equipmentId => ({
+            playgroundId: id,
+            equipmentId: equipmentId,
+          }));
+
+          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+        }
       }
 
       // Clean up orphaned files after successful update
@@ -185,6 +222,13 @@ export const playgroundRouter = createTRPCRouter({
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "approved"),
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      with: {
+        playgroundEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+      },
     });
 
     return playgroundList ?? null;
@@ -193,6 +237,27 @@ export const playgroundRouter = createTRPCRouter({
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      with: {
+        playgroundEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     return playgroundList ?? null;
@@ -202,6 +267,20 @@ export const playgroundRouter = createTRPCRouter({
     const pendingPlaygrounds = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "pending"),
       orderBy: (playgrounds, { asc }) => [asc(playgrounds.createdAt)],
+      with: {
+        playgroundEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     return pendingPlaygrounds ?? [];
@@ -212,6 +291,27 @@ export const playgroundRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const playground = await ctx.db.query.playgrounds.findFirst({
         where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
+        with: {
+          playgroundEquipment: {
+            with: {
+              equipment: true,
+            },
+          },
+          createdBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          reviewedBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       });
 
       if (!playground) {

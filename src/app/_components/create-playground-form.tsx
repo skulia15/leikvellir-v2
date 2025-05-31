@@ -32,6 +32,7 @@ import { api } from "~/trpc/react";
 import { CreatePlaygroundSchema, type CreatePlaygroundInput } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
 import { toast } from "sonner";
+import { EquipmentSelector } from "~/components/ui/equipment-selector";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
@@ -49,6 +50,7 @@ export function CreatePlaygroundForm() {
       longitude: -21.954,
       publiclyAccessible: true,
       toddlerFriendly: false,
+      equipmentIds: [],
       images: [],
     },
   });
@@ -308,6 +310,31 @@ export function CreatePlaygroundForm() {
                         Safe and suitable for children under 3 years old
                       </FormDescription>
                     </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Equipment Selector */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Equipment</h3>
+
+              <FormField
+                control={form.control}
+                name="equipmentIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Equipment</FormLabel>
+                    <FormControl>
+                      <EquipmentSelector
+                        value={field.value || []}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Select the equipment available at the playground
+                    </FormDescription>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

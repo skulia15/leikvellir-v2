@@ -4,6 +4,16 @@ import { z } from "zod";
 // User role types
 export type UserRole = "user" | "admin" | "super_admin";
 
+// Equipment category types
+export type EquipmentCategory =
+  | "core_equipment"
+  | "climbing_and_movement"
+  | "imaginative_and_themed"
+  | "spinning_and_motion"
+  | "fitness_and_obstacle"
+  | "toddler_friendly"
+  | "additional_common_equipment";
+
 // Branded types for coordinates
 export type Latitude = number & { __brand: "latitude" };
 export type Longitude = number & { __brand: "longitude" };
@@ -16,6 +26,19 @@ export type Coordinates = {
 // Playground status enum
 export type PlaygroundStatus = "pending" | "approved" | "rejected";
 
+// Equipment type
+export type Equipment = {
+  id: number;
+  nameEnglish: string;
+  nameIcelandic: string;
+  category: EquipmentCategory;
+  image: string | null;
+  description: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date | null;
+};
+
 // Zod schema for runtime validation of coordinates
 export const CoordinatesSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -23,6 +46,48 @@ export const CoordinatesSchema = z.object({
 });
 
 export type ValidatedCoordinates = z.infer<typeof CoordinatesSchema>;
+
+// Equipment management schemas
+export const CreateEquipmentSchema = z.object({
+  nameEnglish: z.string().min(1, "English name is required").max(256),
+  nameIcelandic: z.string().min(1, "Icelandic name is required").max(256),
+  category: z.enum([
+    "core_equipment",
+    "climbing_and_movement",
+    "imaginative_and_themed",
+    "spinning_and_motion",
+    "fitness_and_obstacle",
+    "toddler_friendly",
+    "additional_common_equipment"
+  ]),
+  description: z.string().optional(),
+  image: z.string().optional(),
+});
+
+export const UpdateEquipmentSchema = z.object({
+  id: z.number(),
+  nameEnglish: z.string().min(1).max(256).optional(),
+  nameIcelandic: z.string().min(1).max(256).optional(),
+  category: z.enum([
+    "core_equipment",
+    "climbing_and_movement",
+    "imaginative_and_themed",
+    "spinning_and_motion",
+    "fitness_and_obstacle",
+    "toddler_friendly",
+    "additional_common_equipment"
+  ]).optional(),
+  description: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+});
+
+export const DeleteEquipmentSchema = z.object({
+  id: z.number(),
+});
+
+export type CreateEquipmentInput = z.infer<typeof CreateEquipmentSchema>;
+export type UpdateEquipmentInput = z.infer<typeof UpdateEquipmentSchema>;
+export type DeleteEquipmentInput = z.infer<typeof DeleteEquipmentSchema>;
 
 // User management schemas
 export const UpdateUserRoleSchema = z.object({
@@ -52,6 +117,7 @@ export const CreatePlaygroundSchema = z.object({
   ...CoordinatesSchema.shape,
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
+  equipmentIds: z.array(z.number()),
   images: z
     .array(
       z.string().refine((str) => {
@@ -99,6 +165,24 @@ export type Playground = {
   reviewedById: string | null;
   reviewedAt: Date | null;
   rejectionReason: string | null;
+  // Equipment relationships
+  playgroundEquipment?: Array<{
+    createdAt: Date;
+    playgroundId: number;
+    equipmentId: number;
+    equipment: Equipment;
+  }>;
+  // User relationships
+  createdBy?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  reviewedBy?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
 };
 
 // PlaygroundInput type used specifically for form submissions

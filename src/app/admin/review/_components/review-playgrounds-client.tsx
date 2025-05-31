@@ -31,10 +31,7 @@ export default function ReviewPlaygroundsClient({
     const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
 
     // Use tRPC query with initial data
-    const { data: pendingSubmissions, refetch } = api.playground.getPendingSubmissions.useQuery(
-        undefined,
-        { initialData }
-    );
+    const { data: pendingSubmissions, refetch } = api.playground.getPendingSubmissions.useQuery();
 
     const reviewMutation = api.playground.review.useMutation({
         onSuccess: () => {
@@ -63,6 +60,16 @@ export default function ReviewPlaygroundsClient({
     const formatCoordinates = (lat: number, lng: number) => {
         return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     };
+
+    if (!pendingSubmissions) {
+        return (
+            <Card>
+                <CardContent className="py-12 text-center">
+                    <div className="text-muted-foreground">Loading pending submissions...</div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     if (pendingSubmissions.length === 0) {
         return (

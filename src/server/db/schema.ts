@@ -38,6 +38,17 @@ export const userRoleEnum = pgEnum("user_role", [
   "super_admin"
 ]);
 
+// Enum for equipment categories
+export const equipmentCategoryEnum = pgEnum("equipment_category", [
+  "core_equipment",
+  "climbing_and_movement",
+  "imaginative_and_themed",
+  "spinning_and_motion",
+  "fitness_and_obstacle",
+  "toddler_friendly",
+  "additional_common_equipment"
+]);
+
 export const posts = createTable(
   "post",
   {
@@ -56,6 +67,52 @@ export const posts = createTable(
   (example) => ({
     createdByIdIdx: index("created_by_idx").on(example.createdById),
     nameIndex: index("post_title_idx").on(example.name),
+  }),
+);
+
+// Equipment table for managing playground equipment types
+export const equipment = createTable(
+  "equipment",
+  {
+    id: serial("id").primaryKey(),
+    nameEnglish: varchar("name_english", { length: 256 }).notNull(),
+    nameIcelandic: varchar("name_icelandic", { length: 256 }).notNull(),
+    category: equipmentCategoryEnum("category").notNull(),
+    image: varchar("image", { length: 512 }), // Optional equipment image URL
+    description: text("description"), // Optional description
+    isActive: boolean("is_active").notNull().default(true), // For soft deletion
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (table) => ({
+    nameEnglishIdx: index("equipment_name_english_idx").on(table.nameEnglish),
+    categoryIdx: index("equipment_category_idx").on(table.category),
+    isActiveIdx: index("equipment_is_active_idx").on(table.isActive),
+  }),
+);
+
+// Junction table for playground-equipment many-to-many relationship
+export const playgroundEquipment = createTable(
+  "playground_equipment",
+  {
+    playgroundId: integer("playground_id")
+      .notNull()
+      .references(() => playgrounds.id, { onDelete: "cascade" }),
+    equipmentId: integer("equipment_id")
+      .notNull()
+      .references(() => equipment.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.playgroundId, table.equipmentId] }),
+    playgroundIdx: index("playground_equipment_playground_idx").on(table.playgroundId),
+    equipmentIdx: index("playground_equipment_equipment_idx").on(table.equipmentId),
   }),
 );
 
@@ -184,3 +241,31 @@ export const verificationTokens = createTable(
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
   }),
 );
+
+// Relations
+export const equipmentRelations = relations(equipment, ({ many }) => ({
+  playgroundEquipment: many(playgroundEquipment),
+}));
+
+export const playgroundEquipmentRelations = relations(playgroundEquipment, ({ one }) => ({
+  playground: one(playgrounds, {
+    fields: [playgroundEquipment.playgroundId],
+    references: [playgrounds.id],
+  }),
+  equipment: one(equipment, {
+    fields: [playgroundEquipment.equipmentId],
+    references: [equipment.id],
+  }),
+}));
+
+export const playgroundsRelations = relations(playgrounds, ({ many, one }) => ({
+  playgroundEquipment: many(playgroundEquipment),
+  createdBy: one(users, {
+    fields: [playgrounds.createdById],
+    references: [users.id],
+  }),
+  reviewedBy: one(users, {
+    fields: [playgrounds.reviewedById],
+    references: [users.id],
+  }),
+}));
