@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub, Users } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub, Users, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -105,6 +105,13 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                     >
                                         <ClipboardCheck className="h-4 w-4" />
                                         <span>Review</span>
+                                    </Link>
+                                    <Link
+                                        href="/admin/equipment"
+                                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        <Package className="h-4 w-4" />
+                                        <span>Equipment</span>
                                     </Link>
                                     {userRole === "super_admin" && (
                                         <Link
@@ -282,6 +289,15 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                         >
                                                             <ClipboardCheck className="mr-2 h-4 w-4" />
                                                             <span>Review</span>
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link
+                                                            href="/admin/equipment"
+                                                            className="flex items-center"
+                                                        >
+                                                            <Package className="mr-2 h-4 w-4" />
+                                                            <span>Equipment</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     {userRole === "super_admin" && (

@@ -16,6 +16,8 @@ import {
 import { api } from "~/trpc/react";
 import { type Equipment } from "~/types";
 import { toast } from "sonner";
+import EquipmentEditDialog from "./equipment-edit-dialog";
+import EquipmentCreateDialog from "./equipment-create-dialog";
 
 interface EquipmentManagementClientProps {
     initialData: Equipment[];
@@ -35,6 +37,7 @@ export default function EquipmentManagementClient({
     initialData,
 }: EquipmentManagementClientProps) {
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     // Use tRPC query with initial data
     const { data: equipment, refetch } = api.equipment.getAllAdmin.useQuery(
@@ -62,6 +65,11 @@ export default function EquipmentManagementClient({
         },
     });
 
+    const handleEdit = (equipment: Equipment) => {
+        setSelectedEquipment(equipment);
+        setIsEditDialogOpen(true);
+    };
+
     const handleDelete = async (equipment: Equipment) => {
         if (confirm(`Are you sure you want to delete "${equipment.nameEnglish}"?`)) {
             await deleteMutation.mutateAsync({ id: equipment.id });
@@ -77,7 +85,7 @@ export default function EquipmentManagementClient({
         if (!acc[item.category]) {
             acc[item.category] = [];
         }
-        acc[item.category].push(item);
+        acc[item.category]!.push(item);
         return acc;
     }, {} as Record<string, Equipment[]>);
 
@@ -93,7 +101,7 @@ export default function EquipmentManagementClient({
                         <div className="flex items-center gap-2">
                             <Package className="h-5 w-5 text-blue-600" />
                             <div>
-                                <div className="text-2xl font-bold">{equipment.length}</div>
+                                <div className="text-2xl font-bold">{equipment?.length || 0}</div>
                                 <div className="text-sm text-muted-foreground">Total Equipment</div>
                             </div>
                         </div>
@@ -136,10 +144,10 @@ export default function EquipmentManagementClient({
                                         {categoryEquipment.length} items
                                     </Badge>
                                 </div>
-                                <Button size="sm">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Equipment
-                                </Button>
+                                <EquipmentCreateDialog
+                                    onSuccess={refetch}
+                                    category={category}
+                                />
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -192,7 +200,7 @@ export default function EquipmentManagementClient({
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => setSelectedEquipment(item)}
+                                                        onClick={() => handleEdit(item)}
                                                     >
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>
@@ -225,6 +233,14 @@ export default function EquipmentManagementClient({
                     </Card>
                 ))}
             </div>
+
+            {/* Edit Dialog */}
+            <EquipmentEditDialog
+                equipment={selectedEquipment}
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                onSuccess={refetch}
+            />
         </div>
     );
 } 
