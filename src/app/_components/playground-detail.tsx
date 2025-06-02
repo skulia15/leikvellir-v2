@@ -26,6 +26,7 @@ import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -127,7 +128,7 @@ export default function PlaygroundDetail({
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-2">
             {/* Image Carousel */}
-            <ImageCarousel 
+            <ImageCarousel
               images={displayImages}
               alt={playground.title}
             />
@@ -245,7 +246,7 @@ export default function PlaygroundDetail({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
+                    <PlaygroundEquipmentIcon className="h-5 w-5" />
                     Playground Equipment
                   </CardTitle>
                 </CardHeader>
@@ -300,13 +301,13 @@ export default function PlaygroundDetail({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
+                    <PlaygroundEquipmentIcon className="h-5 w-5" />
                     Playground Equipment
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-6 text-muted-foreground">
-                    <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <PlaygroundEquipmentIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>No equipment information available for this playground.</p>
                     <p className="text-sm mt-1">Equipment details may be added later.</p>
                   </div>

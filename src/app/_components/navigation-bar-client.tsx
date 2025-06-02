@@ -17,6 +17,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { type Session } from "next-auth";
 import { useAdmin } from "~/lib/admin-context";
+import { PlaygroundEquipmentIcon, PlaygroundSwingIcon } from "~/components/icons";
 
 interface NavigationBarClientProps {
     session: Session | null;
@@ -37,99 +38,102 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
     return (
         <nav className="fixed left-0 right-0 top-0 z-50 border-b bg-background/80 backdrop-blur-md">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                <div className="flex items-center space-x-2">
-                    <Link
-                        href="/"
-                        className="flex items-center transition-colors hover:text-primary/80"
-                    >
-                        <Image
-                            src="/icon.png"
-                            alt="Leikvellir"
-                            width={62}
-                            height={62}
-                            className="mr-2"
-                        />
-                        <h1 className="text-xl font-bold text-primary xl:text-2xl">
-                            Leikvellir
-                        </h1>
-                    </Link>
+                {/* Left side - Logo, Admin Badge, and Navigation Links */}
+                <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                        <Link
+                            href="/"
+                            className="flex items-center transition-colors hover:text-primary/80"
+                        >
+                            <Image
+                                src="/icon.png"
+                                alt="Leikvellir"
+                                width={62}
+                                height={62}
+                                className="mr-2"
+                            />
+                            <h1 className="text-xl font-bold text-primary xl:text-2xl">
+                                Leikvellir
+                            </h1>
+                        </Link>
 
-                    {/* Admin Mode Indicator */}
-                    {session && isAdminMode && !isLoading && (
-                        <Badge variant="destructive" className="ml-2">
-                            <ShieldCheck className="mr-1 h-3 w-3" />
-                            {userRole === "super_admin" ? "Super Admin" : "Admin"} Mode
-                        </Badge>
-                    )}
-                </div>
+                        {/* Admin Mode Indicator */}
+                        {session && isAdminMode && !isLoading && (
+                            <Badge variant="destructive" className="ml-2">
+                                <ShieldCheck className="mr-1 h-3 w-3" />
+                                {userRole === "super_admin" ? "Super Admin" : "Admin"} Mode
+                            </Badge>
+                        )}
+                    </div>
 
-                {/* Desktop Navigation Links */}
-                <div className="hidden items-center space-x-6 md:flex">
-                    <Link
-                        href="/"
-                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        <Map className="h-4 w-4" />
-                        <span>Map</span>
-                    </Link>
+                    {/* Desktop Navigation Links */}
+                    <div className="hidden items-center space-x-6 md:flex">
+                        <Link
+                            href="/"
+                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <Map className="h-4 w-4" />
+                            <span>Map</span>
+                        </Link>
 
-                    <Link
-                        href="/playgrounds"
-                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        <Shrub className="h-4 w-4" />
-                        <span>All Playgrounds</span>
-                    </Link>
+                        <Link
+                            href="/playgrounds"
+                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <List className="h-4 w-4" />
+                            <span>All Playgrounds</span>
+                        </Link>
 
-                    {session && (
-                        <>
-                            <Link
-                                href="/create-playground"
-                                className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span>Add Playground</span>
-                            </Link>
+                        {session && (
+                            <>
+                                <Link
+                                    href="/create-playground"
+                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span>Submit Playground</span>
+                                </Link>
 
-                            {!isLoading && isAdminMode && canAccessAdmin && (
-                                <>
-                                    <Link
-                                        href="/admin"
-                                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                    >
-                                        <Settings className="h-4 w-4" />
-                                        <span>Admin</span>
-                                    </Link>
-                                    <Link
-                                        href="/admin/review"
-                                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                    >
-                                        <ClipboardCheck className="h-4 w-4" />
-                                        <span>Review</span>
-                                    </Link>
-                                    <Link
-                                        href="/admin/equipment"
-                                        className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                    >
-                                        <Package className="h-4 w-4" />
-                                        <span>Equipment</span>
-                                    </Link>
-                                    {userRole === "super_admin" && (
+                                {!isLoading && isAdminMode && canAccessAdmin && (
+                                    <>
                                         <Link
-                                            href="/admin/users"
+                                            href="/admin"
                                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                         >
-                                            <Users className="h-4 w-4" />
-                                            <span>Users</span>
+                                            <Settings className="h-4 w-4" />
+                                            <span>Admin</span>
                                         </Link>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
+                                        <Link
+                                            href="/admin/review"
+                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                        >
+                                            <ClipboardCheck className="h-4 w-4" />
+                                            <span>Review</span>
+                                        </Link>
+                                        <Link
+                                            href="/admin/equipment"
+                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                        >
+                                            <PlaygroundEquipmentIcon className="h-4 w-4" />
+                                            <span>Equipment</span>
+                                        </Link>
+                                        {userRole === "super_admin" && (
+                                            <Link
+                                                href="/admin/users"
+                                                className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                            >
+                                                <Users className="h-4 w-4" />
+                                                <span>Users</span>
+                                            </Link>
+                                        )}
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
-                {/* User Section */}
+                {/* Right side - User Section */}
                 <div className="flex items-center space-x-3">
                     {session ? (
                         <>
@@ -410,4 +414,4 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
             </div>
         </nav>
     );
-} 
+}

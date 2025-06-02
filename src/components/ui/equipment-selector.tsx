@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/trpc/react";
 import { type Equipment, type EquipmentCategory } from "~/types";
+import { PlaygroundEquipmentIcon } from "../icons/playground-icons";
 
 interface EquipmentSelectorProps {
     value: number[];
@@ -97,7 +98,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
+                    <PlaygroundEquipmentIcon className="h-5 w-5" />
                     Playground Equipment
                     {selectedCount > 0 && (
                         <Badge variant="secondary">

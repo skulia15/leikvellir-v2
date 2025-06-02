@@ -19,6 +19,7 @@ import { type Equipment } from "~/types";
 import { toast } from "sonner";
 import EquipmentEditDialog from "./equipment-edit-dialog";
 import EquipmentCreateDialog from "./equipment-create-dialog";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 
 interface EquipmentManagementClientProps {
     initialData: Equipment[];
@@ -108,7 +109,7 @@ export default function EquipmentManagementClient({
                 <Card>
                     <CardContent className="p-6">
                         <div className="flex items-center gap-2">
-                            <Package className="h-5 w-5 text-blue-600" />
+                            <PlaygroundEquipmentIcon className="h-5 w-5 text-blue-600" />
                             <div>
                                 <div className="text-2xl font-bold">{equipment?.length || 0}</div>
                                 <div className="text-sm text-muted-foreground">Total Equipment</div>
@@ -147,7 +148,7 @@ export default function EquipmentManagementClient({
                         <CardHeader>
                             <CardTitle className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Package className="h-5 w-5" />
+                                    <PlaygroundEquipmentIcon className="h-5 w-5" />
                                     {categoryLabels[category] || category}
                                     <Badge variant="outline">
                                         {categoryEquipment.length} items
@@ -192,7 +193,7 @@ export default function EquipmentManagementClient({
                                                     />
                                                 ) : (
                                                     <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                                                        <Package className="h-6 w-6 text-muted-foreground" />
+                                                        <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
                                                     </div>
                                                 )}
                                             </TableCell>

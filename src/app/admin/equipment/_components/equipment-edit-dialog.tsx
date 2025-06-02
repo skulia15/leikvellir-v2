@@ -35,6 +35,7 @@ import {
 import { api } from "~/trpc/react";
 import { UpdateEquipmentSchema, type Equipment, type UpdateEquipmentInput } from "~/types";
 import { toast } from "sonner";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 
 interface EquipmentEditDialogProps {
     equipment: Equipment | null;
@@ -109,7 +110,7 @@ export default function EquipmentEditDialog({
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
+                        <PlaygroundEquipmentIcon className="h-5 w-5" />
                         Edit Equipment
                     </DialogTitle>
                     <DialogDescription>

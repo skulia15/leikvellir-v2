@@ -36,6 +36,7 @@ import {
 import { api } from "~/trpc/react";
 import { CreateEquipmentSchema, type CreateEquipmentInput } from "~/types";
 import { toast } from "sonner";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 
 interface EquipmentCreateDialogProps {
     onSuccess: () => void;
@@ -104,7 +105,7 @@ export default function EquipmentCreateDialog({
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
+                        <PlaygroundEquipmentIcon className="h-5 w-5" />
                         Create New Equipment
                     </DialogTitle>
                     <DialogDescription>

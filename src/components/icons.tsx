@@ -1,5 +1,11 @@
 import { type SVGProps } from "react";
 
+// Re-export playground icons
+export {
+    PlaygroundEquipmentIcon,
+    PlaygroundSwingIcon,
+} from "./icons/playground-icons";
+
 // Authentication provider icons
 export const GoogleIcon = (props: SVGProps<SVGSVGElement>) => (
     <svg className="h-5 w-5" viewBox="0 0 24 24" {...props}>
