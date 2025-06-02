@@ -179,7 +179,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
                                             {!isLoading && canAccessAdmin && (
-                                                <DropdownMenuItem onClick={toggleAdminMode}>
+                                                <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
                                                     {isAdminMode ? (
                                                         <>
                                                             <Eye className="mr-2 h-4 w-4" />
@@ -324,7 +324,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
                                             {!isLoading && canAccessAdmin && (
-                                                <DropdownMenuItem onClick={toggleAdminMode}>
+                                                <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
                                                     {isAdminMode ? (
                                                         <>
                                                             <Eye className="mr-2 h-4 w-4" />

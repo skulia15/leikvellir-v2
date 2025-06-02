@@ -47,19 +47,23 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Error handling and loading states optimization
 - Responsive layout optimization
 - Multi-language support (Icelandic/English)
+- Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
+- Filter by Distance: Option to filter results based on distance from the user's location - DONE
+- Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
+- Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
+- List of available playground equipment and activities
+- List nearby playgrounds by distance from user location - DONE
+- Google Maps directions integration - DONE
+- Traffic tracking (PostHog integration)
+- Cloud storage migration for images
 
 ### 📋 Planned Features
 
 - **Playground Search Functionality**
-  - Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
-  - Filter by Distance: Option to filter results based on distance from the user's location - DONE
-  - Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
 - **Enhanced Playground Details**
-  - Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
   - Facilities Information: Details on available amenities (e.g., bathrooms, benches, shade, parking)
   - Safety Features: Information about fencing, soft ground, and other safety considerations
-  - List of available playground equipment and activities
   - AI-Vision to determine playground equipment types from uploaded photos (admin feature)
 - **Community Features**
   - User-contributed playground reviews and ratings
@@ -71,25 +75,23 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Direct submission to Hafnarfjörður municipality
   - Image attachment for reports
 - **Advanced Features**
-  - List nearby playgrounds by distance from user location - DONE
   - Sort by rating or other criteria
   - Include football, basketball, tennis courts and other facilities
   - Event listings and calendar integration
-  - Google Maps directions integration - DONE
 - **Technical Improvements**
 
   - SEO optimization
   - Accessibility enhancements
   - Dark theme support
   - Production monitoring and logging - Connect with Sentry
-  - Traffic tracking (PostHog integration)
-  - Cloud storage migration for images
   - Automated image optimization and thumbnails
 
   - remove localhost api key fron cloud console
   - svg boundary overlay á map
   - Create a mock instance of the application where everyone has admin privileges in order to test the app
   - remove localhost from oauth consent screens
+
+  - if logged in through disc, then login with fb: "This account is already linked with another provider." merge or fix this
 
 ## 🛠️ Tech Stack
 

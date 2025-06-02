@@ -11,20 +11,19 @@ import {
   Shield,
   Navigation,
   Edit,
-  ChevronLeft,
-  ChevronRight,
   Route,
+  Package,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
-import { type Playground } from "~/types";
+import { type Playground, type EquipmentCategory, type Equipment } from "~/types";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
 import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog";
-import { useSwipe } from "~/lib/hooks/use-swipe";
+import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 
@@ -39,8 +38,6 @@ export default function PlaygroundDetail({
   const { isAdminMode } = useAdmin();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -50,47 +47,6 @@ export default function PlaygroundDetail({
     ...(playground.coverImage ? [playground.coverImage] : []),
     ...(playground.images ?? [])
   ].filter((img, index, arr) => arr.indexOf(img) === index); // Remove duplicates
-
-  const hasMultipleImages = displayImages.length > 1;
-
-  const changeImage = (newIndex: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setSelectedImageIndex(newIndex);
-    setTimeout(() => setIsTransitioning(false), 300);
-  };
-
-  const nextImage = () => {
-    if (isTransitioning) return;
-    const newIndex = (selectedImageIndex + 1) % displayImages.length;
-    changeImage(newIndex);
-  };
-
-  const previousImage = () => {
-    if (isTransitioning) return;
-    const newIndex = (selectedImageIndex - 1 + displayImages.length) % displayImages.length;
-    changeImage(newIndex);
-  };
-
-  // Add swipe functionality
-  const swipeHandlers = useSwipe({
-    onSwipeLeft: nextImage,
-    onSwipeRight: previousImage,
-  });
-
-  // Destructure to separate event handlers from data properties
-  const {
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
-    onMouseDown,
-    onMouseMove,
-    onMouseUp,
-    onMouseLeave,
-    dragOffset,
-    isDragging,
-    style
-  } = swipeHandlers;
 
   const formatCoordinates = (lat: number, lng: number) => {
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
@@ -104,6 +60,32 @@ export default function PlaygroundDetail({
   const handleViewOnMap = () => {
     router.push(`/?lat=${playground.latitude}&lng=${playground.longitude}&playground=${playground.id}`);
   };
+
+  // Helper function to group equipment by category
+  const getEquipmentByCategory = (): Record<EquipmentCategory, Equipment[]> => {
+    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, Equipment[]>;
+
+    return playground.playgroundEquipment.reduce((acc, { equipment }) => {
+      if (!acc[equipment.category]) {
+        acc[equipment.category] = [];
+      }
+      acc[equipment.category].push(equipment);
+      return acc;
+    }, {} as Record<EquipmentCategory, Equipment[]>);
+  };
+
+  const categoryLabels: Record<EquipmentCategory, string> = {
+    core_equipment: "Core Equipment",
+    climbing_and_movement: "Climbing & Movement",
+    imaginative_and_themed: "Imaginative & Themed",
+    spinning_and_motion: "Spinning & Motion",
+    fitness_and_obstacle: "Fitness & Obstacle",
+    toddler_friendly: "Toddler Friendly",
+    additional_common_equipment: "Additional Equipment",
+  };
+
+  const equipmentByCategory = getEquipmentByCategory();
+  const hasEquipment = playground.playgroundEquipment && playground.playgroundEquipment.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,90 +127,10 @@ export default function PlaygroundDetail({
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-2">
             {/* Image Carousel */}
-            <Card>
-              <CardContent className="p-0">
-                <div className="relative">
-                  <div
-                    className="relative h-[400px] w-full overflow-hidden rounded-t-lg touch-pan-y select-none"
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                    onMouseDown={onMouseDown}
-                    onMouseMove={onMouseMove}
-                    onMouseUp={onMouseUp}
-                    onMouseLeave={onMouseLeave}
-                    style={style}
-                  >
-                    {/* Image container with sliding animation */}
-                    <div
-                      className={`flex h-full ${isDragging ? '' : 'transition-transform duration-300 ease-in-out'}`}
-                      style={{
-                        transform: `translateX(calc(-${selectedImageIndex * (100 / displayImages.length)}% + ${dragOffset}px))`,
-                        width: `${displayImages.length * 100}%`
-                      }}
-                    >
-                      {displayImages.map((image, index) => (
-                        <div
-                          key={index}
-                          className="relative h-full flex-shrink-0 bg-gray-50"
-                          style={{ width: `${100 / displayImages.length}%` }}
-                        >
-                          <Image
-                            src={image ?? "/playground.jpg"}
-                            alt={`${playground.title} - Image ${index + 1}`}
-                            fill
-                            className="object-contain p-2"
-                            priority={index === 0}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Navigation arrows */}
-                    {hasMultipleImages && (
-                      <>
-                        <button
-                          onClick={previousImage}
-                          disabled={isTransitioning}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors disabled:opacity-50"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={nextImage}
-                          disabled={isTransitioning}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors disabled:opacity-50"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                      </>
-                    )}
-
-                    {/* Image counter */}
-                    {hasMultipleImages && (
-                      <div className="absolute right-4 top-4 rounded-md bg-black/60 px-3 py-1 text-sm text-white">
-                        {selectedImageIndex + 1} / {displayImages.length}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Dot indicators */}
-                  {hasMultipleImages && (
-                    <div className="flex justify-center gap-2 py-4 bg-background">
-                      {displayImages.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => changeImage(index)}
-                          disabled={isTransitioning}
-                          className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/30'
-                            }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <ImageCarousel 
+              images={displayImages}
+              alt={playground.title}
+            />
 
             {/* Basic Information */}
             <Card>
@@ -337,6 +239,80 @@ export default function PlaygroundDetail({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Equipment */}
+            {hasEquipment ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Playground Equipment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {(Object.keys(equipmentByCategory) as EquipmentCategory[]).map((category) => {
+                    const equipment = equipmentByCategory[category];
+                    return (
+                      <div key={category} className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-sm text-primary">
+                            {categoryLabels[category]}
+                          </h4>
+
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {equipment.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                            >
+                              {item.image && (
+                                <Image
+                                  src={item.image}
+                                  alt={item.nameEnglish}
+                                  width={40}
+                                  height={40}
+                                  className="w-10 h-10 rounded object-cover"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm">
+                                  {item.nameEnglish}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {item.nameIcelandic}
+                                </div>
+                                {item.description && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {item.description}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Playground Equipment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No equipment information available for this playground.</p>
+                    <p className="text-sm mt-1">Equipment details may be added later.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}

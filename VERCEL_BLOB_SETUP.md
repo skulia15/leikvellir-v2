@@ -89,7 +89,7 @@ For a typical playground app, costs should be minimal (a few dollars per month a
 
 1. Ensure the blob store is created in your Vercel dashboard
 2. Verify the token is correct and active
-3. Check file size limits (default: 5MB per file)
+3. Check file size limits (default: 4MB per file)
 
 ### Migration from local files
 
