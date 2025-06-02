@@ -121,7 +121,6 @@ export default function PrivacyPolicyPage() {
               <CardTitle className="flex items-center gap-2">
                 <Cookie className="h-5 w-5 text-orange-500" />
                 Cookie Usage
-                <Badge variant="outline">Updated</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">

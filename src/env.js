@@ -64,6 +64,9 @@ export const env = createEnv({
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string(),
+    // PostHog Analytics
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+    NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
   },
 
   /**
@@ -86,6 +89,9 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.leikvellir_image_store_READ_WRITE_TOKEN,
+    // PostHog Analytics
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

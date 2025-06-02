@@ -134,7 +134,7 @@ export function CookieConsentBanner() {
                   </Badge> */}
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  We use cookies to enhance your experience, analyze usage with PostHog,
+                  We use cookies to enhance your experience, analyze usage,
                   and provide essential functionality. Essential cookies are required for
                   the site to work properly.
                 </p>

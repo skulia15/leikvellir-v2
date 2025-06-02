@@ -139,7 +139,7 @@ export default function HomeClient() {
     // Mobile layout with bottom sheet
     if (isMobile) {
         return (
-            <div className="flex flex-col" style={{ height: 'calc(100vh - 8rem)' }}>
+            <div className="flex flex-col" style={{ height: 'calc(100vh - 12rem)' }}>
                 {/* Map takes the remaining space */}
                 <div className="flex-1 relative">
                     <MapErrorBoundary fallback={MapErrorFallback}>
@@ -184,7 +184,7 @@ export default function HomeClient() {
 
     // Desktop layout with left sidebar
     return (
-        <div className="flex" style={{ height: 'calc(100vh - 8rem)' }}>
+        <div className="flex" style={{ height: 'calc(100vh - 12rem)' }}>
             {/* Left sidebar with playground list */}
             <div className="w-96 bg-background border-r overflow-hidden flex-shrink-0">
                 <ScrollArea className="h-full">

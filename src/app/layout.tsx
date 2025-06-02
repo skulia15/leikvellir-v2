@@ -5,13 +5,13 @@ import { Fira_Sans } from "next/font/google";
 import { type Metadata } from "next";
 import { Toaster } from "sonner";
 
-import { AppErrorBoundary } from "~/components/ui/error-boundary";
 import NavigationBar from "./_components/navigation-bar";
 import { getServerAuthSession } from "~/server/auth";
 import { Providers } from "./_components/providers";
 import { ErrorDashboard } from "./_components/error-dashboard";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
+import { MainContent } from "./_components/main-content";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -37,9 +37,9 @@ export default async function RootLayout({
         <Providers session={session}>
           <div className="flex flex-col">
             <NavigationBar />
-            <main className="flex-1 pt-16">
-              <div id="app-container">{children}</div>
-            </main>
+            <MainContent>
+              {children}
+            </MainContent>
             <Footer />
           </div>
           <Toaster />

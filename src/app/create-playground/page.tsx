@@ -20,7 +20,7 @@ export default async function CreatePlayground() {
 
   return (
     <div
-      className="flex flex-col items-center justify-center gap-12 pt-12"
+      className="flex flex-col items-center justify-center gap-12 pt-12 pb-16"
       id="create-playground"
     >
       <h1 className="text-3xl font-bold hidden">Submit a new Playground</h1>
