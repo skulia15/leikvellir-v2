@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 import NavigationBar from "./_components/navigation-bar";
 import { getServerAuthSession } from "~/server/auth";
 import { Providers } from "./_components/providers";
-import { ErrorDashboard } from "./_components/error-dashboard";
+// import { ErrorDashboard } from "./_components/error-dashboard";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 import { MainContent } from "./_components/main-content";
@@ -44,7 +44,7 @@ export default async function RootLayout({
           </div>
           <Toaster />
           <CookieConsentBanner />
-          {process.env.NODE_ENV === "development" && <ErrorDashboard />}
+          {/* {process.env.NODE_ENV === "development" && <ErrorDashboard />} */}
         </Providers>
       </body>
     </html>

@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { AdminProvider } from "~/lib/admin-context";
+import { LanguageProvider } from "~/lib/i18n";
 import { TRPCReactProvider } from "~/trpc/react";
 import { type Session } from "next-auth";
 import { ErrorProvider } from "./error-provider";
@@ -17,13 +18,15 @@ export function Providers({ children, session }: ProvidersProps) {
   return (
     <AppErrorBoundary>
       <ErrorProvider>
-        <PostHogProvider>
-          <SessionProvider session={session}>
-            <TRPCReactProvider>
-              <AdminProvider>{children}</AdminProvider>
-            </TRPCReactProvider>
-          </SessionProvider>
-        </PostHogProvider>
+        <LanguageProvider>
+          <PostHogProvider>
+            <SessionProvider session={session}>
+              <TRPCReactProvider>
+                <AdminProvider>{children}</AdminProvider>
+              </TRPCReactProvider>
+            </SessionProvider>
+          </PostHogProvider>
+        </LanguageProvider>
       </ErrorProvider>
     </AppErrorBoundary>
   );

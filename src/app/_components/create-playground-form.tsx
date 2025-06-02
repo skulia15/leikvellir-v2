@@ -33,10 +33,12 @@ import { CreatePlaygroundSchema, type CreatePlaygroundInput } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
 import { toast } from "sonner";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
+import { useT } from "~/lib/i18n";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
   const router = useRouter();
+  const t = useT();
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
     "map",
   );
@@ -58,7 +60,7 @@ export function CreatePlaygroundForm() {
   const createPlayground = api.playground.create.useMutation({
     onSuccess: async (data) => {
       await utils.playground.invalidate();
-      toast.success(`"${data?.title}" has been submitted for review!`);
+      toast.success(`"${data?.title}" ${t('playground.playgroundSubmitted')}`);
       form.reset();
       // Redirect to homepage after successful creation
       router.push("/");
@@ -66,7 +68,7 @@ export function CreatePlaygroundForm() {
     onError: (error) => {
       console.error("Failed to create playground:", error);
       console.error("Error details:", error.data);
-      toast.error(`Failed to create playground: ${error.message}`);
+      toast.error(`${t('forms.failedToCreate')}: ${error.message}`);
     },
   });
 
@@ -78,7 +80,7 @@ export function CreatePlaygroundForm() {
     const errors = form.formState.errors;
     if (Object.keys(errors).length > 0) {
       console.log("Form has validation errors:", errors);
-      toast.error("Please fix the form errors before submitting");
+      toast.error(t('forms.fixFormErrors'));
       return;
     }
 
@@ -131,11 +133,10 @@ export function CreatePlaygroundForm() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5" />
-          Add New Playground
+          {t('playground.addNewPlayground')}
         </CardTitle>
         <CardDescription>
-          Help other parents discover great playgrounds by adding detailed
-          information about this location.
+          {t('playground.helpParentsDiscover')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -147,10 +148,10 @@ export function CreatePlaygroundForm() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Playground Name *</FormLabel>
+                  <FormLabel>{t('playground.playgroundName')} *</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter playground name (e.g., Central Park Playground)"
+                      placeholder={t('playground.enterPlaygroundName')}
                       {...field}
                     />
                   </FormControl>
@@ -162,7 +163,7 @@ export function CreatePlaygroundForm() {
             {/* Location Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Location</h3>
+                <h3 className="text-lg font-medium">{t('playground.location')}</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -171,7 +172,7 @@ export function CreatePlaygroundForm() {
                   className="text-sm"
                 >
                   <MapPin className="mr-2 h-4 w-4" />
-                  Use Current Location
+                  {t('forms.useCurrentLocation')}
                 </Button>
               </div>
 
@@ -183,8 +184,8 @@ export function CreatePlaygroundForm() {
                 className="w-full"
               >
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="map">Pick on Map</TabsTrigger>
-                  <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                  <TabsTrigger value="map">{t('forms.pickOnMap')}</TabsTrigger>
+                  <TabsTrigger value="manual">{t('forms.manualEntry')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="manual" className="space-y-4">
@@ -194,7 +195,7 @@ export function CreatePlaygroundForm() {
                       name="latitude"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Latitude *</FormLabel>
+                          <FormLabel>{t('playground.latitude')} *</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -206,7 +207,7 @@ export function CreatePlaygroundForm() {
                               }
                             />
                           </FormControl>
-                          <FormDescription>Range: -90 to 90</FormDescription>
+                          <FormDescription>{t('forms.range')}: -90 to 90</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -217,7 +218,7 @@ export function CreatePlaygroundForm() {
                       name="longitude"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Longitude *</FormLabel>
+                          <FormLabel>{t('playground.longitude')} *</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -229,7 +230,7 @@ export function CreatePlaygroundForm() {
                               }
                             />
                           </FormControl>
-                          <FormDescription>Range: -180 to 180</FormDescription>
+                          <FormDescription>{t('forms.range')}: -180 to 180</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -249,7 +250,7 @@ export function CreatePlaygroundForm() {
                   <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-muted-foreground">
-                        Selected Latitude:
+                        {t('forms.selectedLatitude')}:
                       </span>
                       <span className="rounded bg-muted px-2 py-1 font-mono">
                         {currentLatitude.toFixed(6)}
@@ -257,7 +258,7 @@ export function CreatePlaygroundForm() {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-muted-foreground">
-                        Selected Longitude:
+                        {t('forms.selectedLongitude')}:
                       </span>
                       <span className="rounded bg-muted px-2 py-1 font-mono">
                         {currentLongitude.toFixed(6)}
@@ -270,7 +271,7 @@ export function CreatePlaygroundForm() {
 
             {/* Accessibility Options */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Accessibility & Features</h3>
+              <h3 className="text-lg font-medium">{t('forms.accessibilityAndFeatures')}</h3>
 
               <FormField
                 control={form.control}
@@ -284,9 +285,9 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>Publicly Accessible</FormLabel>
+                      <FormLabel>{t('forms.publiclyAccessible')}</FormLabel>
                       <FormDescription>
-                        This playground is open to the general public
+                        {t('forms.publiclyAccessibleDescription')}
                       </FormDescription>
                     </div>
                   </FormItem>
@@ -305,9 +306,9 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>Toddler Friendly</FormLabel>
+                      <FormLabel>{t('forms.toddlerFriendly')}</FormLabel>
                       <FormDescription>
-                        Safe and suitable for children under 3 years old
+                        {t('forms.toddlerFriendlyDescription')}
                       </FormDescription>
                     </div>
                   </FormItem>
@@ -317,14 +318,14 @@ export function CreatePlaygroundForm() {
 
             {/* Equipment Selector */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Equipment</h3>
+              <h3 className="text-lg font-medium">{t('playground.equipment')}</h3>
 
               <FormField
                 control={form.control}
                 name="equipmentIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Equipment</FormLabel>
+                    <FormLabel>{t('playground.equipment')}</FormLabel>
                     <FormControl>
                       <EquipmentSelector
                         value={field.value || []}
@@ -332,7 +333,7 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Select the equipment available at the playground
+                      {t('forms.selectEquipmentDescription')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -342,14 +343,14 @@ export function CreatePlaygroundForm() {
 
             {/* Images Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Images</h3>
+              <h3 className="text-lg font-medium">{t('forms.uploadImages')}</h3>
 
               <FormField
                 control={form.control}
                 name="images"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Playground Images</FormLabel>
+                    <FormLabel>{t('playground.playgroundImages')}</FormLabel>
                     <FormControl>
                       <ImageUpload
                         value={field.value || []}
@@ -363,7 +364,7 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Upload up to 8 images of the playground. An admin will select a cover image during review.
+                      {t('forms.playgroundImagesDescription')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -379,7 +380,7 @@ export function CreatePlaygroundForm() {
                 onClick={handleReset}
                 disabled={createPlayground.isPending}
               >
-                Reset
+                {t('playground.reset')}
               </Button>
               <Button
                 type="submit"
@@ -393,12 +394,12 @@ export function CreatePlaygroundForm() {
                 {createPlayground.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {t('playground.creating')}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Submit Playground
+                    {t('playground.submitPlayground')}
                   </>
                 )}
               </Button>

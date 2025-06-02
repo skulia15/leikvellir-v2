@@ -18,6 +18,8 @@ import {
 import { type Session } from "next-auth";
 import { useAdmin } from "~/lib/admin-context";
 import { PlaygroundEquipmentIcon, PlaygroundSwingIcon } from "~/components/icons";
+import LanguageSwitcher from "~/components/ui/language-switcher";
+import { useT } from "~/lib/i18n";
 
 interface NavigationBarClientProps {
     session: Session | null;
@@ -25,6 +27,7 @@ interface NavigationBarClientProps {
 
 export default function NavigationBarClient({ session }: NavigationBarClientProps) {
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
+    const t = useT();
 
     const getInitials = (name: string) => {
         return name
@@ -61,7 +64,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                         {session && isAdminMode && !isLoading && (
                             <Badge variant="destructive" className="ml-2">
                                 <ShieldCheck className="mr-1 h-3 w-3" />
-                                {userRole === "super_admin" ? "Super Admin" : "Admin"} Mode
+                                {userRole === "super_admin" ? t('admin.superAdmin') : t('admin.adminMode')}
                             </Badge>
                         )}
                     </div>
@@ -73,7 +76,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                             <Map className="h-4 w-4" />
-                            <span>Map</span>
+                            <span>{t('navigation.map')}</span>
                         </Link>
 
                         <Link
@@ -81,7 +84,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                             <List className="h-4 w-4" />
-                            <span>All Playgrounds</span>
+                            <span>{t('navigation.allPlaygrounds')}</span>
                         </Link>
 
                         {session && (
@@ -91,7 +94,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                     className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    <span>Submit Playground</span>
+                                    <span>{t('navigation.addPlayground')}</span>
                                 </Link>
 
                                 {!isLoading && isAdminMode && canAccessAdmin && (
@@ -101,21 +104,21 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <Settings className="h-4 w-4" />
-                                            <span>Admin</span>
+                                            <span>{t('navigation.admin')}</span>
                                         </Link>
                                         <Link
                                             href="/admin/review"
                                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <ClipboardCheck className="h-4 w-4" />
-                                            <span>Review</span>
+                                            <span>{t('navigation.review')}</span>
                                         </Link>
                                         <Link
                                             href="/admin/equipment"
                                             className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <PlaygroundEquipmentIcon className="h-4 w-4" />
-                                            <span>Equipment</span>
+                                            <span>{t('navigation.equipment')}</span>
                                         </Link>
                                         {userRole === "super_admin" && (
                                             <Link
@@ -123,7 +126,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                 className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                                             >
                                                 <Users className="h-4 w-4" />
-                                                <span>Users</span>
+                                                <span>{t('navigation.users')}</span>
                                             </Link>
                                         )}
                                     </>
@@ -133,8 +136,10 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                     </div>
                 </div>
 
-                {/* Right side - User Section */}
+                {/* Right side - Language Switcher and User Section */}
                 <div className="flex items-center space-x-3">
+                    {/* Language Switcher */}
+                    <LanguageSwitcher />
                     {session ? (
                         <>
                             {/* Desktop User Info with Dropdown */}
@@ -174,7 +179,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             variant="secondary"
                                                             className="w-fit text-xs"
                                                         >
-                                                            Demo User
+                                                            {t('admin.demoUser')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -187,12 +192,12 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                     {isAdminMode ? (
                                                         <>
                                                             <Eye className="mr-2 h-4 w-4" />
-                                                            <span>Switch to User Mode</span>
+                                                            <span>{t('admin.switchToUserMode')}</span>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <ShieldCheck className="mr-2 h-4 w-4" />
-                                                            <span>Switch to Admin Mode</span>
+                                                            <span>{t('admin.switchToAdminMode')}</span>
                                                         </>
                                                     )}
                                                 </DropdownMenuItem>
@@ -207,7 +212,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             >
                                                 <div className="flex items-center px-2 py-1.5">
                                                     <LogOut className="mr-2 h-4 w-4" />
-                                                    <span>Sign Out</span>
+                                                    <span>{t('navigation.signOut')}</span>
                                                 </div>
                                             </Button>
                                         </DropdownMenuItem>
@@ -250,10 +255,10 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                     </span>
                                                     {session.user?.email?.includes("@example.com") && (
                                                         <Badge
-                                                            variant="secondary"
-                                                            className="w-fit text-xs"
+                                                        variant="secondary"
+                                                        className="w-fit text-xs"
                                                         >
-                                                            Demo User
+                                                        {t('admin.demoUser')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -264,13 +269,13 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             <DropdownMenuItem asChild>
                                                 <Link href="/" className="flex items-center">
                                                     <Home className="mr-2 h-4 w-4" />
-                                                    <span>Home</span>
+                                                    <span>{t('navigation.home')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link href="/playgrounds" className="flex items-center">
                                                     <List className="mr-2 h-4 w-4" />
-                                                    <span>All Playgrounds</span>
+                                                    <span>{t('navigation.allPlaygrounds')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
@@ -279,7 +284,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                     className="flex items-center"
                                                 >
                                                     <Plus className="mr-2 h-4 w-4" />
-                                                    <span>Add Playground</span>
+                                                    <span>{t('navigation.addPlayground')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             {!isLoading && isAdminMode && canAccessAdmin && (
@@ -290,7 +295,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             className="flex items-center"
                                                         >
                                                             <Settings className="mr-2 h-4 w-4" />
-                                                            <span>Admin</span>
+                                                            <span>{t('navigation.admin')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem asChild>
@@ -299,7 +304,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             className="flex items-center"
                                                         >
                                                             <ClipboardCheck className="mr-2 h-4 w-4" />
-                                                            <span>Review</span>
+                                                            <span>{t('navigation.review')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem asChild>
@@ -318,7 +323,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                                 className="flex items-center"
                                                             >
                                                                 <Users className="mr-2 h-4 w-4" />
-                                                                <span>Users</span>
+                                                                <span>{t('navigation.users')}</span>
                                                             </Link>
                                                         </DropdownMenuItem>
                                                     )}
@@ -329,17 +334,17 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <DropdownMenuGroup>
                                             {!isLoading && canAccessAdmin && (
                                                 <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
-                                                    {isAdminMode ? (
-                                                        <>
-                                                            <Eye className="mr-2 h-4 w-4" />
-                                                            <span>Switch to User Mode</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <ShieldCheck className="mr-2 h-4 w-4" />
-                                                            <span>Switch to Admin Mode</span>
-                                                        </>
-                                                    )}
+                                                {isAdminMode ? (
+                                                <>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                <span>{t('admin.switchToUserMode')}</span>
+                                                </>
+                                                ) : (
+                                                <>
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                                <span>{t('admin.switchToAdminMode')}</span>
+                                                </>
+                                                )}
                                                 </DropdownMenuItem>
                                             )}
                                         </DropdownMenuGroup>
@@ -352,7 +357,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             >
                                                 <div className="flex items-center px-2 py-1.5">
                                                     <LogOut className="mr-2 h-4 w-4" />
-                                                    <span>Sign Out</span>
+                                                    <span>{t('navigation.signOut')}</span>
                                                 </div>
                                             </Button>
                                         </DropdownMenuItem>
@@ -367,7 +372,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                 <Link href="/signin">
                                     <Button variant="default" size="sm">
                                         <User className="mr-2 h-4 w-4" />
-                                        Sign In
+                                        {t('navigation.signIn')}
                                     </Button>
                                 </Link>
                             </div>
@@ -385,13 +390,13 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             <DropdownMenuItem asChild>
                                                 <Link href="/" className="flex items-center">
                                                     <Home className="mr-2 h-4 w-4" />
-                                                    <span>Home</span>
+                                                    <span>{t('navigation.home')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link href="/playgrounds" className="flex items-center">
                                                     <List className="mr-2 h-4 w-4" />
-                                                    <span>All Playgrounds</span>
+                                                    <span>{t('navigation.allPlaygrounds')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                         </DropdownMenuGroup>
@@ -402,7 +407,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                 className="flex items-center"
                                             >
                                                 <User className="mr-2 h-4 w-4" />
-                                                <span>Sign in</span>
+                                                <span>{t('navigation.signIn')}</span>
                                             </Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
