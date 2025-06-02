@@ -294,7 +294,10 @@ export default function ReviewPlaygroundDialog({
                                                 <ImageUpload
                                                     value={field.value}
                                                     onChange={field.onChange}
-                                                    config={{ maxFiles: 8 }}
+                                                    config={{
+                                                        maxFiles: 8,
+                                                        maxSize: 5 * 1024 * 1024, // 5MB
+                                                    }}
                                                     coverImage={form.watch("coverImage")}
                                                     onCoverImageChange={(url) => form.setValue("coverImage", url)}
                                                     showCoverSelection={true}

@@ -13,6 +13,7 @@ import {
   Edit,
   ChevronLeft,
   ChevronRight,
+  Route,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -24,6 +25,8 @@ import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
 import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog";
 import { useSwipe } from "~/lib/hooks/use-swipe";
+import { useUserLocation } from "~/lib/hooks/use-user-location";
+import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -34,9 +37,13 @@ export default function PlaygroundDetail({
 }: PlaygroundDetailProps) {
   const router = useRouter();
   const { isAdminMode } = useAdmin();
+  const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Calculate distance from user location
+  const distance = getPlaygroundDistance(playground, userLocation);
 
   // Get all images including cover image
   const displayImages = [
@@ -278,6 +285,18 @@ export default function PlaygroundDetail({
                       </p>
                     </div>
                   </div>
+
+                  {distance && (
+                    <div className="flex items-start gap-3">
+                      <Route className="mt-0.5 h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="font-medium">Distance from You</p>
+                        <p className="text-sm font-medium text-green-600">
+                          {formatDistance(distance)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

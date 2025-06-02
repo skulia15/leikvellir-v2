@@ -11,7 +11,6 @@ import { type Playground } from "~/types";
 import { Button } from "~/components/ui/button";
 import { MapPin, Navigation, Maximize2 } from "lucide-react";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
-import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 
 interface PlaygroundDetailMapProps {
     playground: Playground;
@@ -25,13 +24,6 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
     const playgroundPosition = {
         lat: playground.latitude,
         lng: playground.longitude,
-    };
-
-    const distance = getPlaygroundDistance(playground, userLocation);
-
-    const handleGetDirections = () => {
-        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${playground.latitude},${playground.longitude}`;
-        window.open(googleMapsUrl, "_blank");
     };
 
     const handleViewLargerMap = () => {
@@ -48,7 +40,7 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                     mapId="playground-detail-map"
                     className="h-full w-full rounded-md"
                     onZoomChanged={(ev) => setMapZoom(ev.detail.zoom)}
-                    gestureHandling="cooperative"
+                    gestureHandling="greedy"
                     mapTypeControl={false}
                     fullscreenControl={false}
                     streetViewControl={false}
@@ -89,47 +81,7 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                     </Button>
                 </div>
 
-                {/* Location info overlay */}
-                <div className="absolute bottom-2 left-2 right-2 z-10">
-                    <div className="rounded-md bg-background/95 backdrop-blur-sm border p-3 shadow-lg">
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-sm truncate">{playground.title}</h4>
-                                {/* <p className="text-xs text-muted-foreground">
-                                    {playground.latitude.toFixed(6)}, {playground.longitude.toFixed(6)}
-                                </p> */}
-                                {distance && (
-                                    <p className="text-xs text-green-600 font-medium">
-                                        {formatDistance(distance)}
-                                    </p>
-                                )}
-                            </div>
 
-                            <div className="flex gap-1 ml-2">
-                                {permission === "prompt" && (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={requestLocation}
-                                        className="text-xs h-7"
-                                    >
-                                        <Navigation className="h-3 w-3 mr-1" />
-                                        Location
-                                    </Button>
-                                )}
-
-                                <Button
-                                    size="sm"
-                                    onClick={handleGetDirections}
-                                    className="text-xs h-7"
-                                >
-                                    <Navigation className="h-3 w-3 mr-1" />
-                                    Directions
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </APIProvider>
         </div>
     );

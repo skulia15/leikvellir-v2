@@ -73,7 +73,7 @@ export function CoordinatePickerMap({
           onCameraChanged={handleCameraChange}
           mapId="coordinate-picker-map"
           className="h-full w-full rounded-md"
-          gestureHandling="cooperative"
+          gestureHandling="greedy"
           mapTypeControl={false}
           fullscreenControl={false}
           streetViewControl={false}

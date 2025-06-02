@@ -34,6 +34,8 @@ export const env = createEnv({
         : z.string(),
     // Flag to enable mock authentication in development
     ENABLE_MOCK_AUTH: z.string().optional().default("false"),
+    // Vercel Blob storage token for leikvellir_image_store
+    leikvellir_image_store_READ_WRITE_TOKEN: z.string(),
   },
 
   /**
@@ -60,6 +62,8 @@ export const env = createEnv({
     ENABLE_MOCK_AUTH: process.env.ENABLE_MOCK_AUTH,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    leikvellir_image_store_READ_WRITE_TOKEN:
+      process.env.leikvellir_image_store_READ_WRITE_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

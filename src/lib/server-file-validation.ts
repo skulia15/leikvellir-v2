@@ -96,10 +96,11 @@ export async function validateImageFile(
   config: ImageUploadConfig = DEFAULT_UPLOAD_CONFIG,
 ): Promise<ValidationResult> {
   // Check file size
-  if (file.size > config.maxSize!) {
+  const maxSize = config.maxSize ?? DEFAULT_UPLOAD_CONFIG.maxSize;
+  if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File too large. Maximum size is ${formatFileSize(config.maxSize!)}`,
+      error: `File too large. Maximum size is ${formatFileSize(maxSize)}`,
     };
   }
 

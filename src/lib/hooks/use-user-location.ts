@@ -29,9 +29,72 @@ export function useUserLocation(): UseUserLocationReturn {
     const [permission, setPermission] = useState<LocationPermission>("prompt");
     const [error, setError] = useState<string | null>(null);
 
-    // Load cached location and permission on mount
+    // Check browser permission and load cached location on mount
     useEffect(() => {
-        const loadCachedLocation = () => {
+        const initializeLocation = async () => {
+            try {
+                // First check browser permission status
+                if (navigator.permissions) {
+                    try {
+                        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+                        const browserPermission = permissionStatus.state as LocationPermission;
+
+                        // If permission is granted, try to get current location
+                        if (browserPermission === 'granted') {
+                            setPermission('granted');
+
+                            // Check if we have valid cached location first
+                            const cachedLocation = sessionStorage.getItem(STORAGE_KEYS.userLocation);
+                            const cachedTimestamp = sessionStorage.getItem(STORAGE_KEYS.timestamp);
+
+                            if (cachedLocation && cachedTimestamp) {
+                                const timestamp = parseInt(cachedTimestamp, 10);
+                                const now = Date.now();
+
+                                // If cache is still valid, use it
+                                if (now - timestamp < CACHE_DURATION) {
+                                    const location = JSON.parse(cachedLocation) as UserLocation;
+                                    setUserLocation(location);
+                                    return;
+                                }
+                            }
+
+                            // No valid cache, get fresh location
+                            setIsLoading(true);
+                            try {
+                                const location = await getCurrentLocation();
+                                setUserLocation(location);
+                                cacheLocation(location, 'granted');
+                            } catch (err) {
+                                console.warn("Failed to get current location despite permission:", err);
+                            } finally {
+                                setIsLoading(false);
+                            }
+                        } else {
+                            setPermission(browserPermission);
+
+                            // Still load cached permission if available
+                            const cachedPermission = sessionStorage.getItem(STORAGE_KEYS.permission);
+                            if (cachedPermission && cachedPermission === 'denied') {
+                                setPermission('denied');
+                            }
+                        }
+                    } catch (permissionError) {
+                        console.warn("Failed to query permission status:", permissionError);
+                        // Fallback to checking cached data
+                        loadCachedLocationOnly();
+                    }
+                } else {
+                    // Browser doesn't support permissions API, fallback to cached data
+                    loadCachedLocationOnly();
+                }
+            } catch (err) {
+                console.warn("Failed to initialize location:", err);
+                loadCachedLocationOnly();
+            }
+        };
+
+        const loadCachedLocationOnly = () => {
             try {
                 const cachedLocation = sessionStorage.getItem(STORAGE_KEYS.userLocation);
                 const cachedPermission = sessionStorage.getItem(STORAGE_KEYS.permission);
@@ -60,7 +123,7 @@ export function useUserLocation(): UseUserLocationReturn {
             }
         };
 
-        loadCachedLocation();
+        void initializeLocation();
     }, []);
 
     const clearCachedLocation = () => {

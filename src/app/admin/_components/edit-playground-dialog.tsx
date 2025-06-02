@@ -375,12 +375,13 @@ export default function EditPlaygroundDialog({
                                                     maxFiles: 8,
                                                     maxSize: 5 * 1024 * 1024, // 5MB
                                                 }}
-                                                disabled={isSubmitting}
+                                                showCoverSelection
                                                 coverImage={form.watch("coverImage")}
                                                 onCoverImageChange={(url) => {
                                                     form.setValue("coverImage", url);
                                                 }}
-                                                showCoverSelection={true}
+                                                disabled={isSubmitting}
+                                                onReset={() => field.onChange([])}
                                             />
                                         </FormControl>
                                         <FormDescription>

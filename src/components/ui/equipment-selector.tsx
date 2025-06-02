@@ -31,24 +31,6 @@ const categoryLabels: Record<EquipmentCategory, string> = {
     additional_common_equipment: "Additional Equipment",
 };
 
-function CategoryCheckbox({
-    checked,
-    onChange,
-    disabled
-}: {
-    checked: boolean;
-    onChange: () => void;
-    disabled?: boolean;
-}) {
-    return (
-        <Checkbox
-            checked={checked}
-            onCheckedChange={onChange}
-            disabled={disabled}
-        />
-    );
-}
-
 export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelectorProps) {
     const [expandedCategories, setExpandedCategories] = useState<Set<EquipmentCategory>>(
         new Set(["core_equipment"])
@@ -74,22 +56,6 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
             : [...value, equipmentId];
 
         onChange(newValue);
-    };
-
-    const selectAllInCategory = (categoryEquipment: Equipment[]) => {
-        if (disabled) return;
-
-        const categoryIds = categoryEquipment.map(eq => eq.id);
-        const allSelected = categoryIds.every(id => value.includes(id));
-
-        if (allSelected) {
-            // Deselect all in category
-            onChange(value.filter(id => !categoryIds.includes(id)));
-        } else {
-            // Select all in category
-            const newValue = [...new Set([...value, ...categoryIds])];
-            onChange(newValue);
-        }
     };
 
     if (isLoading) {
@@ -146,7 +112,6 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                     const categorySelectedCount = categoryEquipment.filter(eq =>
                         value.includes(eq.id)
                     ).length;
-                    const allCategorySelected = categorySelectedCount === categoryEquipment.length;
 
                     return (
                         <Collapsible
@@ -161,16 +126,9 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                                     disabled={disabled}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-2">
-                                            <CategoryCheckbox
-                                                checked={allCategorySelected}
-                                                onChange={() => selectAllInCategory(categoryEquipment)}
-                                                disabled={disabled}
-                                            />
-                                            <span className="font-medium">
-                                                {categoryLabels[category as EquipmentCategory]}
-                                            </span>
-                                        </div>
+                                        <span className="font-medium">
+                                            {categoryLabels[category as EquipmentCategory]}
+                                        </span>
                                         {categorySelectedCount > 0 && (
                                             <Badge variant="outline" className="text-xs">
                                                 {categorySelectedCount}/{categoryEquipment.length}

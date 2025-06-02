@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { X, Upload, AlertCircle, CheckCircle2, Loader2, Star } from "lucide-react";
+import { X, Upload, AlertCircle, CheckCircle2, Loader2, Star, Zap } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "~/components/ui/button";
@@ -13,6 +13,7 @@ import {
   validateMultipleFiles,
   formatFileSize,
 } from "~/lib/client-file-validation";
+import { resizeImages, needsResizing, formatCompressionInfo, type ResizeResult } from "~/lib/image-resize";
 import type {
   FileWithPreview,
   UploadProgress,
@@ -50,11 +51,22 @@ export function ImageUpload({
     [config],
   );
 
+  console.log("🔍 ImageUpload configuration:", {
+    maxFiles: finalConfig.maxFiles,
+    maxSize: finalConfig.maxSize,
+    maxSizeMB: (finalConfig.maxSize / (1024 * 1024)).toFixed(1) + "MB",
+    allowedTypes: finalConfig.allowedTypes,
+    disabled
+  });
+
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadProgress, setUploadProgress] = useState<
     Map<string, UploadProgress>
   >(new Map());
   const [errors, setErrors] = useState<string[]>([]);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeProgress, setResizeProgress] = useState({ current: 0, total: 0, filename: '' });
+  const [resizeResults, setResizeResults] = useState<Map<string, ResizeResult>>(new Map());
 
   // Use ref to track current URLs for concurrent uploads
   const currentUrlsRef = useRef<string[]>(value);
@@ -97,6 +109,9 @@ export function ImageUpload({
     setFiles([]);
     setUploadProgress(new Map());
     setErrors([]);
+    setIsResizing(false);
+    setResizeProgress({ current: 0, total: 0, filename: '' });
+    setResizeResults(new Map());
     // Call parent reset if provided
     if (onReset) {
       onReset();
@@ -238,35 +253,104 @@ export function ImageUpload({
     [onChange, value, showCoverSelection, coverImage, onCoverImageChange],
   );
 
-  // Handle file drop/selection
+  // Handle file drop/selection with automatic resizing
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
 
+
       setErrors([]);
 
       try {
-        // Validate files
-        const { valid, invalid } = await validateMultipleFiles(
-          acceptedFiles,
-          finalConfig,
-        );
-
-        // Show validation errors
-        if (invalid.length > 0) {
-          setErrors(invalid.map(({ file, error }) => `${file.name}: ${error}`));
-        }
-
         // Check if adding these files would exceed the limit
         const currentUploaded = validUrls.length;
         const currentPending = files.length;
-        const totalAfterUpload = currentUploaded + currentPending + valid.length;
+        const totalAfterUpload = currentUploaded + currentPending + acceptedFiles.length;
 
         if (totalAfterUpload > finalConfig.maxFiles) {
-          setErrors((prev) => [
-            ...prev,
+          setErrors([
             `Maximum ${finalConfig.maxFiles} files allowed. Currently have ${currentUploaded + currentPending} files.`,
           ]);
+          return;
+        }
+
+        // Filter to only image files and check which ones need resizing
+        const imageFiles = acceptedFiles.filter(file => file.type.startsWith('image/'));
+        const nonImageFiles = acceptedFiles.filter(file => !file.type.startsWith('image/'));
+
+        // Show errors for non-image files
+        if (nonImageFiles.length > 0) {
+          setErrors(prev => [
+            ...prev,
+            ...nonImageFiles.map(file => `${file.name}: Only image files are supported`)
+          ]);
+        }
+
+        if (imageFiles.length === 0) {
+          return;
+        }
+
+        // Check which files need resizing
+        const maxSize = finalConfig.maxSize ?? DEFAULT_UPLOAD_CONFIG.maxSize;
+        const filesToResize = imageFiles.filter(file => needsResizing(file, maxSize));
+        const readyFiles = imageFiles.filter(file => !needsResizing(file, maxSize));
+
+
+        let processedFiles = readyFiles;
+
+        // Resize files if needed
+        if (filesToResize.length > 0) {
+          setIsResizing(true);
+
+          try {
+            const resizeResults = await resizeImages(
+              filesToResize,
+              { maxSizeBytes: maxSize },
+              (current, total, filename) => {
+                setResizeProgress({ current, total, filename });
+              }
+            );
+
+            // Store resize results for display
+            const newResizeResults = new Map(resizeResults.map(result => [
+              result.file.name, result
+            ]));
+            setResizeResults(prev => new Map([...prev, ...newResizeResults]));
+
+            // Add resized files to processed files
+            processedFiles = [...processedFiles, ...resizeResults.map(r => r.file)];
+
+            console.log(`✅ Resize complete! Processed ${resizeResults.length} files`);
+          } catch (error) {
+            console.error("❌ Error during resize:", error);
+            setErrors(prev => [
+              ...prev,
+              `Failed to resize images: ${error instanceof Error ? error.message : 'Unknown error'}`
+            ]);
+            return;
+          } finally {
+            setIsResizing(false);
+            setResizeProgress({ current: 0, total: 0, filename: '' });
+          }
+        }
+
+        // Validate all processed files
+        console.log("Starting validation for processed files...");
+        const { valid, invalid } = await validateMultipleFiles(
+          processedFiles,
+          finalConfig,
+        );
+        console.log("Validation results - Valid:", valid.length, "Invalid:", invalid.length);
+
+        // Show validation errors
+        if (invalid.length > 0) {
+          setErrors(prev => [
+            ...prev,
+            ...invalid.map(({ file, error }) => `${file.name}: ${error}`)
+          ]);
+        }
+
+        if (valid.length === 0) {
           return;
         }
 
@@ -279,8 +363,9 @@ export function ImageUpload({
           void uploadFile(file);
         }
       } catch (error) {
+        console.error("❌ Error in onDrop:", error);
         setErrors([
-          error instanceof Error ? error.message : "Validation failed",
+          error instanceof Error ? error.message : "Processing failed",
         ]);
       }
     },
@@ -294,16 +379,49 @@ export function ImageUpload({
     ],
   );
 
-  // Configure dropzone
+  // Configure dropzone with larger initial file size limit for resizing
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      void onDrop(acceptedFiles);
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      // Add rejected files to accepted if they're just too large (we'll resize them)
+      const oversizedImageFiles = rejectedFiles
+        .filter(r =>
+          r.file.type.startsWith('image/') &&
+          r.errors.some(e => e.code === 'file-too-large')
+        )
+        .map(r => r.file);
+
+      const allFilesToProcess = [...acceptedFiles, ...oversizedImageFiles];
+
+      if (allFilesToProcess.length > 0) {
+        void onDrop(allFilesToProcess);
+      }
+
+      // Show errors for truly invalid files (not just oversized images)
+      const reallyRejectedFiles = rejectedFiles.filter(r =>
+        !r.file.type.startsWith('image/') ||
+        !r.errors.some(e => e.code === 'file-too-large')
+      );
+
+      if (reallyRejectedFiles.length > 0) {
+        setErrors(prev => [
+          ...prev,
+          ...reallyRejectedFiles.map(r => `${r.file.name}: ${r.errors.map(e => e.message).join(', ')}`)
+        ]);
+      }
     },
+
+    onDropRejected: (rejectedFiles) => {
+      console.log("🔴 onDropRejected:", rejectedFiles.length);
+      rejectedFiles.forEach(rejected => {
+        console.log(`  - ${rejected.file.name}: ${rejected.errors.map(e => e.message).join(", ")}`);
+      });
+    },
+
     accept: { "image/*": [] },
     multiple: true,
     maxFiles: finalConfig.maxFiles,
-    maxSize: finalConfig.maxSize,
-    disabled,
+    maxSize: 50 * 1024 * 1024, // 50MB - much larger to accept camera photos for resizing
+    disabled: disabled || isResizing,
     noClick: false,
     noKeyboard: false,
   });
@@ -386,6 +504,64 @@ export function ImageUpload({
 
   return (
     <div className={cn("space-y-4", className)}>
+      {/* Test Direct Upload Button - For Debugging Only */}
+      {/* <div className="p-2 border border-dashed border-yellow-400 bg-yellow-50 rounded-md">
+        <h4 className="text-sm font-medium mb-2">Debug Tools</h4>
+        <p className="text-xs mb-2">Test direct file upload (bypasses validation)</p>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            console.log("🧪 Test upload: Selected file", file.name);
+
+            try {
+              // Simple direct upload test without validation
+              const formData = new FormData();
+              formData.append("file", file);
+
+              console.log("🧪 Test upload: Sending to /api/upload");
+              const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+              });
+
+              const result = await response.json();
+              console.log("🧪 Test upload result:", result);
+
+              if (result.success) {
+                console.log("🧪 Test upload success! URL:", result.url);
+                // Add to form value
+                onChange([...currentUrlsRef.current, result.url]);
+              } else {
+                console.error("🧪 Test upload failed:", result.error);
+              }
+            } catch (error) {
+              console.error("🧪 Test upload error:", error);
+            }
+          }}
+          className="text-xs"
+        />
+        <button
+          type="button"
+          className="mt-2 px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 rounded"
+          onClick={async () => {
+            try {
+              console.log("🧪 Testing API connection...");
+              const response = await fetch("/api/test");
+              const result = await response.json();
+              console.log("🧪 API Test result:", result);
+            } catch (error) {
+              console.error("🧪 API Test error:", error);
+            }
+          }}
+        >
+          Test API Connection
+        </button>
+      </div> */}
+
       {/* Dropzone Area */}
       <div
         {...getRootProps()}
@@ -394,23 +570,46 @@ export function ImageUpload({
           isDragActive
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-muted-foreground/50",
-          disabled && "cursor-not-allowed opacity-50",
+          (disabled || isResizing) && "cursor-not-allowed opacity-50",
         )}
       >
         <input {...getInputProps()} />
-        <Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-        <div className="space-y-2">
-          <p className="text-lg font-medium">
-            {isDragActive ? "Drop images here" : "Upload playground images"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Drag & drop images or click to browse
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Max {finalConfig.maxFiles} files, up to{" "}
-            {formatFileSize(finalConfig.maxSize)} each
-          </p>
-        </div>
+        {isResizing ? (
+          <>
+            <Zap className="mx-auto mb-4 h-12 w-12 text-blue-500 animate-pulse" />
+            <div className="space-y-2">
+              <p className="text-lg font-medium text-blue-600">
+                Compressing images...
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {resizeProgress.current > 0 && resizeProgress.total > 0
+                  ? `Processing ${resizeProgress.current} of ${resizeProgress.total}: ${resizeProgress.filename}`
+                  : "Preparing to compress images..."}
+              </p>
+              {resizeProgress.total > 0 && (
+                <Progress
+                  value={(resizeProgress.current / resizeProgress.total) * 100}
+                  className="w-full max-w-xs mx-auto"
+                />
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <div className="space-y-2">
+              <p className="text-lg font-medium">
+                {isDragActive ? "Drop images here" : "Upload playground images"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Drag & drop images or click to browse
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Max {finalConfig.maxFiles} files, large images will be automatically compressed
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Error Messages */}
@@ -487,11 +686,30 @@ export function ImageUpload({
                   </div>
 
                   {/* Image label */}
-                  {isCover && (
-                    <p className="mt-1 text-center text-xs font-medium text-primary">
-                      Cover Image
-                    </p>
-                  )}
+                  <div className="mt-1 text-center">
+                    {isCover && (
+                      <p className="text-xs font-medium text-primary">
+                        Cover Image
+                      </p>
+                    )}
+                    {/* Show compression info if this image was resized */}
+                    {(() => {
+                      // Find the resize result by matching URL or filename
+                      const filename = url.split('/').pop();
+                      const resizeResult = Array.from(resizeResults.values())
+                        .find(r => r.file.name.includes(filename?.replace('_compressed', '') ?? ''));
+
+                      if (resizeResult?.wasResized) {
+                        return (
+                          <div className="flex items-center justify-center gap-1 text-xs text-blue-600 mt-1">
+                            <Zap className="h-3 w-3" />
+                            <span>{formatCompressionInfo(resizeResult)}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
               );
             })}

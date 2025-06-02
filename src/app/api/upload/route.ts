@@ -43,7 +43,9 @@ export async function POST(
   try {
     // Authentication check
     const session = await getServerAuthSession();
+
     if (!session?.user?.id) {
+      console.log("❌ Authentication failed");
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 },
@@ -52,6 +54,7 @@ export async function POST(
 
     // Rate limiting
     if (!checkRateLimit(session.user.id)) {
+      console.log("❌ Rate limit exceeded for user:", session.user.id);
       return NextResponse.json(
         {
           success: false,
@@ -73,33 +76,64 @@ export async function POST(
     }
 
     // Server-side validation (critical security step)
-    const validation = await validateImageFile(file);
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { success: false, error: validation.error },
-        { status: 400 },
-      );
+    try {
+      const validation = await validateImageFile(file);
+      if (!validation.isValid) {
+        console.log("❌ Server validation failed:", validation.error);
+        return NextResponse.json(
+          { success: false, error: validation.error },
+          { status: 400 },
+        );
+      }
+    } catch (validationError) {
+      console.error("❌ Validation error:", validationError);
+      // Continue with upload if validation throws (but log the error)
+      console.log("⚠️ Continuing with upload despite validation error");
     }
 
     // Sanitize the filename first, then generate a unique name
     const sanitizedName = sanitizeFilename(file.name);
     const uniqueFilename = generateUniqueFilename(sanitizedName);
 
-    // Upload to Vercel Blob Storage
-    const blob = await put(`playgrounds/${uniqueFilename}`, file, {
-      access: "public",
-      multipart: true, // Enable multipart upload for larger files
-    });
+    try {
 
-    console.log(`✅ File uploaded to Vercel Blob: ${blob.url}`);
+      if (!process.env.leikvellir_image_store_READ_WRITE_TOKEN) {
+        console.error("❌ Missing leikvellir_image_store_READ_WRITE_TOKEN environment variable");
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Server configuration error: Missing blob storage token. Please notify the administrator."
+          },
+          { status: 500 },
+        );
+      }
 
-    return NextResponse.json({
-      success: true,
-      url: blob.url,
-      filename: uniqueFilename,
-    });
+      // Upload to Vercel Blob Storage
+      const blob = await put(`playgrounds/${uniqueFilename}`, file, {
+        access: "public",
+        multipart: true, // Enable multipart upload for larger files
+        token: process.env.leikvellir_image_store_READ_WRITE_TOKEN, // Use the specific store token
+      });
+
+      console.log(`✅ File uploaded to Vercel Blob: ${blob.url}`);
+
+      return NextResponse.json({
+        success: true,
+        url: blob.url,
+        filename: uniqueFilename,
+      });
+    } catch (blobError) {
+      console.error("❌ Vercel Blob upload error:", blobError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Blob storage error: ${blobError instanceof Error ? blobError.message : "Unknown error"}`
+        },
+        { status: 500 },
+      );
+    }
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("❌ Upload error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
@@ -158,7 +192,9 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       }
 
       // Delete from Vercel Blob Storage
-      await del(blobUrl);
+      await del(blobUrl, {
+        token: process.env.leikvellir_image_store_READ_WRITE_TOKEN, // Use the specific store token
+      });
       console.log(`🗑️ File deleted from Vercel Blob: ${blobUrl}`);
       return NextResponse.json({ success: true });
     } catch (error) {

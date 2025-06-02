@@ -94,7 +94,10 @@ async function validateFileSignature(file: File): Promise<boolean> {
       resolve(false);
     };
 
-    reader.onerror = () => resolve(false);
+    reader.onerror = (error) => {
+      console.error(`❌ FileReader error for ${file.name}:`, error);
+      resolve(false);
+    };
 
     // Read first 12 bytes - enough for most image signatures
     // Create a new blob with the correct type so the mock can access it
@@ -112,10 +115,11 @@ export async function validateImageFile(
   config: ImageUploadConfig = DEFAULT_UPLOAD_CONFIG,
 ): Promise<ValidationResult> {
   // Check file size
-  if (file.size > config.maxSize!) {
+  const maxSize = config.maxSize ?? DEFAULT_UPLOAD_CONFIG.maxSize;
+  if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File too large. Maximum size is ${formatFileSize(config.maxSize!)}`,
+      error: `File too large. Maximum size is ${formatFileSize(maxSize)}`,
     };
   }
 
@@ -151,27 +155,60 @@ export async function validateImageFile(
 }
 
 /**
- * Validate multiple files at once
+ * Validate multiple files and separate valid from invalid
  */
 export async function validateMultipleFiles(
   files: File[],
   config: ImageUploadConfig = DEFAULT_UPLOAD_CONFIG,
-): Promise<{ valid: File[]; invalid: Array<{ file: File; error: string }> }> {
+): Promise<{ valid: File[]; invalid: { file: File; error: string }[] }> {
+  console.log(`🔍 validateMultipleFiles called with ${files.length} files`);
   const valid: File[] = [];
-  const invalid: Array<{ file: File; error: string }> = [];
+  const invalid: { file: File; error: string }[] = [];
 
-  // Check total file count
-  if (files.length > config.maxFiles!) {
-    throw new Error(`Too many files. Maximum allowed: ${config.maxFiles}`);
-  }
-
-  // Validate each file
+  // Basic validation checks
   for (const file of files) {
-    const validation = await validateImageFile(file, config);
-    if (validation.isValid) {
+    // Check if it's an image based on mimetype
+    if (!file.type.startsWith("image/")) {
+      console.warn(`❌ Not an image type: ${file.name} (${file.type})`);
+      invalid.push({
+        file,
+        error: "Not an image file. Only image files are supported.",
+      });
+      continue;
+    }
+
+    // Check file size
+    const maxSize = config.maxSize ?? DEFAULT_UPLOAD_CONFIG.maxSize;
+    if (file.size > maxSize) {
+      console.warn(`❌ File too large: ${file.name} (${formatFileSize(file.size)} > ${formatFileSize(maxSize)})`);
+      invalid.push({
+        file,
+        error: `File too large. Maximum size is ${formatFileSize(maxSize)}.`,
+      });
+      continue;
+    }
+
+    try {
+      // Perform deep signature validation to prevent malicious uploads
+      const isValidSignature = await validateFileSignature(file);
+      if (!isValidSignature) {
+        console.warn(`❌ Invalid file signature: ${file.name}`);
+        invalid.push({
+          file,
+          error: "Invalid image format or corrupted file.",
+        });
+        continue;
+      }
+
+      // If all checks pass, add to valid files
+      console.log(`✅ File passed all validations: ${file.name}`);
       valid.push(file);
-    } else {
-      invalid.push({ file, error: validation.error! });
+    } catch (error) {
+      console.error(`❌ Error validating file ${file.name}:`, error);
+      invalid.push({
+        file,
+        error: error instanceof Error ? error.message : "Validation failed",
+      });
     }
   }
 

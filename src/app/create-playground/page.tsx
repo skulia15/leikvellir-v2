@@ -23,7 +23,7 @@ export default async function CreatePlayground() {
       className="flex flex-col items-center justify-center gap-12 pt-12"
       id="create-playground"
     >
-      <h1 className="text-3xl font-bold">Create Playground</h1>
+      <h1 className="text-3xl font-bold hidden">Submit a new Playground</h1>
 
       {session?.user ? (
         <>
