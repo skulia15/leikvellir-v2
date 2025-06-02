@@ -356,7 +356,7 @@ export function CreatePlaygroundForm() {
                         onChange={field.onChange}
                         config={{
                           maxFiles: 8,
-                          maxSize: 5 * 1024 * 1024, // 5MB
+                          maxSize: 4 * 1024 * 1024, // 4MB
                         }}
                         disabled={createPlayground.isPending}
                         onReset={() => field.onChange([])}
