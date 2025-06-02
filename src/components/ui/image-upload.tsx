@@ -334,17 +334,25 @@ export function ImageUpload({
 
   // Remove existing uploaded image
   const removeExistingImage = async (url: string) => {
-    // Extract filename from URL for deletion
-    const filename = url.split('/').pop();
-    if (filename && url.startsWith('/uploads/playgrounds/')) {
-      try {
-        await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+    try {
+      // For Vercel Blob Storage, we can pass the full URL
+      if (url.includes('vercel-storage.com') || url.includes('blob.vercel-storage.com')) {
+        // Delete using the full blob URL
+        await fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
           method: 'DELETE',
         });
-      } catch (error) {
-        console.warn('Failed to delete file from server:', error);
-        // Don't block the UI operation if file deletion fails
+      } else {
+        // Fallback for local files (backward compatibility)
+        const filename = url.split('/').pop();
+        if (filename && url.startsWith('/uploads/playgrounds/')) {
+          await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+            method: 'DELETE',
+          });
+        }
       }
+    } catch (error) {
+      console.warn('Failed to delete file from server:', error);
+      // Don't block the UI operation if file deletion fails
     }
 
     const newUrls = value.filter((existingUrl) => existingUrl !== url);

@@ -77,6 +77,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Event listings and calendar integration
   - Google Maps directions integration - DONE
 - **Technical Improvements**
+
   - SEO optimization
   - Accessibility enhancements
   - Dark theme support
@@ -84,6 +85,9 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Traffic tracking (PostHog integration)
   - Cloud storage migration for images
   - Automated image optimization and thumbnails
+
+  - remove localhost api key fron cloud console
+  - svg boundary overlay á map
 
 ## 🛠️ Tech Stack
 

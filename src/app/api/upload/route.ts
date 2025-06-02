@@ -1,7 +1,6 @@
 // app/api/upload/route.ts
 import { type NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { put, del } from "@vercel/blob";
 import { getServerAuthSession } from "~/server/auth";
 import {
   generateUniqueFilename,
@@ -36,7 +35,7 @@ function checkRateLimit(userId: string): boolean {
 }
 
 /**
- * Handle file upload with security checks
+ * Handle file upload with security checks using Vercel Blob Storage
  */
 export async function POST(
   request: NextRequest,
@@ -86,27 +85,17 @@ export async function POST(
     const sanitizedName = sanitizeFilename(file.name);
     const uniqueFilename = generateUniqueFilename(sanitizedName);
 
-    // Create upload directory if it doesn't exist
-    const uploadDir = join(process.cwd(), "public", "uploads", "playgrounds");
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch {
-      // Directory might already exist, that's okay
-    }
+    // Upload to Vercel Blob Storage
+    const blob = await put(`playgrounds/${uniqueFilename}`, file, {
+      access: "public",
+      multipart: true, // Enable multipart upload for larger files
+    });
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const filePath = join(uploadDir, uniqueFilename);
-    await writeFile(filePath, buffer);
-
-    // Return the public URL
-    const publicUrl = `/uploads/playgrounds/${uniqueFilename}`;
+    console.log(`✅ File uploaded to Vercel Blob: ${blob.url}`);
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: blob.url,
       filename: uniqueFilename,
     });
   } catch (error) {
@@ -119,7 +108,7 @@ export async function POST(
 }
 
 /**
- * Handle file deletion (for cleanup)
+ * Handle file deletion (for cleanup) using Vercel Blob Storage
  */
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
@@ -133,36 +122,47 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     const { searchParams } = new URL(request.url);
     const filename = searchParams.get("filename");
+    const url = searchParams.get("url"); // Accept full blob URL as well
 
-    if (!filename) {
+    if (!filename && !url) {
       return NextResponse.json(
-        { success: false, error: "No filename provided" },
+        { success: false, error: "No filename or URL provided" },
         { status: 400 },
       );
     }
-
-    // Security: only allow deletion of files in the playground uploads directory
-    const filenameRegex = /^[a-zA-Z0-9._-]+$/;
-    if (!filenameRegex.exec(filename)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid filename" },
-        { status: 400 },
-      );
-    }
-
-    const filePath = join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "playgrounds",
-      filename,
-    );
 
     try {
-      const { unlink } = await import("fs/promises");
-      await unlink(filePath);
+      let blobUrl: string;
+
+      if (url) {
+        // If full URL is provided, use it directly
+        blobUrl = url;
+      } else if (filename) {
+        // Security: only allow deletion of files with safe filenames
+        const filenameRegex = /^[a-zA-Z0-9._-]+$/;
+        if (!filenameRegex.exec(filename)) {
+          return NextResponse.json(
+            { success: false, error: "Invalid filename" },
+            { status: 400 },
+          );
+        }
+
+        // For backward compatibility, construct the blob URL from filename
+        // This will need to be updated based on your actual blob store URL
+        blobUrl = `https://your-blob-store.vercel-storage.com/playgrounds/${filename}`;
+      } else {
+        return NextResponse.json(
+          { success: false, error: "Invalid parameters" },
+          { status: 400 },
+        );
+      }
+
+      // Delete from Vercel Blob Storage
+      await del(blobUrl);
+      console.log(`🗑️ File deleted from Vercel Blob: ${blobUrl}`);
       return NextResponse.json({ success: true });
-    } catch {
+    } catch (error) {
+      console.warn("Failed to delete from blob storage:", error);
       // File might not exist, that's okay
       return NextResponse.json({ success: true });
     }
