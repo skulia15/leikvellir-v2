@@ -12,6 +12,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Filter, X, List } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useT } from "~/lib/i18n";
 
 export interface PlaygroundFilters {
     toddlerFriendly?: boolean;
@@ -30,6 +31,7 @@ export default function PlaygroundFilters({
     playgroundCount,
 }: PlaygroundFiltersProps) {
     const router = useRouter();
+    const t = useT();
     const activeFilterCount = Object.values(filters).filter(
         (value) => value !== undefined,
     ).length;
@@ -55,7 +57,7 @@ export default function PlaygroundFilters({
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="relative">
                         <Filter className="mr-2 h-4 w-4" />
-                        Filters
+                        {t('forms.filters')}
                         {activeFilterCount > 0 && (
                             <Badge
                                 variant="secondary"
@@ -67,12 +69,12 @@ export default function PlaygroundFilters({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-64">
-                    <DropdownMenuLabel>Filter Playgrounds</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('forms.filterPlaygrounds')}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
 
                     <div className="p-2 space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Accessibility</label>
+                            <label className="text-sm font-medium">{t('forms.accessibility')}</label>
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
@@ -89,7 +91,7 @@ export default function PlaygroundFilters({
                                         htmlFor="toddler-friendly"
                                         className="text-sm cursor-pointer"
                                     >
-                                        Toddler Friendly
+                                        {t('playground.toddlerFriendly')}
                                     </label>
                                 </div>
 
@@ -108,7 +110,7 @@ export default function PlaygroundFilters({
                                         htmlFor="publicly-accessible"
                                         className="text-sm cursor-pointer"
                                     >
-                                        Publicly Accessible
+                                        {t('playground.publiclyAccessible')}
                                     </label>
                                 </div>
                             </div>
@@ -122,7 +124,7 @@ export default function PlaygroundFilters({
                                 className="w-full"
                             >
                                 <X className="mr-2 h-4 w-4" />
-                                Clear Filters
+                                {t('forms.clearFilters')}
                             </Button>
                         )}
                     </div>
@@ -136,14 +138,14 @@ export default function PlaygroundFilters({
                 className="flex items-center gap-2"
             >
                 <List className="h-4 w-4" />
-                All Playgrounds
+                {t('forms.allPlaygrounds')}
             </Button>
 
             {/* Active filter badges */}
             <div className="flex flex-wrap gap-1">
                 {filters.toddlerFriendly && (
                     <Badge variant="secondary" className="text-xs">
-                        Toddler Friendly
+                        {t('playground.toddlerFriendly')}
                         <button
                             onClick={() => handleFilterChange("toddlerFriendly", undefined)}
                             className="ml-1 hover:bg-background/20 rounded-full p-0.5"
@@ -154,7 +156,7 @@ export default function PlaygroundFilters({
                 )}
                 {filters.publiclyAccessible && (
                     <Badge variant="secondary" className="text-xs">
-                        Publicly Accessible
+                        {t('playground.publiclyAccessible')}
                         <button
                             onClick={() => handleFilterChange("publiclyAccessible", undefined)}
                             className="ml-1 hover:bg-background/20 rounded-full p-0.5"

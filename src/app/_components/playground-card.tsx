@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type Playground } from "~/types";
 import { MapPin } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
+import { useT } from "~/lib/i18n";
 
 // TODO: Remove this type use trpc for types instead, like posts is doing
 
@@ -18,6 +19,8 @@ export default function PlaygroundCard({
   distance,
   showDistance = false,
 }: PlaygroundCardProps) {
+  const t = useT();
+  
   return (
     <Card className="cursor-pointer border-0 py-2 transition-colors">
       <CardContent className="py-0">
@@ -44,12 +47,12 @@ export default function PlaygroundCard({
             <div className="mt-2 flex flex-wrap gap-1">
               {playground.toddlerFriendly && (
                 <Badge variant="secondary" className="text-xs">
-                  Toddler Friendly
+                  {t('playground.toddlerFriendly')}
                 </Badge>
               )}
               {playground.publiclyAccessible && (
                 <Badge variant="outline" className="text-xs">
-                  Public Access
+                  {t('forms.publicAccess')}
                 </Badge>
               )}
               {showDistance && distance !== undefined && (

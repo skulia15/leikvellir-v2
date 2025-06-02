@@ -27,6 +27,7 @@ import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
+import { useT } from "~/lib/i18n";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -39,6 +40,7 @@ export default function PlaygroundDetail({
   const { isAdminMode } = useAdmin();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const t = useT();
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -75,16 +77,6 @@ export default function PlaygroundDetail({
     }, {} as Record<EquipmentCategory, Equipment[]>);
   };
 
-  const categoryLabels: Record<EquipmentCategory, string> = {
-    core_equipment: "Core Equipment",
-    climbing_and_movement: "Climbing & Movement",
-    imaginative_and_themed: "Imaginative & Themed",
-    spinning_and_motion: "Spinning & Motion",
-    fitness_and_obstacle: "Fitness & Obstacle",
-    toddler_friendly: "Toddler Friendly",
-    additional_common_equipment: "Additional Equipment",
-  };
-
   const equipmentByCategory = getEquipmentByCategory();
   const hasEquipment = playground.playgroundEquipment && playground.playgroundEquipment.length > 0;
 
@@ -102,7 +94,7 @@ export default function PlaygroundDetail({
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {t('playground.back')}
               </Button>
               <h1 className="truncate text-2xl font-bold">{playground.title}</h1>
             </div>
@@ -116,7 +108,7 @@ export default function PlaygroundDetail({
                 className="flex items-center gap-2"
               >
                 <Edit className="h-4 w-4" />
-                Edit Playground
+                {t('playground.editPlayground')}
               </Button>
             )}
           </div>
@@ -138,7 +130,7 @@ export default function PlaygroundDetail({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Playground Information
+                  {t('playground.playgroundInformation')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -149,14 +141,14 @@ export default function PlaygroundDetail({
                     }
                   >
                     {playground.publiclyAccessible
-                      ? "Publicly Accessible"
-                      : "Restricted Access"}
+                      ? t('playground.publiclyAccessible')
+                      : t('playground.restrictedAccess')}
                   </Badge>
                   {playground.toddlerFriendly && (
                     <Badge
                       variant={playground.toddlerFriendly ? "default" : "outline"}
                     >
-                      Toddler Friendly
+                      {t('playground.toddlerFriendly')}
                     </Badge>
                   )}
                 </div>
@@ -167,7 +159,7 @@ export default function PlaygroundDetail({
                   <div className="flex items-start gap-3">
                     <MapPin className="mt-0.5 h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Location</p>
+                      <p className="font-medium">{t('playground.location')}</p>
                       <p className="text-sm text-muted-foreground">
                         {formatCoordinates(
                           playground.latitude,
@@ -180,11 +172,11 @@ export default function PlaygroundDetail({
                   <div className="flex items-start gap-3">
                     <Clock className="mt-0.5 h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Added</p>
+                      <p className="font-medium">{t('playground.added')}</p>
                       <p className="text-sm text-muted-foreground">
                         {playground.createdAt
                           ? new Date(playground.createdAt).toLocaleDateString()
-                          : "Unknown"}
+                          : t('playground.unknown')}
                       </p>
                     </div>
                   </div>
@@ -193,7 +185,7 @@ export default function PlaygroundDetail({
                     <div className="flex items-start gap-3">
                       <Route className="mt-0.5 h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium">Distance from You</p>
+                        <p className="font-medium">{t('playground.distanceFromYou')}</p>
                         <p className="text-sm font-medium text-green-600">
                           {formatDistance(distance)}
                         </p>
@@ -209,7 +201,7 @@ export default function PlaygroundDetail({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Features & Accessibility
+                  {t('playground.featuresAndAccessibility')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -217,11 +209,11 @@ export default function PlaygroundDetail({
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">Public Access</p>
+                      <p className="font-medium">{t('playground.publicAccess')}</p>
                       <p className="text-sm text-muted-foreground">
                         {playground.publiclyAccessible
-                          ? "Open to the public"
-                          : "Restricted access (may be part of school grounds)"}
+                          ? t('playground.openToPublic')
+                          : t('playground.restrictedAccessDescription')}
                       </p>
                     </div>
                   </div>
@@ -229,11 +221,11 @@ export default function PlaygroundDetail({
                   <div className="flex items-center gap-3">
                     <Baby className="h-5 w-5 text-pink-500" />
                     <div>
-                      <p className="font-medium">Age Suitability</p>
+                      <p className="font-medium">{t('playground.ageSuitability')}</p>
                       <p className="text-sm text-muted-foreground">
                         {playground.toddlerFriendly
-                          ? "Suitable for toddlers and young children"
-                          : "More suitable for older children"}
+                          ? t('playground.suitableForToddlers')
+                          : t('playground.moreForOlderChildren')}
                       </p>
                     </div>
                   </div>
@@ -247,7 +239,7 @@ export default function PlaygroundDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PlaygroundEquipmentIcon className="h-5 w-5" />
-                    Playground Equipment
+                    {t('playground.playgroundEquipment')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -257,9 +249,8 @@ export default function PlaygroundDetail({
                       <div key={category} className="space-y-3">
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium text-sm text-primary">
-                            {categoryLabels[category]}
+                            {t(`equipment.categories.${category}`)}
                           </h4>
-
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {equipment.map((item) => (
@@ -302,14 +293,14 @@ export default function PlaygroundDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PlaygroundEquipmentIcon className="h-5 w-5" />
-                    Playground Equipment
+                    {t('playground.playgroundEquipment')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-6 text-muted-foreground">
                     <PlaygroundEquipmentIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No equipment information available for this playground.</p>
-                    <p className="text-sm mt-1">Equipment details may be added later.</p>
+                    <p>{t('playground.noEquipmentInfo')}</p>
+                    <p className="text-sm mt-1">{t('playground.equipmentMayBeAdded')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -321,7 +312,7 @@ export default function PlaygroundDetail({
             {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>{t('playground.quickActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button
@@ -330,7 +321,7 @@ export default function PlaygroundDetail({
                   size="lg"
                 >
                   <Navigation className="mr-2 h-4 w-4" />
-                  Get Directions
+                  {t('playground.getDirections')}
                 </Button>
 
                 <Button
@@ -340,7 +331,7 @@ export default function PlaygroundDetail({
                   onClick={handleViewOnMap}
                 >
                   <MapPin className="mr-2 h-4 w-4" />
-                  View on Map
+                  {t('playground.viewOnMap')}
                 </Button>
               </CardContent>
             </Card>
@@ -348,7 +339,7 @@ export default function PlaygroundDetail({
             {/* Interactive Map */}
             <Card>
               <CardHeader>
-                <CardTitle>Location</CardTitle>
+                <CardTitle>{t('playground.location')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <PlaygroundDetailMap
@@ -361,22 +352,22 @@ export default function PlaygroundDetail({
             {/* Additional Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Additional Information</CardTitle>
+                <CardTitle>{t('playground.additionalInformation')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
-                      Playground ID:
+                      {t('playground.playgroundId')}:
                     </span>
                     <span className="font-medium">#{playground.id}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Last Updated:</span>
+                    <span className="text-muted-foreground">{t('playground.lastUpdated')}:</span>
                     <span className="font-medium">
                       {playground.updatedAt
                         ? new Date(playground.updatedAt).toLocaleDateString()
-                        : "Unknown"}
+                        : t('playground.unknown')}
                     </span>
                   </div>
                 </div>
