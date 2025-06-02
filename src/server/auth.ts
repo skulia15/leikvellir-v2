@@ -20,6 +20,7 @@ import {
   verificationTokens,
 } from "~/server/db/schema";
 
+
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -93,7 +94,7 @@ if (env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development") {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ user, account }) {
       // Allow sign in for mock authentication
       if (env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development") {
         return true;
