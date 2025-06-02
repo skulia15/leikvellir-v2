@@ -1,5 +1,4 @@
 // lib/logging/logger.ts
-"use client";
 
 import { type ErrorInfo } from "react";
 
@@ -37,10 +36,17 @@ class Logger {
     };
 
     if (this.isClient) {
-      context.userAgent = navigator.userAgent;
-      context.url = window.location.href;
-      context.referrer = document.referrer;
-      context.sessionId = this.getSessionId();
+      try {
+        context.userAgent = navigator.userAgent;
+        context.url = window.location.href;
+        context.referrer = document.referrer;
+        context.sessionId = this.getSessionId();
+      } catch {
+        // Fallback if browser APIs are not available
+        context.sessionId = this.getSessionId();
+      }
+    } else {
+      context.sessionId = "server";
     }
 
     return context;
@@ -49,12 +55,17 @@ class Logger {
   private getSessionId(): string {
     if (!this.isClient) return "server";
 
-    let sessionId = sessionStorage.getItem("leikvellir-session-id");
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-      sessionStorage.setItem("leikvellir-session-id", sessionId);
+    try {
+      let sessionId = sessionStorage.getItem("leikvellir-session-id");
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+        sessionStorage.setItem("leikvellir-session-id", sessionId);
+      }
+      return sessionId;
+    } catch {
+      // Fallback if sessionStorage is not available
+      return `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
     }
-    return sessionId;
   }
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
