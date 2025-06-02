@@ -7,7 +7,7 @@ export default async function EquipmentManagementPage() {
     const session = await getServerAuthSession();
 
     if (!session) {
-        redirect("/api/auth/signin");
+        redirect("/signin");
     }
 
     // Get current user to check permissions

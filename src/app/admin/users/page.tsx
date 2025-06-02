@@ -7,7 +7,7 @@ export default async function UserManagementPage() {
     const session = await getServerAuthSession();
 
     if (!session?.user) {
-        redirect("/api/auth/signin");
+        redirect("/signin");
     }
 
     // Check if user has super admin permissions

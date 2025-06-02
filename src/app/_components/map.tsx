@@ -181,6 +181,7 @@ export function GoogleMap({
           zoomControl={true}
           scaleControl={false}
           cameraControl={false}
+          gestureHandling="greedy"
         >
           {/* User location marker */}
           {userLocation && (

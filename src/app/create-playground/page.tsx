@@ -36,12 +36,12 @@ export default async function CreatePlayground() {
           <CardHeader>
             <CardTitle>Sign In Required</CardTitle>
             <CardDescription>
-              Please sign in to create a new playground.
+              Please sign in to submit a new playground.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/api/auth/signin">Sign In</Link>
+              <Link href="/signin">Sign In</Link>
             </Button>
           </CardContent>
         </Card>

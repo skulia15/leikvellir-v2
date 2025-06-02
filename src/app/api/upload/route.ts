@@ -8,6 +8,7 @@ import {
   sanitizeFilename,
 } from "~/lib/server-file-validation";
 import type { UploadResponse } from "~/types/upload";
+import { logger, reportUploadError, logApiError } from "~/lib/logging";
 
 // Rate limiting - simple in-memory store (use Redis in production)
 const uploadCounts = new Map<string, { count: number; resetTime: number }>();
@@ -80,13 +81,16 @@ export async function POST(
       const validation = await validateImageFile(file);
       if (!validation.isValid) {
         console.log("❌ Server validation failed:", validation.error);
+        reportUploadError(file.name, file.size, new Error(validation.error || "Validation failed"), "validation");
         return NextResponse.json(
           { success: false, error: validation.error },
           { status: 400 },
         );
       }
     } catch (validationError) {
+      const error = validationError instanceof Error ? validationError : new Error(String(validationError));
       console.error("❌ Validation error:", validationError);
+      reportUploadError(file.name, file.size, error, "validation");
       // Continue with upload if validation throws (but log the error)
       console.log("⚠️ Continuing with upload despite validation error");
     }
@@ -123,11 +127,22 @@ export async function POST(
         filename: uniqueFilename,
       });
     } catch (blobError) {
+      const error = blobError instanceof Error ? blobError : new Error(String(blobError));
       console.error("❌ Vercel Blob upload error:", blobError);
+      reportUploadError(file.name, file.size, error, "upload");
+      logApiError("/api/upload", "POST", error, {
+        component: "UploadAPI",
+        userId: session.user.id,
+        metadata: {
+          filename: file.name,
+          fileSize: file.size,
+          stage: "blob_upload",
+        },
+      });
       return NextResponse.json(
         {
           success: false,
-          error: `Blob storage error: ${blobError instanceof Error ? blobError.message : "Unknown error"}`
+          error: `Blob storage error: ${error.message}`
         },
         { status: 500 },
       );

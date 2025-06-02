@@ -5,7 +5,7 @@ import { MapPin, Home } from "lucide-react";
 
 export default function PlaygroundNotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex items-center justify-center bg-background">
       <div className="container mx-auto px-4">
         <Card className="mx-auto max-w-md">
           <CardHeader className="text-center">

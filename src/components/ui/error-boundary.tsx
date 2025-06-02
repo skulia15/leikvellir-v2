@@ -2,11 +2,13 @@
 
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { DefaultErrorFallback } from "./error-fallbacks";
+import { logReactError, reportError } from "~/lib/logging";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  component?: string; // Component identifier for better logging
 }
 
 interface ErrorBoundaryState {
@@ -29,14 +31,24 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error details
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    // Enhanced logging with context
+    const context = {
+      component: this.props.component || "UnknownComponent",
+      action: "component_render_error",
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+      },
+    };
+
+    // Log to our centralized logger
+    logReactError(error, errorInfo, context);
+
+    // Report to error tracking
+    reportError(error, context);
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);
-
-    // You can also log the error to an error reporting service here
-    // Example: errorReportingService.captureException(error, { extra: errorInfo });
   }
 
   private handleReset = () => {
@@ -56,15 +68,17 @@ export class ErrorBoundary extends Component<
   }
 }
 
-// Hook-based error boundary for functional components
+// Hook-based error handler for functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: ErrorInfo) => {
-    console.error("Error caught by error handler:", error, errorInfo);
+    const context = {
+      component: "FunctionalComponent",
+      action: "hook_error_handler",
+    };
 
-    // TODO: In a real app I will
-    // - Send error to monitoring service
-    // - Show a toast notification
-    // - Log to analytics
+    // Log using centralized logger
+    logReactError(error, errorInfo || {}, context);
+    reportError(error, context);
 
     throw error; // Re-throw to trigger error boundary
   };
@@ -74,9 +88,13 @@ export function useErrorHandler() {
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: React.ComponentType<{ error: Error; reset: () => void }>,
+  componentName?: string,
 ) {
   const WrappedComponent = (props: P) => (
-    <ErrorBoundary fallback={fallback}>
+    <ErrorBoundary 
+      fallback={fallback}
+      component={componentName || Component.displayName || Component.name}
+    >
       <Component {...props} />
     </ErrorBoundary>
   );
@@ -87,14 +105,13 @@ export function withErrorBoundary<P extends object>(
 }
 
 // Predefined error boundary wrappers for common use cases
-// These components handle error logging internally to avoid server component issues
-
 export function AppErrorBoundary({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary
+      component="App"
       onError={(error, errorInfo) => {
-        console.error("Application error:", error, errorInfo);
-        // In production, send to error monitoring service
+        // Additional app-level error handling if needed
+        console.error("Application-level error:", error.message);
       }}
     >
       {children}
@@ -105,17 +122,16 @@ export function AppErrorBoundary({ children }: { children: ReactNode }) {
 export function FormErrorBoundary({
   children,
   fallback,
+  formName,
 }: {
   children: ReactNode;
   fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+  formName?: string;
 }) {
   return (
     <ErrorBoundary
       fallback={fallback}
-      onError={(error, errorInfo) => {
-        console.error("Form component error:", error, errorInfo);
-        // Could send to error monitoring service with form-specific context
-      }}
+      component={`Form_${formName || "Unknown"}`}
     >
       {children}
     </ErrorBoundary>
@@ -132,10 +148,7 @@ export function MapErrorBoundary({
   return (
     <ErrorBoundary
       fallback={fallback}
-      onError={(error, errorInfo) => {
-        console.error("Map component error:", error, errorInfo);
-        // Could send specific map errors to monitoring service
-      }}
+      component="Map"
     >
       {children}
     </ErrorBoundary>
@@ -152,10 +165,7 @@ export function DataErrorBoundary({
   return (
     <ErrorBoundary
       fallback={fallback}
-      onError={(error, errorInfo) => {
-        console.error("Data loading error:", error, errorInfo);
-        // Could send specific data loading errors to monitoring service
-      }}
+      component="Data"
     >
       {children}
     </ErrorBoundary>

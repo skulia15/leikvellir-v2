@@ -81,13 +81,15 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - SEO optimization
   - Accessibility enhancements
   - Dark theme support
-  - Production monitoring and logging
+  - Production monitoring and logging - Connect with Sentry
   - Traffic tracking (PostHog integration)
   - Cloud storage migration for images
   - Automated image optimization and thumbnails
 
   - remove localhost api key fron cloud console
   - svg boundary overlay á map
+  - Create a mock instance of the application where everyone has admin privileges in order to test the app
+  - remove localhost from oauth consent screens
 
 ## 🛠️ Tech Stack
 

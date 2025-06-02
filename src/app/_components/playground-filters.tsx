@@ -166,9 +166,9 @@ export default function PlaygroundFilters({
             </div>
 
             {/* Results count */}
-            <div className="ml-auto text-sm text-muted-foreground">
+            {/* <div className="ml-auto text-sm text-muted-foreground">
                 {playgroundCount} playground{playgroundCount !== 1 ? "s" : ""}
-            </div>
+            </div> */}
         </div>
     );
 } 

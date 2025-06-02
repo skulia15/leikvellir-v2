@@ -32,6 +32,24 @@ export const env = createEnv({
       process.env.NODE_ENV === "development"
         ? z.string().optional()
         : z.string(),
+    // Google OAuth credentials
+    GOOGLE_CLIENT_ID:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
+    GOOGLE_CLIENT_SECRET:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
+    // Facebook OAuth credentials
+    FACEBOOK_CLIENT_ID:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
+    FACEBOOK_CLIENT_SECRET:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
     // Flag to enable mock authentication in development
     ENABLE_MOCK_AUTH: z.string().optional().default("false"),
     // Vercel Blob storage token for leikvellir_image_store
@@ -59,6 +77,10 @@ export const env = createEnv({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    FACEBOOK_CLIENT_ID: process.env.FACEBOOK_CLIENT_ID,
+    FACEBOOK_CLIENT_SECRET: process.env.FACEBOOK_CLIENT_SECRET,
     ENABLE_MOCK_AUTH: process.env.ENABLE_MOCK_AUTH,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,

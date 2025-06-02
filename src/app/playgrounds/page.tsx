@@ -8,7 +8,7 @@ export default async function PlaygroundsPage() {
   const playgrounds = await api.playground.getAll();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

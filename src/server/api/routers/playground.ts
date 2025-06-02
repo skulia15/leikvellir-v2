@@ -10,6 +10,7 @@ import {
 import { playgrounds, playgroundEquipment } from "~/server/db/schema";
 import { CreatePlaygroundSchema, PlaygroundNotFoundError, ReviewPlaygroundSchema } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
+import { logDbError, logger } from "~/lib/logging/logger";
 
 // Update schema for playground editing
 const UpdatePlaygroundSchema = z.object({
@@ -36,53 +37,82 @@ export const playgroundRouter = createTRPCRouter({
   create: protectedProcedure
     .input(CreatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log("🏗️ Creating playground with input:", {
-        ...input,
-        images: input.images,
-        imageCount: input.images?.length ?? 0,
-        equipmentCount: input.equipmentIds?.length ?? 0
-      });
+      const userId = ctx.session.user.id;
 
-      // Create playground first
-      const [newPlayground] = await ctx.db
-        .insert(playgrounds)
-        .values({
+      logger.info("Creating playground", {
+        component: "PlaygroundRouter",
+        action: "create_playground",
+        userId,
+        metadata: {
           title: input.title,
-          latitude: input.latitude,
-          longitude: input.longitude,
-          publiclyAccessible: input.publiclyAccessible,
-          toddlerFriendly: input.toddlerFriendly,
-          coverImage: input.images[0] ?? null, // First image as cover
-          images: input.images,
-          createdById: ctx.session.user.id,
-          status: "pending", // New submissions default to pending
-        })
-        .returning();
-
-      if (!newPlayground) {
-        throw new Error("Failed to create playground");
-      }
-
-      // Add equipment relationships if any equipment selected
-      if (input.equipmentIds && input.equipmentIds.length > 0) {
-        const equipmentRelations = input.equipmentIds.map(equipmentId => ({
-          playgroundId: newPlayground.id,
-          equipmentId: equipmentId,
-        }));
-
-        await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
-      }
-
-      console.log("✅ Playground created successfully:", {
-        id: newPlayground?.id,
-        title: newPlayground?.title,
-        images: newPlayground?.images,
-        coverImage: newPlayground?.coverImage,
-        imageCount: newPlayground?.images?.length ?? 0,
-        equipmentCount: input.equipmentIds?.length ?? 0
+          imageCount: input.images?.length ?? 0,
+          equipmentCount: input.equipmentIds?.length ?? 0,
+        },
       });
 
-      return newPlayground;
+      try {
+        // Create playground first
+        const [newPlayground] = await ctx.db
+          .insert(playgrounds)
+          .values({
+            title: input.title,
+            latitude: input.latitude,
+            longitude: input.longitude,
+            publiclyAccessible: input.publiclyAccessible,
+            toddlerFriendly: input.toddlerFriendly,
+            coverImage: input.images[0] ?? null, // First image as cover
+            images: input.images,
+            createdById: userId,
+            status: "pending", // New submissions default to pending
+          })
+          .returning();
+
+        if (!newPlayground) {
+          const error = new Error("Failed to create playground - no record returned");
+          logDbError("playground_insert", error, {
+            component: "PlaygroundRouter",
+            action: "create_playground",
+            userId,
+          });
+          throw error;
+        }
+
+        // Add equipment relationships if any equipment selected
+        if (input.equipmentIds && input.equipmentIds.length > 0) {
+          const equipmentRelations = input.equipmentIds.map(equipmentId => ({
+            playgroundId: newPlayground.id,
+            equipmentId: equipmentId,
+          }));
+
+          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+        }
+
+        logger.info("Playground created successfully", {
+          component: "PlaygroundRouter",
+          action: "create_playground_success",
+          userId,
+          metadata: {
+            playgroundId: newPlayground.id,
+            title: newPlayground.title,
+            imageCount: newPlayground.images?.length ?? 0,
+            equipmentCount: input.equipmentIds?.length ?? 0,
+          },
+        });
+
+        return newPlayground;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logDbError("playground_creation", err, {
+          component: "PlaygroundRouter",
+          action: "create_playground",
+          userId,
+          metadata: {
+            title: input.title,
+            imageCount: input.images?.length ?? 0,
+          },
+        });
+        throw err;
+      }
     }),
 
   update: protectedProcedure
@@ -289,36 +319,71 @@ export const playgroundRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const playground = await ctx.db.query.playgrounds.findFirst({
-        where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
-        with: {
-          playgroundEquipment: {
-            with: {
-              equipment: true,
-            },
-          },
-          createdBy: {
-            columns: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          reviewedBy: {
-            columns: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
+      logger.debug("Fetching playground by ID", {
+        component: "PlaygroundRouter",
+        action: "get_playground_by_id",
+        metadata: { playgroundId: input.id },
       });
 
-      if (!playground) {
-        throw new PlaygroundNotFoundError(input.id);
-      }
+      try {
+        const playground = await ctx.db.query.playgrounds.findFirst({
+          where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
+          with: {
+            playgroundEquipment: {
+              with: {
+                equipment: true,
+              },
+            },
+            createdBy: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            reviewedBy: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
 
-      return playground;
+        if (!playground) {
+          logger.warn("Playground not found", {
+            component: "PlaygroundRouter",
+            action: "playground_not_found",
+            metadata: { playgroundId: input.id },
+          });
+          throw new PlaygroundNotFoundError(input.id);
+        }
+
+        logger.debug("Playground fetched successfully", {
+          component: "PlaygroundRouter",
+          action: "get_playground_by_id_success",
+          metadata: {
+            playgroundId: playground.id,
+            title: playground.title,
+            status: playground.status,
+          },
+        });
+
+        return playground;
+      } catch (error) {
+        if (error instanceof PlaygroundNotFoundError) {
+          throw error; // Re-throw custom errors
+        }
+
+        const err = error instanceof Error ? error : new Error(String(error));
+        logDbError("playground_fetch_by_id", err, {
+          component: "PlaygroundRouter",
+          action: "get_playground_by_id",
+          metadata: { playgroundId: input.id },
+        });
+        throw err;
+      }
     }),
 
   delete: protectedProcedure

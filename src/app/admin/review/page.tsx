@@ -7,7 +7,7 @@ export default async function ReviewPage() {
     const session = await getServerAuthSession();
 
     if (!session) {
-        redirect("/api/auth/signin");
+        redirect("/signin");
     }
 
     // Get pending submissions

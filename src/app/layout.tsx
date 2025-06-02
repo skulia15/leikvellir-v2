@@ -9,6 +9,9 @@ import { AppErrorBoundary } from "~/components/ui/error-boundary";
 import NavigationBar from "./_components/navigation-bar";
 import { getServerAuthSession } from "~/server/auth";
 import { Providers } from "./_components/providers";
+import { ErrorDashboard } from "./_components/error-dashboard";
+import { Footer } from "./_components/footer";
+import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -30,15 +33,18 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${GeistSans.variable} ${firaSans.variable}`}>
-      <body className="min-h-screen bg-background">
+      <body className="bg-background">
         <Providers session={session}>
-          <AppErrorBoundary>
+          <div className="flex flex-col">
             <NavigationBar />
-            <main className="pt-16">
+            <main className="flex-1 pt-16">
               <div id="app-container">{children}</div>
             </main>
-          </AppErrorBoundary>
+            <Footer />
+          </div>
           <Toaster />
+          <CookieConsentBanner />
+          {process.env.NODE_ENV === "development" && <ErrorDashboard />}
         </Providers>
       </body>
     </html>

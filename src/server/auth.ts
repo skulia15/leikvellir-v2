@@ -6,6 +6,8 @@ import {
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
 import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import { env } from "~/env";
@@ -128,76 +130,99 @@ export const authOptions: NextAuthOptions = {
     env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development"
       ? undefined // Don't use adapter in mock mode
       : (DrizzleAdapter(db, {
-          usersTable: users,
-          accountsTable: accounts,
-          sessionsTable: sessions,
-          verificationTokensTable: verificationTokens,
-        }) as Adapter),
+        usersTable: users,
+        accountsTable: accounts,
+        sessionsTable: sessions,
+        verificationTokensTable: verificationTokens,
+      }) as Adapter),
   session: {
     strategy:
       env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development"
         ? "jwt" // Use JWT for mock mode
         : "database", // Use database for production
   },
+  pages: {
+    signIn: "/signin",
+  },
   providers: [
     // Mock authentication provider for development
     ...(env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development"
       ? [
-          CredentialsProvider({
-            id: "mock",
-            name: "Mock Authentication",
-            credentials: {
-              email: {
-                label: "Email",
-                type: "email",
-                placeholder: "Choose a mock user email",
-              },
+        CredentialsProvider({
+          id: "mock",
+          name: "Mock Authentication",
+          credentials: {
+            email: {
+              label: "Email",
+              type: "email",
+              placeholder: "Choose a mock user email",
             },
-            async authorize(credentials) {
-              console.log("Mock auth - received credentials:", credentials);
+          },
+          async authorize(credentials) {
+            console.log("Mock auth - received credentials:", credentials);
 
-              if (!credentials?.email) {
-                console.log("Mock auth - no email provided");
-                return null;
-              }
+            if (!credentials?.email) {
+              console.log("Mock auth - no email provided");
+              return null;
+            }
 
-              // Find user by email
-              const user = mockUsers.find((u) => u.email === credentials.email);
-              if (!user) {
-                console.log(
-                  "Mock auth - user not found for email:",
-                  credentials.email,
-                );
-                console.log(
-                  "Available mock users:",
-                  mockUsers.map((u) => u.email),
-                );
-                return null;
-              }
+            // Find user by email
+            const user = mockUsers.find((u) => u.email === credentials.email);
+            if (!user) {
+              console.log(
+                "Mock auth - user not found for email:",
+                credentials.email,
+              );
+              console.log(
+                "Available mock users:",
+                mockUsers.map((u) => u.email),
+              );
+              return null;
+            }
 
-              // Ensure this user exists in the database
-              await ensureMockUsersExist();
+            // Ensure this user exists in the database
+            await ensureMockUsersExist();
 
-              console.log("Mock auth - found user:", user);
-              return {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-              };
-            },
-          }),
-        ]
+            console.log("Mock auth - found user:", user);
+            return {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+            };
+          },
+        }),
+      ]
+      : []),
+
+    // Google provider (only if credentials are available)
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? [
+        GoogleProvider({
+          clientId: env.GOOGLE_CLIENT_ID,
+          clientSecret: env.GOOGLE_CLIENT_SECRET,
+        }),
+      ]
+      : []),
+
+    // Facebook provider (only if credentials are available)
+    ...(env.FACEBOOK_CLIENT_ID && env.FACEBOOK_CLIENT_SECRET
+      ? [
+        FacebookProvider({
+          clientId: env.FACEBOOK_CLIENT_ID,
+          clientSecret: env.FACEBOOK_CLIENT_SECRET,
+        }),
+      ]
       : []),
 
     // Discord provider (only if credentials are available)
     ...(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET
       ? [
-          DiscordProvider({
-            clientId: env.DISCORD_CLIENT_ID,
-            clientSecret: env.DISCORD_CLIENT_SECRET,
-          }),
-        ]
+        DiscordProvider({
+          clientId: env.DISCORD_CLIENT_ID,
+          clientSecret: env.DISCORD_CLIENT_SECRET,
+        }),
+      ]
       : []),
 
     /**

@@ -10,10 +10,12 @@ import {
     MapErrorFallback,
     DataErrorFallback,
 } from "~/components/ui/error-fallbacks";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { Sheet, type SheetRef } from "react-modal-sheet";
+import { useRef } from "react";
 
 import { api } from "~/trpc/react";
 import { GoogleMap } from "./map";
-import PlaygroundDrawer from "./playground-drawer";
 import PlaygroundList from "./playground-list";
 import PlaygroundFilters, { type PlaygroundFilters as PlaygroundFiltersType } from "./playground-filters";
 import { type Playground } from "~/types";
@@ -25,9 +27,25 @@ export default function HomeClient() {
     const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
     const [mapCenter, setMapCenter] = useState<UserLocation | null>(null);
     const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
+    const [isOpen, setOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+    const ref = useRef<SheetRef>();
 
     const searchParams = useSearchParams();
     const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+
+    // Check if mobile
+    // TODO: use tailwind to style for mobile instead, if possible. 
+    // TODO: Move mobile size breakpoint to const or tailwind config.
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     // Automatically request user location on mount
     useEffect(() => {
@@ -97,8 +115,85 @@ export default function HomeClient() {
         setVisiblePlaygrounds(newVisiblePlaygrounds);
     }, []);
 
+    // Playground list content
+    const playgroundContent = (
+        <DataErrorBoundary fallback={DataErrorFallback}>
+            {/* Filters */}
+            <PlaygroundFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                playgroundCount={filteredPlaygroundCount}
+            />
+
+            {/* Playground list */}
+            <PlaygroundList
+                filters={filters}
+                userLocation={userLocation}
+                selectedPlayground={selectedPlayground}
+                onPlaygroundSelect={setSelectedPlayground}
+                visiblePlaygrounds={visiblePlaygrounds}
+            />
+        </DataErrorBoundary>
+    );
+
+    // Mobile layout with bottom sheet
+    if (isMobile) {
+        return (
+            <div className="flex flex-col" style={{ height: 'calc(100vh - 8rem)' }}>
+                {/* Map takes the remaining space */}
+                <div className="flex-1 relative">
+                    <MapErrorBoundary fallback={MapErrorFallback}>
+                        <GoogleMap
+                            selectedPlayground={selectedPlayground}
+                            onPlaygroundSelect={setSelectedPlayground}
+                            filters={filters}
+                            userLocation={userLocation}
+                            onUserLocationChange={setUserLocation}
+                            mapCenter={mapCenter}
+                            onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                        />
+                    </MapErrorBoundary>
+                </div>
+
+                {/* Mobile bottom sheet */}
+                <Sheet
+                    ref={ref}
+                    isOpen={isOpen}
+                    onClose={() => setOpen(true)} // Keep it always open
+                    snapPoints={[0.9, 0.5, 0.2]}
+                    initialSnap={2}
+                    onSnap={(snapIndex) =>
+                        console.log("> Current snap point index:", snapIndex)
+                    }
+                    disableScrollLocking
+                >
+                    <Sheet.Container>
+                        <Sheet.Header className="px-4 py-2">
+                            <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/30" />
+                        </Sheet.Header>
+                        <Sheet.Content>
+                            <ScrollArea className="h-full overflow-y-auto">
+                                {playgroundContent}
+                            </ScrollArea>
+                        </Sheet.Content>
+                    </Sheet.Container>
+                </Sheet>
+            </div>
+        );
+    }
+
+    // Desktop layout with left sidebar
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex" style={{ height: 'calc(100vh - 8rem)' }}>
+            {/* Left sidebar with playground list */}
+            <div className="w-96 bg-background border-r overflow-hidden flex-shrink-0">
+                <ScrollArea className="h-full">
+                    <div className="p-4">
+                        {playgroundContent}
+                    </div>
+                </ScrollArea>
+            </div>
+
             {/* Map takes the remaining space */}
             <div className="flex-1 relative">
                 <MapErrorBoundary fallback={MapErrorFallback}>
@@ -113,27 +208,6 @@ export default function HomeClient() {
                     />
                 </MapErrorBoundary>
             </div>
-
-            {/* Playground drawer/panel */}
-            <PlaygroundDrawer>
-                <DataErrorBoundary fallback={DataErrorFallback}>
-                    {/* Filters */}
-                    <PlaygroundFilters
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        playgroundCount={filteredPlaygroundCount}
-                    />
-
-                    {/* Playground list */}
-                    <PlaygroundList
-                        filters={filters}
-                        userLocation={userLocation}
-                        selectedPlayground={selectedPlayground}
-                        onPlaygroundSelect={setSelectedPlayground}
-                        visiblePlaygrounds={visiblePlaygrounds}
-                    />
-                </DataErrorBoundary>
-            </PlaygroundDrawer>
         </div>
     );
 } 

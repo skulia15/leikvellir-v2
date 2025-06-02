@@ -3,6 +3,7 @@
 import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub, Users, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -195,10 +196,16 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>
-                                            <Link href="/api/auth/signout" className="flex items-center">
-                                                <LogOut className="mr-2 h-4 w-4" />
-                                                <span>Sign Out</span>
-                                            </Link>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full cursor-pointer justify-start p-0 h-auto font-normal"
+                                                onClick={() => signOut()}
+                                            >
+                                                <div className="flex items-center px-2 py-1.5">
+                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    <span>Sign Out</span>
+                                                </div>
+                                            </Button>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -334,13 +341,16 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>
-                                            <Link
-                                                href="/api/auth/signout"
-                                                className="flex items-center"
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start p-0 h-auto font-normal"
+                                                onClick={() => signOut()}
                                             >
-                                                <LogOut className="mr-2 h-4 w-4" />
-                                                <span>Sign out</span>
-                                            </Link>
+                                                <div className="flex items-center px-2 py-1.5">
+                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    <span>Sign Out</span>
+                                                </div>
+                                            </Button>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -350,7 +360,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                         <>
                             {/* Desktop Sign In */}
                             <div className="hidden md:block">
-                                <Link href="/api/auth/signin">
+                                <Link href="/signin">
                                     <Button variant="default" size="sm">
                                         <User className="mr-2 h-4 w-4" />
                                         Sign In
@@ -384,7 +394,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>
                                             <Link
-                                                href="/api/auth/signin"
+                                                href="/signin"
                                                 className="flex items-center"
                                             >
                                                 <User className="mr-2 h-4 w-4" />

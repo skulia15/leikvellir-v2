@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
 import { InfoWindow } from "@vis.gl/react-google-maps";
-import { Card, CardContent } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
+import { ChevronLeft, ChevronRight, ExternalLink, MapPin, X } from "lucide-react";
 import Image from "next/image";
-import { MapPin, ExternalLink, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { type Playground } from "~/types";
+import Link from "next/link";
+import { useState } from "react";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
 import { calculateDistance, formatDistance, type UserLocation } from "~/lib/geo-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
+import { type Playground } from "~/types";
 
 interface PlaygroundInfoWindowProps {
   playground: Playground;
@@ -81,9 +82,7 @@ export function PlaygroundInfoWindow({
     style
   } = swipeHandlers;
 
-  const handleViewDetails = () => {
-    window.open(`/playground/${playground.id}`, "_blank");
-  };
+
 
   return (
     <InfoWindow
@@ -226,15 +225,18 @@ export function PlaygroundInfoWindow({
 
           {/* Action button */}
           <div className="px-3 pb-3">
-            <Button
+            <Link
+              href={`/playground/${playground.id}`}
+
+            >            <Button
               variant="default"
               size="sm"
-              onClick={handleViewDetails}
               className="w-full h-8 text-sm"
             >
-              <ExternalLink className="mr-1 h-3 w-3" />
-              View Details
-            </Button>
+                <ExternalLink className="mr-1 h-3 w-3" />
+                View Details
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

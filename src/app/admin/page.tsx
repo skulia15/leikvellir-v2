@@ -7,7 +7,7 @@ export default async function AdminPage() {
     const session = await getServerAuthSession();
 
     if (!session) {
-        redirect("/api/auth/signin");
+        redirect("/signin");
     }
 
     // In development, allow any authenticated user
@@ -17,7 +17,7 @@ export default async function AdminPage() {
     void api.playground.getAll.prefetch();
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="bg-background">
             <div className="container mx-auto px-4 py-6">
                 <div className="mb-6">
                     <h1 className="mb-2 text-3xl font-bold">Admin Dashboard</h1>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { type UserLocation, getCurrentLocation } from "~/lib/geo-utils";
+import { logger, reportLocationError } from "~/lib/logging";
 
 type LocationPermission = "granted" | "denied" | "prompt";
 
@@ -33,11 +34,22 @@ export function useUserLocation(): UseUserLocationReturn {
     useEffect(() => {
         const initializeLocation = async () => {
             try {
+                logger.debug("Initializing user location", {
+                    component: "useUserLocation",
+                    action: "initialize",
+                });
+
                 // First check browser permission status
                 if (navigator.permissions) {
                     try {
                         const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
                         const browserPermission = permissionStatus.state as LocationPermission;
+
+                        logger.debug(`Browser geolocation permission: ${browserPermission}`, {
+                            component: "useUserLocation",
+                            action: "permission_check",
+                            metadata: { permission: browserPermission },
+                        });
 
                         // If permission is granted, try to get current location
                         if (browserPermission === 'granted') {
@@ -55,6 +67,11 @@ export function useUserLocation(): UseUserLocationReturn {
                                 if (now - timestamp < CACHE_DURATION) {
                                     const location = JSON.parse(cachedLocation) as UserLocation;
                                     setUserLocation(location);
+                                    logger.debug("Using cached location", {
+                                        component: "useUserLocation",
+                                        action: "cache_hit",
+                                        metadata: { cacheAge: now - timestamp },
+                                    });
                                     return;
                                 }
                             }
@@ -65,8 +82,21 @@ export function useUserLocation(): UseUserLocationReturn {
                                 const location = await getCurrentLocation();
                                 setUserLocation(location);
                                 cacheLocation(location, 'granted');
+                                logger.info("Successfully obtained user location", {
+                                    component: "useUserLocation",
+                                    action: "location_obtained",
+                                    metadata: {
+                                        latitude: location.lat.toFixed(6),
+                                        longitude: location.lng.toFixed(6),
+                                    },
+                                });
                             } catch (err) {
-                                console.warn("Failed to get current location despite permission:", err);
+                                const error = err instanceof Error ? err : new Error(String(err));
+                                logger.warn("Failed to get current location despite permission", {
+                                    component: "useUserLocation",
+                                    action: "location_error_with_permission",
+                                }, error);
+                                reportLocationError(error, "get_current_location_with_permission");
                             } finally {
                                 setIsLoading(false);
                             }
@@ -80,16 +110,30 @@ export function useUserLocation(): UseUserLocationReturn {
                             }
                         }
                     } catch (permissionError) {
-                        console.warn("Failed to query permission status:", permissionError);
+                        const error = permissionError instanceof Error ? permissionError : new Error(String(permissionError));
+                        logger.warn("Failed to query permission status", {
+                            component: "useUserLocation",
+                            action: "permission_query_error",
+                        }, error);
+                        reportLocationError(error, "permission_query");
                         // Fallback to checking cached data
                         loadCachedLocationOnly();
                     }
                 } else {
+                    logger.warn("Browser doesn't support permissions API", {
+                        component: "useUserLocation",
+                        action: "no_permissions_api",
+                    });
                     // Browser doesn't support permissions API, fallback to cached data
                     loadCachedLocationOnly();
                 }
             } catch (err) {
-                console.warn("Failed to initialize location:", err);
+                const error = err instanceof Error ? err : new Error(String(err));
+                logger.error("Failed to initialize location", {
+                    component: "useUserLocation",
+                    action: "initialization_error",
+                }, error);
+                reportLocationError(error, "initialization");
                 loadCachedLocationOnly();
             }
         };
@@ -112,13 +156,28 @@ export function useUserLocation(): UseUserLocationReturn {
                     if (now - timestamp < CACHE_DURATION) {
                         const location = JSON.parse(cachedLocation) as UserLocation;
                         setUserLocation(location);
+                        logger.debug("Loaded cached location", {
+                            component: "useUserLocation",
+                            action: "cache_loaded",
+                            metadata: { cacheAge: now - timestamp },
+                        });
                     } else {
                         // Clear expired cache
                         clearCachedLocation();
+                        logger.debug("Cleared expired location cache", {
+                            component: "useUserLocation",
+                            action: "cache_expired",
+                            metadata: { cacheAge: now - timestamp },
+                        });
                     }
                 }
             } catch (err) {
-                console.warn("Failed to load cached location:", err);
+                const error = err instanceof Error ? err : new Error(String(err));
+                logger.warn("Failed to load cached location", {
+                    component: "useUserLocation",
+                    action: "cache_load_error",
+                }, error);
+                reportLocationError(error, "cache_load");
                 clearCachedLocation();
             }
         };
@@ -137,12 +196,27 @@ export function useUserLocation(): UseUserLocationReturn {
             sessionStorage.setItem(STORAGE_KEYS.userLocation, JSON.stringify(location));
             sessionStorage.setItem(STORAGE_KEYS.permission, permissionState);
             sessionStorage.setItem(STORAGE_KEYS.timestamp, Date.now().toString());
+            logger.debug("Cached user location", {
+                component: "useUserLocation",
+                action: "cache_location",
+                metadata: { permission: permissionState },
+            });
         } catch (err) {
-            console.warn("Failed to cache location:", err);
+            const error = err instanceof Error ? err : new Error(String(err));
+            logger.warn("Failed to cache location", {
+                component: "useUserLocation",
+                action: "cache_error",
+            }, error);
+            reportLocationError(error, "cache_location");
         }
     };
 
     const requestLocation = useCallback(() => {
+        logger.info("User requested location", {
+            component: "useUserLocation",
+            action: "request_location",
+        });
+        
         setIsLoading(true);
         setError(null);
 
@@ -152,14 +226,31 @@ export function useUserLocation(): UseUserLocationReturn {
                 setUserLocation(location);
                 setPermission("granted");
                 cacheLocation(location, "granted");
+                
+                logger.info("Successfully granted location access", {
+                    component: "useUserLocation",
+                    action: "location_granted",
+                    metadata: {
+                        latitude: location.lat.toFixed(6),
+                        longitude: location.lng.toFixed(6),
+                    },
+                });
             } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : "Failed to get location";
+                const error = err instanceof Error ? err : new Error(String(err));
+                const errorMessage = error.message || "Failed to get location";
                 setError(errorMessage);
                 setPermission("denied");
 
                 // Cache the denied permission to avoid repeated prompts
                 sessionStorage.setItem(STORAGE_KEYS.permission, "denied");
-                console.error("Error getting location:", err);
+                
+                logger.warn("Location access denied or failed", {
+                    component: "useUserLocation",
+                    action: "location_denied",
+                    metadata: { errorMessage },
+                }, error);
+                
+                reportLocationError(error, "user_request_location");
             } finally {
                 setIsLoading(false);
             }
@@ -167,6 +258,11 @@ export function useUserLocation(): UseUserLocationReturn {
     }, []);
 
     const clearLocation = useCallback(() => {
+        logger.info("User cleared location", {
+            component: "useUserLocation",
+            action: "clear_location",
+        });
+        
         setUserLocation(null);
         setPermission("prompt");
         setError(null);
