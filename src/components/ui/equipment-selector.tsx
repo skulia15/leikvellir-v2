@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/trpc/react";
 import { type Equipment, type EquipmentCategory } from "~/types";
+import { useT } from "~/lib/i18n";
 import { PlaygroundEquipmentIcon } from "../icons/playground-icons";
 
 interface EquipmentSelectorProps {
@@ -22,17 +23,8 @@ interface EquipmentSelectorProps {
     disabled?: boolean;
 }
 
-const categoryLabels: Record<EquipmentCategory, string> = {
-    core_equipment: "Core Equipment",
-    climbing_and_movement: "Climbing & Movement",
-    imaginative_and_themed: "Imaginative & Themed",
-    spinning_and_motion: "Spinning & Motion",
-    fitness_and_obstacle: "Fitness & Obstacle",
-    toddler_friendly: "Toddler Friendly",
-    additional_common_equipment: "Additional Equipment",
-};
-
 export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelectorProps) {
+    const t = useT();
     const [expandedCategories, setExpandedCategories] = useState<Set<EquipmentCategory>>(
         new Set(["core_equipment"])
     );
@@ -64,7 +56,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
             <Card>
                 <CardContent className="py-6">
                     <div className="flex items-center justify-center">
-                        <div className="text-muted-foreground">Loading equipment...</div>
+                        <div className="text-muted-foreground">{t('equipment.loadingEquipment')}</div>
                     </div>
                 </CardContent>
             </Card>
@@ -76,7 +68,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
             <Card>
                 <CardContent className="py-6">
                     <div className="text-center text-muted-foreground">
-                        No equipment available
+                        {t('equipment.noEquipmentAvailable')}
                     </div>
                 </CardContent>
             </Card>
@@ -99,10 +91,10 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <PlaygroundEquipmentIcon className="h-5 w-5" />
-                    Playground Equipment
+                    {t('equipment.playgroundEquipment')}
                     {selectedCount > 0 && (
                         <Badge variant="secondary">
-                            {selectedCount} selected
+                            {selectedCount} {t('equipment.selected')}
                         </Badge>
                     )}
                 </CardTitle>
@@ -128,7 +120,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="font-medium">
-                                            {categoryLabels[category as EquipmentCategory]}
+                                            {t(`equipment.categories.${category as EquipmentCategory}`)}
                                         </span>
                                         {categorySelectedCount > 0 && (
                                             <Badge variant="outline" className="text-xs">
@@ -197,7 +189,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                             disabled={disabled}
                             className="w-full"
                         >
-                            Clear All Selections
+                            {t('equipment.clearAllSelections')}
                         </Button>
                     </div>
                 )}

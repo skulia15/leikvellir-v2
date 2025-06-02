@@ -45,11 +45,11 @@ export const getTranslation = (locale: Locale, key: string, params?: Record<stri
 
 export const hasTranslation = (locale: Locale, key: string): boolean => {
   const keys = key.split('.');
-  let value: any = translations[locale];
+  let value: unknown = translations[locale];
 
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+    if (value && typeof value === 'object' && value !== null && k in value) {
+      value = (value as Record<string, unknown>)[k];
     } else {
       return false;
     }

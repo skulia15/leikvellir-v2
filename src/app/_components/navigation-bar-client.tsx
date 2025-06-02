@@ -208,7 +208,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                             <Button
                                                 variant="ghost"
                                                 className="w-full cursor-pointer justify-start p-0 h-auto font-normal"
-                                                onClick={() => signOut()}
+                                                onClick={() => void signOut()}
                                             >
                                                 <div className="flex items-center px-2 py-1.5">
                                                     <LogOut className="mr-2 h-4 w-4" />
