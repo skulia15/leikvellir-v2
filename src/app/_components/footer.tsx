@@ -112,7 +112,7 @@ export function Footer() {
                 </a>
 
                 <a
-                  href="mailto:contact@leikvellir.is"
+                  href="mailto:skuliarnarson@gmail.com"
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Mail className="h-4 w-4" />
