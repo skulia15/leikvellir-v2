@@ -29,6 +29,8 @@ export interface LogEntry {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === "development";
   private isClient = typeof window !== "undefined";
+  private isLogging = false; // Recursion guard
+  private logQueue: LogEntry[] = []; // Queue to handle logs during recursion
 
   private getBaseContext(): LogContext {
     const context: LogContext = {
@@ -88,29 +90,60 @@ class Logger {
 
   private logToConsole(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
+    
+    // Prevent recursion by checking if we're already logging
+    if (this.isLogging) {
+      // If we're already logging, queue this entry to prevent infinite loops
+      if (this.logQueue.length < 100) { // Prevent queue overflow
+        this.logQueue.push(entry);
+      }
+      return;
+    }
 
-    const message = this.formatMessage(entry.level, entry.message, entry.context);
+    this.isLogging = true;
+    
+    try {
+      const message = this.formatMessage(entry.level, entry.message, entry.context);
 
-    switch (entry.level) {
-      case "debug":
-        console.debug(message, entry.context, entry.error);
-        break;
-      case "info":
-        console.info(message, entry.context);
-        break;
-      case "warn":
-        console.warn(message, entry.context, entry.error);
-        break;
-      case "error":
-      case "fatal":
-        console.error(message, entry.context, entry.error);
-        if (entry.error?.stack) {
-          console.error("Stack trace:", entry.error.stack);
+      // Use setTimeout to break the call stack and prevent PostHog recursion
+      setTimeout(() => {
+        try {
+          switch (entry.level) {
+            case "debug":
+              console.debug(message, entry.context, entry.error);
+              break;
+            case "info":
+              console.info(message, entry.context);
+              break;
+            case "warn":
+              console.warn(message, entry.context, entry.error);
+              break;
+            case "error":
+            case "fatal":
+              console.error(message, entry.context, entry.error);
+              if (entry.error?.stack) {
+                console.error("Stack trace:", entry.error.stack);
+              }
+              if (entry.errorInfo) {
+                console.error("React Error Info:", entry.errorInfo);
+              }
+              break;
+          }
+        } catch (err) {
+          // Silently fail to prevent further recursion
         }
-        if (entry.errorInfo) {
-          console.error("React Error Info:", entry.errorInfo);
+      }, 0);
+    } finally {
+      this.isLogging = false;
+      
+      // Process any queued logs
+      if (this.logQueue.length > 0) {
+        const queuedEntry = this.logQueue.shift();
+        if (queuedEntry) {
+          // Process next queued log asynchronously
+          setTimeout(() => this.logToConsole(queuedEntry), 10);
         }
-        break;
+      }
     }
   }
 
@@ -121,15 +154,25 @@ class Logger {
     // - Custom API endpoint for logging
 
     if (!this.shouldLog(entry.level)) return;
+    
+    // Prevent recursion in external logging too
+    if (this.isLogging) return;
 
     // For now, just log critical errors to console in production
     if (entry.level === "fatal" || entry.level === "error") {
-      console.error("EXTERNAL_LOG:", {
-        level: entry.level,
-        message: entry.message,
-        context: entry.context,
-        timestamp: entry.timestamp.toISOString(),
-      });
+      // Use setTimeout to prevent recursion with PostHog
+      setTimeout(() => {
+        try {
+          console.error("EXTERNAL_LOG:", {
+            level: entry.level,
+            message: entry.message,
+            context: entry.context,
+            timestamp: entry.timestamp.toISOString(),
+          });
+        } catch (err) {
+          // Silently fail to prevent recursion
+        }
+      }, 5);
     }
   }
 
@@ -158,13 +201,19 @@ class Logger {
     error?: Error,
     errorInfo?: ErrorInfo
   ): void {
+    // Additional safety check - if we detect we're already in a logging cycle, bail out
+    if (this.isLogging && level === "error" && message.includes("Maximum call stack size exceeded")) {
+      return; // Prevent PostHog recursion specifically
+    }
+    
     const entry = this.createLogEntry(level, message, context, error, errorInfo);
 
     this.logToConsole(entry);
 
     // Don't await external logging to avoid blocking
-    void this.logToExternalService(entry).catch((err) => {
-      console.error("Failed to log to external service:", err);
+    void this.logToExternalService(entry).catch(() => {
+      // Silently fail to prevent further recursion
+      // Don't use console.error here as it might cause more recursion
     });
   }
 
