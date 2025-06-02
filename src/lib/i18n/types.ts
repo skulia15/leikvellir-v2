@@ -17,6 +17,4 @@ export interface Translation {
   [key: string]: string | Translation;
 }
 
-export interface Translations {
-  [locale: string]: Translation;
-}
+export type Translations = Record<string, Translation>;

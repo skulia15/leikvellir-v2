@@ -113,7 +113,7 @@ export const authOptions: NextAuthOptions = {
       try {
         // Check if a user with this email already exists
         const existingUser = await db.query.users.findFirst({
-          where: eq(users.email, user.email!),
+          where: eq(users.email, user.email),
           with: {
             accounts: true,
           },

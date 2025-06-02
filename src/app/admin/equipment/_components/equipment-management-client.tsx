@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, RotateCcw, Package } from "lucide-react";
+import { Pencil, Trash2, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";

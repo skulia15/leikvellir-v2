@@ -2,23 +2,41 @@
 import { type Locale, type Translation, type Translations } from './types';
 
 // Import translation files
-import isTranslations from '../../locales/is.json';
-import enTranslations from '../../locales/en.json';
-import plTranslations from '../../locales/pl.json';
+import isTranslationsRaw from '../../locales/is.json';
+import enTranslationsRaw from '../../locales/en.json';
+import plTranslationsRaw from '../../locales/pl.json';
+
+// Type guard to validate translation structure
+function isValidTranslation(obj: unknown): obj is Translation {
+  if (!obj || typeof obj !== 'object') return false;
+
+  const record = obj as Record<string, unknown>;
+  return Object.values(record).every(value =>
+    typeof value === 'string' || isValidTranslation(value)
+  );
+}
+
+// Safely cast the imported JSON to Translation type
+function safeTranslation(raw: unknown): Translation {
+  if (isValidTranslation(raw)) {
+    return raw;
+  }
+  throw new Error('Invalid translation file structure');
+}
 
 export const translations: Translations = {
-  is: isTranslations as Translation,
-  en: enTranslations as Translation,
-  pl: plTranslations as Translation,
+  is: safeTranslation(isTranslationsRaw),
+  en: safeTranslation(enTranslationsRaw),
+  pl: safeTranslation(plTranslationsRaw),
 };
 
 export const getTranslation = (locale: Locale, key: string, params?: Record<string, string | number>): string => {
   const keys = key.split('.');
-  let value: any = translations[locale];
+  let value: unknown = translations[locale];
 
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+    if (value && typeof value === 'object' && value !== null && k in value) {
+      value = (value as Record<string, unknown>)[k];
     } else {
       // Fallback to English if key not found in current locale
       if (locale !== 'en') {
