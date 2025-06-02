@@ -1,11 +1,15 @@
-import { api } from "~/trpc/server";
+"use client";
+
+import { api } from "~/trpc/react";
 import PlaygroundsList from "~/app/_components/playgrounds-list";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { useT } from "~/lib/i18n";
 
-export default async function PlaygroundsPage() {
-  const playgrounds = await api.playground.getAll();
+export default function PlaygroundsPage() {
+  const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+  const t = useT();
 
   return (
     <div className="bg-background">
@@ -13,16 +17,15 @@ export default async function PlaygroundsPage() {
         <div className="mb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="mb-2 text-3xl font-bold">All Playgrounds</h1>
+              <h1 className="mb-2 text-3xl font-bold">{t('playground.allPlaygrounds')}</h1>
               <p className="text-muted-foreground">
-                {/* TODO: better description */}
-                Hér eru upplýsingar um leikvelli bla bla bla.
+                {t('playground.allPlaygroundsDescription')}
               </p>
             </div>
             <Link href="/create-playground">
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Create Playground
+                {t('playground.createPlayground')}
               </Button>
             </Link>
           </div>
@@ -33,9 +36,3 @@ export default async function PlaygroundsPage() {
     </div>
   );
 }
-
-export const metadata = {
-  title: "All Playgrounds - Leikvellir",
-  description:
-    "Browse and discover playgrounds. Find the perfect playground for your family.",
-};

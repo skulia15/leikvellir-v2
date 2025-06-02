@@ -15,6 +15,7 @@ import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { PlaygroundInfoWindow } from "./info-window";
 import { type PlaygroundFilters } from "./playground-filters";
+import { useT } from "~/lib/i18n";
 
 interface MapProps {
   selectedPlayground: Playground | null;
@@ -40,10 +41,11 @@ function UserLocationButton({
 }) {
   const map = useMap();
   const [isLoading, setIsLoading] = useState(false);
+  const t = useT();
 
   const getUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
+      alert(t('map.geolocationNotSupported'));
       return;
     }
 
@@ -63,7 +65,7 @@ function UserLocationButton({
       },
       (error) => {
         console.error("Error getting user location:", error);
-        alert("Unable to get your location. Please enable location services.");
+        alert(t('map.locationAccessDenied'));
         setIsLoading(false);
       },
       {
@@ -72,7 +74,7 @@ function UserLocationButton({
         maximumAge: 60000,
       },
     );
-  }, [map, onLocationFound]);
+  }, [map, onLocationFound, t]);
 
   return (
     <Button
@@ -82,7 +84,7 @@ function UserLocationButton({
       className="absolute right-3 top-3 z-10"
     >
       <Navigation className="mr-1 h-4 w-4" />
-      {isLoading ? "Finding..." : "My Location"}
+      {isLoading ? t('map.findingLocation') : t('map.myLocation')}
     </Button>
   );
 }
@@ -99,6 +101,7 @@ export function GoogleMap({
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
   const previousPlaygroundsRef = useRef<(Playground & { distance?: number | null })[]>([]);
+  const t = useT();
 
   // Calculate the center to use - either from prop or default
   const centerToUse = mapCenter ?? defaultCenter;
@@ -187,7 +190,7 @@ export function GoogleMap({
           {userLocation && (
             <AdvancedMarker
               position={userLocation}
-              title="Your Location"
+              title={t('map.yourLocation')}
             >
               <div className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
             </AdvancedMarker>

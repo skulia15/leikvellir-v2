@@ -17,6 +17,7 @@ import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, sortPlaygroundsByDistance } from "~/lib/geo-utils";
+import { useT } from "~/lib/i18n";
 
 interface PlaygroundsListProps {
   playgrounds: Playground[];
@@ -27,6 +28,7 @@ type SortOption = "proximity" | "popularity" | "newest" | "name";
 export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
+  const t = useT();
 
   const { userLocation, isLoading, permission, requestLocation } = useUserLocation();
 
@@ -65,7 +67,7 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <SortAsc className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Sort by:</span>
+                <span className="text-sm font-medium">{t('playground.sortBy')}</span>
               </div>
               <Select
                 value={sortBy}
@@ -75,13 +77,13 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="name">Name (A-Z)</SelectItem>
+                  <SelectItem value="newest">{t('playground.newestFirst')}</SelectItem>
+                  <SelectItem value="name">{t('playground.nameAZ')}</SelectItem>
                   <SelectItem value="proximity" disabled={!userLocation}>
-                    Distance {!userLocation && "(Location needed)"}
+                    {t('playground.distance')} {!userLocation && t('playground.locationNeeded')}
                   </SelectItem>
                   <SelectItem value="popularity" disabled>
-                    Popularity (Coming Soon)
+                    {t('playground.popularity')} {t('playground.comingSoon')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -97,14 +99,14 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
                 className="flex items-center gap-2"
               >
                 <Navigation className="h-4 w-4" />
-                {isLoading ? "Finding..." : "Enable Location for Distance Sorting"}
+                {isLoading ? t('playground.finding') : t('playground.enableLocationSorting')}
               </Button>
             )}
 
             {userLocation && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
-                Location enabled
+                {t('playground.locationEnabled')}
               </Badge>
             )}
           </div>
@@ -114,12 +116,12 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
       {/* Playgrounds Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {sortedPlaygrounds.length} playground
+          {t('playground.showing')} {sortedPlaygrounds.length} {t('playground.playground')}
           {sortedPlaygrounds.length !== 1 ? "s" : ""}
         </p>
         {sortBy === "proximity" && userLocation && (
           <p className="text-sm text-muted-foreground">
-            Sorted by distance from your location
+            {t('playground.sortedByDistance')}
           </p>
         )}
       </div>
@@ -130,9 +132,9 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
           <Card>
             <CardContent className="pt-6 text-center">
               <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">No Playgrounds Found</h3>
+              <h3 className="mb-2 text-lg font-medium">{t('playground.noPlaygroundsFound')}</h3>
               <p className="text-muted-foreground">
-                Be the first to add a playground to the database!
+                {t('playground.beFirstToAdd')}
               </p>
             </CardContent>
           </Card>

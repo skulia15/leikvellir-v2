@@ -14,7 +14,9 @@
     "yes": "Tak",
     "no": "Nie",
     "submit": "Wyślij",
-    "required": "Wymagane"
+    "required": "Wymagane",
+    "update": "Aktualizuj",
+    "create": "Utwórz"
   },
   "navigation": {
     "home": "Strona główna",
@@ -28,6 +30,43 @@
     "signIn": "Zaloguj się",
     "signOut": "Wyloguj się",
     "profile": "Profil"
+  },
+  "auth": {
+    "welcomeToLeikvellir": "Witamy w Leikvellir",
+    "signInToDiscover": "Zaloguj się, aby odkrywać i mapować place zabaw w całej Islandii",
+    "continueWithGoogle": "Kontynuuj z Google",
+    "continueWithFacebook": "Kontynuuj z Facebook",
+    "continueWithDiscord": "Kontynuuj z Discord",
+    "developmentOnly": "Tylko rozwój",
+    "mockAuthentication": "Uwierzytelnianie testowe",
+    "signInWithMockUser": "Zaloguj się z użytkownikiem testowym",
+    "termsAndPrivacy": "Logując się, akceptujesz nasze warunki usługi i politykę prywatności",
+    "authenticationFailed": "Uwierzytelnianie nie powiodło się. Spróbuj ponownie.",
+    "authenticationCallback": "Błąd wywołania zwrotnego uwierzytelniania.",
+    "accountLinking": "Łączenie kont w toku. Spróbuj zalogować się ponownie.",
+    "emailSignInFailed": "Logowanie przez e-mail nie powiodło się.",
+    "invalidCredentials": "Nieprawidłowe dane uwierzytelniające.",
+    "pleaseEnterEmail": "Proszę wprowadzić adres e-mail",
+    "invalidMockEmail": "Nieprawidłowy e-mail testowy. Spróbuj: skuli@example.com",
+    "mockSignInError": "Nie udało się zalogować. Spróbuj ponownie.",
+    "failedToSignIn": "Nie udało się zalogować z {{provider}}. Spróbuj ponownie."
+  },
+  "footer": {
+    "brand": "Leikvellir",
+    "beta": "Beta",
+    "description": "Odkrywaj i mapuj place zabaw w całej Islandii. Platforma społecznościowa pomagająca rodzinom znaleźć idealne miejsca zabaw dla swoich dzieci.",
+    "location": "Hafnarfjörður, Islandia",
+    "quickLinks": "Szybkie linki",
+    "exploreMap": "Przeglądaj mapę",
+    "addPlayground": "Dodaj plac zabaw",
+    "browsePlaygrounds": "Przeglądaj place zabaw",
+    "privacyPolicy": "Polityka prywatności",
+    "cookieSettings": "Ustawienia plików cookie",
+    "developer": "Deweloper",
+    "softwareDeveloper": "Programista",
+    "allRightsReserved": "{{year}} Skúli Arnarsson. Wszelkie prawa zastrzeżone.",
+    "builtWith": "Zbudowane z Next.js i TypeScript",
+    "version": "v1.0.0-beta"
   },
   "playground": {
     "title": "Plac zabaw",
@@ -46,7 +85,7 @@
     "noEquipment": "Brak informacji o wyposażeniu tego placu zabaw",
     "equipmentDetails": "Szczegóły wyposażenia mogą zostać dodane później",
     "added": "Dodano",
-    "distance": "Odległość od Ciebie",
+    "distance": "Odległość",
     "additionalInfo": "Dodatkowe informacje",
     "createPlayground": "Utwórz plac zabaw",
     "editPlayground": "Edytuj plac zabaw",
@@ -88,7 +127,28 @@
     "additionalInformation": "Dodatkowe informacje",
     "playgroundId": "ID placu zabaw",
     "lastUpdated": "Ostatnio zaktualizowano",
-    "unknown": "Nieznane"
+    "unknown": "Nieznane",
+    "sortBy": "Sortuj według:",
+    "newestFirst": "Najnowsze pierwsze",
+    "nameAZ": "Nazwa (A-Z)",
+    "locationNeeded": "(Potrzebna lokalizacja)",
+    "popularity": "Popularność",
+    "comingSoon": "(Wkrótce)",
+    "finding": "Szukanie...",
+    "enableLocationSorting": "Włącz lokalizację do sortowania według odległości",
+    "locationEnabled": "Lokalizacja włączona",
+    "showing": "Wyświetlanie",
+    "playground": "plac zabaw",
+    "sortedByDistance": "Posortowane według odległości od Ciebie",
+    "noPlaygroundsFound": "Nie znaleziono placów zabaw",
+    "beFirstToAdd": "Bądź pierwszy, który doda plac zabaw do bazy danych!",
+    "loadingPlaygrounds": "Ładowanie placów zabaw...",
+    "noPlaygroundsMatchingFilters": "Nie znaleziono placów zabaw pasujących do Twoich filtrów.",
+    "notFound": "Plac zabaw nie został znaleziony",
+    "allPlaygrounds": "Wszystkie place zabaw",
+    "allPlaygroundsDescription": "Przeglądaj i odkrywaj place zabaw w całej Islandii. Znajdź idealny plac zabaw dla swojej rodziny.",
+    "pageTitle": "Wszystkie place zabaw - Leikvellir",
+    "pageDescription": "Przeglądaj i odkrywaj place zabaw. Znajdź idealny plac zabaw dla swojej rodziny."
   },
   "equipment": {
     "categories": {
@@ -106,7 +166,27 @@
     "loadingEquipment": "Ładowanie wyposażenia...",
     "noEquipmentAvailable": "Brak dostępnego wyposażenia",
     "playgroundEquipment": "Wyposażenie placu zabaw",
-    "clearAllSelections": "Wyczyść wszystkie wybory"
+    "clearAllSelections": "Wyczyść wszystkie wybory",
+    "editEquipment": "Edytuj wyposażenie",
+    "createNewEquipment": "Utwórz nowe wyposażenie",
+    "addNewEquipmentToCatalog": "Dodaj nową pozycję wyposażenia do katalogu",
+    "createEquipment": "Utwórz wyposażenie",
+    "updateDetails": "Zaktualizuj szczegóły wyposażenia poniżej",
+    "equipmentUpdatedSuccessfully": "Wyposażenie zostało pomyślnie zaktualizowane",
+    "failedToUpdateEquipment": "Nie udało się zaktualizować wyposażenia",
+    "englishName": "Nazwa angielska",
+    "enterEnglishName": "Wprowadź nazwę angielską",
+    "icelandicName": "Nazwa islandzka",
+    "enterIcelandicName": "Wprowadź nazwę islandzką",
+    "category": "Kategoria",
+    "selectCategory": "Wybierz kategorię",
+    "description": "Opis",
+    "enterDescription": "Wprowadź opis wyposażenia (opcjonalnie)",
+    "imageUrl": "URL obrazu",
+    "enterImageUrl": "Wprowadź URL obrazu (opcjonalnie)",
+    "updateEquipment": "Zaktualizuj wyposażenie",
+    "equipmentCreatedSuccessfully": "Wyposażenie zostało pomyślnie utworzone",
+    "failedToCreateEquipment": "Nie udało się utworzyć wyposażenia"
   },
   "admin": {
     "adminMode": "Tryb administratora",
@@ -187,5 +267,137 @@
     "playgroundUpdated": "Plac zabaw został zaktualizowany pomyślnie",
     "playgroundDeleted": "Plac zabaw został usunięty pomyślnie",
     "settingsSaved": "Ustawienia zostały zapisane pomyślnie"
+  },
+  "cookies": {
+    "cookieManagement": "Zarządzanie plikami cookie",
+    "manageCookiePreferences": "Zarządzaj preferencjami plików cookie i ustawieniami zbierania danych.",
+    "essentialCookies": "Niezbędne pliki cookie",
+    "essentialCookiesDescription": "Te pliki cookie są niezbędne do działania strony internetowej i nie można ich wyłączyć.",
+    "analyticsCookies": "Pliki cookie analityczne",
+    "analyticsCookiesDescription": "Te pliki cookie pomagają nam zrozumieć, jak odwiedzający korzystają z naszej strony internetowej.",
+    "marketingCookies": "Pliki cookie marketingowe",
+    "marketingCookiesDescription": "Te pliki cookie są używane do śledzenia odwiedzających i wyświetlania odpowiednich reklam.",
+    "savePreferences": "Zapisz preferencje",
+    "resetToDefaults": "Zresetuj do domyślnych",
+    "revokeAllConsent": "Odwołaj wszystkie zgody",
+    "cookieInformation": "Informacje o plikach cookie",
+    "learnMore": "Dowiedz się więcej o tym, jak używamy plików cookie w naszej",
+    "privacyPolicy": "polityce prywatności"
+  },
+  "privacy": {
+    "privacyPolicy": "Polityka Prywatności",
+    "lastUpdated": "Ostatnio zaktualizowano:",
+    "backToMap": "Powrót do mapy",
+    "overview": "Przegląd",
+    "overviewText": "Leikvellir zobowiązuje się do ochrony Twojej prywatności. Ta Polityka Prywatności wyjaśnia, jak gromadzimy, używamy i chronimy Twoje informacje podczas korzystania z naszej platformy odkrywania placów zabaw dla Islandii.",
+    "keyPoints": "Kluczowe punkty:",
+    "keyPointsText": "Gromadzimy minimalne dane niezbędne do świadczenia usługi, używamy plików cookie do analiz i funkcjonalności oraz nigdy nie sprzedajemy Twoich danych osobowych.",
+    "informationWeCollect": "Informacje, które gromadzimy",
+    "accountInformation": "Informacje o koncie",
+    "accountInfoItems": [
+      "Adres e-mail (przez Discord OAuth)",
+      "Nazwa wyświetlana (przez Discord OAuth)",
+      "ID użytkownika Discord (do uwierzytelniania)",
+      "Znaczniki czasu utworzenia konta i ostatniego logowania"
+    ],
+    "userGeneratedContent": "Treści generowane przez użytkowników",
+    "userContentItems": [
+      "Zgłoszenia placów zabaw (lokalizacja, tytuł, zdjęcia, szczegóły wyposażenia)",
+      "Przesłane fotografie placów zabaw",
+      "Informacje o wyposażeniu i dostępności"
+    ],
+    "locationData": "Dane lokalizacyjne",
+    "locationDataItems": [
+      "Przybliżona lokalizacja (gdy dobrowolnie udostępniona do obliczeń odległości)",
+      "Współrzędne placów zabaw (do celów mapowania)",
+      "Dane lokalizacyjne są przechowywane lokalnie w Twojej przeglądarce i nie są wysyłane na nasze serwery"
+    ],
+    "technicalInformation": "Informacje techniczne",
+    "technicalInfoItems": [
+      "Typ i wersja przeglądarki",
+      "Typ urządzenia i rozdzielczość ekranu",
+      "Adres IP (dla bezpieczeństwa i analiz)",
+      "Wzorce użytkowania i interakcje z funkcjami"
+    ],
+    "cookieUsage": "Użycie plików cookie",
+    "cookieUsageText": "Używamy plików cookie i podobnych technologii, aby poprawić Twoje doświadczenie i zrozumieć, jak nasza usługa jest używana. Oto podział naszego użycia plików cookie:",
+    "essentialCookiesTitle": "Niezbędne pliki cookie",
+    "essentialCookiesText": "Wymagane do podstawowej funkcjonalności. Nie można ich wyłączyć.",
+    "essentialCookiesList": [
+      "Pliki cookie sesji uwierzytelniania",
+      "Tokeny bezpieczeństwa",
+      "Ochrona przed przesyłaniem formularzy",
+      "Przechowywanie preferencji użytkownika"
+    ],
+    "analyticsCookiesTitle": "Pliki cookie analityczne",
+    "analyticsCookiesText": "Pomagają nam zrozumieć wzorce użytkowania (przez PostHog).",
+    "analyticsCookiesList": [
+      "Widoki stron i podróże użytkowników",
+      "Statystyki użycia funkcji",
+      "Metryki wydajności",
+      "Anonimowe śledzenie zachowań użytkowników"
+    ],
+    "functionalCookiesTitle": "Pliki cookie funkcjonalne",
+    "functionalCookiesText": "Poprawiają Twoje doświadczenie z platformą.",
+    "functionalCookiesList": [
+      "Pamięć podręczna lokalizacji (przechowywanie w przeglądarce)",
+      "Preferencje mapy",
+      "Ustawienia filtrów",
+      "Trwałość stanu interfejsu użytkownika"
+    ],
+    "thirdPartyCookiesTitle": "Pliki cookie stron trzecich",
+    "thirdPartyCookiesText": "Z zewnętrznych usług, z którymi się integrujemy.",
+    "thirdPartyCookiesList": [
+      "Pliki cookie API Google Maps",
+      "Pliki cookie Discord OAuth",
+      "Pliki cookie analityczne PostHog",
+      "Pliki cookie CDN i wydajności"
+    ],
+    "managingCookies": "Zarządzanie plikami cookie",
+    "managingCookiesText": "Możesz zarządzać swoimi preferencjami plików cookie za pomocą naszego banera plików cookie lub przez ustawienia przeglądarki. Wyłączenie niektórych plików cookie może ograniczyć część funkcjonalności.",
+    "howWeUseInformation": "Jak używamy Twoich informacji",
+    "serviceFunctionality": "Funkcjonalność usługi",
+    "serviceFunctionalityList": [
+      "Uwierzytelnianie użytkowników i zarządzanie kontami",
+      "Wyświetlanie i zarządzanie zgłoszeniami placów zabaw",
+      "Obliczanie odległości do placów zabaw (gdy lokalizacja jest udostępniona)",
+      "Moderowanie treści i zapobieganie nadużyciom"
+    ],
+    "analyticsAndImprovement": "Analityka i ulepszenia",
+    "analyticsImprovementList": [
+      "Zrozumienie wzorców użytkowania i popularnych funkcji",
+      "Monitorowanie wydajności i niezawodności systemu",
+      "Identyfikowanie i naprawianie błędów lub problemów",
+      "Planowanie nowych funkcji na podstawie potrzeb użytkowników"
+    ],
+    "communication": "Komunikacja",
+    "communicationList": [
+      "Wysyłanie ważnych aktualizacji usługi",
+      "Odpowiadanie na prośby o wsparcie",
+      "Powiadamianie o zmianach w polityce"
+    ],
+    "dataSharingTitle": "Udostępnianie danych i strony trzecie",
+    "dataSharingText": "Nie sprzedajemy, nie wymieniamy ani nie wynajmujemy Twoich danych osobowych stronom trzecim. Możemy udostępniać informacje tylko w tych konkretnych okolicznościach:",
+    "serviceProviders": "Dostawcy usług",
+    "serviceProvidersText": "PostHog (analityka), Vercel (hosting), Google Maps (usługi mapowania)",
+    "legalRequirements": "Wymagania prawne",
+    "legalRequirementsText": "Gdy wymagane przez prawo lub w celu ochrony praw i bezpieczeństwa",
+    "publicContent": "Treści publiczne",
+    "publicContentText": "Zatwierdzone zgłoszenia placów zabaw są publicznie widoczne na mapie",
+    "contactUs": "Skontaktuj się z nami",
+    "contactUsText": "Jeśli masz pytania dotyczące tej Polityki Prywatności lub chcesz skorzystać ze swoich praw:",
+    "email": "E-mail:",
+    "developer": "Deweloper:",
+    "github": "GitHub:",
+    "location": "Lokalizacja:",
+    "privacyNotice": "Ta polityka prywatności może być okresowo aktualizowana. Będziemy powiadamiać użytkowników o znaczących zmianach za pośrednictwem e-maila lub przez aplikację."
+  },
+  "map": {
+    "myLocation": "Moja lokalizacja",
+    "yourLocation": "Twoja lokalizacja",
+    "findingLocation": "Szukanie...",
+    "geolocationNotSupported": "Geolokalizacja nie jest obsługiwana przez tę przeglądarkę.",
+    "locationAccessDenied": "Nie można uzyskać Twojej lokalizacji. Proszę włączyć usługi lokalizacyjne.",
+    "errorGettingLocation": "Błąd podczas uzyskiwania Twojej lokalizacji. Spróbuj ponownie."
   }
 }

@@ -14,7 +14,9 @@
     "yes": "Yes",
     "no": "No",
     "submit": "Submit",
-    "required": "Required"
+    "required": "Required",
+    "update": "Update",
+    "create": "Create"
   },
   "navigation": {
     "home": "Home",
@@ -28,6 +30,43 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "profile": "Profile"
+  },
+  "auth": {
+    "welcomeToLeikvellir": "Welcome to Leikvellir",
+    "signInToDiscover": "Sign in to discover and map playgrounds across Iceland",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithDiscord": "Continue with Discord",
+    "developmentOnly": "Development Only",
+    "mockAuthentication": "Mock Authentication",
+    "signInWithMockUser": "Sign in with Mock User",
+    "termsAndPrivacy": "By signing in, you agree to our terms of service and privacy policy",
+    "authenticationFailed": "Authentication failed. Please try again.",
+    "authenticationCallback": "Authentication callback failed.",
+    "accountLinking": "Account linking in progress. Please try signing in again.",
+    "emailSignInFailed": "Email sign-in failed.",
+    "invalidCredentials": "Invalid credentials provided.",
+    "pleaseEnterEmail": "Please enter an email address",
+    "invalidMockEmail": "Invalid mock user email. Try: skuli@example.com",
+    "mockSignInError": "Failed to sign in. Please try again.",
+    "failedToSignIn": "Failed to sign in with {{provider}}. Please try again."
+  },
+  "footer": {
+    "brand": "Leikvellir",
+    "beta": "Beta",
+    "description": "Discover and map playgrounds across Iceland. A community-driven platform to help families find the perfect play spaces for their children.",
+    "location": "Hafnarfjörður, Iceland",
+    "quickLinks": "Quick Links",
+    "exploreMap": "Explore Map",
+    "addPlayground": "Add Playground",
+    "browsePlaygrounds": "Browse Playgrounds",
+    "privacyPolicy": "Privacy Policy",
+    "cookieSettings": "Cookie Settings",
+    "developer": "Developer",
+    "softwareDeveloper": "Software Developer",
+    "allRightsReserved": "{{year}} Skúli Arnarsson. All rights reserved.",
+    "builtWith": "Built with Next.js & TypeScript",
+    "version": "v1.0.0-beta"
   },
   "playground": {
     "title": "Playground",
@@ -88,7 +127,29 @@
     "equipmentMayBeAdded": "Equipment details may be added later",
     "quickActions": "Quick Actions",
     "additionalInformation": "Additional Information",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "sortBy": "Sort by:",
+    "newestFirst": "Newest First",
+    "nameAZ": "Name (A-Z)",
+    "distance": "Distance",
+    "locationNeeded": "(Location needed)",
+    "popularity": "Popularity",
+    "comingSoon": "(Coming Soon)",
+    "finding": "Finding...",
+    "enableLocationSorting": "Enable Location for Distance Sorting",
+    "locationEnabled": "Location enabled",
+    "showing": "Showing",
+    "playground": "playground",
+    "sortedByDistance": "Sorted by distance from your location",
+    "noPlaygroundsFound": "No Playgrounds Found",
+    "beFirstToAdd": "Be the first to add a playground to the database!",
+    "loadingPlaygrounds": "Loading playgrounds...",
+    "noPlaygroundsMatchingFilters": "No playgrounds found matching your filters.",
+    "notFound": "Playground Not Found",
+    "allPlaygrounds": "All Playgrounds",
+    "allPlaygroundsDescription": "Browse and discover playgrounds across Iceland. Find the perfect playground for your family.",
+    "pageTitle": "All Playgrounds - Leikvellir",
+    "pageDescription": "Browse and discover playgrounds. Find the perfect playground for your family."
   },
   "equipment": {
     "categories": {
@@ -106,7 +167,27 @@
     "loadingEquipment": "Loading equipment...",
     "noEquipmentAvailable": "No equipment available",
     "playgroundEquipment": "Playground Equipment",
-    "clearAllSelections": "Clear All Selections"
+    "clearAllSelections": "Clear All Selections",
+    "editEquipment": "Edit Equipment",
+    "createNewEquipment": "Create New Equipment",
+    "addNewEquipmentToCatalog": "Add a new equipment item to the catalog",
+    "createEquipment": "Create Equipment",
+    "updateDetails": "Update the equipment details below",
+    "equipmentUpdatedSuccessfully": "Equipment updated successfully",
+    "failedToUpdateEquipment": "Failed to update equipment",
+    "englishName": "English Name",
+    "enterEnglishName": "Enter English name",
+    "icelandicName": "Icelandic Name",
+    "enterIcelandicName": "Enter Icelandic name",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "description": "Description",
+    "enterDescription": "Enter equipment description (optional)",
+    "imageUrl": "Image URL",
+    "enterImageUrl": "Enter image URL (optional)",
+    "updateEquipment": "Update Equipment",
+    "equipmentCreatedSuccessfully": "Equipment created successfully",
+    "failedToCreateEquipment": "Failed to create equipment"
   },
   "admin": {
     "adminMode": "Admin Mode",
@@ -187,5 +268,137 @@
     "playgroundUpdated": "Playground updated successfully",
     "playgroundDeleted": "Playground deleted successfully",
     "settingsSaved": "Settings saved successfully"
+  },
+  "cookies": {
+    "cookieManagement": "Cookie Management",
+    "manageCookiePreferences": "Manage your cookie preferences and data collection settings.",
+    "essentialCookies": "Essential Cookies",
+    "essentialCookiesDescription": "These cookies are necessary for the website to function and cannot be switched off.",
+    "analyticsCookies": "Analytics Cookies",
+    "analyticsCookiesDescription": "These cookies help us understand how visitors interact with our website.",
+    "marketingCookies": "Marketing Cookies",
+    "marketingCookiesDescription": "These cookies are used to track visitors and display relevant advertisements.",
+    "savePreferences": "Save Preferences",
+    "resetToDefaults": "Reset to Defaults",
+    "revokeAllConsent": "Revoke All Consent",
+    "cookieInformation": "Cookie Information",
+    "learnMore": "Learn more about how we use cookies in our",
+    "privacyPolicy": "privacy policy"
+  },
+  "privacy": {
+    "privacyPolicy": "Privacy Policy",
+    "lastUpdated": "Last updated:",
+    "backToMap": "Back to Map",
+    "overview": "Overview",
+    "overviewText": "Leikvellir is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our playground discovery platform for Iceland.",
+    "keyPoints": "Key Points:",
+    "keyPointsText": "We collect minimal data necessary for the service, use cookies for analytics and functionality, and never sell your personal information.",
+    "informationWeCollect": "Information We Collect",
+    "accountInformation": "Account Information",
+    "accountInfoItems": [
+      "Email address (via Discord OAuth)",
+      "Display name (via Discord OAuth)",
+      "Discord user ID (for authentication)",
+      "Account creation and last login timestamps"
+    ],
+    "userGeneratedContent": "User-Generated Content",
+    "userContentItems": [
+      "Playground submissions (location, title, images, equipment details)",
+      "Uploaded photographs of playgrounds",
+      "Equipment and accessibility information"
+    ],
+    "locationData": "Location Data",
+    "locationDataItems": [
+      "Approximate location (when voluntarily shared for distance calculations)",
+      "Playground coordinates (for mapping purposes)",
+      "Location data is stored locally in your browser and not sent to our servers"
+    ],
+    "technicalInformation": "Technical Information",
+    "technicalInfoItems": [
+      "Browser type and version",
+      "Device type and screen resolution",
+      "IP address (for security and analytics)",
+      "Usage patterns and feature interactions"
+    ],
+    "cookieUsage": "Cookie Usage",
+    "cookieUsageText": "We use cookies and similar technologies to enhance your experience and understand how our service is used. Here's a breakdown of our cookie usage:",
+    "essentialCookiesTitle": "Essential Cookies",
+    "essentialCookiesText": "Required for basic functionality. Cannot be disabled.",
+    "essentialCookiesList": [
+      "Authentication session cookies",
+      "Security tokens",
+      "Form submission protection",
+      "User preference storage"
+    ],
+    "analyticsCookiesTitle": "Analytics Cookies",
+    "analyticsCookiesText": "Help us understand usage patterns (via PostHog).",
+    "analyticsCookiesList": [
+      "Page views and user journeys",
+      "Feature usage statistics",
+      "Performance metrics",
+      "Anonymous user behavior tracking"
+    ],
+    "functionalCookiesTitle": "Functional Cookies",
+    "functionalCookiesText": "Enhance your experience with the platform.",
+    "functionalCookiesList": [
+      "Location cache (browser storage)",
+      "Map preferences",
+      "Filter settings",
+      "UI state persistence"
+    ],
+    "thirdPartyCookiesTitle": "Third-Party Cookies",
+    "thirdPartyCookiesText": "From external services we integrate with.",
+    "thirdPartyCookiesList": [
+      "Google Maps API cookies",
+      "Discord OAuth cookies",
+      "PostHog analytics cookies",
+      "CDN and performance cookies"
+    ],
+    "managingCookies": "Managing Cookies",
+    "managingCookiesText": "You can manage your cookie preferences using our cookie banner or through your browser settings. Disabling certain cookies may limit some functionality.",
+    "howWeUseInformation": "How We Use Your Information",
+    "serviceFunctionality": "Service Functionality",
+    "serviceFunctionalityList": [
+      "Authenticate users and manage accounts",
+      "Display and manage playground submissions",
+      "Calculate distances to playgrounds (when location is shared)",
+      "Moderate content and prevent abuse"
+    ],
+    "analyticsAndImprovement": "Analytics and Improvement",
+    "analyticsImprovementList": [
+      "Understand usage patterns and popular features",
+      "Monitor system performance and reliability",
+      "Identify and fix bugs or issues",
+      "Plan new features based on user needs"
+    ],
+    "communication": "Communication",
+    "communicationList": [
+      "Send important service updates",
+      "Respond to support requests",
+      "Notify about policy changes"
+    ],
+    "dataSharingTitle": "Data Sharing and Third Parties",
+    "dataSharingText": "We do not sell, trade, or rent your personal information to third parties. We may share information only in these specific circumstances:",
+    "serviceProviders": "Service Providers",
+    "serviceProvidersText": "PostHog (analytics), Vercel (hosting), Google Maps (mapping services)",
+    "legalRequirements": "Legal Requirements",
+    "legalRequirementsText": "When required by law or to protect rights and safety",
+    "publicContent": "Public Content",
+    "publicContentText": "Approved playground submissions are publicly visible on the map",
+    "contactUs": "Contact Us",
+    "contactUsText": "If you have questions about this Privacy Policy or want to exercise your rights:",
+    "email": "Email:",
+    "developer": "Developer:",
+    "github": "GitHub:",
+    "location": "Location:",
+    "privacyNotice": "This privacy policy may be updated periodically. We will notify users of significant changes via email or through the application."
+  },
+  "map": {
+    "myLocation": "My Location",
+    "yourLocation": "Your Location",
+    "findingLocation": "Finding...",
+    "geolocationNotSupported": "Geolocation is not supported by this browser.",
+    "locationAccessDenied": "Unable to get your location. Please enable location services.",
+    "errorGettingLocation": "Error getting your location. Please try again."
   }
 }

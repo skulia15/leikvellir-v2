@@ -1,4 +1,6 @@
 // app/_components/footer.tsx
+"use client";
+
 import {
   Code,
   Copyright,
@@ -10,9 +12,11 @@ import {
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
+import { useT } from "~/lib/i18n";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const t = useT();
 
   return (
     <footer className="border-t bg-background">
@@ -22,19 +26,18 @@ export function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               {/* <Playground className="h-6 w-6 text-primary" /> */}
-              <h3 className="text-lg font-bold">Leikvellir</h3>
+              <h3 className="text-lg font-bold">{t('footer.brand')}</h3>
               <Badge variant="outline" className="text-xs">
-                Beta
+                {t('footer.beta')}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              Discover and map playgrounds across Iceland. A community-driven platform
-              to help families find the perfect play spaces for their children.
+              {t('footer.description')}
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
-                <span>Hafnarfjörður, Iceland</span>
+                <span>{t('footer.location')}</span>
               </div>
               {/* <div className="flex items-center gap-1">
                 <Heart className="h-4 w-4 text-red-500" />
@@ -45,14 +48,14 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold mb-4">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Explore Map
+                  {t('footer.exploreMap')}
                 </Link>
               </li>
               <li>
@@ -60,7 +63,7 @@ export function Footer() {
                   href="/create-playground"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Add Playground
+                  {t('footer.addPlayground')}
                 </Link>
               </li>
               <li>
@@ -68,7 +71,7 @@ export function Footer() {
                   href="/playgrounds"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Browse Playgrounds
+                  {t('footer.browsePlaygrounds')}
                 </Link>
               </li>
               <li>
@@ -76,7 +79,7 @@ export function Footer() {
                   href="/privacy"
                   className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                 >
-                  Privacy Policy
+                  {t('footer.privacyPolicy')}
                 </Link>
               </li>
               <li>
@@ -84,7 +87,7 @@ export function Footer() {
                   href="/cookies"
                   className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                 >
-                  Cookie Settings
+                  {t('footer.cookieSettings')}
                 </Link>
               </li>
             </ul>
@@ -92,11 +95,11 @@ export function Footer() {
 
           {/* Developer & Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Developer</h4>
+            <h4 className="font-semibold mb-4">{t('footer.developer')}</h4>
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-medium">Skúli Arnarsson</p>
-                <p className="text-muted-foreground">Software Developer</p>
+                <p className="text-muted-foreground">{t('footer.softwareDeveloper')}</p>
               </div>
 
               <div className="space-y-2">
@@ -130,7 +133,7 @@ export function Footer() {
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Copyright className="h-4 w-4" />
-              <span>{currentYear} Skúli Arnarsson. All rights reserved.</span>
+              <span>{t('footer.allRightsReserved', { year: currentYear })}</span>
             </div>
 
             {/* <div className="text-xs text-muted-foreground">
@@ -141,12 +144,12 @@ export function Footer() {
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Code className="h-3 w-3" />
-              <span>Built with Next.js & TypeScript</span>
+              <span>{t('footer.builtWith')}</span>
             </div>
 
             <span>•</span>
 
-            <span>v1.0.0-beta</span>
+            <span>{t('footer.version')}</span>
           </div>
         </div>
 

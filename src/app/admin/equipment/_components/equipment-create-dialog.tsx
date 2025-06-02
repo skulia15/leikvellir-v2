@@ -37,27 +37,19 @@ import { api } from "~/trpc/react";
 import { CreateEquipmentSchema, type CreateEquipmentInput } from "~/types";
 import { toast } from "sonner";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
+import { useT } from "~/lib/i18n";
 
 interface EquipmentCreateDialogProps {
     onSuccess: () => void;
     category?: string;
 }
 
-const categoryLabels: Record<string, string> = {
-    core_equipment: "Core Equipment",
-    climbing_and_movement: "Climbing & Movement",
-    imaginative_and_themed: "Imaginative & Themed",
-    spinning_and_motion: "Spinning & Motion",
-    fitness_and_obstacle: "Fitness & Obstacle",
-    toddler_friendly: "Toddler Friendly",
-    additional_common_equipment: "Additional Equipment",
-};
-
 export default function EquipmentCreateDialog({
     onSuccess,
     category,
 }: EquipmentCreateDialogProps) {
     const [open, setOpen] = useState(false);
+    const t = useT();
 
     const form = useForm<CreateEquipmentInput>({
         resolver: zodResolver(CreateEquipmentSchema),
@@ -73,13 +65,13 @@ export default function EquipmentCreateDialog({
 
     const createMutation = api.equipment.create.useMutation({
         onSuccess: () => {
-            toast.success("Equipment created successfully");
+            toast.success(t('equipment.equipmentCreatedSuccessfully'));
             onSuccess();
             setOpen(false);
             form.reset();
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to create equipment");
+            toast.error(error.message || t('equipment.failedToCreateEquipment'));
         },
     });
 
@@ -99,17 +91,17 @@ export default function EquipmentCreateDialog({
             <DialogTrigger asChild>
                 <Button size="sm">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Equipment
+                    {t('common.add')} {t('navigation.equipment')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <PlaygroundEquipmentIcon className="h-5 w-5" />
-                        Create New Equipment
+                        {t('equipment.createNewEquipment')}
                     </DialogTitle>
                     <DialogDescription>
-                        Add a new equipment item to the catalog.
+                        {t('equipment.addNewEquipmentToCatalog')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -121,10 +113,10 @@ export default function EquipmentCreateDialog({
                                 name="nameEnglish"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>English Name *</FormLabel>
+                                        <FormLabel>{t('equipment.englishName')} *</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="Enter English name"
+                                                placeholder={t('equipment.enterEnglishName')}
                                                 {...field}
                                             />
                                         </FormControl>
@@ -138,10 +130,10 @@ export default function EquipmentCreateDialog({
                                 name="nameIcelandic"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Icelandic Name *</FormLabel>
+                                        <FormLabel>{t('equipment.icelandicName')} *</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="Enter Icelandic name"
+                                                placeholder={t('equipment.enterIcelandicName')}
                                                 {...field}
                                             />
                                         </FormControl>
@@ -156,18 +148,26 @@ export default function EquipmentCreateDialog({
                             name="category"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Category *</FormLabel>
+                                    <FormLabel>{t('equipment.category')} *</FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a category" />
+                                                <SelectValue placeholder={t('equipment.selectCategory')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {Object.entries(categoryLabels).map(([value, label]) => (
+                                            {(Object.entries({
+                                                core_equipment: t('equipment.categories.core_equipment'),
+                                                climbing_and_movement: t('equipment.categories.climbing_and_movement'),
+                                                imaginative_and_themed: t('equipment.categories.imaginative_and_themed'),
+                                                spinning_and_motion: t('equipment.categories.spinning_and_motion'),
+                                                fitness_and_obstacle: t('equipment.categories.fitness_and_obstacle'),
+                                                toddler_friendly: t('equipment.categories.toddler_friendly'),
+                                                additional_common_equipment: t('equipment.categories.additional_common_equipment'),
+                                            })).map(([value, label]) => (
                                                 <SelectItem key={value} value={value}>
                                                     {label}
                                                 </SelectItem>
@@ -184,10 +184,10 @@ export default function EquipmentCreateDialog({
                             name="image"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Image URL</FormLabel>
+                                    <FormLabel>{t('equipment.imageUrl')}</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Enter image URL (optional)"
+                                            placeholder={t('equipment.enterImageUrl')}
                                             {...field}
                                         />
                                     </FormControl>
@@ -201,10 +201,10 @@ export default function EquipmentCreateDialog({
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel>{t('equipment.description')}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter equipment description (optional)"
+                                            placeholder={t('equipment.enterDescription')}
                                             rows={3}
                                             {...field}
                                         />
@@ -221,7 +221,7 @@ export default function EquipmentCreateDialog({
                                 onClick={() => setOpen(false)}
                                 disabled={createMutation.isPending}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -230,10 +230,10 @@ export default function EquipmentCreateDialog({
                                 {createMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Creating...
+                                        {t('common.creating')}
                                     </>
                                 ) : (
-                                    "Create Equipment"
+                                    t('equipment.createEquipment')
                                 )}
                             </Button>
                         </DialogFooter>

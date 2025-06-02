@@ -255,10 +255,10 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                     </span>
                                                     {session.user?.email?.includes("@example.com") && (
                                                         <Badge
-                                                        variant="secondary"
-                                                        className="w-fit text-xs"
+                                                            variant="secondary"
+                                                            className="w-fit text-xs"
                                                         >
-                                                        {t('admin.demoUser')}
+                                                            {t('admin.demoUser')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -313,7 +313,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             className="flex items-center"
                                                         >
                                                             <Package className="mr-2 h-4 w-4" />
-                                                            <span>Equipment</span>
+                                                            <span>{t('navigation.equipment')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     {userRole === "super_admin" && (
@@ -334,17 +334,17 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                         <DropdownMenuGroup>
                                             {!isLoading && canAccessAdmin && (
                                                 <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
-                                                {isAdminMode ? (
-                                                <>
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                <span>{t('admin.switchToUserMode')}</span>
-                                                </>
-                                                ) : (
-                                                <>
-                                                <ShieldCheck className="mr-2 h-4 w-4" />
-                                                <span>{t('admin.switchToAdminMode')}</span>
-                                                </>
-                                                )}
+                                                    {isAdminMode ? (
+                                                        <>
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            <span>{t('admin.switchToUserMode')}</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                                            <span>{t('admin.switchToAdminMode')}</span>
+                                                        </>
+                                                    )}
                                                 </DropdownMenuItem>
                                             )}
                                         </DropdownMenuGroup>

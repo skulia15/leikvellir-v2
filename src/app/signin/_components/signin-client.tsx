@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useT } from "~/lib/i18n";
 
 export default function SignInClient() {
     const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -17,31 +18,32 @@ export default function SignInClient() {
     const searchParams = useSearchParams();
     const error = searchParams.get("error");
     const callbackUrl = searchParams.get("callbackUrl") || "/";
+    const t = useT();
 
     // Show error message if there's an authentication error
     if (error) {
-        let errorMessage = "Authentication failed. Please try again.";
+        let errorMessage = t('auth.authenticationFailed');
         switch (error) {
             case "OAuthSignin":
             case "OAuthCallback":
             case "OAuthCreateAccount":
             case "EmailCreateAccount":
-                errorMessage = "Authentication failed. Please try again.";
+                errorMessage = t('auth.authenticationFailed');
                 break;
             case "Callback":
-                errorMessage = "Authentication callback failed.";
+                errorMessage = t('auth.authenticationCallback');
                 break;
             case "OAuthAccountNotLinked":
-                errorMessage = "Account linking in progress. Please try signing in again.";
+                errorMessage = t('auth.accountLinking');
                 break;
             case "EmailSignin":
-                errorMessage = "Email sign-in failed.";
+                errorMessage = t('auth.emailSignInFailed');
                 break;
             case "CredentialsSignin":
-                errorMessage = "Invalid credentials provided.";
+                errorMessage = t('auth.invalidCredentials');
                 break;
             default:
-                errorMessage = "Authentication failed. Please try again.";
+                errorMessage = t('auth.authenticationFailed');
         }
         toast.error(errorMessage);
     }
@@ -52,7 +54,7 @@ export default function SignInClient() {
             await signIn(provider, { callbackUrl });
         } catch (error) {
             console.error(`Error signing in with ${provider}:`, error);
-            toast.error(`Failed to sign in with ${provider}. Please try again.`);
+            toast.error(t('auth.failedToSignIn', { provider }));
         } finally {
             setIsLoading(null);
         }
@@ -60,7 +62,7 @@ export default function SignInClient() {
 
     const handleMockSignIn = async () => {
         if (!mockEmail) {
-            toast.error("Please enter an email address");
+            toast.error(t('auth.pleaseEnterEmail'));
             return;
         }
 
@@ -73,13 +75,13 @@ export default function SignInClient() {
             });
 
             if (result?.error) {
-                toast.error("Invalid mock user email. Try: skuli@example.com");
+                toast.error(t('auth.invalidMockEmail'));
             } else if (result?.url) {
                 window.location.href = result.url;
             }
         } catch (error) {
             console.error("Mock sign-in error:", error);
-            toast.error("Failed to sign in. Please try again.");
+            toast.error(t('auth.mockSignInError'));
         } finally {
             setIsLoading(null);
         }
@@ -92,10 +94,10 @@ export default function SignInClient() {
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center space-y-2">
                     <CardTitle className="text-2xl font-bold text-gray-900">
-                        Welcome to Leikvellir
+                        {t('auth.welcomeToLeikvellir')}
                     </CardTitle>
                     <CardDescription className="text-gray-600">
-                        Sign in to discover and map playgrounds across Iceland
+                        {t('auth.signInToDiscover')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -111,7 +113,7 @@ export default function SignInClient() {
                         ) : (
                             <GoogleIcon />
                         )}
-                        <span className="ml-2">Continue with Google</span>
+                        <span className="ml-2">{t('auth.continueWithGoogle')}</span>
                     </Button>
 
                     {/* Facebook Sign In */}
@@ -125,7 +127,7 @@ export default function SignInClient() {
                         ) : (
                             <FacebookIcon />
                         )}
-                        <span className="ml-2">Continue with Facebook</span>
+                        <span className="ml-2">{t('auth.continueWithFacebook')}</span>
                     </Button>
 
                     {/* Discord Sign In */}
@@ -139,7 +141,7 @@ export default function SignInClient() {
                         ) : (
                             <DiscordIcon />
                         )}
-                        <span className="ml-2">Continue with Discord</span>
+                        <span className="ml-2">{t('auth.continueWithDiscord')}</span>
                     </Button>
 
                     {/* Development Mode Mock Sign In */}
@@ -150,11 +152,11 @@ export default function SignInClient() {
                                     <span className="w-full border-t border-gray-300" />
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="bg-white px-2 text-gray-500">Development Only</span>
+                                    <span className="bg-white px-2 text-gray-500">{t('auth.developmentOnly')}</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="mock-email">Mock Authentication</Label>
+                                <Label htmlFor="mock-email">{t('auth.mockAuthentication')}</Label>
                                 <Input
                                     id="mock-email"
                                     type="email"
@@ -179,13 +181,13 @@ export default function SignInClient() {
                                 ) : (
                                     <Mail className="mr-2 h-4 w-4" />
                                 )}
-                                Sign in with Mock User
+                                {t('auth.signInWithMockUser')}
                             </Button>
                         </>
                     )}
 
                     <div className="text-center text-sm text-gray-600 mt-6">
-                        By signing in, you agree to our terms of service and privacy policy.
+                        {t('auth.termsAndPrivacy')}
                     </div>
                 </CardContent>
             </Card>

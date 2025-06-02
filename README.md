@@ -91,8 +91,6 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Create a mock instance of the application where everyone has admin privileges in order to test the app
   - remove localhost from oauth consent screens
 
-  - if logged in through disc, then login with fb: "This account is already linked with another provider." merge or fix this
-
 ## 🛠️ Tech Stack
 
 This project uses the **T3 Stack** - a modern, type-safe full-stack TypeScript framework:

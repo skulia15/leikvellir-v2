@@ -14,7 +14,9 @@
     "yes": "Já",
     "no": "Nei",
     "submit": "Senda",
-    "required": "Nauðsynlegt"
+    "required": "Nauðsynlegt",
+    "update": "Uppfæra",
+    "create": "Búa til"
   },
   "navigation": {
     "home": "Heim",
@@ -29,6 +31,43 @@
     "signOut": "Skrá út",
     "profile": "Notendaupplýsingar"
   },
+  "auth": {
+    "welcomeToLeikvellir": "Velkomin á Leikvelli",
+    "signInToDiscover": "Skráðu þig inn til að uppgötva og kortleggja leikvelli um allt Ísland",
+    "continueWithGoogle": "Halda áfram með Google",
+    "continueWithFacebook": "Halda áfram með Facebook",
+    "continueWithDiscord": "Halda áfram með Discord",
+    "developmentOnly": "Aðeins í þróun",
+    "mockAuthentication": "Prófunarauðkenning",
+    "signInWithMockUser": "Skrá inn með prófunarnotanda",
+    "termsAndPrivacy": "Með því að skrá þig inn samþykkir þú þjónustuskilmála okkar og persónuverndarstefnu",
+    "authenticationFailed": "Auðkenning mistókst. Vinsamlegast reyndu aftur.",
+    "authenticationCallback": "Villa í auðkenningarferlinu.",
+    "accountLinking": "Reikningar eru tengdir saman. Vinsamlegast reyndu að skrá þig inn aftur.",
+    "emailSignInFailed": "Innskráning með tölvupósti mistókst.",
+    "invalidCredentials": "Ógild auðkenni.",
+    "pleaseEnterEmail": "Vinsamlegast sláðu inn netfang",
+    "invalidMockEmail": "Ógilt prófunarnetfang. Reyndu: skuli@example.com",
+    "mockSignInError": "Mistókst að skrá inn. Vinsamlegast reyndu aftur.",
+    "failedToSignIn": "Mistókst að skrá inn með {{provider}}. Vinsamlegast reyndu aftur."
+  },
+  "footer": {
+    "brand": "Leikvellir",
+    "beta": "Beta",
+    "description": "Uppgötvaðu og kortlegðu leikvelli um allt Ísland. Samfélagsvettvangur til að hjálpa fjölskyldum að finna fullkomin leiksvæðin fyrir börnin sín.",
+    "location": "Hafnarfjörður, Ísland",
+    "quickLinks": "Flýtileiðir",
+    "exploreMap": "Skoða kort",
+    "addPlayground": "Bæta við leikvelli",
+    "browsePlaygrounds": "Skoða leikvelli",
+    "privacyPolicy": "Persónuverndarstefna",
+    "cookieSettings": "Vafrakökustillingar",
+    "developer": "Forritari",
+    "softwareDeveloper": "Tölvunarfræðingur / Forritari",
+    "allRightsReserved": "{{year}} Skúli Arnarsson. Öll réttindi áskilin.",
+    "builtWith": "Byggt með Next.js og TypeScript",
+    "version": "v1.0.0-beta"
+  },
   "playground": {
     "title": "Leikvöllur",
     "playgrounds": "Leikvellir",
@@ -41,7 +80,7 @@
     "equipment": "Leiktæki",
     "noEquipment": "Engar upplýsingar um leiktæki til staðar fyrir þennan leikvöll",
     "equipmentDetails": "Upplýsingar um leiktæki verður bætt við síðar",
-    "distance": "Fjarlægð frá þér",
+    "distance": "Fjarlægð",
     "additionalInfo": "Viðbótarupplýsingar",
     "createPlayground": "Búa til leikvöll",
     "deletePlayground": "Eyða leikvelli",
@@ -88,7 +127,28 @@
     "additionalInformation": "Viðbótarupplýsingar",
     "playgroundId": "Leikvallarnúmer",
     "lastUpdated": "Síðast uppfært",
-    "unknown": "Óþekkt"
+    "unknown": "Óþekkt",
+    "sortBy": "Raða eftir:",
+    "newestFirst": "Nýjast fyrst",
+    "nameAZ": "Nafn (A-Ö)",
+    "locationNeeded": "(Þarf staðsetningu)",
+    "popularity": "Vinsældir",
+    "comingSoon": "(Kemur fljótlega)",
+    "finding": "Leitar...",
+    "enableLocationSorting": "Virkja staðsetningu fyrir fjarlægðarröðun",
+    "locationEnabled": "Staðsetning virk",
+    "showing": "Sýni",
+    "playground": "leikvöll",
+    "sortedByDistance": "Raðað eftir fjarlægð frá þér",
+    "noPlaygroundsFound": "Engir leikvellir fundust",
+    "beFirstToAdd": "Vertu fyrstur til að bæta leikvelli í gagnagrunninn!",
+    "loadingPlaygrounds": "Hleður leikvelli...",
+    "noPlaygroundsMatchingFilters": "Engir leikvellir fundust sem passa við síurnar þínar.",
+    "notFound": "Leikvöllur fannst ekki",
+    "allPlaygrounds": "Allir leikvellir",
+    "allPlaygroundsDescription": "Skoðaðu og uppgötvaðu leikvelli um allt Ísland. Finndu fullkominn leikvöll fyrir fjölskylduna þína.",
+    "pageTitle": "Allir leikvellir - Leikvellir",
+    "pageDescription": "Skoðaðu og uppgötvaðu leikvelli. Finndu fullkominn leikvöll fyrir fjölskylduna þína."
   },
   "equipment": {
     "categories": {
@@ -106,7 +166,27 @@
     "loadingEquipment": "Hleð leiktæki...",
     "noEquipmentAvailable": "Engin leiktæki til staðar",
     "playgroundEquipment": "Leiktæki leikvallar",
-    "clearAllSelections": "Hreinsa allt valið"
+    "clearAllSelections": "Hreinsa allt valið",
+    "editEquipment": "Breyta leiktækjum",
+    "createNewEquipment": "Búa til ný leiktæki",
+    "addNewEquipmentToCatalog": "Bættu nýju leiktæki við skrána",
+    "createEquipment": "Búa til leiktæki",
+    "updateDetails": "Uppfærðu upplýsingar um leiktækin hér að neðan",
+    "equipmentUpdatedSuccessfully": "Leiktæki uppfærð með góðum árangri",
+    "failedToUpdateEquipment": "Mistókst að uppfæra leiktæki",
+    "englishName": "Enskt nafn",
+    "enterEnglishName": "Sláðu inn enskt nafn",
+    "icelandicName": "Íslenskt nafn",
+    "enterIcelandicName": "Sláðu inn íslenskt nafn",
+    "category": "Flokkur",
+    "selectCategory": "Veldu flokk",
+    "description": "Lýsing",
+    "enterDescription": "Sláðu inn lýsingu á leiktækjunum (valfrjálst)",
+    "imageUrl": "Myndslóð",
+    "enterImageUrl": "Sláðu inn myndslóð (valfrjálst)",
+    "updateEquipment": "Uppfæra leiktæki",
+    "equipmentCreatedSuccessfully": "Leiktæki búin til með góðum árangri",
+    "failedToCreateEquipment": "Mistókst að búa til leiktæki"
   },
   "admin": {
     "adminMode": "Stjórnunarhamur",
@@ -150,7 +230,7 @@
     "fixFormErrors": "Vinsamlegast lagaðu villur í eyðublaðinu áður en þú sendir",
     "failedToCreate": "Mistókst að búa til leikvöll",
     "filters": "Síur",
-    "filterPlaygrounds": "Sía leikvölli",
+    "filterPlaygrounds": "Sía leikvelli",
     "accessibility": "Aðgengi",
     "clearFilters": "Hreinsa síur",
     "allPlaygrounds": "Allir leikvellir",
@@ -187,5 +267,137 @@
     "playgroundUpdated": "Leikvöllur uppfærður",
     "playgroundDeleted": "Leikvelli eytt",
     "settingsSaved": "Stillingar vistaðar"
+  },
+  "cookies": {
+    "cookieManagement": "Stjórnun vafrakaka",
+    "manageCookiePreferences": "Stjórnaðu vafrakökustillingum þínum og gagnasöfnun.",
+    "essentialCookies": "Nauðsynlegar vafrakökur",
+    "essentialCookiesDescription": "Þessar vafrakökur eru nauðsynlegar fyrir vefinn til að virka og er ekki hægt að slökkva á þeim.",
+    "analyticsCookies": "Greinandlegar vafrakökur",
+    "analyticsCookiesDescription": "Þessar vafrakökur hjálpa okkur að skilja hvernig gestir nota vefsíðuna okkar.",
+    "marketingCookies": "Markaðsvafrakökur",
+    "marketingCookiesDescription": "Þessar vafrakökur eru notaðar til að fylgjast með gestum og sýna viðeigandi auglýsingar.",
+    "savePreferences": "Vista stillingar",
+    "resetToDefaults": "Endurstilla á sjálfgefið",
+    "revokeAllConsent": "Afturkalla öll samþykki",
+    "cookieInformation": "Upplýsingar um vafrakökur",
+    "learnMore": "Lærðu meira um hvernig við notum vafrakökur í okkar",
+    "privacyPolicy": "persónuverndarstefnu"
+  },
+  "privacy": {
+    "privacyPolicy": "Persónuverndarstefna",
+    "lastUpdated": "Síðast uppfært:",
+    "backToMap": "Til baka á kort",
+    "overview": "Yfirlit",
+    "overviewText": "Leikvellir skuldbindur sig til að vernda persónuvernd þína. Þessi persónuverndarstefna útskýrir hvernig við söfnum, notum og verndum upplýsingar þínar þegar þú notar leikvallafundið okkar fyrir Ísland.",
+    "keyPoints": "Lykilatriði:",
+    "keyPointsText": "Við söfnum lágmarksgögnum sem nauðsynleg eru fyrir þjónustuna, notum vafrakökur fyrir greiningar og virkni, og seljum aldrei persónuupplýsingar þínar.",
+    "informationWeCollect": "Upplýsingar sem við söfnum",
+    "accountInformation": "Reikningsupplýsingar",
+    "accountInfoItems": [
+      "Netfang (í gegnum Discord OAuth)",
+      "Birtingarnafn (í gegnum Discord OAuth)",
+      "Discord notendaauðkenni (fyrir auðkenningu)",
+      "Tímastimplar fyrir stofnun reiknings og síðustu innskráningu"
+    ],
+    "userGeneratedContent": "Notendaframleitt efni",
+    "userContentItems": [
+      "Leikvallaskil (staðsetning, titill, myndir, tækjaupplýsingar)",
+      "Upphaldar ljósmyndir af leikvöllum",
+      "Upplýsingar um tæki og aðgengi"
+    ],
+    "locationData": "Staðsetningargögn",
+    "locationDataItems": [
+      "Áætluð staðsetning (þegar sjálfviljugt deilt fyrir fjarlægðarútreikninga)",
+      "Hnit leikvalla (í kortlagningu)",
+      "Staðsetningargögn eru geymd á þínum tölvu og ekki send á þjóna okkar"
+    ],
+    "technicalInformation": "Tæknilegar upplýsingar",
+    "technicalInfoItems": [
+      "Tegund og útgáfa vafra",
+      "Tegund tækis og skjáupplausn",
+      "IP-tala (fyrir öryggi og greiningar)",
+      "Notkunarmynstur og samskipti við eiginleika"
+    ],
+    "cookieUsage": "Notkun vafrakaka",
+    "cookieUsageText": "Við notum vafrakökur og svipaða tækni til að bæta upplifun þína og skilja hvernig þjónustan okkar er notuð. Hér er yfirlit yfir notkun okkar á vafrakökum:",
+    "essentialCookiesTitle": "Nauðsynlegar vafrakökur",
+    "essentialCookiesText": "Nauðsynlegar fyrir grunnvirkni. Ekki hægt að slökkva á.",
+    "essentialCookiesList": [
+      "Auðkenningarlotu vafrakökur",
+      "Öryggistákn",
+      "Vörn gegn eyðublaðasendingu",
+      "Geymsla notendastillinga"
+    ],
+    "analyticsCookiesTitle": "Greiningarvafraskökur",
+    "analyticsCookiesText": "Hjálpa okkur að skilja notkunarmynstur (í gegnum PostHog).",
+    "analyticsCookiesList": [
+      "Síðuhorfa og notendaferðir",
+      "Tölfræði um eiginleikanotkun",
+      "Afkastavísitölur",
+      "Nafnlaus hegðunarrakningarnotenda"
+    ],
+    "functionalCookiesTitle": "Virknivafraskökur",
+    "functionalCookiesText": "Bæta upplifun þína með vettvangi.",
+    "functionalCookiesList": [
+      "Staðsetningarskyndiminni (vafrageymsla)",
+      "Kortastillingar",
+      "Síustillingar",
+      "Viðmótsástandsviðvarandi"
+    ],
+    "thirdPartyCookiesTitle": "Þriðja aðila vafrakökur",
+    "thirdPartyCookiesText": "Frá ytri þjónustum sem við samþættum við.",
+    "thirdPartyCookiesList": [
+      "Google Maps API vafrakökur",
+      "Discord OAuth vafrakökur",
+      "PostHog greiningarvafraskökur",
+      "CDN og afkastavafrakökur"
+    ],
+    "managingCookies": "Stjórnun vafrakaka",
+    "managingCookiesText": "Þú getur stjórnað vafrakökustillingum þínum með því að nota vafrakökuborða okkar eða í gegnum vafrastillingar þínar. Ef þú slekkur á ákveðnum vafrakökum getur það takmarkað suma virkni.",
+    "howWeUseInformation": "Hvernig við notum upplýsingar þínar",
+    "serviceFunctionality": "Þjónustuvirkni",
+    "serviceFunctionalityList": [
+      "Auðkenna notendur og stjórna reikningum",
+      "Birta og stjórna leikvallaskráningum",
+      "Reikna fjarlægðir að leikvöllum (þegar staðsetning er deild)",
+      "Miðla efni og koma í veg fyrir misnotkun"
+    ],
+    "analyticsAndImprovement": "Greiningar og umbætur",
+    "analyticsImprovementList": [
+      "Skilja notkunarmynstur og vinsæla eiginleika",
+      "Fylgjast með kerfisafköstum og áreiðanleika",
+      "Greina og laga villur eða vandamál",
+      "Skipuleggja nýja eiginleika á grundvelli þarfa notenda"
+    ],
+    "communication": "Samskipti",
+    "communicationList": [
+      "Senda mikilvægar þjónustuuppfærslur",
+      "Svara stuðningsbeiðnum",
+      "Tilkynna um stefnubreytingar"
+    ],
+    "dataSharingTitle": "Gagnadeiling og þriðju aðilar",
+    "dataSharingText": "Við seljum, verslunum eða útleigum ekki persónuupplýsingar þínar til þriðju aðila. Við getum deilt upplýsingum aðeins við þessar sérstakar aðstæður:",
+    "serviceProviders": "Þjónustuaðilar",
+    "serviceProvidersText": "PostHog (greiningar), Vercel (hýsing), Google Maps (kortaþjónustur)",
+    "legalRequirements": "Lagalegar kröfur",
+    "legalRequirementsText": "Þegar krafist er af lögum eða til að vernda réttindi og öryggi",
+    "publicContent": "Opinbert efni",
+    "publicContentText": "Samþykktar leikvallaskráningar eru opinberlega sýnilegar á kortinu",
+    "contactUs": "Hafðu samband við okkur",
+    "contactUsText": "Ef þú hefur spurningar um þessa persónuverndarstefnu eða vilt nýta réttindi þín:",
+    "email": "Netfang:",
+    "developer": "Forritari:",
+    "github": "GitHub:",
+    "location": "Staðsetning:",
+    "privacyNotice": "Þessi persónuverndarstefna getur verið uppfærð reglulega. Við munum tilkynna notendum um verulegar breytingar í gegnum tölvupóst eða í gegnum forritið."
+  },
+  "map": {
+    "myLocation": "Mín staðsetning",
+    "yourLocation": "Þín staðsetning",
+    "findingLocation": "Leitar...",
+    "geolocationNotSupported": "Staðsetningarþjónusta er ekki studd í þessum vafra.",
+    "locationAccessDenied": "Ekki hægt að fá staðsetningu þína. Vinsamlegast virkjaðu staðsetningarþjónustu.",
+    "errorGettingLocation": "Villa við að fá staðsetningu þína. Vinsamlegast reyndu aftur."
   }
 }

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { api } from "~/trpc/server";
 import PlaygroundDetail from "~/app/_components/playground-detail";
+import { getTranslation } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 
 interface PlaygroundPageProps {
   params: Promise<{ id: string }>;
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: PlaygroundPageProps) {
 
   if (isNaN(playgroundId)) {
     return {
-      title: "Playground Not Found",
+      title: getTranslation(defaultLocale, 'playground.notFound'),
     };
   }
 
@@ -38,13 +40,12 @@ export async function generateMetadata({ params }: PlaygroundPageProps) {
     const playground = await api.playground.getById({ id: playgroundId });
     return {
       title: `${playground.title} - Leikvellir`,
-      description: `Discover ${playground.title} playground in Iceland. ${
-        playground.toddlerFriendly ? "Toddler-friendly" : ""
-      } ${playground.publiclyAccessible ? "Publicly accessible" : ""} playground.`,
+      description: `${getTranslation(defaultLocale, 'navigation.map')} ${playground.title} ${getTranslation(defaultLocale, 'playground.title')} ${getTranslation(defaultLocale, 'footer.location')}. ${playground.toddlerFriendly ? getTranslation(defaultLocale, 'playground.toddlerFriendly') : ""
+        } ${playground.publiclyAccessible ? getTranslation(defaultLocale, 'playground.publiclyAccessible') : ""} ${getTranslation(defaultLocale, 'playground.title')}.`,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
-      title: "Playground Not Found",
+      title: getTranslation(defaultLocale, 'playground.notFound'),
     };
   }
 }
