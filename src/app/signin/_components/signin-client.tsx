@@ -32,7 +32,7 @@ export default function SignInClient() {
                 errorMessage = "Authentication callback failed.";
                 break;
             case "OAuthAccountNotLinked":
-                errorMessage = "This account is already linked with another provider.";
+                errorMessage = "Account linking in progress. Please try signing in again.";
                 break;
             case "EmailSignin":
                 errorMessage = "Email sign-in failed.";

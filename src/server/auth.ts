@@ -9,6 +9,7 @@ import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { eq } from "drizzle-orm";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
@@ -92,6 +93,65 @@ if (env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development") {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      // Allow sign in for mock authentication
+      if (env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development") {
+        return true;
+      }
+
+      // If no account or email, allow (should not happen with OAuth)
+      if (!account || !user.email) {
+        return true;
+      }
+
+      // Only handle OAuth providers (not credentials)
+      if (account.type !== "oauth") {
+        return true;
+      }
+
+      try {
+        // Check if a user with this email already exists
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, user.email!),
+          with: {
+            accounts: true,
+          },
+        });
+
+        // If user exists and has accounts from other providers
+        if (existingUser && existingUser.accounts.length > 0) {
+          // Check if this specific provider account already exists
+          const existingAccount = existingUser.accounts.find(
+            (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
+          );
+
+          // If the account doesn't exist, link it to the existing user
+          if (!existingAccount) {
+            await db.insert(accounts).values({
+              userId: existingUser.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state: account.session_state,
+            });
+
+            console.log(`Linked ${account.provider} account to existing user: ${user.email}`);
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error in signIn callback:", error);
+        // If there's an error, still allow sign in to avoid blocking users
+        return true;
+      }
+    },
     session: ({ session, user, token }) => {
       if (env.ENABLE_MOCK_AUTH === "true" && env.NODE_ENV === "development") {
         // In mock mode, use token data
