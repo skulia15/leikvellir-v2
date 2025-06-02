@@ -40,7 +40,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
 
     return (
         <nav className="fixed left-0 right-0 top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-            <div className="container mx-auto flex h-16 items-center justify-between px-4">
+            <div className="container mx-auto flex h-16 items-center justify-between pr-2 md:px-4">
                 {/* Left side - Logo, Admin Badge, and Navigation Links */}
                 <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
@@ -55,7 +55,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                 height={62}
                                 className="mr-2"
                             />
-                            <h1 className="text-xl font-bold text-primary xl:text-2xl">
+                            <h1 className="text-sm md:text-xl font-bold text-primary xl:text-2xl">
                                 Leikvellir
                             </h1>
                         </Link>

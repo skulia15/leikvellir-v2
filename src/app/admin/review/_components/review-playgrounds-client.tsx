@@ -17,6 +17,7 @@ import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { toast } from "sonner";
 import ReviewPlaygroundDialog from "./review-playground-dialog";
+import { useT } from "~/lib/i18n";
 
 interface ReviewPlaygroundsClientProps {
     initialData: Playground[];
@@ -27,19 +28,20 @@ export default function ReviewPlaygroundsClient({
 }: ReviewPlaygroundsClientProps) {
     const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
     const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const t = useT();
 
     // Use tRPC query with initial data
     const { data: pendingSubmissions, refetch } = api.playground.getPendingSubmissions.useQuery();
 
     const reviewMutation = api.playground.review.useMutation({
         onSuccess: () => {
-            toast.success("Playground reviewed successfully");
+            toast.success(t('success.playgroundReviewed'));
             void refetch();
             setIsReviewDialogOpen(false);
             setSelectedPlayground(null);
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to review playground");
+            toast.error(error.message || t('admin.failedToReviewPlayground'));
         },
     });
 
@@ -67,7 +69,7 @@ export default function ReviewPlaygroundsClient({
         return (
             <Card>
                 <CardContent className="py-12 text-center">
-                    <div className="text-muted-foreground">Loading pending submissions...</div>
+                    <div className="text-muted-foreground">{t('admin.loadingPendingSubmissions')}</div>
                 </CardContent>
             </Card>
         );
@@ -80,9 +82,9 @@ export default function ReviewPlaygroundsClient({
                     <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
                         <Check className="h-6 w-6 text-green-600" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">No Pending Submissions</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('admin.noPendingSubmissions')}</h3>
                     <p className="text-muted-foreground">
-                        All playground submissions have been reviewed. Great job!
+                        {t('admin.allSubmissionsReviewed')}
                     </p>
                 </CardContent>
             </Card>
@@ -95,7 +97,7 @@ export default function ReviewPlaygroundsClient({
                 <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-orange-600 bg-orange-100">
                         <Clock className="mr-1 h-3 w-3" />
-                        {pendingSubmissions.length} Pending
+                        {t('admin.pendingSubmissions')}
                     </Badge>
                 </div>
             </div>

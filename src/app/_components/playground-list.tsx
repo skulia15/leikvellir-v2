@@ -91,7 +91,7 @@ export default function PlaygroundList({
         >
           <PlaygroundCard
             playground={playground}
-            distance={playground.distance || getPlaygroundDistance(playground, userLocation)}
+            distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
             showDistance={!!userLocation}
           />
         </div>

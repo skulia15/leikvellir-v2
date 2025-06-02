@@ -34,6 +34,7 @@ import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
+import { useT } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 
@@ -65,6 +66,7 @@ export default function ReviewPlaygroundDialog({
 }: ReviewPlaygroundDialogProps) {
     const [selectedAction, setSelectedAction] = useState<"approve" | "reject" | null>(null);
     const [showRejectionReason, setShowRejectionReason] = useState(false);
+    const t = useT();
 
     // Ensure we have a cover image - use existing cover or first image as default
     const validImages = (playground.images ?? []).filter(img => img && img.trim() !== "");
@@ -182,21 +184,20 @@ export default function ReviewPlaygroundDialog({
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        Review Playground Submission
+                        {t('admin.reviewPlaygroundSubmission')}
                         <Badge variant="secondary">#{playground.id}</Badge>
                     </DialogTitle>
                     <DialogDescription>
-                        Review the playground details and approve or reject the submission.
-                        You can edit any details before approving.
+                        {t('admin.reviewSubmissionDescription')}
                     </DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
                     <Tabs defaultValue="details" className="space-y-6">
                         <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="details">Details</TabsTrigger>
-                            <TabsTrigger value="images">Images</TabsTrigger>
-                            <TabsTrigger value="location">Location</TabsTrigger>
+                            <TabsTrigger value="details">{t('admin.details')}</TabsTrigger>
+                            <TabsTrigger value="images">{t('admin.images')}</TabsTrigger>
+                            <TabsTrigger value="location">{t('admin.location')}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="details" className="space-y-4">
@@ -206,7 +207,7 @@ export default function ReviewPlaygroundDialog({
                                     name="title"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Playground Name</FormLabel>
+                                            <FormLabel>{t('playground.playgroundName')}</FormLabel>
                                             <FormControl>
                                                 <Input {...field} />
                                             </FormControl>
@@ -228,7 +229,7 @@ export default function ReviewPlaygroundDialog({
                                                     />
                                                 </FormControl>
                                                 <div className="space-y-1 leading-none">
-                                                    <FormLabel>Publicly Accessible</FormLabel>
+                                                    <FormLabel>{t('playground.publiclyAccessible')}</FormLabel>
                                                 </div>
                                             </FormItem>
                                         )}
@@ -246,7 +247,7 @@ export default function ReviewPlaygroundDialog({
                                                     />
                                                 </FormControl>
                                                 <div className="space-y-1 leading-none">
-                                                    <FormLabel>Toddler Friendly</FormLabel>
+                                                    <FormLabel>{t('playground.toddlerFriendly')}</FormLabel>
                                                 </div>
                                             </FormItem>
                                         )}
@@ -257,14 +258,14 @@ export default function ReviewPlaygroundDialog({
                             <Separator />
 
                             <div className="space-y-4">
-                                <h3 className="text-lg font-semibold">Submission Details</h3>
+                                <h3 className="text-lg font-semibold">{t('admin.submissionDetails')}</h3>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <span className="text-muted-foreground">Submitted by:</span>
+                                        <span className="text-muted-foreground">{t('admin.submittedBy')}:</span>
                                         <span className="ml-2 font-medium">{playground.createdById}</span>
                                     </div>
                                     <div>
-                                        <span className="text-muted-foreground">Submitted on:</span>
+                                        <span className="text-muted-foreground">{t('admin.submittedOn')}:</span>
                                         <span className="ml-2 font-medium">
                                             {new Date(playground.createdAt).toLocaleDateString()}
                                         </span>
@@ -279,7 +280,7 @@ export default function ReviewPlaygroundDialog({
                                 {form.watch("coverImage") && (
                                     <div className="rounded-md border border-green-200 bg-green-50 p-3">
                                         <p className="text-sm text-green-800">
-                                            <strong>Cover Image Selected:</strong> The highlighted image will be used as the cover for this playground.
+                                            <strong>{t('admin.coverImageSelected')}:</strong> {t('admin.coverImageDescription')}
                                         </p>
                                     </div>
                                 )}
@@ -289,7 +290,7 @@ export default function ReviewPlaygroundDialog({
                                     name="images"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Playground Images</FormLabel>
+                                            <FormLabel>{t('playground.playgroundImages')}</FormLabel>
                                             <FormControl>
                                                 <ImageUpload
                                                     value={field.value}
@@ -305,8 +306,8 @@ export default function ReviewPlaygroundDialog({
                                                 />
                                             </FormControl>
                                             <FormDescription>
-                                                Upload playground images and click on any image to set it as the cover.
-                                                <strong> A cover image is required for approval.</strong>
+                                                {t('admin.uploadImagesDescription')}
+                                                <strong> {t('admin.coverImageRequired')}</strong>
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
@@ -322,7 +323,7 @@ export default function ReviewPlaygroundDialog({
                                     name="latitude"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Latitude</FormLabel>
+                                            <FormLabel>{t('playground.latitude')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
@@ -341,7 +342,7 @@ export default function ReviewPlaygroundDialog({
                                     name="longitude"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Longitude</FormLabel>
+                                            <FormLabel>{t('playground.longitude')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
@@ -377,10 +378,10 @@ export default function ReviewPlaygroundDialog({
                                 name="rejectionReason"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Rejection Reason</FormLabel>
+                                        <FormLabel>{t('admin.rejectionReason')}</FormLabel>
                                         <FormControl>
                                             <Textarea
-                                                placeholder="Please provide a reason for rejecting this submission..."
+                                                placeholder={t('admin.rejectionReasonPlaceholder')}
                                                 {...field}
                                             />
                                         </FormControl>
@@ -401,7 +402,7 @@ export default function ReviewPlaygroundDialog({
                                 setShowRejectionReason(false);
                             }}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
 
                         <div className="flex items-center gap-2">
@@ -415,7 +416,7 @@ export default function ReviewPlaygroundDialog({
                                             setSelectedAction(null);
                                         }}
                                     >
-                                        Back
+                                        {t('common.back')}
                                     </Button>
                                     <Button
                                         type="button"
@@ -424,7 +425,7 @@ export default function ReviewPlaygroundDialog({
                                         disabled={reviewMutation.isPending}
                                     >
                                         <X className="mr-2 h-4 w-4" />
-                                        Reject Submission
+                                        {t('admin.rejectSubmission')}
                                     </Button>
                                 </>
                             ) : (
@@ -436,7 +437,7 @@ export default function ReviewPlaygroundDialog({
                                         disabled={reviewMutation.isPending}
                                     >
                                         <X className="mr-2 h-4 w-4" />
-                                        Reject
+                                        {t('admin.reject')}
                                     </Button>
                                     <Button
                                         type="button"
@@ -444,7 +445,7 @@ export default function ReviewPlaygroundDialog({
                                         disabled={reviewMutation.isPending}
                                     >
                                         <Check className="mr-2 h-4 w-4" />
-                                        Approve
+                                        {t('admin.approve')}
                                     </Button>
                                 </>
                             )}

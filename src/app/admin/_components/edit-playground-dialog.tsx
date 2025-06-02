@@ -43,6 +43,7 @@ import ImageUpload from "~/components/ui/image-upload";
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { toast } from "sonner";
+import { useT } from "~/lib/i18n";
 
 // Create a schema that matches the backend update mutation
 const updatePlaygroundSchema = z.object({
@@ -75,6 +76,7 @@ export default function EditPlaygroundDialog({
     const [isDeleting, setIsDeleting] = useState(false);
     const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">("map");
     const utils = api.useUtils();
+    const t = useT();
 
     const form = useForm<UpdatePlaygroundForm>({
         resolver: zodResolver(updatePlaygroundSchema),
@@ -92,13 +94,13 @@ export default function EditPlaygroundDialog({
 
     const updatePlayground = api.playground.update.useMutation({
         onSuccess: () => {
-            toast.success("Playground updated successfully");
+            toast.success(t('success.playgroundUpdated'));
             void utils.playground.getAll.invalidate();
             void utils.playground.getAllForAdmin.invalidate();
             onOpenChange(false);
         },
         onError: (error: { message: string }) => {
-            toast.error(`Failed to update playground: ${error.message}`);
+            toast.error(t('admin.failedToUpdatePlayground', { error: error.message }));
         },
         onSettled: () => {
             setIsSubmitting(false);
@@ -107,7 +109,7 @@ export default function EditPlaygroundDialog({
 
     const deletePlayground = api.playground.delete.useMutation({
         onSuccess: () => {
-            toast.success("Playground deleted successfully");
+            toast.success(t('success.playgroundDeleted'));
             void utils.playground.getAll.invalidate();
             void utils.playground.getAllForAdmin.invalidate();
             void utils.playground.getPendingSubmissions.invalidate();
@@ -115,7 +117,7 @@ export default function EditPlaygroundDialog({
             onPlaygroundDeleted?.();
         },
         onError: (error: { message: string }) => {
-            toast.error(`Failed to delete playground: ${error.message}`);
+            toast.error(t('admin.failedToDeletePlayground', { error: error.message }));
         },
         onSettled: () => {
             setIsDeleting(false);
@@ -177,10 +179,10 @@ export default function EditPlaygroundDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
-                        Edit Playground
+                        {t('playground.editPlayground')}
                     </DialogTitle>
                     <DialogDescription>
-                        Update the playground details below.
+                        {t('admin.updatePlaygroundDetails')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -192,10 +194,10 @@ export default function EditPlaygroundDialog({
                             name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Playground Name *</FormLabel>
+                                    <FormLabel>{t('playground.playgroundName')} *</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Enter playground name (e.g., Central Park Playground)"
+                                            placeholder={t('playground.enterPlaygroundName')}
                                             {...field}
                                         />
                                     </FormControl>
@@ -207,7 +209,7 @@ export default function EditPlaygroundDialog({
                         {/* Location Section */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium">Location</h3>
+                                <h3 className="text-lg font-medium">{t('playground.location')}</h3>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -216,7 +218,7 @@ export default function EditPlaygroundDialog({
                                     className="text-sm"
                                 >
                                     <MapPin className="mr-2 h-4 w-4" />
-                                    Use Current Location
+                                    {t('forms.useCurrentLocation')}
                                 </Button>
                             </div>
 
@@ -228,8 +230,8 @@ export default function EditPlaygroundDialog({
                                 className="w-full"
                             >
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="map">Pick on Map</TabsTrigger>
-                                    <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                                    <TabsTrigger value="map">{t('forms.pickOnMap')}</TabsTrigger>
+                                    <TabsTrigger value="manual">{t('forms.manualEntry')}</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="manual" className="space-y-4">
@@ -239,7 +241,7 @@ export default function EditPlaygroundDialog({
                                             name="latitude"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Latitude *</FormLabel>
+                                                    <FormLabel>{t('playground.latitude')} *</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
@@ -251,7 +253,7 @@ export default function EditPlaygroundDialog({
                                                             }
                                                         />
                                                     </FormControl>
-                                                    <FormDescription>Range: -90 to 90</FormDescription>
+                                                    <FormDescription>{t('forms.range')}: -90 to 90</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -262,7 +264,7 @@ export default function EditPlaygroundDialog({
                                             name="longitude"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Longitude *</FormLabel>
+                                                    <FormLabel>{t('playground.longitude')} *</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
@@ -274,7 +276,7 @@ export default function EditPlaygroundDialog({
                                                             }
                                                         />
                                                     </FormControl>
-                                                    <FormDescription>Range: -180 to 180</FormDescription>
+                                                    <FormDescription>{t('forms.range')}: -180 to 180</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -294,7 +296,7 @@ export default function EditPlaygroundDialog({
                                     <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                                         <div className="flex flex-col space-y-1">
                                             <span className="font-medium text-muted-foreground">
-                                                Selected Latitude:
+                                                {t('forms.selectedLatitude')}:
                                             </span>
                                             <span className="rounded bg-muted px-2 py-1 font-mono">
                                                 {currentLatitude.toFixed(6)}
@@ -302,7 +304,7 @@ export default function EditPlaygroundDialog({
                                         </div>
                                         <div className="flex flex-col space-y-1">
                                             <span className="font-medium text-muted-foreground">
-                                                Selected Longitude:
+                                                {t('forms.selectedLongitude')}:
                                             </span>
                                             <span className="rounded bg-muted px-2 py-1 font-mono">
                                                 {currentLongitude.toFixed(6)}
@@ -315,7 +317,7 @@ export default function EditPlaygroundDialog({
 
                         {/* Accessibility Options */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Accessibility & Features</h3>
+                            <h3 className="text-lg font-medium">{t('forms.accessibilityAndFeatures')}</h3>
 
                             <FormField
                                 control={form.control}
@@ -329,9 +331,9 @@ export default function EditPlaygroundDialog({
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel>Publicly Accessible</FormLabel>
+                                            <FormLabel>{t('playground.publiclyAccessible')}</FormLabel>
                                             <FormDescription>
-                                                This playground is open to the general public
+                                                {t('forms.publiclyAccessibleDescription')}
                                             </FormDescription>
                                         </div>
                                     </FormItem>
@@ -350,9 +352,9 @@ export default function EditPlaygroundDialog({
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel>Toddler Friendly</FormLabel>
+                                            <FormLabel>{t('playground.toddlerFriendly')}</FormLabel>
                                             <FormDescription>
-                                                Safe and suitable for children under 3 years old
+                                                {t('forms.toddlerFriendlyDescription')}
                                             </FormDescription>
                                         </div>
                                     </FormItem>
@@ -367,7 +369,7 @@ export default function EditPlaygroundDialog({
                                 name="equipmentIds"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Playground Equipment</FormLabel>
+                                        <FormLabel>{t('playground.playgroundEquipment')}</FormLabel>
                                         <FormControl>
                                             <EquipmentSelector
                                                 value={field.value || []}
@@ -376,7 +378,7 @@ export default function EditPlaygroundDialog({
                                             />
                                         </FormControl>
                                         <FormDescription>
-                                            Select the equipment available at this playground.
+                                            {t('forms.selectEquipmentAtPlayground')}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -386,14 +388,14 @@ export default function EditPlaygroundDialog({
 
                         {/* Images Section */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Images</h3>
+                            <h3 className="text-lg font-medium">{t('playground.images')}</h3>
 
                             <FormField
                                 control={form.control}
                                 name="images"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Playground Images</FormLabel>
+                                        <FormLabel>{t('playground.playgroundImages')}</FormLabel>
                                         <FormControl>
                                             <ImageUpload
                                                 value={field.value || []}
@@ -412,7 +414,7 @@ export default function EditPlaygroundDialog({
                                             />
                                         </FormControl>
                                         <FormDescription>
-                                            Upload up to 8 images and click on an image to set it as the cover.
+                                            {t('forms.playgroundImagesDescription')}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -430,25 +432,24 @@ export default function EditPlaygroundDialog({
                                         className="mr-auto"
                                     >
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete Playground
+                                        {t('playground.deletePlayground')}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogTitle>{t('forms.areYouSure')}</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete the playground
-                                            &quot;{playground.title}&quot; and remove all associated data and images from our servers.
+                                            {t('forms.deleteConfirmation')}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
                                         <AlertDialogAction
                                             onClick={handleDelete}
                                             disabled={isDeleting}
                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                         >
-                                            {isDeleting ? "Deleting..." : "Delete Playground"}
+                                            {isDeleting ? t('actions.deleting') : t('playground.deletePlayground')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -461,10 +462,10 @@ export default function EditPlaygroundDialog({
                                     onClick={() => onOpenChange(false)}
                                     disabled={isSubmitting || isDeleting}
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button type="submit" disabled={isSubmitting || isDeleting}>
-                                    {isSubmitting ? "Updating..." : "Update Playground"}
+                                    {isSubmitting ? t('actions.updating') : t('forms.updatePlayground')}
                                 </Button>
                             </div>
                         </DialogFooter>

@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { calculateDistance, formatDistance, type UserLocation } from "~/lib/geo-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
+import { useT } from "~/lib/i18n";
 import { type Playground } from "~/types";
 
 interface PlaygroundInfoWindowProps {
@@ -25,6 +26,7 @@ export function PlaygroundInfoWindow({
 }: PlaygroundInfoWindowProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const t = useT();
 
   const distance = userLocation
     ? calculateDistance(
@@ -91,11 +93,10 @@ export function PlaygroundInfoWindow({
         lng: playground.longitude
       }}
       onCloseClick={onClose}
-      maxWidth={350}
       pixelOffset={[0, -10]}
       headerDisabled={true}
     >
-      <Card className="w-80 border-0 shadow-none max-h-96 overflow-hidden">
+      <Card className="w-full min-w-72 max-w-80 sm:w-80 border-0 shadow-none max-h-[85vh] sm:max-h-96 overflow-hidden">
         <CardContent className="p-0">
           {/* Compact header with inline close button */}
           <div className="px-3 pt-3 pb-1">
@@ -125,12 +126,12 @@ export function PlaygroundInfoWindow({
               <div className="flex items-center gap-1.5">
                 {playground.toddlerFriendly && (
                   <Badge variant="outline" className="text-xs py-0 h-4 px-2">
-                    Toddler Friendly
+                    {t('playground.toddlerFriendly')}
                   </Badge>
                 )}
                 {playground.publiclyAccessible && (
                   <Badge variant="outline" className="text-xs py-0 h-4 px-2">
-                    Public Access
+                    {t('playground.publicAccess')}
                   </Badge>
                 )}
               </div>
@@ -234,7 +235,7 @@ export function PlaygroundInfoWindow({
               className="w-full h-8 text-sm"
             >
                 <ExternalLink className="mr-1 h-3 w-3" />
-                View Details
+                {t('playground.viewDetails')}
               </Button>
             </Link>
           </div>

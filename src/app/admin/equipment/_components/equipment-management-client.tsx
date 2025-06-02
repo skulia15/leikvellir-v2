@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import EquipmentEditDialog from "./equipment-edit-dialog";
 import EquipmentCreateDialog from "./equipment-create-dialog";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
+import { useT } from "~/lib/i18n";
 
 interface EquipmentManagementClientProps {
     initialData: Equipment[];
@@ -40,6 +41,7 @@ export default function EquipmentManagementClient({
 }: EquipmentManagementClientProps) {
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const t = useT();
 
     // Use tRPC query with initial data
     const { data: equipment, refetch } = api.equipment.getAllAdmin.useQuery(
@@ -49,21 +51,21 @@ export default function EquipmentManagementClient({
 
     const deleteMutation = api.equipment.delete.useMutation({
         onSuccess: () => {
-            toast.success("Equipment deleted successfully");
+            toast.success(t("equipment.delete.success"));
             void refetch();
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to delete equipment");
+            toast.error(error.message || t("equipment.delete.error"));
         },
     });
 
     const restoreMutation = api.equipment.restore.useMutation({
         onSuccess: () => {
-            toast.success("Equipment restored successfully");
+            toast.success(t("equipment.restore.success"));
             void refetch();
         },
         onError: (error) => {
-            toast.error(error.message || "Failed to restore equipment");
+            toast.error(error.message || t("equipment.restore.error"));
         },
     });
 
@@ -73,7 +75,7 @@ export default function EquipmentManagementClient({
     };
 
     const handleDelete = async (equipment: Equipment) => {
-        if (confirm(`Are you sure you want to delete "${equipment.nameEnglish}"?`)) {
+        if (confirm(`${t("equipment.delete.confirm")} "${equipment.nameEnglish}"?`)) {
             try {
                 await deleteMutation.mutateAsync({ id: equipment.id });
             } catch (_error) {
@@ -112,7 +114,7 @@ export default function EquipmentManagementClient({
                             <PlaygroundEquipmentIcon className="h-5 w-5 text-blue-600" />
                             <div>
                                 <div className="text-2xl font-bold">{equipment?.length || 0}</div>
-                                <div className="text-sm text-muted-foreground">Total Equipment</div>
+                                <div className="text-sm text-muted-foreground">{t("equipment.total")}</div>
                             </div>
                         </div>
                     </CardContent>
@@ -123,7 +125,7 @@ export default function EquipmentManagementClient({
                             <div className="h-3 w-3 rounded-full bg-green-500" />
                             <div>
                                 <div className="text-2xl font-bold">{activeCount}</div>
-                                <div className="text-sm text-muted-foreground">Active</div>
+                                <div className="text-sm text-muted-foreground">{t("equipment.active")}</div>
                             </div>
                         </div>
                     </CardContent>
@@ -134,7 +136,7 @@ export default function EquipmentManagementClient({
                             <div className="h-3 w-3 rounded-full bg-red-500" />
                             <div>
                                 <div className="text-2xl font-bold">{inactiveCount}</div>
-                                <div className="text-sm text-muted-foreground">Inactive</div>
+                                <div className="text-sm text-muted-foreground">{t("equipment.inactive")}</div>
                             </div>
                         </div>
                     </CardContent>
@@ -151,7 +153,7 @@ export default function EquipmentManagementClient({
                                     <PlaygroundEquipmentIcon className="h-5 w-5" />
                                     {categoryLabels[category] || category}
                                     <Badge variant="outline">
-                                        {categoryEquipment.length} items
+                                        {categoryEquipment.length} {t("equipment.items")}
                                     </Badge>
                                 </div>
                                 <EquipmentCreateDialog
@@ -164,11 +166,11 @@ export default function EquipmentManagementClient({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Equipment</TableHead>
-                                        <TableHead>Image</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead>{t('admin.equipmentTable')}</TableHead>
+                                        <TableHead>{t('admin.image')}</TableHead>
+                                        <TableHead>{t('admin.description')}</TableHead>
+                                        <TableHead>{t('admin.status')}</TableHead>
+                                        <TableHead className="text-right">{t('admin.actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -199,12 +201,12 @@ export default function EquipmentManagementClient({
                                             </TableCell>
                                             <TableCell>
                                                 <div className="max-w-xs truncate">
-                                                    {item.description || "No description"}
+                                                    {item.description || t('admin.noDescription')}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={item.isActive ? "default" : "secondary"}>
-                                                    {item.isActive ? "Active" : "Inactive"}
+                                                    {item.isActive ? t('admin.active') : t('admin.inactive')}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">

@@ -25,6 +25,8 @@ interface MapProps {
   onUserLocationChange: (location: UserLocation | null) => void;
   mapCenter?: UserLocation | null;
   onVisiblePlaygroundsChange?: (playgrounds: (Playground & { distance?: number | null })[]) => void;
+  isMobile?: boolean;
+  drawerHeight?: number;
 }
 
 const defaultCenter = {
@@ -97,6 +99,8 @@ export function GoogleMap({
   onUserLocationChange,
   mapCenter,
   onVisiblePlaygroundsChange,
+  isMobile: _isMobile = false,
+  drawerHeight: _drawerHeight = 0,
 }: MapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);

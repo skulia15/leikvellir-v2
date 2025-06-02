@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
+import { getTranslation } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 import AdminPlaygroundsClient from "./_components/admin-playgrounds-client";
 
 export default async function AdminPage() {
@@ -20,9 +22,9 @@ export default async function AdminPage() {
         <div className="bg-background">
             <div className="container mx-auto px-4 py-6">
                 <div className="mb-6">
-                    <h1 className="mb-2 text-3xl font-bold">Admin Dashboard</h1>
+                    <h1 className="mb-2 text-3xl font-bold">{getTranslation(defaultLocale, 'admin.adminDashboard')}</h1>
                     <p className="text-muted-foreground">
-                        Manage playgrounds in the system. You can edit details or remove playgrounds.
+                        {getTranslation(defaultLocale, 'admin.adminDashboardDescription')}
                     </p>
                 </div>
 
@@ -33,6 +35,6 @@ export default async function AdminPage() {
 }
 
 export const metadata = {
-    title: "Admin Dashboard - Leikvellir",
-    description: "Manage playgrounds and system settings.",
+    title: getTranslation(defaultLocale, 'admin.adminDashboardTitle'),
+    description: getTranslation(defaultLocale, 'admin.adminDashboardMetaDescription'),
 }; 

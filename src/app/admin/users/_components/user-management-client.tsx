@@ -36,6 +36,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { type UserRole } from "~/types";
 import Image from "next/image";
+import { useT } from "~/lib/i18n";
 
 // Define the user type based on the database schema
 type User = {
@@ -54,6 +55,7 @@ type User = {
 export default function UserManagementClient() {
     const [banReason, setBanReason] = useState("");
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const t = useT();
 
     const utils = api.useUtils();
 
@@ -62,7 +64,7 @@ export default function UserManagementClient() {
 
     const updateRoleMutation = api.users.updateRole.useMutation({
         onSuccess: () => {
-            toast.success("User role updated successfully");
+            toast.success(t('success.userRoleUpdated'));
             void utils.users.getAll.invalidate();
         },
         onError: (error) => {
@@ -72,7 +74,7 @@ export default function UserManagementClient() {
 
     const banUserMutation = api.users.banUser.useMutation({
         onSuccess: () => {
-            toast.success("User banned successfully");
+            toast.success(t('success.userBanned'));
             void utils.users.getAll.invalidate();
             setBanReason("");
             setSelectedUserId(null);
@@ -84,7 +86,7 @@ export default function UserManagementClient() {
 
     const unbanUserMutation = api.users.unbanUser.useMutation({
         onSuccess: () => {
-            toast.success("User unbanned successfully");
+            toast.success(t('success.userUnbanned'));
             void utils.users.getAll.invalidate();
         },
         onError: (error) => {
@@ -98,7 +100,7 @@ export default function UserManagementClient() {
 
     const handleBanUser = () => {
         if (!selectedUserId || !banReason.trim()) {
-            toast.error("Please provide a ban reason");
+            toast.error(t('admin.provideBanReason'));
             return;
         }
 
@@ -118,21 +120,21 @@ export default function UserManagementClient() {
                 return (
                     <Badge variant="destructive" className="flex items-center gap-1">
                         <Crown className="h-3 w-3" />
-                        Super Admin
+                        {t('admin.superAdmin')}
                     </Badge>
                 );
             case "admin":
                 return (
                     <Badge variant="secondary" className="flex items-center gap-1">
                         <ShieldCheck className="h-3 w-3" />
-                        Admin
+                        {t('admin.admin')}
                     </Badge>
                 );
             default:
                 return (
                     <Badge variant="outline" className="flex items-center gap-1">
                         <Shield className="h-3 w-3" />
-                        User
+                        {t('admin.userRole')}
                     </Badge>
                 );
         }
@@ -143,20 +145,20 @@ export default function UserManagementClient() {
             return (
                 <Badge variant="destructive" className="flex items-center gap-1">
                     <Ban className="h-3 w-3" />
-                    Banned
+                    {t('admin.banned')}
                 </Badge>
             );
         }
         return (
             <Badge variant="default" className="flex items-center gap-1">
                 <UserCheck className="h-3 w-3" />
-                Active
+                {t('admin.active')}
             </Badge>
         );
     };
 
     if (isLoading) {
-        return <div>Loading users...</div>;
+        return <div>{t('admin.loadingUsers')}</div>;
     }
 
     return (
@@ -164,12 +166,12 @@ export default function UserManagementClient() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Joined</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{t('admin.userTable')}</TableHead>
+                        <TableHead>{t('admin.email')}</TableHead>
+                        <TableHead>{t('admin.role')}</TableHead>
+                        <TableHead>{t('admin.status')}</TableHead>
+                        <TableHead>{t('admin.joined')}</TableHead>
+                        <TableHead>{t('admin.actions')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -189,7 +191,7 @@ export default function UserManagementClient() {
                                     <div>
                                         <div className="font-medium">{user.name ?? "Unknown"}</div>
                                         {user.id === currentUser?.id && (
-                                            <div className="text-xs text-muted-foreground">(You)</div>
+                                            <div className="text-xs text-muted-foreground">{t('admin.youIndicator')}</div>
                                         )}
                                     </div>
                                 </div>
@@ -198,7 +200,7 @@ export default function UserManagementClient() {
                                 <div className="text-sm">{user.email}</div>
                                 {user.email?.includes("@example.com") && (
                                     <Badge variant="outline" className="text-xs">
-                                        Demo
+                                        {t('admin.demo')}
                                     </Badge>
                                 )}
                             </TableCell>
@@ -217,9 +219,9 @@ export default function UserManagementClient() {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="user">User</SelectItem>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                                                <SelectItem value="user">{t('admin.userRole')}</SelectItem>
+                                                <SelectItem value="admin">{t('admin.admin')}</SelectItem>
+                                                <SelectItem value="super_admin">{t('admin.superAdmin')}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -243,7 +245,7 @@ export default function UserManagementClient() {
                                                     disabled={unbanUserMutation.isPending}
                                                 >
                                                     <UserCheck className="h-4 w-4 mr-1" />
-                                                    Unban
+                                                    {t('admin.unban')}
                                                 </Button>
                                             ) : (
                                                 <AlertDialog>
@@ -255,25 +257,24 @@ export default function UserManagementClient() {
                                                             disabled={user.role === "super_admin"}
                                                         >
                                                             <Ban className="h-4 w-4 mr-1" />
-                                                            Ban
+                                                            {t('admin.banUser')}
                                                         </Button>
                                                     </AlertDialogTrigger>
                                                     <AlertDialogContent>
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle>Ban User</AlertDialogTitle>
+                                                            <AlertDialogTitle>{t('admin.banUserTitle')}</AlertDialogTitle>
                                                             <AlertDialogDescription>
-                                                                Are you sure you want to ban {user.name ?? user.email}?
-                                                                They will be unable to access the platform.
+                                                                {t('admin.banUserDescription', { name: user.name ?? user.email })}
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <div className="space-y-4">
                                                             <div>
-                                                                <Label htmlFor="banReason">Reason for ban</Label>
+                                                                <Label htmlFor="banReason">{t('admin.reasonForBan')}</Label>
                                                                 <Input
                                                                     id="banReason"
                                                                     value={banReason}
                                                                     onChange={(e) => setBanReason(e.target.value)}
-                                                                    placeholder="Enter reason for banning this user..."
+                                                                    placeholder={t('admin.enterBanReason')}
                                                                 />
                                                             </div>
                                                         </div>
@@ -284,14 +285,14 @@ export default function UserManagementClient() {
                                                                     setSelectedUserId(null);
                                                                 }}
                                                             >
-                                                                Cancel
+                                                                {t('common.cancel')}
                                                             </AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={handleBanUser}
                                                                 disabled={!banReason.trim() || banUserMutation.isPending}
                                                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                             >
-                                                                Ban User
+                                                                {t('admin.banUser')}
                                                             </AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>

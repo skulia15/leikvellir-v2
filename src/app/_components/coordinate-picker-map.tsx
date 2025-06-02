@@ -9,6 +9,7 @@ import {
   type MapMouseEvent,
 } from "@vis.gl/react-google-maps";
 import { env } from "~/env";
+import { useT } from "~/lib/i18n";
 
 interface CoordinatePickerMapProps {
   latitude: number;
@@ -37,6 +38,8 @@ export function CoordinatePickerMap({
     lat: latitude || defaultCenter.lat,
     lng: longitude || defaultCenter.lng,
   });
+
+  const t = useT();
 
   // Update marker position when props change
   useEffect(() => {
@@ -83,17 +86,17 @@ export function CoordinatePickerMap({
         >
           <AdvancedMarker
             position={markerPosition}
-            title="Selected playground location"
+            title={t('map.selectedPlaygroundLocation')}
           />
         </Map>
 
         {/* Instruction overlay */}
         <div className="absolute left-2 top-2 rounded-md border bg-background/90 px-3 py-2 text-sm shadow-md backdrop-blur-sm">
           <p className="font-medium text-foreground">
-            Click on the map to set location
+            {t('map.clickToSetLocation')}
           </p>
           <p className="text-xs text-muted-foreground">
-            Lat: {markerPosition.lat.toFixed(6)}, Lng:{" "}
+            {t('playground.latitude')}: {markerPosition.lat.toFixed(6)}, {t('playground.longitude')}:{" "}
             {markerPosition.lng.toFixed(6)}
           </p>
         </div>

@@ -28,20 +28,22 @@ import {
 import { Pencil, Trash2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useT } from "~/lib/i18n";
 import EditPlaygroundDialog from "./edit-playground-dialog";
 
 export default function AdminPlaygroundsClient() {
     const [editingPlayground, setEditingPlayground] = useState<Playground | null>(null);
     const [playgrounds] = api.playground.getAllForAdmin.useSuspenseQuery();
     const utils = api.useUtils();
+    const t = useT();
 
     const deletePlayground = api.playground.delete.useMutation({
         onSuccess: () => {
-            toast.success(`Playground deleted successfully`);
+            toast.success(t('success.playgroundDeleted'));
             void utils.playground.getAllForAdmin.invalidate();
         },
         onError: (error) => {
-            toast.error(`Failed to delete playground: ${error.message}`);
+            toast.error(t('admin.failedToDeletePlayground', { error: error.message }));
         },
     });
 
@@ -64,11 +66,11 @@ export default function AdminPlaygroundsClient() {
     const getStatusBadge = (status: Playground["status"]) => {
         switch (status) {
             case "approved":
-                return <Badge variant="default" className="text-xs">Approved</Badge>;
+                return <Badge variant="default" className="text-xs">{t('admin.approved')}</Badge>;
             case "pending":
-                return <Badge variant="secondary" className="text-xs text-orange-600 bg-orange-100">Pending</Badge>;
+                return <Badge variant="secondary" className="text-xs text-orange-600 bg-orange-100">{t('admin.pending')}</Badge>;
             case "rejected":
-                return <Badge variant="destructive" className="text-xs">Rejected</Badge>;
+                return <Badge variant="destructive" className="text-xs">{t('admin.rejected')}</Badge>;
             default:
                 return null;
         }
@@ -79,12 +81,12 @@ export default function AdminPlaygroundsClient() {
             <Card>
                 <CardContent className="pt-6 text-center">
                     <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                    <h3 className="mb-2 text-lg font-medium">No Playgrounds Found</h3>
+                    <h3 className="mb-2 text-lg font-medium">{t('admin.noPlaygroundsFound')}</h3>
                     <p className="text-muted-foreground">
-                        There are no playgrounds in the system yet.
+                        {t('admin.noPlaygroundsFoundDescription')}
                     </p>
                     <Button asChild className="mt-4">
-                        <Link href="/create-playground">Add First Playground</Link>
+                        <Link href="/create-playground">{t('admin.addFirstPlayground')}</Link>
                     </Button>
                 </CardContent>
             </Card>
@@ -103,25 +105,25 @@ export default function AdminPlaygroundsClient() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold">{playgrounds.length}</div>
-                        <p className="text-xs text-muted-foreground">Total Playgrounds</p>
+                        <p className="text-xs text-muted-foreground">{t('admin.totalPlaygrounds')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold text-green-600">{statusCounts.approved || 0}</div>
-                        <p className="text-xs text-muted-foreground">Approved</p>
+                        <p className="text-xs text-muted-foreground">{t('admin.approved')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold text-orange-600">{statusCounts.pending || 0}</div>
-                        <p className="text-xs text-muted-foreground">Pending Review</p>
+                        <p className="text-xs text-muted-foreground">{t('admin.pendingReview')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold text-red-600">{statusCounts.rejected || 0}</div>
-                        <p className="text-xs text-muted-foreground">Rejected</p>
+                        <p className="text-xs text-muted-foreground">{t('admin.rejected')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -129,13 +131,13 @@ export default function AdminPlaygroundsClient() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                        <span>All Playgrounds ({playgrounds.length})</span>
+                        <span>{t('admin.allPlaygrounds')} ({playgrounds.length})</span>
                         <div className="flex items-center gap-2">
                             <Button asChild variant="outline">
-                                <Link href="/admin/review">Review Submissions</Link>
+                                <Link href="/admin/review">{t('admin.reviewSubmissions')}</Link>
                             </Button>
                             <Button asChild>
-                                <Link href="/create-playground">Add New Playground</Link>
+                                <Link href="/create-playground">{t('playground.addNewPlayground')}</Link>
                             </Button>
                         </div>
                     </CardTitle>
@@ -145,12 +147,12 @@ export default function AdminPlaygroundsClient() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Location</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Features</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead>{t('admin.name')}</TableHead>
+                                    <TableHead>{t('admin.location')}</TableHead>
+                                    <TableHead>{t('admin.status')}</TableHead>
+                                    <TableHead>{t('admin.features')}</TableHead>
+                                    <TableHead>{t('admin.created')}</TableHead>
+                                    <TableHead>{t('admin.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -169,12 +171,12 @@ export default function AdminPlaygroundsClient() {
                                             <div className="flex flex-wrap gap-1">
                                                 {playground.toddlerFriendly && (
                                                     <Badge variant="secondary" className="text-xs">
-                                                        Toddler Friendly
+                                                        {t('playground.toddlerFriendly')}
                                                     </Badge>
                                                 )}
                                                 {playground.publiclyAccessible && (
                                                     <Badge variant="outline" className="text-xs">
-                                                        Public Access
+                                                        {t('playground.publicAccess')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -214,20 +216,19 @@ export default function AdminPlaygroundsClient() {
                                                     </AlertDialogTrigger>
                                                     <AlertDialogContent>
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle>Delete Playground</AlertDialogTitle>
+                                                            <AlertDialogTitle>{t('playground.deletePlayground')}</AlertDialogTitle>
                                                             <AlertDialogDescription>
-                                                                Are you sure you want to delete &quot;{playground.title}&quot;?
-                                                                This action cannot be undone.
+                                                                {t('admin.deletePlaygroundConfirmation', { title: playground.title })}
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={() => handleDelete(playground)}
                                                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                 disabled={deletePlayground.isPending}
                                                             >
-                                                                {deletePlayground.isPending ? "Deleting..." : "Delete"}
+                                                                {deletePlayground.isPending ? t('actions.deleting') : t('common.delete')}
                                                             </AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>

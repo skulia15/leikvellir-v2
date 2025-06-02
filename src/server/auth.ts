@@ -48,7 +48,7 @@ const mockUsers = [
     id: "mock-user-1",
     name: "Skúli Arnarsson",
     email: "skuli@example.com",
-    image: "	https://avatars.githubusercontent.com/u/16030738?v=4",
+    image: "https://avatars.githubusercontent.com/u/16030738?v=4",
   },
 ];
 

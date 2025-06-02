@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
 import UserManagementClient from "./_components/user-management-client";
+import { getTranslation, defaultLocale } from "~/lib/i18n";
 
 export default async function UserManagementPage() {
     const session = await getServerAuthSession();
@@ -25,9 +26,9 @@ export default async function UserManagementPage() {
     return (
         <div className="container mx-auto p-6">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold">User Management</h1>
+                <h1 className="text-3xl font-bold">{getTranslation(defaultLocale, 'admin.userManagement')}</h1>
                 <p className="text-muted-foreground">
-                    Manage user roles and permissions across the platform.
+                    {getTranslation(defaultLocale, 'admin.userManagementDescription')}
                 </p>
             </div>
 

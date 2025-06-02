@@ -59,6 +59,8 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 📋 Planned Features
 
+- add a change request submission available for all users
+
 - **Playground Search Functionality**
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
 - **Enhanced Playground Details**

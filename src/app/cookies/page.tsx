@@ -1,10 +1,12 @@
 // app/cookies/page.tsx
 import type { Metadata } from "next";
 import CookieManagementPage from "./_components/cookie-management-client";
+import { getTranslation } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 
 export const metadata: Metadata = {
-    title: "Cookie Management | Leikvellir",
-    description: "Manage your cookie preferences and data collection settings.",
+    title: `${getTranslation(defaultLocale, 'cookies.cookieManagement')} | Leikvellir`,
+    description: getTranslation(defaultLocale, 'cookies.manageCookiePreferences'),
 };
 
 export default function CookiesPage() {

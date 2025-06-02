@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { List } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import {
     MapErrorBoundary,
     DataErrorBoundary,
@@ -20,8 +22,10 @@ import PlaygroundList from "./playground-list";
 import PlaygroundFilters, { type PlaygroundFilters as PlaygroundFiltersType } from "./playground-filters";
 import { type Playground } from "~/types";
 import { type UserLocation } from "~/lib/geo-utils";
+import { useT } from "~/lib/i18n";
 
 export default function HomeClient() {
+    const t = useT();
     const [filters, setFilters] = useState<PlaygroundFiltersType>({});
     const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
     const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
@@ -29,6 +33,7 @@ export default function HomeClient() {
     const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
     const [isOpen, setOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
+    const [currentSnapIndex, setCurrentSnapIndex] = useState(2); // Start at minimized
     const ref = useRef<SheetRef>();
 
     const searchParams = useSearchParams();
@@ -115,6 +120,27 @@ export default function HomeClient() {
         setVisiblePlaygrounds(newVisiblePlaygrounds);
     }, []);
 
+    // Handle playground selection and snap drawer to minimized state on mobile
+    const handlePlaygroundSelect = useCallback((playground: Playground | null) => {
+        setSelectedPlayground(playground);
+
+        // If on mobile and a playground is selected, minimize the drawer
+        if (isMobile && playground && ref.current) {
+            ref.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
+        }
+    }, [isMobile]);
+
+    // Calculate drawer height based on snap point
+    const getDrawerHeight = useCallback(() => {
+        if (!isMobile || !isOpen) return 0;
+
+        const snapPoints = [0.85, 0.6, 0.15];
+        const viewportHeight = window.innerHeight;
+        const snapPoint = snapPoints[currentSnapIndex] || 0.15;
+
+        return viewportHeight * snapPoint;
+    }, [isMobile, isOpen, currentSnapIndex]);
+
     // Playground list content
     const playgroundContent = (
         <DataErrorBoundary fallback={DataErrorFallback}>
@@ -130,7 +156,7 @@ export default function HomeClient() {
                 filters={filters}
                 userLocation={userLocation}
                 selectedPlayground={selectedPlayground}
-                onPlaygroundSelect={setSelectedPlayground}
+                onPlaygroundSelect={handlePlaygroundSelect}
                 visiblePlaygrounds={visiblePlaygrounds}
             />
         </DataErrorBoundary>
@@ -139,52 +165,93 @@ export default function HomeClient() {
     // Mobile layout with bottom sheet
     if (isMobile) {
         return (
-            <div className="flex flex-col" style={{ height: 'calc(100vh - 12rem)' }}>
-                {/* Map takes the remaining space */}
-                <div className="flex-1 relative">
+            <div className="flex flex-col h-screen relative">
+                {/* Map container - takes full viewport height */}
+                <div className="absolute inset-0">
                     <MapErrorBoundary fallback={MapErrorFallback}>
                         <GoogleMap
                             selectedPlayground={selectedPlayground}
-                            onPlaygroundSelect={setSelectedPlayground}
+                            onPlaygroundSelect={handlePlaygroundSelect}
                             filters={filters}
                             userLocation={userLocation}
                             onUserLocationChange={setUserLocation}
                             mapCenter={mapCenter}
                             onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                            isMobile={isMobile}
+                            drawerHeight={getDrawerHeight()}
                         />
                     </MapErrorBoundary>
                 </div>
 
-                {/* Mobile bottom sheet */}
+                {/* Mobile bottom sheet with improved settings */}
                 <Sheet
                     ref={ref}
                     isOpen={isOpen}
-                    onClose={() => setOpen(true)} // Keep it always open
-                    snapPoints={[0.9, 0.5, 0.2]}
-                    initialSnap={2}
-                    onSnap={(snapIndex) =>
-                        console.log("> Current snap point index:", snapIndex)
-                    }
+                    onClose={() => setOpen(false)} // Allow closing
+                    snapPoints={[0.85, 0.6, 0.15]} // More intuitive heights
+                    initialSnap={2} // Start minimized
+                    onSnap={(snapIndex) => {
+                        console.log("> Current snap point index:", snapIndex);
+                        setCurrentSnapIndex(snapIndex);
+                        // Keep track of open state based on snap point
+                        if (snapIndex === 2) {
+                            // At the smallest snap point, consider it "minimized" but still open
+                            setOpen(true);
+                        }
+                    }}
                     disableScrollLocking
+                    style={{
+                        zIndex: 40, // Lower than cookie banner (z-50)
+                    }}
                 >
-                    <Sheet.Container>
-                        <Sheet.Header className="px-4 py-2">
-                            <div className="mx-auto h-1 w-12 rounded-full bg-muted-foreground/30" />
+                    <Sheet.Container
+                        style={{
+                            borderTopLeftRadius: "20px",
+                            borderTopRightRadius: "20px",
+                            boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
+                        }}
+                    >
+                        <Sheet.Header className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm">
+                            {/* Improved drag handle */}
+                            <div className="mx-auto h-1.5 w-12 rounded-full bg-muted-foreground/40 mb-2" />
+                            <div className="text-center">
+                                <h2 className="text-sm font-medium text-muted-foreground">
+                                    {visiblePlaygrounds.length} {t('playground.playgroundsFound')}
+                                </h2>
+                            </div>
                         </Sheet.Header>
-                        <Sheet.Content>
-                            <ScrollArea className="h-full overflow-y-auto">
-                                {playgroundContent}
+                        <Sheet.Content className="bg-background/95 backdrop-blur-sm">
+                            <ScrollArea className="h-full px-2">
+                                <div className="pb-safe-area-inset-bottom">
+                                    {playgroundContent}
+                                </div>
                             </ScrollArea>
                         </Sheet.Content>
                     </Sheet.Container>
+                    <Sheet.Backdrop className="bg-transparent" />
                 </Sheet>
+
+                {/* Floating button to reopen drawer when closed */}
+                {!isOpen && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+                        <Button
+                            onClick={() => setOpen(true)}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg rounded-full px-6 py-3 flex items-center gap-2"
+                        >
+                            <List className="h-4 w-4" />
+                            <span className="text-sm font-medium">
+                                {visiblePlaygrounds.length} {t('playground.playgroundsFound')}
+                            </span>
+                        </Button>
+                    </div>
+                )}
             </div>
         );
     }
 
     // Desktop layout with left sidebar
     return (
-        <div className="flex" style={{ height: 'calc(100vh - 12rem)' }}>
+        <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
             {/* Left sidebar with playground list */}
             <div className="w-96 bg-background border-r overflow-hidden flex-shrink-0">
                 <ScrollArea className="h-full">
@@ -199,12 +266,14 @@ export default function HomeClient() {
                 <MapErrorBoundary fallback={MapErrorFallback}>
                     <GoogleMap
                         selectedPlayground={selectedPlayground}
-                        onPlaygroundSelect={setSelectedPlayground}
+                        onPlaygroundSelect={handlePlaygroundSelect}
                         filters={filters}
                         userLocation={userLocation}
                         onUserLocationChange={setUserLocation}
                         mapCenter={mapCenter}
                         onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                        isMobile={false}
+                        drawerHeight={0}
                     />
                 </MapErrorBoundary>
             </div>

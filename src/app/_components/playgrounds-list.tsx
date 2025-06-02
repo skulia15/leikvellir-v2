@@ -80,7 +80,7 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
                   <SelectItem value="newest">{t('playground.newestFirst')}</SelectItem>
                   <SelectItem value="name">{t('playground.nameAZ')}</SelectItem>
                   <SelectItem value="proximity" disabled={!userLocation}>
-                    {t('playground.distance')} {!userLocation && t('playground.locationNeeded')}
+                    {t('playground.distanceFromYou')} {!userLocation && t('playground.locationNeeded')}
                   </SelectItem>
                   <SelectItem value="popularity" disabled>
                     {t('playground.popularity')} {t('playground.comingSoon')}

@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "./card";
 import Link from "next/link";
+import { useT } from "~/lib/i18n";
 
 // Generic error fallback component
 export function DefaultErrorFallback({
@@ -19,23 +20,24 @@ export function DefaultErrorFallback({
   error: Error;
   reset: () => void;
 }) {
+  const t = useT();
+
   return (
     <Card className="mx-auto w-full max-w-lg mt-20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <AlertCircle className="h-5 w-5" />
-          Something went wrong
+          {t('errors.somethingWentWrong')}
         </CardTitle>
         <CardDescription>
-          An unexpected error occurred. Please try refreshing the page or
-          contact support if the problem persists.
+          {t('errors.unexpectedError')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {process.env.NODE_ENV === "development" && (
           <details className="rounded border p-2 text-sm">
             <summary className="cursor-pointer font-medium">
-              Error Details
+              {t('errors.errorDetails')}
             </summary>
             <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
               {error.message}
@@ -55,10 +57,10 @@ export function DefaultErrorFallback({
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            Try Again
+            {t('errors.tryAgain')}
           </Button>
           <Button onClick={() => window.location.reload()} variant="outline">
-            Reload Page
+            {t('errors.reloadPage')}
           </Button>
         </div>
       </CardContent>
@@ -74,16 +76,17 @@ export function FormErrorFallback({
   error: Error;
   reset: () => void;
 }) {
+  const t = useT();
+
   return (
     <Card className="mx-auto w-full max-w-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <AlertCircle className="h-5 w-5" />
-          Form Error
+          {t('errors.formError')}
         </CardTitle>
         <CardDescription>
-          There was an issue with the form. This might be due to a validation
-          error or connection issue.
+          {t('errors.formErrorDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -93,12 +96,12 @@ export function FormErrorFallback({
         </p>
         <div className="flex gap-2">
           <Button onClick={reset} variant="default">
-            Try Again
+            {t('errors.tryAgain')}
           </Button>
           <Button asChild variant="outline">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Map
+              {t('errors.backToMap')}
             </Link>
           </Button>
         </div>
@@ -115,17 +118,18 @@ export function MapErrorFallback({
   error: Error;
   reset: () => void;
 }) {
+  const t = useT();
+
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center bg-muted/20">
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-destructive">
             <MapPin className="h-5 w-5" />
-            Map Loading Error
+            {t('errors.mapLoadingError')}
           </CardTitle>
           <CardDescription>
-            Unable to load the map. This might be due to a network issue or
-            Google Maps API problem.
+            {t('errors.mapErrorDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -134,7 +138,7 @@ export function MapErrorFallback({
           </p>
           <Button onClick={reset} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
-            Retry Map
+            {t('errors.retryMap')}
           </Button>
         </CardContent>
       </Card>
@@ -150,16 +154,18 @@ export function DataErrorFallback({
   error: Error;
   reset: () => void;
 }) {
+  const t = useT();
+
   return (
     <div className="p-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" />
-            Data Loading Error
+            {t('errors.dataLoadingError')}
           </CardTitle>
           <CardDescription>
-            Unable to load the data. This might be a database connection issue.
+            {t('errors.dataErrorDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -172,7 +178,7 @@ export function DataErrorFallback({
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            Retry Loading
+            {t('errors.retryLoading')}
           </Button>
         </CardContent>
       </Card>

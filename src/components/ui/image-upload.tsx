@@ -21,6 +21,7 @@ import type {
   UploadResponse,
 } from "~/types/upload";
 import { DEFAULT_UPLOAD_CONFIG } from "~/types/upload";
+import { useT } from "~/lib/i18n";
 
 interface ImageUploadProps {
   value?: string[]; // Current image URLs
@@ -51,6 +52,7 @@ export function ImageUpload({
     [config],
   );
 
+  const t = useT();
 
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadProgress, setUploadProgress] = useState<
@@ -256,7 +258,10 @@ export function ImageUpload({
 
         if (totalAfterUpload > finalConfig.maxFiles) {
           setErrors([
-            `Maximum ${finalConfig.maxFiles} files allowed. Currently have ${currentUploaded + currentPending} files.`,
+            t('forms.maximumFilesExceeded', {
+              maxFiles: finalConfig.maxFiles,
+              currentFiles: currentUploaded + currentPending
+            }),
           ]);
           return;
         }
@@ -269,7 +274,7 @@ export function ImageUpload({
         if (nonImageFiles.length > 0) {
           setErrors(prev => [
             ...prev,
-            ...nonImageFiles.map(file => `${file.name}: Only image files are supported`)
+            ...nonImageFiles.map(file => t('forms.onlyImageFilesSupported', { filename: file.name }))
           ]);
         }
 
@@ -312,7 +317,7 @@ export function ImageUpload({
             console.error("❌ Error during resize:", error);
             setErrors(prev => [
               ...prev,
-              `Failed to resize images: ${error instanceof Error ? error.message : 'Unknown error'}`
+              t('forms.failedToResizeImages', { error: error instanceof Error ? error.message : t('errors.unknownError') })
             ]);
             return;
           } finally {
@@ -333,7 +338,7 @@ export function ImageUpload({
         if (invalid.length > 0) {
           setErrors(prev => [
             ...prev,
-            ...invalid.map(({ file, error }) => `${file.name}: ${error}`)
+            ...invalid.map(({ file, error }) => t('forms.fileValidationError', { filename: file.name, error }))
           ]);
         }
 
@@ -352,7 +357,7 @@ export function ImageUpload({
       } catch (error) {
         console.error("❌ Error in onDrop:", error);
         setErrors([
-          error instanceof Error ? error.message : "Processing failed",
+          error instanceof Error ? error.message : t('forms.processingFailed'),
         ]);
       }
     },
@@ -363,6 +368,7 @@ export function ImageUpload({
       createFileWithPreview,
       disabled,
       uploadFile,
+      t,
     ],
   );
 
@@ -392,7 +398,10 @@ export function ImageUpload({
       if (reallyRejectedFiles.length > 0) {
         setErrors(prev => [
           ...prev,
-          ...reallyRejectedFiles.map(r => `${r.file.name}: ${r.errors.map(e => e.message).join(', ')}`)
+          ...reallyRejectedFiles.map(r => t('forms.fileRejected', {
+            filename: r.file.name,
+            errors: r.errors.map(e => e.message).join(', ')
+          }))
         ]);
       }
     },
@@ -491,64 +500,6 @@ export function ImageUpload({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Test Direct Upload Button - For Debugging Only */}
-      {/* <div className="p-2 border border-dashed border-yellow-400 bg-yellow-50 rounded-md">
-        <h4 className="text-sm font-medium mb-2">Debug Tools</h4>
-        <p className="text-xs mb-2">Test direct file upload (bypasses validation)</p>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-
-            console.log("🧪 Test upload: Selected file", file.name);
-
-            try {
-              // Simple direct upload test without validation
-              const formData = new FormData();
-              formData.append("file", file);
-
-              console.log("🧪 Test upload: Sending to /api/upload");
-              const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-              });
-
-              const result = await response.json();
-              console.log("🧪 Test upload result:", result);
-
-              if (result.success) {
-                console.log("🧪 Test upload success! URL:", result.url);
-                // Add to form value
-                onChange([...currentUrlsRef.current, result.url]);
-              } else {
-                console.error("🧪 Test upload failed:", result.error);
-              }
-            } catch (error) {
-              console.error("🧪 Test upload error:", error);
-            }
-          }}
-          className="text-xs"
-        />
-        <button
-          type="button"
-          className="mt-2 px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 rounded"
-          onClick={async () => {
-            try {
-              console.log("🧪 Testing API connection...");
-              const response = await fetch("/api/test");
-              const result = await response.json();
-              console.log("🧪 API Test result:", result);
-            } catch (error) {
-              console.error("🧪 API Test error:", error);
-            }
-          }}
-        >
-          Test API Connection
-        </button>
-      </div> */}
-
       {/* Dropzone Area */}
       <div
         {...getRootProps()}
@@ -566,12 +517,16 @@ export function ImageUpload({
             <Zap className="mx-auto mb-4 h-12 w-12 text-blue-500 animate-pulse" />
             <div className="space-y-2">
               <p className="text-lg font-medium text-blue-600">
-                Compressing images...
+                {t('forms.compressingImages')}
               </p>
               <p className="text-sm text-muted-foreground">
                 {resizeProgress.current > 0 && resizeProgress.total > 0
-                  ? `Processing ${resizeProgress.current} of ${resizeProgress.total}: ${resizeProgress.filename}`
-                  : "Preparing to compress images..."}
+                  ? t('forms.processingImageProgress', {
+                    current: resizeProgress.current,
+                    total: resizeProgress.total,
+                    filename: resizeProgress.filename
+                  })
+                  : t('forms.preparingToCompressImages')}
               </p>
               {resizeProgress.total > 0 && (
                 <Progress
@@ -586,13 +541,13 @@ export function ImageUpload({
             <Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <div className="space-y-2">
               <p className="text-lg font-medium">
-                {isDragActive ? "Drop images here" : "Upload playground images"}
+                {isDragActive ? t('forms.dropImagesHere') : t('forms.uploadPlaygroundImages')}
               </p>
               <p className="text-sm text-muted-foreground">
-                Drag & drop images or click to browse
+                {t('forms.dragDropOrClick')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Max {finalConfig.maxFiles} files, large images will be automatically compressed
+                {t('forms.maxFilesCompression', { maxFiles: finalConfig.maxFiles })}
               </p>
             </div>
           </>
@@ -619,11 +574,11 @@ export function ImageUpload({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h4 className="text-sm font-medium">
-              {showCoverSelection ? "Images & Cover Selection" : "Uploaded Images"}
+              {showCoverSelection ? t('forms.imagesCoverSelection') : t('forms.uploadedImages')}
             </h4>
             {showCoverSelection && coverImage && (
               <p className="text-xs text-muted-foreground">
-                Click an image to set as cover
+                {t('forms.clickImageSetCover')}
               </p>
             )}
           </div>
@@ -642,7 +597,7 @@ export function ImageUpload({
                   >
                     <Image
                       src={url}
-                      alt={`Image ${index + 1}`}
+                      alt={t('forms.imageAlt', { index: index + 1 })}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -676,7 +631,7 @@ export function ImageUpload({
                   <div className="mt-1 text-center">
                     {isCover && (
                       <p className="text-xs font-medium text-primary">
-                        Cover Image
+                        {t('forms.coverImage')}
                       </p>
                     )}
                     {/* Show compression info if this image was resized */}
@@ -710,7 +665,7 @@ export function ImageUpload({
         return state === "uploading" || state === "success";
       }) && (
           <div>
-            <h4 className="mb-3 text-sm font-medium">Uploading Images</h4>
+            <h4 className="mb-3 text-sm font-medium">{t('forms.uploadingImages')}</h4>
             <div className="space-y-4">
               {files
                 .filter(f => {
@@ -771,13 +726,13 @@ export function ImageUpload({
                             <div className="space-y-1">
                               <Progress value={progress.progress} className="h-2" />
                               <p className="text-xs text-muted-foreground">
-                                {progress.progress}% uploaded
+                                {t('forms.uploadProgress', { progress: progress.progress })}
                               </p>
                             </div>
                           )}
                           {progress?.state === "success" && (
                             <p className="text-xs text-green-600">
-                              Upload complete! Moving to gallery...
+                              {t('forms.uploadCompleteMoving')}
                             </p>
                           )}
                         </div>
@@ -792,7 +747,10 @@ export function ImageUpload({
       {/* Upload Stats */}
       {(validUrls.length > 0 || files.length > 0) && (
         <div className="text-xs text-muted-foreground">
-          {totalUploadedImages} of {finalConfig.maxFiles} images uploaded
+          {t('forms.imagesUploadedStats', {
+            uploaded: totalUploadedImages,
+            maxFiles: finalConfig.maxFiles
+          })}
         </div>
       )}
     </div>
