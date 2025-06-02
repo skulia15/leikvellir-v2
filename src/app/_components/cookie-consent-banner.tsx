@@ -25,15 +25,21 @@ interface CookiePreferences {
   advertising: boolean;
 }
 
+interface StoredConsentData {
+  preferences: CookiePreferences;
+  version: number;
+  timestamp: string;
+}
+
 const DEFAULT_PREFERENCES: CookiePreferences = {
   essential: true,
   analytics: false,
-  functional: true,
+  functional: false,
   advertising: false,
 };
 
 const STORAGE_KEY = "leikvellir-cookie-consent";
-const CONSENT_VERSION = "1.0";
+const CONSENT_VERSION = 1;
 
 export function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -45,7 +51,8 @@ export function CookieConsentBanner() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const { preferences: storedPrefs, version } = JSON.parse(stored);
+        const parsedData = JSON.parse(stored) as StoredConsentData;
+        const { preferences: storedPrefs, version } = parsedData;
         if (version === CONSENT_VERSION) {
           setPreferences(storedPrefs);
           // Initialize analytics if consented
@@ -78,7 +85,7 @@ export function CookieConsentBanner() {
   };
 
   const savePreferences = (newPreferences: CookiePreferences) => {
-    const consentData = {
+    const consentData: StoredConsentData = {
       preferences: newPreferences,
       version: CONSENT_VERSION,
       timestamp: new Date().toISOString(),
@@ -162,8 +169,8 @@ export function CookieConsentBanner() {
                         Cookie Preferences
                       </DialogTitle>
                       <DialogDescription>
-                        Choose which cookies you'd like to allow. Essential cookies
-                        cannot be disabled as they're required for basic functionality.
+                        Choose which cookies you&apos;d like to allow. Essential cookies
+                        cannot be disabled as they&apos;re required for basic functionality.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -277,7 +284,8 @@ export const cookieUtils = {
     if (!stored) return null;
 
     try {
-      const { preferences, version } = JSON.parse(stored);
+      const parsedData = JSON.parse(stored) as StoredConsentData;
+      const { preferences, version } = parsedData;
       if (version === CONSENT_VERSION) {
         return preferences;
       }

@@ -1,18 +1,15 @@
 // app/_components/footer.tsx
+import {
+  Code,
+  Copyright,
+  ExternalLink,
+  Github,
+  Mail,
+  MapPin
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
-import {
-  Github,
-  Mail,
-  MapPin,
-  Heart,
-  Shield,
-  Copyright,
-  ExternalLink,
-  Code,
-  // Playground
-} from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();

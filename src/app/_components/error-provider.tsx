@@ -2,14 +2,22 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 
+interface ErrorContext {
+    component?: string;
+    action?: string;
+    [key: string]: unknown;
+}
+
 interface ErrorProviderProps {
     children: ReactNode;
 }
 
 const ErrorContext = createContext<{
-    reportError: (error: Error, context?: any) => void;
+    reportError: (error: Error, context?: ErrorContext) => void;
 }>({
-    reportError: () => { }
+    reportError: (error: Error, context?: ErrorContext) => {
+        console.error("Error reported:", error, context);
+    }
 });
 
 export function ErrorProvider({ children }: ErrorProviderProps) {
@@ -36,8 +44,11 @@ export function ErrorProvider({ children }: ErrorProviderProps) {
         };
     }, []);
 
-    const reportError = (error: Error, context?: any) => {
+    const reportError = (error: Error, context?: ErrorContext) => {
         console.error("Reported error:", error, context);
+
+        // In a real application, you might send this to a logging service
+        // or store it for the error dashboard
     };
 
     return (

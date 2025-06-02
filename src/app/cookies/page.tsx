@@ -201,7 +201,7 @@ export default function CookieManagementPage() {
                                         <Badge variant="outline">Not Used</Badge>
                                     </div>
                                     <p className="text-sm text-muted-foreground mb-2">
-                                        We don't currently use advertising cookies on Leikvellir.
+                                        We don&apos;t currently use advertising cookies on Leikvellir.
                                     </p>
                                     <div className="text-xs text-muted-foreground">
                                         <strong>Future use:</strong> Personalized ads, retargeting (if implemented)
@@ -254,7 +254,7 @@ export default function CookieManagementPage() {
                                     • You can change these settings at any time by revisiting this page
                                 </p>
                                 <p>
-                                    • Essential cookies cannot be disabled as they're required for the site to function
+                                    • Essential cookies cannot be disabled as they&apos;re required for the site to function
                                 </p>
                                 <p>
                                     • Disabling functional cookies may limit some features like saved map preferences

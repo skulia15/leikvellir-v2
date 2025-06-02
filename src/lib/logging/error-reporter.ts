@@ -9,6 +9,11 @@ export interface ErrorReport {
   timestamp: Date;
 }
 
+interface ResourceElement extends HTMLElement {
+  src?: string;
+  href?: string;
+}
+
 class ErrorReporter {
   private errorQueue: ErrorReport[] = [];
   private maxQueueSize = 100;
@@ -39,10 +44,10 @@ class ErrorReporter {
 
     // Handle unhandled Promise rejections
     window.addEventListener("unhandledrejection", (event) => {
-      const error = event.reason instanceof Error 
-        ? event.reason 
+      const error = event.reason instanceof Error
+        ? event.reason
         : new Error(String(event.reason));
-      
+
       this.reportError(error, {
         component: "GlobalErrorHandler",
         action: "unhandled_promise_rejection",
@@ -52,7 +57,7 @@ class ErrorReporter {
     // Handle resource loading errors
     window.addEventListener("error", (event) => {
       if (event.target && event.target !== window) {
-        const target = event.target as HTMLElement;
+        const target = event.target as ResourceElement;
         this.reportError(
           new Error(`Resource failed to load: ${target.tagName}`),
           {
@@ -60,7 +65,7 @@ class ErrorReporter {
             action: "resource_load_error",
             metadata: {
               tagName: target.tagName,
-              src: (target as any).src || (target as any).href,
+              src: target.src || target.href,
             },
           }
         );
@@ -79,7 +84,7 @@ class ErrorReporter {
 
     // Add to queue
     this.errorQueue.push(report);
-    
+
     // Trim queue if it gets too large
     if (this.errorQueue.length > this.maxQueueSize) {
       this.errorQueue.shift();
@@ -95,7 +100,7 @@ class ErrorReporter {
     method: string,
     error: Error,
     responseStatus?: number,
-    responseData?: any
+    responseData?: unknown
   ): void {
     this.reportError(error, {
       component: "API",
@@ -194,7 +199,7 @@ class ErrorReporter {
   } {
     const now = new Date();
     const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-    
+
     const recentErrors = this.errorQueue.filter(
       report => report.timestamp > tenMinutesAgo
     );
@@ -233,7 +238,7 @@ export const reportApiError = (
   method: string,
   error: Error,
   responseStatus?: number,
-  responseData?: any
+  responseData?: unknown
 ) => {
   errorReporter.reportApiError(endpoint, method, error, responseStatus, responseData);
 };

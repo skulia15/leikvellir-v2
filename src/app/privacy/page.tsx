@@ -1,10 +1,9 @@
 // app/privacy/page.tsx
+import { ArrowLeft, Cookie, Database, Eye, Shield, UserCheck } from "lucide-react";
 import { type Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
-import { ArrowLeft, Shield, Cookie, Database, Eye, UserCheck } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Privacy Policy - Leikvellir",
@@ -126,7 +125,7 @@ export default function PrivacyPolicyPage() {
             <CardContent className="space-y-6">
               <p>
                 We use cookies and similar technologies to enhance your experience and understand
-                how our service is used. Here's a breakdown of our cookie usage:
+                how our service is used. Here&apos;s a breakdown of our cookie usage:
               </p>
 
               <div className="grid gap-4 md:grid-cols-2">

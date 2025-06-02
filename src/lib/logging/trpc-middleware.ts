@@ -1,21 +1,26 @@
 // lib/logging/trpc-middleware.ts
-import { type ProcedureType } from "@trpc/server";
-import { type TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
+import { type inferRouterContext } from "@trpc/server";
 import { logger, logDbError } from "./logger";
 import { reportError } from "./error-reporter";
 
+interface TRPCError extends Error {
+  code: string;
+  cause?: unknown;
+  data?: unknown;
+}
+
 export interface TRPCErrorContext {
   procedure: string;
-  input?: any;
+  input?: unknown;
   userId?: string;
-  type: ProcedureType;
+  type: 'query' | 'mutation' | 'subscription';
 }
 
 export function logTRPCError(
-  error: any,
+  error: TRPCError,
   context: TRPCErrorContext
 ): void {
-  const isDatabase = error.code === "INTERNAL_SERVER_ERROR" && 
+  const isDatabase = error.code === "INTERNAL_SERVER_ERROR" &&
     (error.message.includes("database") || error.message.includes("SQL"));
 
   if (isDatabase) {
@@ -25,7 +30,7 @@ export function logTRPCError(
       userId: context.userId,
       metadata: {
         type: context.type,
-        input: JSON.stringify(context.input).substring(0, 1000),
+        input: context.input ? JSON.stringify(context.input).substring(0, 1000) : undefined,
       },
     });
   } else {
@@ -36,7 +41,7 @@ export function logTRPCError(
       metadata: {
         type: context.type,
         errorCode: error.code,
-        input: JSON.stringify(context.input).substring(0, 1000),
+        input: context.input ? JSON.stringify(context.input).substring(0, 1000) : undefined,
       },
     }, error);
   }
@@ -56,12 +61,12 @@ export function logTRPCError(
 // Middleware function for tRPC
 export const errorLoggingMiddleware = (opts: {
   procedure: string;
-  type: ProcedureType;
-  input?: any;
+  type: 'query' | 'mutation' | 'subscription';
+  input?: unknown;
   userId?: string;
 }) => {
   return {
-    onError: (error: any) => {
+    onError: (error: TRPCError) => {
       logTRPCError(error, {
         procedure: opts.procedure,
         input: opts.input,

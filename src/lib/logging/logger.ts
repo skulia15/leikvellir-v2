@@ -8,7 +8,7 @@ export interface LogContext {
   sessionId?: string;
   component?: string;
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp?: Date;
   userAgent?: string;
   url?: string;
@@ -46,7 +46,7 @@ class Logger {
 
   private getSessionId(): string {
     if (!this.isClient) return "server";
-    
+
     let sessionId = sessionStorage.getItem("leikvellir-session-id");
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
@@ -58,17 +58,17 @@ class Logger {
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
-    
+
     if (context?.component) {
       return `${prefix} [${context.component}] ${message}`;
     }
-    
+
     return `${prefix} ${message}`;
   }
 
   private shouldLog(level: LogLevel): boolean {
     if (this.isDevelopment) return true;
-    
+
     // In production, only log warnings and errors
     return ["warn", "error", "fatal"].includes(level);
   }
@@ -77,7 +77,7 @@ class Logger {
     if (!this.shouldLog(entry.level)) return;
 
     const message = this.formatMessage(entry.level, entry.message, entry.context);
-    
+
     switch (entry.level) {
       case "debug":
         console.debug(message, entry.context, entry.error);
@@ -106,9 +106,9 @@ class Logger {
     // - Sentry: Sentry.captureException(entry.error, { extra: entry.context })
     // - DataDog: DD_LOGS.logger.error(entry.message, entry.context)
     // - Custom API endpoint for logging
-    
+
     if (!this.shouldLog(entry.level)) return;
-    
+
     // For now, just log critical errors to console in production
     if (entry.level === "fatal" || entry.level === "error") {
       console.error("EXTERNAL_LOG:", {
@@ -146,9 +146,9 @@ class Logger {
     errorInfo?: ErrorInfo
   ): void {
     const entry = this.createLogEntry(level, message, context, error, errorInfo);
-    
+
     this.logToConsole(entry);
-    
+
     // Don't await external logging to avoid blocking
     this.logToExternalService(entry).catch((err) => {
       console.error("Failed to log to external service:", err);

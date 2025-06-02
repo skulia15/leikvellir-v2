@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
+  AdvancedMarker,
   APIProvider,
   Map,
-  AdvancedMarker,
   useMap,
 } from "@vis.gl/react-google-maps";
+import { MapPin, Navigation } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import { env } from "~/env";
+import { calculateDistance, type UserLocation } from "~/lib/geo-utils";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
-import { Button } from "~/components/ui/button";
-import { MapPin, Navigation } from "lucide-react";
-import { type PlaygroundFilters } from "./playground-filters";
-import { calculateDistance, formatDistance, type UserLocation } from "~/lib/geo-utils";
 import { PlaygroundInfoWindow } from "./info-window";
+import { type PlaygroundFilters } from "./playground-filters";
 
 interface MapProps {
   selectedPlayground: Playground | null;

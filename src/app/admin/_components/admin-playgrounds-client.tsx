@@ -36,7 +36,7 @@ export default function AdminPlaygroundsClient() {
     const utils = api.useUtils();
 
     const deletePlayground = api.playground.delete.useMutation({
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success(`Playground deleted successfully`);
             void utils.playground.getAllForAdmin.invalidate();
         },

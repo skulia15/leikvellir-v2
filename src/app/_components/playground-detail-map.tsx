@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
 import {
+    AdvancedMarker,
     APIProvider,
     Map,
-    AdvancedMarker,
 } from "@vis.gl/react-google-maps";
-import { env } from "~/env";
-import { type Playground } from "~/types";
+import { MapPin, Maximize2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { MapPin, Navigation, Maximize2 } from "lucide-react";
+import { env } from "~/env";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
+import { type Playground } from "~/types";
 
 interface PlaygroundDetailMapProps {
     playground: Playground;

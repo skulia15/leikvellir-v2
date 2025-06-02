@@ -1,17 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
+import { AlertTriangle, Bug, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Badge } from "~/components/ui/badge";
-import { AlertTriangle, Bug, Clock, TrendingUp } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+
+interface ErrorContext {
+    component?: string;
+    action?: string;
+    [key: string]: unknown;
+}
 
 interface ErrorEntry {
     timestamp: number;
     component: string;
     action: string;
     error: Error;
-    context?: any;
+    context?: ErrorContext;
 }
 
 interface ErrorStats {
@@ -25,11 +31,11 @@ class SimpleErrorReporter {
     private errors: ErrorEntry[] = [];
     private maxErrors = 100;
 
-    reportError(error: Error, context: any = {}) {
+    reportError(error: Error, context: ErrorContext = {}) {
         const entry: ErrorEntry = {
             timestamp: Date.now(),
-            component: context.component || "Unknown",
-            action: context.action || "unknown",
+            component: context.component ?? "Unknown",
+            action: context.action ?? "unknown",
             error,
             context,
         };
@@ -199,7 +205,7 @@ export function ErrorDashboard() {
                                 onClick={() => console.table(errors)}
                                 className="text-xs"
                             >
-                                Log Details
+                                Debug
                             </Button>
                         )}
                     </div>
@@ -209,5 +215,5 @@ export function ErrorDashboard() {
     );
 }
 
-// Export the error reporter for global use
+// Export the error reporter for use in other components
 export { errorReporter };
