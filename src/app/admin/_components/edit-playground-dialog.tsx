@@ -41,6 +41,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import ImageUpload from "~/components/ui/image-upload";
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
+import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { toast } from "sonner";
 
 // Create a schema that matches the backend update mutation
@@ -52,6 +53,7 @@ const updatePlaygroundSchema = z.object({
     toddlerFriendly: z.boolean(),
     coverImage: z.string().nullable(),
     images: z.array(z.string()),
+    equipmentIds: z.array(z.number()),
 });
 
 type UpdatePlaygroundForm = z.infer<typeof updatePlaygroundSchema>;
@@ -84,6 +86,7 @@ export default function EditPlaygroundDialog({
             toddlerFriendly: playground.toddlerFriendly,
             coverImage: playground.coverImage,
             images: playground.images ?? [],
+            equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [],
         },
     });
 
@@ -357,6 +360,30 @@ export default function EditPlaygroundDialog({
                             />
                         </div>
 
+                        {/* Equipment Section */}
+                        <div className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="equipmentIds"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Playground Equipment</FormLabel>
+                                        <FormControl>
+                                            <EquipmentSelector
+                                                value={field.value || []}
+                                                onChange={field.onChange}
+                                                disabled={isSubmitting}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Select the equipment available at this playground.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
                         {/* Images Section */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-medium">Images</h3>
@@ -373,7 +400,7 @@ export default function EditPlaygroundDialog({
                                                 onChange={field.onChange}
                                                 config={{
                                                     maxFiles: 8,
-                                                    maxSize: 5 * 1024 * 1024, // 5MB
+                                                    maxSize: 4 * 1024 * 1024, // 4MB
                                                 }}
                                                 showCoverSelection
                                                 coverImage={form.watch("coverImage")}

@@ -296,7 +296,7 @@ export default function ReviewPlaygroundDialog({
                                                     onChange={field.onChange}
                                                     config={{
                                                         maxFiles: 8,
-                                                        maxSize: 5 * 1024 * 1024, // 5MB
+                                                        maxSize: 4 * 1024 * 1024, // 4MB
                                                     }}
                                                     coverImage={form.watch("coverImage")}
                                                     onCoverImageChange={(url) => form.setValue("coverImage", url)}

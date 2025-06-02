@@ -1,4 +1,6 @@
 // lib/logging/logger.ts
+"use client";
+
 import { type ErrorInfo } from "react";
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
@@ -150,7 +152,7 @@ class Logger {
     this.logToConsole(entry);
 
     // Don't await external logging to avoid blocking
-    this.logToExternalService(entry).catch((err) => {
+    void this.logToExternalService(entry).catch((err) => {
       console.error("Failed to log to external service:", err);
     });
   }

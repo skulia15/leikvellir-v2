@@ -22,7 +22,7 @@ export interface UploadProgress {
 // Validation schemas
 export const ImageUploadSchema = z.object({
   file: z.instanceof(File),
-  maxSize: z.number().default(5 * 1024 * 1024), // 5MB
+  maxSize: z.number().default(4 * 1024 * 1024), // 4MB
   allowedTypes: z
     .array(z.string())
     .default(["image/jpeg", "image/jpg", "image/png", "image/webp"]),
@@ -53,7 +53,7 @@ export interface ImageUploadConfig {
 // Default configuration
 export const DEFAULT_UPLOAD_CONFIG: Required<ImageUploadConfig> = {
   maxFiles: 10,
-  maxSize: 5 * 1024 * 1024, // 5MB
+  maxSize: 4 * 1024 * 1024, // 4MB
   allowedTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
   accept: "image/jpeg,image/jpg,image/png,image/webp",
 };

@@ -51,13 +51,6 @@ export function ImageUpload({
     [config],
   );
 
-  console.log("🔍 ImageUpload configuration:", {
-    maxFiles: finalConfig.maxFiles,
-    maxSize: finalConfig.maxSize,
-    maxSizeMB: (finalConfig.maxSize / (1024 * 1024)).toFixed(1) + "MB",
-    allowedTypes: finalConfig.allowedTypes,
-    disabled
-  });
 
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadProgress, setUploadProgress] = useState<
@@ -172,8 +165,6 @@ export function ImageUpload({
               xhr.responseText,
             ) as unknown as UploadResponse;
             if (response.success && response.url) {
-              console.log(`✅ Upload successful for ${file.name}: ${response.url}`);
-              console.log(`📋 Current URLs before adding: [${currentUrlsRef.current.join(', ')}]`);
 
               // Add URL to form value - use functional state update to avoid race conditions
               const newUrl = response.url;
@@ -181,8 +172,6 @@ export function ImageUpload({
               onChange(updatedUrls);
               // Update the ref immediately
               currentUrlsRef.current = updatedUrls;
-
-              console.log(`📋 Current URLs after adding: [${updatedUrls.join(', ')}]`);
 
               // Set upload to success state instead of immediately removing
               setUploadProgress((prev) => {
@@ -198,13 +187,11 @@ export function ImageUpload({
 
               // Auto-select first image as cover if none selected and cover selection is enabled
               if (showCoverSelection && !coverImage && onCoverImageChange) {
-                console.log(`🏆 Auto-selecting cover image: ${response.url}`);
                 onCoverImageChange(response.url);
               }
 
               // Clean up successful upload after a brief delay to allow UI to update
               setTimeout(() => {
-                console.log(`🧹 Cleaning up UI for ${file.name}`);
                 setFiles((prev) => prev.filter((f) => f.id !== file.id));
                 setUploadProgress((prev) => {
                   const updated = new Map(prev);
