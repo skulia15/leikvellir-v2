@@ -231,16 +231,15 @@ export function ImageUpload({
       setErrors([]);
 
       try {
-        // Check if adding these files would exceed the limit
-        const currentUploaded = validUrls.length;
+        // Check if this batch would exceed the per-batch limit
         const currentPending = files.length;
-        const totalAfterUpload = currentUploaded + currentPending + acceptedFiles.length;
+        const batchSize = currentPending + acceptedFiles.length;
 
-        if (totalAfterUpload > finalConfig.maxFiles) {
+        if (batchSize > finalConfig.maxFiles) {
           setErrors([
-            t('forms.maximumFilesExceeded', {
+            t('forms.maximumBatchFilesExceeded', {
               maxFiles: finalConfig.maxFiles,
-              currentFiles: currentUploaded + currentPending
+              batchSize: acceptedFiles.length
             }),
           ]);
           return;
@@ -527,7 +526,7 @@ export function ImageUpload({
                 {t('forms.dragDropOrClick')}
               </p>
               <p className="text-xs text-muted-foreground">
-                {t('forms.maxFilesCompression', { maxFiles: finalConfig.maxFiles })}
+                {t('forms.maxFilesPerBatchCompression', { maxFiles: finalConfig.maxFiles })}
               </p>
             </div>
           </>
@@ -727,9 +726,10 @@ export function ImageUpload({
       {/* Upload Stats */}
       {(validUrls.length > 0 || files.length > 0) && (
         <div className="text-xs text-muted-foreground">
-          {t('forms.imagesUploadedStats', {
+          {t('forms.imagesUploadedBatchStats', {
             uploaded: totalUploadedImages,
-            maxFiles: finalConfig.maxFiles
+            pending: files.length,
+            maxPerBatch: finalConfig.maxFiles
           })}
         </div>
       )}

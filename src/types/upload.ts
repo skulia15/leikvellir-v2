@@ -44,7 +44,7 @@ export interface ValidationResult {
 
 // Configuration for the upload component
 export interface ImageUploadConfig {
-  maxFiles?: number;
+  maxFiles?: number; // Max files per upload batch (not total limit)
   maxSize?: number; // bytes
   allowedTypes?: string[];
   accept?: string; // for input accept attribute

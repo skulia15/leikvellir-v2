@@ -569,14 +569,14 @@ export function CreatePlaygroundForm() {
                         value={field.value || []}
                         onChange={field.onChange}
                         config={{
-                          maxFiles: 8,
+                          maxFiles: 8, // Max files per upload batch (unlimited total)
                           maxSize: 4 * 1024 * 1024, // 4MB
                         }}
                         disabled={createPlayground.isPending}
                       />
                     </FormControl>
                     <FormDescription>
-                      {t('forms.playgroundImagesDescription')}
+                      {t('forms.playgroundImagesDescriptionBatch')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
