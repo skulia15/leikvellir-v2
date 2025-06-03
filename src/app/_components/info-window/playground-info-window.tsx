@@ -89,11 +89,11 @@ export function PlaygroundInfoWindow({
   return (
     <InfoWindow
       position={{
-        lat: playground.latitude + 0.0008, // Slightly larger offset for better positioning
+        lat: playground.latitude, // Slightly larger offset for better positioning
         lng: playground.longitude
       }}
       onCloseClick={onClose}
-      pixelOffset={[0, -10]}
+      pixelOffset={[0, -30]}
       headerDisabled={true}
     >
       <Card className="w-full min-w-72 max-w-80 sm:w-80 border-0 shadow-none max-h-[85vh] sm:max-h-96 overflow-hidden">

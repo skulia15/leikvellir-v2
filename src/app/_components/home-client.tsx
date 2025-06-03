@@ -52,13 +52,14 @@ export default function HomeClient() {
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-    // Automatically request user location on mount
+    // Automatically prompt for user location on mount
     useEffect(() => {
         if (!navigator.geolocation) {
             console.log("Geolocation is not supported by this browser.");
             return;
         }
 
+        // Always prompt for location on page load
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const location = {
@@ -66,10 +67,10 @@ export default function HomeClient() {
                     lng: position.coords.longitude,
                 };
                 setUserLocation(location);
-                console.log("User location automatically detected:", location);
+                console.log("User location detected on page load:", location);
             },
             (error) => {
-                console.log("Could not get user location automatically:", error.message);
+                console.log("User denied location or error occurred:", error.message);
                 // Don't show alert for automatic request, just log it
             },
             {
@@ -179,6 +180,7 @@ export default function HomeClient() {
                             onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
                             isMobile={isMobile}
                             drawerHeight={getDrawerHeight()}
+                            shouldCenterOnUserLocation={true}
                         />
                     </MapErrorBoundary>
                 </div>
@@ -274,6 +276,7 @@ export default function HomeClient() {
                         onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
                         isMobile={false}
                         drawerHeight={0}
+                        shouldCenterOnUserLocation={true}
                     />
                 </MapErrorBoundary>
             </div>

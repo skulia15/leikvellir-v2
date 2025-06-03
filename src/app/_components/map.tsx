@@ -27,6 +27,7 @@ interface MapProps {
   onVisiblePlaygroundsChange?: (playgrounds: (Playground & { distance?: number | null })[]) => void;
   isMobile?: boolean;
   drawerHeight?: number;
+  shouldCenterOnUserLocation?: boolean; // New prop to control auto-centering
 }
 
 const defaultCenter = {
@@ -34,7 +35,21 @@ const defaultCenter = {
   lng: -21.954,
 };
 
+// User location marker component with ping animation
+function UserLocationMarker() {
+  return (
+    <div className="relative flex items-center justify-center">
+      {/* Ping animation rings */}
+      <div className="absolute h-8 w-8 rounded-full bg-blue-500 animate-ping opacity-15"
+        style={{ animationDuration: '4s', animationDelay: '0s' }} />
+      <div className="absolute h-6 w-6 rounded-full bg-blue-500 animate-ping opacity-25"
+        style={{ animationDuration: '4s', animationDelay: '1s' }} />
 
+      {/* Main location dot */}
+      <div className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white shadow-lg relative z-10" />
+    </div>
+  );
+}
 
 function UserLocationButton({
   onLocationFound,
@@ -91,6 +106,44 @@ function UserLocationButton({
   );
 }
 
+function MapCenterController({
+  userLocation,
+  mapCenter,
+  shouldCenterOnUserLocation,
+}: {
+  userLocation: UserLocation | null;
+  mapCenter?: UserLocation | null;
+  shouldCenterOnUserLocation?: boolean;
+}) {
+  const map = useMap();
+  const hasAutocentered = useRef(false);
+
+  // Auto-center on user location when it becomes available (only once)
+  useEffect(() => {
+    if (
+      map &&
+      userLocation &&
+      shouldCenterOnUserLocation &&
+      !hasAutocentered.current &&
+      !mapCenter // Only if no explicit map center is set
+    ) {
+      map.panTo(userLocation);
+      map.setZoom(15);
+      hasAutocentered.current = true;
+      console.log("Map auto-centered on user location:", userLocation);
+    }
+  }, [map, userLocation, shouldCenterOnUserLocation, mapCenter]);
+
+  // Reset the auto-center flag when mapCenter changes (for deep linking)
+  useEffect(() => {
+    if (mapCenter) {
+      hasAutocentered.current = true; // Prevent auto-centering when explicit center is set
+    }
+  }, [mapCenter]);
+
+  return null;
+}
+
 export function GoogleMap({
   selectedPlayground,
   onPlaygroundSelect,
@@ -101,6 +154,7 @@ export function GoogleMap({
   onVisiblePlaygroundsChange,
   isMobile: _isMobile = false,
   drawerHeight: _drawerHeight = 0,
+  shouldCenterOnUserLocation = false,
 }: MapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
@@ -190,14 +244,22 @@ export function GoogleMap({
           cameraControl={false}
           gestureHandling="greedy"
           headingInteractionEnabled={false}
+          clickableIcons={false}
         >
+          {/* Map center controller */}
+          <MapCenterController
+            userLocation={userLocation}
+            mapCenter={mapCenter}
+            shouldCenterOnUserLocation={shouldCenterOnUserLocation}
+          />
+
           {/* User location marker */}
           {userLocation && (
             <AdvancedMarker
               position={userLocation}
               title={t('map.yourLocation')}
             >
-              <div className="h-4 w-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
+              <UserLocationMarker />
             </AdvancedMarker>
           )}
 
