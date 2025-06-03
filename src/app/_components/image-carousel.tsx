@@ -136,22 +136,22 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                 {selectedImageIndex + 1} / {images.length}
               </div>
             )}
-          </div>
 
-          {/* Dot indicators */}
-          {hasMultipleImages && (
-            <div className="flex justify-center gap-2 py-4 bg-background">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => changeImage(index)}
-                  disabled={isTransitioning}
-                  className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/30'
-                    }`}
-                />
-              ))}
-            </div>
-          )}
+            {/* Dot indicators - overlaid at bottom */}
+            {hasMultipleImages && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => changeImage(index)}
+                    disabled={isTransitioning}
+                    className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex ? 'bg-white' : 'bg-white/40'
+                      }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Thumbnail Strip */}
           {hasMultipleImages && (
@@ -162,9 +162,9 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     key={index}
                     onClick={() => changeImage(index)}
                     disabled={isTransitioning}
-                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all disabled:opacity-50 ${index === selectedImageIndex
-                        ? 'border-primary shadow-md'
-                        : 'border-transparent hover:border-muted-foreground/50'
+                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all ${index === selectedImageIndex
+                      ? 'border-primary shadow-md'
+                      : 'border-transparent hover:border-muted-foreground/50'
                       }`}
                   >
                     <Image

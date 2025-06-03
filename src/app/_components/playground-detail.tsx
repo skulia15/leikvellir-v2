@@ -82,39 +82,39 @@ export default function PlaygroundDetail({
   return (
     <div className="min-h-screen bg-background">
       {/* Header with back button and admin actions */}
-      <div className="sticky top-0 z-10 border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t('playground.back')}
-              </Button>
-              <h1 className="truncate text-2xl font-bold">{playground.title}</h1>
-            </div>
-
-            {/* Admin Edit Button */}
-            {isAdminMode && (
-              <Button
-                onClick={() => setIsEditDialogOpen(true)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                {t('playground.editPlayground')}
-              </Button>
-            )}
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 ">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="flex items-center gap-2 "
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t('playground.back')}
+            </Button>
           </div>
+
+          {/* Admin Edit Button */}
+          {isAdminMode && (
+            <Button
+              onClick={() => setIsEditDialogOpen(true)}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              {t('playground.editPlayground')}
+            </Button>
+          )}
         </div>
+
+        {/* Title on separate line */}
+        <h1 className="pt-6 text-2xl font-bold">{playground.title}</h1>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-2">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-2">
@@ -243,7 +243,7 @@ export default function PlaygroundDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    {t('playground.amenities')}
+                    {t('forms.amenities')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -259,7 +259,7 @@ export default function PlaygroundDetail({
                         </div>
                       </div>
                     )}
-                    
+
                     {playground.hasPicnicTable && (
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -271,7 +271,7 @@ export default function PlaygroundDetail({
                         </div>
                       </div>
                     )}
-                    
+
                     {playground.hasGarbageCan && (
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -283,7 +283,7 @@ export default function PlaygroundDetail({
                         </div>
                       </div>
                     )}
-                    
+
                     {playground.hasBathroomNearby && (
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -306,7 +306,7 @@ export default function PlaygroundDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    {t('playground.safetyAndStructure')}
+                    {t('forms.safetyAndStructure')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -322,7 +322,7 @@ export default function PlaygroundDetail({
                         </div>
                       </div>
                     )}
-                    
+
                     {playground.hasSoftPlayArea && (
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
