@@ -243,6 +243,7 @@
   "admin": {
     "adminMode": "Admin Mode",
     "superAdmin": "Super Admin",
+    "admin": "Admin",
     "switchToUserMode": "Switch to User Mode",
     "switchToAdminMode": "Switch to Admin Mode",
     "pendingReview": "Pending Review",
@@ -359,7 +360,7 @@
     "amenities": "Amenities",
     "safetyAndStructure": "Safety & Structure",
     "hasSeating": "Bench / Seating",
-    "hasSeatingDescription": "Bench or seating area available for parents/guardians",
+    "hasSeatingDescription": "Bench or seating area available",
     "hasPicnicTable": "Picnic Table",
     "hasPicnicTableDescription": "Picnic table available for families",
     "hasGarbageCan": "Garbage Can",
@@ -372,6 +373,7 @@
     "hasSoftPlayAreaDescription": "Soft surface play area for young children",
     "selectEquipmentDescription": "Select the equipment available at the playground",
     "playgroundImagesDescription": "Upload up to 8 images of the playground.",
+    "playgroundImagesDescriptionBatch": "Upload playground images in batches of up to 8 files. You can upload multiple batches to add more images.",
     "fixFormErrors": "Please fix the form errors before submitting",
     "failedToCreate": "Failed to create playground",
     "filters": "Filters",
@@ -388,6 +390,7 @@
     "clickToSetCover": "and click on an image to set it as the cover",
     "selectEquipmentAtPlayground": "Select the equipment available at this playground",
     "maximumFilesExceeded": "Maximum {{maxFiles}} files allowed. Currently have {{currentFiles}} files.",
+    "maximumBatchFilesExceeded": "Maximum {{maxFiles}} files per upload batch. You're trying to upload {{batchSize}} files.",
     "onlyImageFilesSupported": "{{filename}}: Only image files are supported",
     "failedToResizeImages": "Failed to resize images: {{error}}",
     "fileValidationError": "{{filename}}: {{error}}",
@@ -400,6 +403,7 @@
     "uploadPlaygroundImages": "Upload playground images",
     "dragDropOrClick": "Drag & drop images or click to browse",
     "maxFilesCompression": "Max {{maxFiles}} files",
+    "maxFilesPerBatchCompression": "Max {{maxFiles}} files per upload batch",
     "imagesCoverSelection": "Images & Cover Selection",
     "uploadedImages": "Uploaded Images",
     "clickImageSetCover": "Click an image to set as cover",
@@ -408,7 +412,8 @@
     "uploadingImages": "Uploading Images",
     "uploadProgress": "{{progress}}% uploaded",
     "uploadCompleteMoving": "Upload complete! Moving to gallery...",
-    "imagesUploadedStats": "{{uploaded}} of {{maxFiles}} images uploaded"
+    "imagesUploadedStats": "{{uploaded}} of {{maxFiles}} images uploaded",
+    "imagesUploadedBatchStats": "{{uploaded}} images uploaded, {{pending}} pending (max {{maxPerBatch}} per batch)"
   },
   "actions": {
     "quickActions": "Quick Actions",

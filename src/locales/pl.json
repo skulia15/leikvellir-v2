@@ -250,6 +250,7 @@
   "admin": {
     "adminMode": "Tryb administratora",
     "superAdmin": "Super Administrator",
+    "admin": "Administrator",
     "switchToUserMode": "Przełącz na tryb użytkownika",
     "switchToAdminMode": "Przełącz na tryb administratora",
     "pendingReview": "Oczekuje na przegląd",
