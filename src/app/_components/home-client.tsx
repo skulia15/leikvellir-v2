@@ -67,7 +67,6 @@ export default function HomeClient() {
                     lng: position.coords.longitude,
                 };
                 setUserLocation(location);
-                console.log("User location detected on page load:", location);
             },
             (error) => {
                 console.log("User denied location or error occurred:", error.message);

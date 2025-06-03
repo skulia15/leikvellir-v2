@@ -130,7 +130,6 @@ function MapCenterController({
       map.panTo(userLocation);
       map.setZoom(15);
       hasAutocentered.current = true;
-      console.log("Map auto-centered on user location:", userLocation);
     }
   }, [map, userLocation, shouldCenterOnUserLocation, mapCenter]);
 
