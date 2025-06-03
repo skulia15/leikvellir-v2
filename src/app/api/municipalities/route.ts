@@ -1,0 +1,69 @@
+import { NextResponse } from 'next/server';
+
+// Cache the municipalities data to avoid excessive API calls
+let municipalitiesCache: {
+  data: any;
+  timestamp: number;
+} | null = null;
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+export async function GET() {
+  try {
+    // Check if we have valid cached data
+    if (municipalitiesCache &&
+      Date.now() - municipalitiesCache.timestamp < CACHE_DURATION) {
+      console.log('Returning cached municipalities data');
+      return NextResponse.json(municipalitiesCache.data);
+    }
+
+    console.log('Fetching fresh municipalities data from Icelandic registry');
+
+    // Fetch fresh data from the Icelandic registry
+    const response = await fetch('https://svc.skra.is/talnaefni/api/Sveitarfelog', {
+      headers: {
+        'User-Agent': 'Leikvellir-App/1.0',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Icelandic registry API responded with ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Validate the response structure
+    if (!data || !data.Result || !Array.isArray(data.Result)) {
+      throw new Error('Invalid response structure from Icelandic registry');
+    }
+
+    // Update cache
+    municipalitiesCache = {
+      data,
+      timestamp: Date.now(),
+    };
+
+    console.log(`Successfully fetched ${data.Result.length} regions with municipalities`);
+
+    return NextResponse.json(data);
+
+  } catch (error) {
+    console.error('Error fetching municipalities:', error);
+
+    // If we have cached data, return it even if stale
+    if (municipalitiesCache) {
+      console.log('Returning stale cached data due to error');
+      return NextResponse.json(municipalitiesCache.data);
+    }
+
+    // Return error response
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch municipalities',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}

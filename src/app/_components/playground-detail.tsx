@@ -380,7 +380,7 @@ export default function PlaygroundDetail({
       </div>
 
       {/* Edit Dialog */}
-      {isAdminMode && (
+      {isAdminMode && isEditDialogOpen && (
         <EditPlaygroundDialog
           playground={playground}
           open={isEditDialogOpen}

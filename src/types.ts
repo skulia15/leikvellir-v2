@@ -138,7 +138,7 @@ export const CreatePlaygroundSchema = z.object({
         try {
           new URL(str);
           return true;
-        } catch (_error) {
+        } catch {
           return false;
         }
       }, "Must be a valid URL or upload path"),

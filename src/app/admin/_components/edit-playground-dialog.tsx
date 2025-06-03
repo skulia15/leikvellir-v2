@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,8 +43,9 @@ import ImageUpload from "~/components/ui/image-upload";
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { toast } from "sonner";
-import { useT } from "~/lib/i18n";
+import { useTranslation } from "~/lib/i18n";
 import { reverseGeocode } from "~/lib/geocoding";
+import MunicipalitySelector from "~/components/municipality-selector";
 
 // Create a schema that matches the backend update mutation
 const updatePlaygroundSchema = z.object({
@@ -77,8 +78,9 @@ export default function EditPlaygroundDialog({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">("map");
+    const previousCoordinatesRef = useRef<{ lat: number; lng: number } | null>(null);
     const utils = api.useUtils();
-    const t = useT();
+    const { t } = useTranslation();
 
     const form = useForm<UpdatePlaygroundForm>({
         resolver: zodResolver(updatePlaygroundSchema),
@@ -190,6 +192,25 @@ export default function EditPlaygroundDialog({
 
     // Auto-fill municipality when coordinates change (manual entry)
     useEffect(() => {
+        const currentCoords = { lat: currentLatitude, lng: currentLongitude };
+        const previousCoords = previousCoordinatesRef.current;
+        
+        // Skip if coordinates haven't actually changed
+        if (previousCoords && 
+            Math.abs(previousCoords.lat - currentCoords.lat) < 0.000001 &&
+            Math.abs(previousCoords.lng - currentCoords.lng) < 0.000001) {
+            return;
+        }
+        
+        // Skip if this is the initial form population (no previous coordinates)
+        if (!previousCoords) {
+            previousCoordinatesRef.current = currentCoords;
+            return;
+        }
+
+        // Update the reference for next comparison
+        previousCoordinatesRef.current = currentCoords;
+
         const timeoutId = setTimeout(async () => {
             if (currentLatitude && currentLongitude) {
                 try {
@@ -358,9 +379,11 @@ export default function EditPlaygroundDialog({
                                 <FormItem>
                                     <FormLabel>{t('playground.municipality')}</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            placeholder={t('playground.enterMunicipality')}
-                                            {...field}
+                                        <MunicipalitySelector
+                                            value={field.value || ""}
+                                            onValueChange={field.onChange}
+                                            placeholder={t('playground.selectMunicipality')}
+                                            disabled={isSubmitting}
                                         />
                                     </FormControl>
                                     <FormDescription>

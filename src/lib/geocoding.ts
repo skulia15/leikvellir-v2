@@ -1,4 +1,5 @@
 import { env } from "~/env";
+import { findMunicipalityByName } from "./api/municipalities";
 
 export interface GeocodeResult {
   municipality: string | null;
@@ -181,31 +182,38 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     let country: string | null = null;
 
     // Extract municipality and country from address components
+    // For Iceland, prioritize administrative_area_level_1 over locality
     for (const component of result.address_components) {
       const types = component.types;
       console.log("Address component:", component.long_name, "Types:", types);
 
-      // Look for municipality (various types depending on location)
-      if (
-        types.includes("locality") ||
-        types.includes("administrative_area_level_2") ||
-        types.includes("administrative_area_level_1")
-      ) {
-        if (!municipality) {
-          municipality = component.long_name;
-          console.log("Found municipality:", municipality, "from type:", types);
-        }
-      }
-
-      // Look for country
+      // Look for country first
       if (types.includes("country")) {
         country = component.long_name;
         console.log("Found country:", country);
       }
+
+      // For Iceland, prioritize administrative_area_level_1 (municipality)
+      if (types.includes("administrative_area_level_1") && !municipality) {
+        municipality = component.long_name;
+        console.log("Found municipality (admin_area_1):", municipality, "from type:", types);
+      }
+    }
+
+    // If no administrative_area_level_1 found, fall back to locality
+    if (!municipality) {
+      for (const component of result.address_components) {
+        const types = component.types;
+        if (types.includes("locality")) {
+          municipality = component.long_name;
+          console.log("Found municipality (locality fallback):", municipality, "from type:", types);
+          break;
+        }
+      }
     }
 
     const geocodeResult = {
-      municipality,
+      municipality: await normalizeMunicipalityName(municipality),
       country,
       formattedAddress: result.formatted_address,
     };
@@ -236,4 +244,27 @@ export function getRateLimitStatus() {
     cooldownUntil: rateLimitState.isInCooldown ? new Date(rateLimitState.cooldownUntil) : null,
     cacheSize: geocodeCache.size,
   };
+}
+
+/**
+ * Normalize municipality name to match official Icelandic registry
+ */
+async function normalizeMunicipalityName(municipalityName: string | null): Promise<string | null> {
+  if (!municipalityName) return null;
+  
+  try {
+    // Try to find exact match in official Icelandic municipalities
+    const officialMunicipality = await findMunicipalityByName(municipalityName);
+    if (officialMunicipality) {
+      console.log(`Normalized municipality: "${municipalityName}" -> "${officialMunicipality.nafn}"`);
+      return officialMunicipality.nafn;
+    }
+    
+    // If no exact match found, return the original name
+    console.log(`Municipality "${municipalityName}" not found in official registry, using as-is`);
+    return municipalityName;
+  } catch (error) {
+    console.warn("Failed to normalize municipality name:", error);
+    return municipalityName;
+  }
 }

@@ -33,13 +33,14 @@ import { CreatePlaygroundSchema, type CreatePlaygroundInput } from "~/types";
 import { CoordinatePickerMap } from "./coordinate-picker-map";
 import { toast } from "sonner";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
-import { useT } from "~/lib/i18n";
+import MunicipalitySelector from "~/components/municipality-selector";
+import { useTranslation } from "~/lib/i18n";
 import { reverseGeocode } from "~/lib/geocoding";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
   const router = useRouter();
-  const t = useT();
+  const { t } = useTranslation();
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
     "map",
   );
@@ -194,26 +195,6 @@ export function CreatePlaygroundForm() {
               )}
             />
 
-            {/* Municipality Field */}
-            <FormField
-              control={form.control}
-              name="municipality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('playground.municipality')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('playground.enterMunicipality')}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('playground.municipalityDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             {/* Location Section */}
             <div className="space-y-4">
@@ -223,7 +204,9 @@ export function CreatePlaygroundForm() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={getCurrentLocation}
+                  onClick={() => {
+                    void getCurrentLocation();
+                  }}
                   className="text-sm"
                 >
                   <MapPin className="mr-2 h-4 w-4" />
@@ -323,6 +306,30 @@ export function CreatePlaygroundForm() {
                 </TabsContent>
               </Tabs>
             </div>
+
+            {/* Municipality Field */}
+            <FormField
+              control={form.control}
+              name="municipality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('playground.municipality')}</FormLabel>
+                  <FormControl>
+                    <MunicipalitySelector
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder={t('playground.selectMunicipality')}
+                      disabled={createPlayground.isPending}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('playground.municipalityDescription')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
 
             {/* Accessibility Options */}
             <div className="space-y-4">

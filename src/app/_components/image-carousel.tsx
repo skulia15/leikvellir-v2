@@ -74,7 +74,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
         <div className="relative">
           {/* Main Carousel */}
           <div
-            className="relative h-[400px] w-full overflow-hidden rounded-t-lg touch-pan-y select-none"
+            className="relative h-[600px] w-full overflow-hidden rounded-t-lg touch-pan-y select-none"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -102,6 +102,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     src={image ?? "/playground.jpg"}
                     alt={`${alt} - Image ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
                     className="object-contain p-2"
                     priority={index === 0}
                   />
@@ -145,9 +146,8 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                   key={index}
                   onClick={() => changeImage(index)}
                   disabled={isTransitioning}
-                  className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${
-                    index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/30'
-                  }`}
+                  className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                    }`}
                 />
               ))}
             </div>
@@ -162,16 +162,16 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     key={index}
                     onClick={() => changeImage(index)}
                     disabled={isTransitioning}
-                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all disabled:opacity-50 ${
-                      index === selectedImageIndex
+                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all disabled:opacity-50 ${index === selectedImageIndex
                         ? 'border-primary shadow-md'
                         : 'border-transparent hover:border-muted-foreground/50'
-                    }`}
+                      }`}
                   >
                     <Image
                       src={image ?? "/playground.jpg"}
                       alt={`${alt} - Thumbnail ${index + 1}`}
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                   </button>
