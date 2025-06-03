@@ -20,4 +20,3 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "playground_title_idx" ON "leikvellir_v2_playground" USING btree ("name");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "post_title_idx" ON "leikvellir_v2_post" USING btree ("name");

@@ -5,10 +5,10 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 ALTER TABLE "leikvellir_v2_playground" ALTER COLUMN "name" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_playground" ADD COLUMN "status" "playground_status" DEFAULT 'pending' NOT NULL;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_playground" ADD COLUMN "reviewed_by" varchar(255);--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_playground" ADD COLUMN "reviewed_at" timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_playground" ADD COLUMN "rejection_reason" text;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN IF NOT EXISTS "status" "playground_status" DEFAULT 'pending' NOT NULL;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN IF NOT EXISTS "reviewed_by" varchar(255);--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN IF NOT EXISTS "reviewed_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN IF NOT EXISTS "rejection_reason" text;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "leikvellir_v2_playground" ADD CONSTRAINT "leikvellir_v2_playground_reviewed_by_leikvellir_v2_user_id_fk" FOREIGN KEY ("reviewed_by") REFERENCES "public"."leikvellir_v2_user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION

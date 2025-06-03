@@ -1,1 +1,1 @@
-DROP TABLE "leikvellir_v2_post";
+DROP TABLE IF EXISTS "leikvellir_v2_post";

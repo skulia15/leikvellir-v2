@@ -115,6 +115,13 @@ export const CreatePlaygroundSchema = z.object({
   municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
+  // Amenity properties
+  hasSeating: z.boolean(),
+  hasPicnicTable: z.boolean(),
+  hasFencing: z.boolean(),
+  hasGarbageCan: z.boolean(),
+  hasBathroomNearby: z.boolean(),
+  hasSoftPlayArea: z.boolean(),
   equipmentIds: z.array(z.number()),
   images: z
     .array(
@@ -158,6 +165,13 @@ export type Playground = {
   municipality: string | null;
   publiclyAccessible: boolean;
   toddlerFriendly: boolean;
+  // Amenity properties
+  hasSeating: boolean;
+  hasPicnicTable: boolean;
+  hasFencing: boolean;
+  hasGarbageCan: boolean;
+  hasBathroomNearby: boolean;
+  hasSoftPlayArea: boolean;
   coverImage: string | null;
   images: string[] | null;
   status: PlaygroundStatus;
@@ -202,6 +216,13 @@ export const ReviewPlaygroundSchema = z.object({
   municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean().optional(),
   toddlerFriendly: z.boolean().optional(),
+  // Amenity properties
+  hasSeating: z.boolean().optional(),
+  hasPicnicTable: z.boolean().optional(),
+  hasFencing: z.boolean().optional(),
+  hasGarbageCan: z.boolean().optional(),
+  hasBathroomNearby: z.boolean().optional(),
+  hasSoftPlayArea: z.boolean().optional(),
   coverImage: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
 });

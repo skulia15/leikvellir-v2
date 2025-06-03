@@ -160,7 +160,9 @@
     "pageTitle": "Leiksvæði - Allir leikvellir",
     "pageDescription": "Skoðaðu og uppgötvaðu leikvelli. Finndu skemmtilega leikvelli í nágrenni við þig.",
     "submitNewPlayground": "Bæta við nýjum leikvelli",
-    "signInToSubmitPlayground": "Vinsamlegast skráðu þig inn til að bæta við nýjum leikvelli."
+    "signInToSubmitPlayground": "Vinsamlegast skráðu þig inn til að bæta við nýjum leikvelli.",
+    "amenities": "Þægindi",
+    "safetyAndStructure": "Öryggi og uppbygging"
   },
   "equipment": {
     "categories": {
@@ -357,6 +359,20 @@
     "publiclyAccessibleDescription": "Þessi leikvöllur er opinn almenningi",
     "toddlerFriendly": "Hentar ungabörnum",
     "toddlerFriendlyDescription": "Öruggur og hentar börnum yngri en 3 ára",
+    "amenities": "Þægindi",
+    "safetyAndStructure": "Öryggi og uppbygging",
+    "hasSeating": "Bekkur / Sæti",
+    "hasSeatingDescription": "Bekkur eða sæti í boði fyrir foreldra/forráðamenn",
+    "hasPicnicTable": "Útivistaborð",
+    "hasPicnicTableDescription": "Útivistaborð í boði fyrir fjölskyldur",
+    "hasGarbageCan": "Ruslatunna",
+    "hasGarbageCanDescription": "Ruslatunna eða ruslaförgun í boði í nágrenninu",
+    "hasBathroomNearby": "Salerni í nágrenninu",
+    "hasBathroomNearbyDescription": "Salerni í göngufæri",
+    "hasFencing": "Girðing",
+    "hasFencingDescription": "Leikvöllurinn er girtur til öryggis",
+    "hasSoftPlayArea": "Mjúkt leiksvæði",
+    "hasSoftPlayAreaDescription": "Mjúkt leiksvæði fyrir smábörn",
     "selectEquipmentDescription": "Veldu leiktæki sem eru til staðar á leikvellinum",
     "playgroundImagesDescription": "Hladdu upp allt að 8 myndum af leikvellinum.",
     "fixFormErrors": "Vinsamlegast lagaðu villur í eyðublaðinu áður en þú sendir",

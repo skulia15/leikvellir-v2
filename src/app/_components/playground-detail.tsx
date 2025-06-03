@@ -237,6 +237,108 @@ export default function PlaygroundDetail({
               </CardContent>
             </Card>
 
+            {/* Amenities Section */}
+            {(playground.hasSeating || playground.hasPicnicTable || playground.hasGarbageCan || playground.hasBathroomNearby || playground.hasFencing || playground.hasSoftPlayArea) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    {t('playground.amenities')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {playground.hasSeating && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasSeating')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasSeatingDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {playground.hasPicnicTable && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasPicnicTable')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasPicnicTableDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {playground.hasGarbageCan && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasGarbageCan')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasGarbageCanDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {playground.hasBathroomNearby && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasBathroomNearby')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasBathroomNearbyDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Safety & Structure Section */}
+            {(playground.hasFencing || playground.hasSoftPlayArea) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    {t('playground.safetyAndStructure')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {playground.hasFencing && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasFencing')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasFencingDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {playground.hasSoftPlayArea && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">{t('forms.hasSoftPlayArea')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('forms.hasSoftPlayAreaDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Equipment */}
             {hasEquipment ? (
               <Card>

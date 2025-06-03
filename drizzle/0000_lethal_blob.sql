@@ -13,14 +13,6 @@ CREATE TABLE IF NOT EXISTS "leikvellir_v2_account" (
 	CONSTRAINT "leikvellir_v2_account_provider_provider_account_id_pk" PRIMARY KEY("provider","provider_account_id")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "leikvellir_v2_post" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar(256),
-	"created_by" varchar(255) NOT NULL,
-	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"updated_at" timestamp with time zone
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "leikvellir_v2_session" (
 	"session_token" varchar(255) PRIMARY KEY NOT NULL,
 	"user_id" varchar(255) NOT NULL,
@@ -47,12 +39,7 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "leikvellir_v2_post" ADD CONSTRAINT "leikvellir_v2_post_created_by_leikvellir_v2_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."leikvellir_v2_user"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
+
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "leikvellir_v2_session" ADD CONSTRAINT "leikvellir_v2_session_user_id_leikvellir_v2_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."leikvellir_v2_user"("id") ON DELETE no action ON UPDATE no action;
@@ -61,6 +48,4 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "account_user_id_idx" ON "leikvellir_v2_account" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "created_by_idx" ON "leikvellir_v2_post" USING btree ("created_by");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "name_idx" ON "leikvellir_v2_post" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "session_user_id_idx" ON "leikvellir_v2_session" USING btree ("user_id");

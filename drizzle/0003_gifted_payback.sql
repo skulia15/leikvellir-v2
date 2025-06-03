@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS "leikvellir_v2_playground_equipment" (
 	CONSTRAINT "leikvellir_v2_playground_equipment_playground_id_equipment_id_pk" PRIMARY KEY("playground_id","equipment_id")
 );
 --> statement-breakpoint
-ALTER TABLE "leikvellir_v2_playground" ADD COLUMN "municipality" varchar(256);--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_user" ADD COLUMN "role" "user_role" DEFAULT 'user' NOT NULL;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_user" ADD COLUMN "is_banned" boolean DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_user" ADD COLUMN "banned_at" timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_user" ADD COLUMN "banned_by" varchar(255);--> statement-breakpoint
-ALTER TABLE "leikvellir_v2_user" ADD COLUMN "ban_reason" text;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN IF NOT EXISTS "municipality" varchar(256);--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_user" ADD COLUMN IF NOT EXISTS "role" "user_role" DEFAULT 'user' NOT NULL;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_user" ADD COLUMN IF NOT EXISTS "is_banned" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_user" ADD COLUMN IF NOT EXISTS "banned_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_user" ADD COLUMN IF NOT EXISTS "banned_by" varchar(255);--> statement-breakpoint
+ALTER TABLE "leikvellir_v2_user" ADD COLUMN IF NOT EXISTS "ban_reason" text;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "leikvellir_v2_playground_equipment" ADD CONSTRAINT "leikvellir_v2_playground_equipment_playground_id_leikvellir_v2_playground_id_fk" FOREIGN KEY ("playground_id") REFERENCES "public"."leikvellir_v2_playground"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION

@@ -104,6 +104,13 @@ export const playgrounds = createTable(
     municipality: varchar("municipality", { length: 256 }), // Municipality where playground is located
     publiclyAccessible: boolean("publicly_accessible").notNull().default(true),
     toddlerFriendly: boolean("toddler_friendly").notNull().default(false),
+    // Amenity properties
+    hasSeating: boolean("has_seating").notNull().default(false), // Bench/seating available
+    hasPicnicTable: boolean("has_picnic_table").notNull().default(false), // Picnic table available
+    hasFencing: boolean("has_fencing").notNull().default(false), // Fencing around playground
+    hasGarbageCan: boolean("has_garbage_can").notNull().default(false), // Garbage can nearby
+    hasBathroomNearby: boolean("has_bathroom_nearby").notNull().default(false), // Bathroom facilities nearby
+    hasSoftPlayArea: boolean("has_soft_play_area").notNull().default(false), // Soft play area (removed from equipment)
     coverImage: varchar("cover_image", { length: 512 }), // Cover image URL
     images: json("images").$type<string[]>().default([]), // JSON array of image URLs
     status: playgroundStatusEnum("status").notNull().default("pending"), // Submission status
