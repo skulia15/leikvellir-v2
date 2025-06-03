@@ -166,6 +166,11 @@ export default function PlaygroundDetail({
                           playground.longitude,
                         )}
                       </p>
+                      {playground.municipality && (
+                        <p className="text-sm font-medium text-primary mt-1">
+                          {playground.municipality}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -261,7 +266,7 @@ export default function PlaygroundDetail({
                               {item.image && (
                                 <Image
                                   src={item.image}
-                                  alt={item.nameEnglish}
+                                  alt={t(item.name)}
                                   width={40}
                                   height={40}
                                   className="w-10 h-10 rounded object-cover"
@@ -269,14 +274,11 @@ export default function PlaygroundDetail({
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm">
-                                  {item.nameEnglish}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {item.nameIcelandic}
+                                  {t(item.name)}
                                 </div>
                                 {item.description && (
                                   <div className="text-xs text-muted-foreground mt-1">
-                                    {item.description}
+                                    {t(item.description)}
                                   </div>
                                 )}
                               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Loader2, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +34,7 @@ import { CoordinatePickerMap } from "./coordinate-picker-map";
 import { toast } from "sonner";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { useT } from "~/lib/i18n";
+import { reverseGeocode } from "~/lib/geocoding";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
@@ -50,6 +51,7 @@ export function CreatePlaygroundForm() {
       title: "",
       latitude: 64.071, // TODO: default to Hafnarfjörður
       longitude: -21.954,
+      municipality: "",
       publiclyAccessible: true,
       toddlerFriendly: false,
       equipmentIds: [],
@@ -120,13 +122,45 @@ export function CreatePlaygroundForm() {
   };
 
   // Handle coordinate changes from map
-  const handleMapCoordinateChange = (lat: number, lng: number) => {
+  const handleMapCoordinateChange = async (lat: number, lng: number) => {
     form.setValue("latitude", lat);
     form.setValue("longitude", lng);
+
+    // Auto-fill municipality using reverse geocoding
+    try {
+      const geocodeResult = await reverseGeocode(lat, lng);
+      if (geocodeResult.municipality) {
+        // Always update municipality when map pin is moved
+        form.setValue("municipality", geocodeResult.municipality);
+        console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+      }
+    } catch (error) {
+      console.error("Failed to reverse geocode coordinates:", error);
+    }
   };
 
+  // Auto-fill municipality when coordinates change (manual entry)
   const currentLatitude = form.watch("latitude");
   const currentLongitude = form.watch("longitude");
+
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (currentLatitude && currentLongitude) {
+        try {
+          const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
+          if (geocodeResult.municipality) {
+            // Always update municipality when coordinates change
+            form.setValue("municipality", geocodeResult.municipality);
+            console.log("Municipality auto-filled:", geocodeResult.municipality);
+          }
+        } catch (error) {
+          console.error("Failed to reverse geocode coordinates:", error);
+        }
+      }
+    }, 1000); // Debounce for 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [currentLatitude, currentLongitude, form]);
 
   return (
     <Card className="mx-auto w-full max-w-4xl mb-24">
@@ -155,6 +189,27 @@ export function CreatePlaygroundForm() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Municipality Field */}
+            <FormField
+              control={form.control}
+              name="municipality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('playground.municipality')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t('playground.enterMunicipality')}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('playground.municipalityDescription')}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

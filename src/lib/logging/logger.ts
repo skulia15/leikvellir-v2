@@ -88,8 +88,20 @@ class Logger {
     return ["warn", "error", "fatal"].includes(level);
   }
 
+  private isPostHogLog(message: string): boolean {
+    return message.includes('[PostHog.js]') || 
+           message.includes('$snapshot') || 
+           message.includes('$web_vitals') ||
+           message.includes('$pageview') ||
+           message.includes('$pageleave') ||
+           message.includes('$autocapture');
+  }
+
   private logToConsole(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
+    
+    // Filter out PostHog logs to reduce console noise
+    if (this.isPostHogLog(entry.message)) return;
     
     // Prevent recursion by checking if we're already logging
     if (this.isLogging) {

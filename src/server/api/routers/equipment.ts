@@ -10,7 +10,7 @@ export const equipmentRouter = createTRPCRouter({
     getAll: publicProcedure.query(async ({ ctx }) => {
         return await ctx.db.query.equipment.findMany({
             where: eq(equipment.isActive, true),
-            orderBy: [equipment.category, equipment.nameEnglish],
+            orderBy: [equipment.category, equipment.name],
         });
     }),
 
@@ -29,7 +29,7 @@ export const equipmentRouter = createTRPCRouter({
         }
 
         return await ctx.db.query.equipment.findMany({
-            orderBy: [equipment.category, equipment.nameEnglish],
+            orderBy: [equipment.category, equipment.name],
         });
     }),
 
@@ -39,7 +39,7 @@ export const equipmentRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             return await ctx.db.query.equipment.findMany({
                 where: eq(equipment.category, input.category),
-                orderBy: [equipment.nameEnglish],
+                orderBy: [equipment.name],
             });
         }),
 
@@ -80,8 +80,7 @@ export const equipmentRouter = createTRPCRouter({
             const newEquipment = await ctx.db
                 .insert(equipment)
                 .values({
-                    nameEnglish: input.nameEnglish,
-                    nameIcelandic: input.nameIcelandic,
+                    name: input.name,
                     category: input.category,
                     description: input.description || null,
                     image: input.image || null,
@@ -120,15 +119,13 @@ export const equipmentRouter = createTRPCRouter({
             }
 
             const updateData: Partial<{
-                nameEnglish: string;
-                nameIcelandic: string;
+                name: string;
                 category: EquipmentCategory;
                 description: string | null;
                 image: string | null;
             }> = {};
 
-            if (input.nameEnglish !== undefined) updateData.nameEnglish = input.nameEnglish;
-            if (input.nameIcelandic !== undefined) updateData.nameIcelandic = input.nameIcelandic;
+            if (input.name !== undefined) updateData.name = input.name;
             if (input.category !== undefined) updateData.category = input.category;
             if (input.description !== undefined) updateData.description = input.description;
             if (input.image !== undefined) updateData.image = input.image;

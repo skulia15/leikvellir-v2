@@ -29,11 +29,10 @@ export type PlaygroundStatus = "pending" | "approved" | "rejected";
 // Equipment type
 export type Equipment = {
   id: number;
-  nameEnglish: string;
-  nameIcelandic: string;
+  name: string; // Translation key (e.g., "equipment.slide")
   category: EquipmentCategory;
   image: string | null;
-  description: string | null;
+  description: string | null; // Optional description translation key
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date | null;
@@ -49,8 +48,7 @@ export type ValidatedCoordinates = z.infer<typeof CoordinatesSchema>;
 
 // Equipment management schemas
 export const CreateEquipmentSchema = z.object({
-  nameEnglish: z.string().min(1, "English name is required").max(256),
-  nameIcelandic: z.string().min(1, "Icelandic name is required").max(256),
+  name: z.string().min(1, "Playground equipment name key is required").max(256),
   category: z.enum([
     "core_equipment",
     "climbing_and_movement",
@@ -66,8 +64,7 @@ export const CreateEquipmentSchema = z.object({
 
 export const UpdateEquipmentSchema = z.object({
   id: z.number(),
-  nameEnglish: z.string().min(1).max(256).optional(),
-  nameIcelandic: z.string().min(1).max(256).optional(),
+  name: z.string().min(1).max(256).optional(),
   category: z.enum([
     "core_equipment",
     "climbing_and_movement",
@@ -115,6 +112,7 @@ export const CreatePlaygroundSchema = z.object({
     .min(1, "Title is required")
     .max(256, "Title must be less than 256 characters"),
   ...CoordinatesSchema.shape,
+  municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
   equipmentIds: z.array(z.number()),
@@ -157,6 +155,7 @@ export type Playground = {
   title: string;
   latitude: number;
   longitude: number;
+  municipality: string | null;
   publiclyAccessible: boolean;
   toddlerFriendly: boolean;
   coverImage: string | null;
@@ -200,6 +199,7 @@ export const ReviewPlaygroundSchema = z.object({
   title: z.string().min(1).max(256).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
+  municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean().optional(),
   toddlerFriendly: z.boolean().optional(),
   coverImage: z.string().nullable().optional(),

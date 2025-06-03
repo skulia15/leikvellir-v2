@@ -55,8 +55,7 @@ export default function EquipmentCreateDialog({
         resolver: zodResolver(CreateEquipmentSchema),
         mode: "onChange",
         defaultValues: {
-            nameEnglish: "",
-            nameIcelandic: "",
+            name: "",
             category: (category as CreateEquipmentInput["category"]) || "core_equipment",
             description: "",
             image: "",
@@ -110,30 +109,13 @@ export default function EquipmentCreateDialog({
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <FormField
                                 control={form.control}
-                                name="nameEnglish"
+                                name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>{t('equipment.englishName')} *</FormLabel>
+                                        <FormLabel>{t('equipment.equipmentName')} *</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder={t('equipment.enterEnglishName')}
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="nameIcelandic"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('equipment.icelandicName')} *</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder={t('equipment.enterIcelandicName')}
+                                                placeholder={t('equipment.enterEquipmentName')}
                                                 {...field}
                                             />
                                         </FormControl>

@@ -49,37 +49,15 @@ export const equipmentCategoryEnum = pgEnum("equipment_category", [
   "additional_common_equipment"
 ]);
 
-export const posts = createTable(
-  "post",
-  {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
-    createdById: varchar("created_by", { length: 255 })
-      .notNull()
-      .references(() => users.id),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date(),
-    ),
-  },
-  (example) => ({
-    createdByIdIdx: index("created_by_idx").on(example.createdById),
-    nameIndex: index("post_title_idx").on(example.name),
-  }),
-);
-
 // Equipment table for managing playground equipment types
 export const equipment = createTable(
   "equipment",
   {
     id: serial("id").primaryKey(),
-    nameEnglish: varchar("name_english", { length: 256 }).notNull(),
-    nameIcelandic: varchar("name_icelandic", { length: 256 }).notNull(),
+    name: varchar("name", { length: 256 }).notNull(), // Translation key (e.g., "equipment.slide")
     category: equipmentCategoryEnum("category").notNull(),
     image: varchar("image", { length: 512 }), // Optional equipment image URL
-    description: text("description"), // Optional description
+    description: text("description"), // Optional description translation key
     isActive: boolean("is_active").notNull().default(true), // For soft deletion
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -89,7 +67,7 @@ export const equipment = createTable(
     ),
   },
   (table) => ({
-    nameEnglishIdx: index("equipment_name_english_idx").on(table.nameEnglish),
+    nameIdx: index("equipment_name_idx").on(table.name),
     categoryIdx: index("equipment_category_idx").on(table.category),
     isActiveIdx: index("equipment_is_active_idx").on(table.isActive),
   }),
@@ -123,6 +101,7 @@ export const playgrounds = createTable(
     title: varchar("name", { length: 256 }).notNull(),
     latitude: doublePrecision("latitude").notNull(),
     longitude: doublePrecision("longitude").notNull(),
+    municipality: varchar("municipality", { length: 256 }), // Municipality where playground is located
     publiclyAccessible: boolean("publicly_accessible").notNull().default(true),
     toddlerFriendly: boolean("toddler_friendly").notNull().default(false),
     coverImage: varchar("cover_image", { length: 512 }), // Cover image URL
@@ -145,6 +124,7 @@ export const playgrounds = createTable(
   (example) => ({
     titleIdx: index("playground_title_idx").on(example.title),
     statusIdx: index("playground_status_idx").on(example.status),
+    municipalityIdx: index("playground_municipality_idx").on(example.municipality),
   }),
 );
 

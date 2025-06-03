@@ -83,6 +83,8 @@ export function CoordinatePickerMap({
           zoomControl={true}
           scaleControl={false}
           cameraControl={false}
+          draggableCursor="default"
+          draggingCursor="grabbing"
         >
           <AdvancedMarker
             position={markerPosition}

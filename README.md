@@ -38,6 +38,15 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - **Form Validation**: React Hook Form with Zod validation
 - **Responsive Design Foundation**: Mobile-first approach with Tailwind CSS
 - **Database Migrations**: Automated schema management with Drizzle
+- animation for users current location
+- List nearby playgrounds by distance from user location - DONE
+- Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
+- Filter by Distance: Option to filter results based on distance from the user's location - DONE
+- Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
+- Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
+- Multi-language support (Icelandic/English/Polish)
+- Cloud storage migration for images - DONE
+- Google Maps directions integration - DONE
 
 ### 🚧 In Progress
 
@@ -46,20 +55,16 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Playground detail pages with comprehensive information
 - Error handling and loading states optimization
 - Responsive layout optimization
-- Multi-language support (Icelandic/English)
-- Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
-- Filter by Distance: Option to filter results based on distance from the user's location - DONE
-- Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
-- Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
 - List of available playground equipment and activities
-- List nearby playgrounds by distance from user location - DONE
-- Google Maps directions integration - DONE
+
+- fix list display on detail pages
+- get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog
+
 - Traffic tracking (PostHog integration)
-- Cloud storage migration for images
 - Specific map pins in different color for ball courts - specific icons for each type
 - when location is allowed - make the map jump to the users location.
-- animation for users current location
 - hover effects for list next to map
+- RESTRICT API ACCESS for Maps api key
 
 ### 📋 Planned Features
 

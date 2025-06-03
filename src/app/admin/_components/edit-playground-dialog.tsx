@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,12 +44,14 @@ import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
 import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { toast } from "sonner";
 import { useT } from "~/lib/i18n";
+import { reverseGeocode } from "~/lib/geocoding";
 
 // Create a schema that matches the backend update mutation
 const updatePlaygroundSchema = z.object({
     title: z.string().min(1, "Title is required").max(256, "Title too long"),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
+    municipality: z.string().max(256).optional(),
     publiclyAccessible: z.boolean(),
     toddlerFriendly: z.boolean(),
     coverImage: z.string().nullable(),
@@ -84,6 +86,7 @@ export default function EditPlaygroundDialog({
             title: playground.title,
             latitude: playground.latitude,
             longitude: playground.longitude,
+            municipality: playground.municipality || "",
             publiclyAccessible: playground.publiclyAccessible,
             toddlerFriendly: playground.toddlerFriendly,
             coverImage: playground.coverImage,
@@ -165,13 +168,45 @@ export default function EditPlaygroundDialog({
     };
 
     // Handle coordinate changes from map
-    const handleMapCoordinateChange = (lat: number, lng: number) => {
+    const handleMapCoordinateChange = async (lat: number, lng: number) => {
         form.setValue("latitude", lat);
         form.setValue("longitude", lng);
+        
+        // Auto-fill municipality using reverse geocoding
+        try {
+            const geocodeResult = await reverseGeocode(lat, lng);
+            if (geocodeResult.municipality) {
+                // Always update municipality when map pin is moved
+                form.setValue("municipality", geocodeResult.municipality);
+                console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+            }
+        } catch (error) {
+            console.error("Failed to reverse geocode coordinates:", error);
+        }
     };
 
     const currentLatitude = form.watch("latitude");
     const currentLongitude = form.watch("longitude");
+
+    // Auto-fill municipality when coordinates change (manual entry)
+    useEffect(() => {
+        const timeoutId = setTimeout(async () => {
+            if (currentLatitude && currentLongitude) {
+                try {
+                    const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
+                    if (geocodeResult.municipality) {
+                        // Always update municipality when coordinates change
+                        form.setValue("municipality", geocodeResult.municipality);
+                        console.log("Municipality auto-filled:", geocodeResult.municipality);
+                    }
+                } catch (error) {
+                    console.error("Failed to reverse geocode coordinates:", error);
+                }
+            }
+        }, 1000); // Debounce for 1 second
+
+        return () => clearTimeout(timeoutId);
+    }, [currentLatitude, currentLongitude, form]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -314,6 +349,27 @@ export default function EditPlaygroundDialog({
                                 </TabsContent>
                             </Tabs>
                         </div>
+
+                        {/* Municipality Field - positioned after location */}
+                        <FormField
+                            control={form.control}
+                            name="municipality"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('playground.municipality')}</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder={t('playground.enterMunicipality')}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        {t('playground.municipalityDescription')}
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         {/* Accessibility Options */}
                         <div className="space-y-4">

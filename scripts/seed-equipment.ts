@@ -18,51 +18,51 @@ const db = drizzle(client);
 
 const equipmentData = {
     core_equipment: [
-        { english: "Slide", icelandic: "Rennibraut" },
-        { english: "Swing", icelandic: "Róla" },
-        { english: "Seesaw", icelandic: "Vagga" },
-        { english: "Climbing Frame / Jungle Gym", icelandic: "Klifurgrind / Klifurkastali" },
-        { english: "Sandbox", icelandic: "Sandkassi" },
-        { english: "Multi-Play System", icelandic: "Leiktækjakerfi / Margþætt leiktæki" }
+        "equipment.items.slide",
+        "equipment.items.swing",
+        "equipment.items.seesaw",
+        "equipment.items.climbing_frame",
+        "equipment.items.sandbox",
+        "equipment.items.multi_play_system"
     ],
     climbing_and_movement: [
-        { english: "Monkey Bars", icelandic: "Armgangur" },
-        { english: "Aparóla (swinging monkey bars)", icelandic: "Aparóla" },
-        { english: "Climbing Wall", icelandic: "Klifurveggur" },
-        { english: "Rope Climber / Climbing Net", icelandic: "Klifurnet" },
-        { english: "Balance Beam", icelandic: "Jafnvægispallur" },
-        { english: "Stepping Stones", icelandic: "Stígursteinar" },
-        { english: "Fireman Pole", icelandic: "Brunastöng" }
+        "equipment.items.monkey_bars",
+        "equipment.items.aparola",
+        "equipment.items.climbing_wall",
+        "equipment.items.rope_climber",
+        "equipment.items.balance_beam",
+        "equipment.items.stepping_stones",
+        "equipment.items.fireman_pole"
     ],
     imaginative_and_themed: [
-        { english: "Playhouse", icelandic: "Leikhús / Leikhúsbústaður" },
-        { english: "Play Car", icelandic: "Leikbíl" },
-        { english: "Play Train", icelandic: "Leiklest" },
-        { english: "Play Boat / Viking Ship", icelandic: "Leikbátur / Víkingaskip" },
-        { english: "Tunnel", icelandic: "Göng" }
+        "equipment.items.playhouse",
+        "equipment.items.play_car",
+        "equipment.items.play_train",
+        "equipment.items.play_boat",
+        "equipment.items.tunnel"
     ],
     spinning_and_motion: [
-        { english: "Merry-Go-Round", icelandic: "Hringekja" },
-        { english: "Spinner Bowl / Spinning Top", icelandic: "Snúningsskál / Snúandi toppur" },
-        { english: "Spinner", icelandic: "Snúari" }
+        "equipment.items.merry_go_round",
+        "equipment.items.spinner_bowl",
+        "equipment.items.spinner"
     ],
     fitness_and_obstacle: [
-        { english: "Pull-Up Bar", icelandic: "Upphífingastöng / Upphífingastangir" },
-        { english: "Outdoor Gym Equipment", icelandic: "Útivistarþjálfunartæki / Útigymtæki" },
-        { english: "Obstacle Course Elements", icelandic: "Hindrunabrautarhlutir" },
-        { english: "Zip Line", icelandic: "Renningabraut" }
+        "equipment.items.pull_up_bar",
+        "equipment.items.outdoor_gym",
+        "equipment.items.obstacle_course",
+        "equipment.items.zip_line"
     ],
     toddler_friendly: [
-        { english: "Baby Swing", icelandic: "Barnaróla" },
-        { english: "Small Slide", icelandic: "Lítil rennibraut" },
-        { english: "Rocking Animal / Spring Rider", icelandic: "Gungudýr / Gungufígúra" },
-        { english: "Soft Play Area", icelandic: "Mjúkt leiksvæði" }
+        "equipment.items.baby_swing",
+        "equipment.items.small_slide",
+        "equipment.items.rocking_animal",
+        "equipment.items.soft_play_area"
     ],
     additional_common_equipment: [
-        { english: "Trampoline", icelandic: "Trampólín" },
-        { english: "Jumping Pillow", icelandic: "Stökkpúði / Ærslabelgur" },
-        { english: "Basketball Hoop", icelandic: "Körfuboltakarfa" },
-        { english: "Football Goal", icelandic: "Fótboltamark" }
+        "equipment.items.trampoline",
+        "equipment.items.jumping_pillow",
+        "equipment.items.basketball_hoop",
+        "equipment.items.football_goal"
     ]
 };
 
@@ -76,16 +76,14 @@ async function seedEquipment() {
 
         // Insert all equipment data
         const equipmentInserts: Array<{
-            nameEnglish: string;
-            nameIcelandic: string;
+            name: string;
             category: EquipmentCategory;
         }> = [];
 
         for (const [category, items] of Object.entries(equipmentData)) {
             for (const item of items) {
                 equipmentInserts.push({
-                    nameEnglish: item.english,
-                    nameIcelandic: item.icelandic,
+                    name: item,
                     category: category as EquipmentCategory,
                 });
             }

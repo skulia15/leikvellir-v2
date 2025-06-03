@@ -1,0 +1,1 @@
+DROP TABLE "leikvellir_v2_post";

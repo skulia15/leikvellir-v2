@@ -151,7 +151,7 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                                                     {item.image && (
                                                         <Image
                                                             src={item.image}
-                                                            alt={item.nameEnglish}
+                                                            alt={t(item.name)}
                                                             width={32}
                                                             height={32}
                                                             className="w-8 h-8 rounded object-cover"
@@ -159,16 +159,13 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                                                     )}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-medium text-sm">
-                                                            {item.nameEnglish}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {item.nameIcelandic}
+                                                            {t(item.name)}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 {item.description && (
                                                     <div className="text-xs text-muted-foreground mt-1">
-                                                        {item.description}
+                                                        {t(item.description)}
                                                     </div>
                                                 )}
                                             </div>

@@ -22,6 +22,20 @@
       "when": 1748609679015,
       "tag": "0002_thankful_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1748946245384,
+      "tag": "0003_gifted_payback",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1748946942457,
+      "tag": "0004_uneven_diamondback",
+      "breakpoints": true
     }
   ]
 }

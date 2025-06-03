@@ -75,7 +75,7 @@ export default function EquipmentManagementClient({
     };
 
     const handleDelete = async (equipment: Equipment) => {
-        if (confirm(`${t("equipment.delete.confirm")} "${equipment.nameEnglish}"?`)) {
+        if (confirm(`${t("equipment.delete.confirm")} "${t(equipment.name)}"?`)) {
             try {
                 await deleteMutation.mutateAsync({ id: equipment.id });
             } catch (_error) {
@@ -152,8 +152,8 @@ export default function EquipmentManagementClient({
                                 <div className="flex items-center gap-2">
                                     <PlaygroundEquipmentIcon className="h-5 w-5" />
                                     {categoryLabels[category] || category}
-                                    <Badge variant="outline">
-                                        {categoryEquipment.length} {t("equipment.items")}
+                                    <Badge variant="outline" className="text-xs">
+                                        {categoryEquipment.length} {t("equipment.itemsText")}
                                     </Badge>
                                 </div>
                                 <EquipmentCreateDialog
@@ -178,17 +178,14 @@ export default function EquipmentManagementClient({
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <div>
-                                                    <div className="font-medium">{item.nameEnglish}</div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        {item.nameIcelandic}
-                                                    </div>
+                                                    <div className="font-medium">{t(item.name)}</div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 {item.image ? (
                                                     <Image
                                                         src={item.image}
-                                                        alt={item.nameEnglish}
+                                                        alt={t(item.name)}
                                                         width={48}
                                                         height={48}
                                                         className="w-12 h-12 rounded object-cover"
@@ -201,7 +198,7 @@ export default function EquipmentManagementClient({
                                             </TableCell>
                                             <TableCell>
                                                 <div className="max-w-xs truncate">
-                                                    {item.description || t('admin.noDescription')}
+                                                    {item.description ? t(item.description) : t('admin.noDescription')}
                                                 </div>
                                             </TableCell>
                                             <TableCell>

@@ -36,12 +36,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     const isLoading = status === "loading" || (status === "authenticated" && userLoading);
 
-    // Load admin mode from localStorage on mount, but only if user has admin permissions
+    // Load admin mode from localStorage on mount, with smart defaults for elevated users
     useEffect(() => {
         if (status === "authenticated" && session?.user && canAccessAdmin && currentUser) {
             const savedAdminMode = localStorage.getItem("adminMode");
-            if (savedAdminMode === "true") {
-                setIsAdminMode(true);
+
+            if (savedAdminMode !== null) {
+                // User has explicitly set a preference - respect it
+                setIsAdminMode(savedAdminMode === "true");
+            } else {
+                // No saved preference - default elevated users to admin mode
+                const defaultToAdminMode = currentUser.role === "admin" || currentUser.role === "super_admin";
+                setIsAdminMode(defaultToAdminMode);
+                // Save this default choice
+                localStorage.setItem("adminMode", defaultToAdminMode.toString());
             }
         } else {
             // Clear admin mode if user doesn't have admin permissions

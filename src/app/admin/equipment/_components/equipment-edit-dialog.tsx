@@ -59,12 +59,12 @@ export default function EquipmentEditDialog({
 
     const updateMutation = api.equipment.update.useMutation({
         onSuccess: () => {
-            toast.success(t('equipment.equipmentUpdatedSuccessfully'));
+            toast.success(t('success.equipmentUpdated'));
             onSuccess();
             onOpenChange(false);
         },
         onError: (error) => {
-            toast.error(error.message || t('equipment.failedToUpdateEquipment'));
+            toast.error(error.message || t('errors.failedToUpdateEquipment'));
         },
     });
 
@@ -73,8 +73,7 @@ export default function EquipmentEditDialog({
         if (equipment) {
             form.reset({
                 id: equipment.id,
-                nameEnglish: equipment.nameEnglish,
-                nameIcelandic: equipment.nameIcelandic,
+                name: equipment.name,
                 category: equipment.category,
                 description: equipment.description || "",
                 image: equipment.image || "",
@@ -112,41 +111,22 @@ export default function EquipmentEditDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FormField
-                                control={form.control}
-                                name="nameEnglish"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('equipment.englishName')} *</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder={t('equipment.enterEnglishName')}
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="nameIcelandic"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('equipment.icelandicName')} *</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder={t('equipment.enterIcelandicName')}
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('equipment.equipmentName')} *</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder={t('equipment.enterEquipmentName')}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}
@@ -234,10 +214,10 @@ export default function EquipmentEditDialog({
                                 {updateMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {t('common.updating')}
+                                        {t('actions.updating')}
                                     </>
                                 ) : (
-                                    t('equipment.updateEquipment')
+                                    t('common.update')
                                 )}
                             </Button>
                         </DialogFooter>
