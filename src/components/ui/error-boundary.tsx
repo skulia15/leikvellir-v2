@@ -91,7 +91,7 @@ export function withErrorBoundary<P extends object>(
   componentName?: string,
 ) {
   const WrappedComponent = (props: P) => (
-    <ErrorBoundary 
+    <ErrorBoundary
       fallback={fallback}
       component={componentName || Component.displayName || Component.name}
     >
@@ -109,7 +109,7 @@ export function AppErrorBoundary({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary
       component="App"
-      onError={(error, errorInfo) => {
+      onError={(error) => {
         // Additional app-level error handling if needed
         console.error("Application-level error:", error.message);
       }}

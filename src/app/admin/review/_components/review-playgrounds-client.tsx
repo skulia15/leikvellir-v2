@@ -51,7 +51,7 @@ export default function ReviewPlaygroundsClient({
                 id: playground.id,
                 action: "approve",
             });
-        } catch (_error) {
+        } catch {
             // Error handling is already done in the mutation onError
         }
     };

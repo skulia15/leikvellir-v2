@@ -50,7 +50,7 @@ export default function AdminPlaygroundsClient() {
     const handleDelete = async (playground: Playground) => {
         try {
             await deletePlayground.mutateAsync({ id: playground.id });
-        } catch (error) {
+        } catch {
             // Error handling is done in the mutation callbacks
         }
     };

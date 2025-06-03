@@ -28,7 +28,6 @@ interface PlaygroundFiltersProps {
 export default function PlaygroundFilters({
     filters,
     onFiltersChange,
-    playgroundCount,
 }: PlaygroundFiltersProps) {
     const router = useRouter();
     const t = useT();

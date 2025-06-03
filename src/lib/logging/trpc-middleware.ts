@@ -1,5 +1,4 @@
 // lib/logging/trpc-middleware.ts
-import { type inferRouterContext } from "@trpc/server";
 import { logger, logDbError } from "./logger";
 import { reportError } from "./error-reporter";
 

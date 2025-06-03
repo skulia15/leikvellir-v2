@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Shrub, Users, Package } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -17,7 +17,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { type Session } from "next-auth";
 import { useAdmin } from "~/lib/admin-context";
-import { PlaygroundEquipmentIcon, PlaygroundSwingIcon } from "~/components/icons";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 import LanguageSwitcher from "~/components/ui/language-switcher";
 import { useT } from "~/lib/i18n";
 

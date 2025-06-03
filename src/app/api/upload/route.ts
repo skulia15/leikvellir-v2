@@ -8,7 +8,7 @@ import {
   sanitizeFilename,
 } from "~/lib/server-file-validation";
 import type { UploadResponse } from "~/types/upload";
-import { logger, reportUploadError, logApiError } from "~/lib/logging";
+import { reportUploadError, logApiError } from "~/lib/logging";
 
 // Rate limiting - simple in-memory store (use Redis in production)
 const uploadCounts = new Map<string, { count: number; resetTime: number }>();

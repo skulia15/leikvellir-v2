@@ -19,7 +19,7 @@ interface PlaygroundDetailMapProps {
 
 export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailMapProps) {
     const [mapZoom, setMapZoom] = useState(15);
-    const { userLocation, requestLocation, permission } = useUserLocation();
+    const { userLocation } = useUserLocation();
 
     const playgroundPosition = {
         lat: playground.latitude,

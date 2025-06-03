@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 
+interface ApiResult {
+  Result: Array<{
+    Landshluti: string;
+    Sveitarfelog: Array<{
+      Svfn: string;
+      Nafn: string;
+      Fulltnafn: string;
+    }>;
+  }>;
+}
+
 // Cache the municipalities data to avoid excessive API calls
 let municipalitiesCache: {
-  data: any;
+  data: ApiResult;
   timestamp: number;
 } | null = null;
 
@@ -31,10 +42,10 @@ export async function GET() {
       throw new Error(`Icelandic registry API responded with ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as ApiResult;
 
     // Validate the response structure
-    if (!data || !data.Result || !Array.isArray(data.Result)) {
+    if (!data?.Result || !Array.isArray(data.Result)) {
       throw new Error('Invalid response structure from Icelandic registry');
     }
 

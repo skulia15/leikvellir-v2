@@ -7,6 +7,22 @@ export interface GeocodeResult {
   formattedAddress: string | null;
 }
 
+interface GoogleGeocodingResponse {
+  status: string;
+  error_message?: string;
+  results: GoogleGeocodingResult[];
+}
+
+interface GoogleGeocodingResult {
+  address_components: AddressComponent[];
+  formatted_address: string;
+}
+
+interface AddressComponent {
+  long_name: string;
+  types: string[];
+}
+
 // Rate limiting configuration
 const RATE_LIMIT = {
   maxRequests: 10, // Maximum requests per time window
@@ -21,7 +37,7 @@ interface RateLimitState {
   cooldownUntil: number;
 }
 
-let rateLimitState: RateLimitState = {
+const rateLimitState: RateLimitState = {
   requests: [],
   isInCooldown: false,
   cooldownUntil: 0,
@@ -45,25 +61,25 @@ function getCacheKey(lat: number, lng: number): string {
 
 function checkRateLimit(): boolean {
   const now = Date.now();
-  
+
   // Check if we're in cooldown period
   if (rateLimitState.isInCooldown && now < rateLimitState.cooldownUntil) {
     console.warn(`Geocoding rate limited. Cooldown until: ${new Date(rateLimitState.cooldownUntil).toLocaleTimeString()}`);
     return false;
   }
-  
+
   // Reset cooldown if period has passed
   if (rateLimitState.isInCooldown && now >= rateLimitState.cooldownUntil) {
     rateLimitState.isInCooldown = false;
     rateLimitState.requests = [];
     console.log("Geocoding rate limit cooldown period ended");
   }
-  
+
   // Remove requests outside the time window
   rateLimitState.requests = rateLimitState.requests.filter(
     timestamp => now - timestamp < RATE_LIMIT.timeWindow
   );
-  
+
   // Check if we've hit the rate limit
   if (rateLimitState.requests.length >= RATE_LIMIT.maxRequests) {
     rateLimitState.isInCooldown = true;
@@ -71,7 +87,7 @@ function checkRateLimit(): boolean {
     console.warn(`Geocoding rate limit exceeded (${RATE_LIMIT.maxRequests} requests per minute). Entering cooldown period.`);
     return false;
   }
-  
+
   return true;
 }
 
@@ -82,17 +98,17 @@ function addRequest(): void {
 function getCachedResult(lat: number, lng: number): GeocodeResult | null {
   const cacheKey = getCacheKey(lat, lng);
   const cached = geocodeCache.get(cacheKey);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     console.log("Using cached geocoding result for:", cacheKey);
     return cached.result;
   }
-  
+
   // Clean up expired cache entries
   if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
     geocodeCache.delete(cacheKey);
   }
-  
+
   return null;
 }
 
@@ -102,7 +118,7 @@ function setCachedResult(lat: number, lng: number, result: GeocodeResult): void 
     result,
     timestamp: Date.now(),
   });
-  
+
   // Periodically clean up old cache entries (keep cache size manageable)
   if (geocodeCache.size > 100) {
     const now = Date.now();
@@ -120,7 +136,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
   if (cachedResult) {
     return cachedResult;
   }
-  
+
   // Check rate limit
   if (!checkRateLimit()) {
     console.warn("Geocoding request blocked due to rate limiting");
@@ -130,21 +146,21 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       formattedAddress: null,
     };
   }
-  
+
   try {
     // Add this request to rate limit tracking
     addRequest();
-    
+
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
     console.log("Making geocoding request for:", lat, lng);
-    
+
     const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as GoogleGeocodingResponse;
     console.log("Geocoding response status:", data.status);
 
     if (data.status !== "OK") {
@@ -152,13 +168,13 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       if (data.status === "ZERO_RESULTS") {
         console.warn("No geocoding results found for coordinates:", lat, lng);
       }
-      
+
       const emptyResult = {
         municipality: null,
         country: null,
         formattedAddress: null,
       };
-      
+
       // Cache empty results to avoid repeated failed requests
       setCachedResult(lat, lng, emptyResult);
       return emptyResult;
@@ -176,15 +192,25 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     }
 
     const result = data.results[0];
+    if (!result) {
+      console.warn("No geocoding results found for coordinates:", lat, lng);
+      const emptyResult = {
+        municipality: null,
+        country: null,
+        formattedAddress: null,
+      };
+      setCachedResult(lat, lng, emptyResult);
+      return emptyResult;
+    }
     console.log("Processing geocoding result for:", lat, lng);
-    
+
     let municipality: string | null = null;
     let country: string | null = null;
 
     // Extract municipality and country from address components
     // For Iceland, prioritize administrative_area_level_1 over locality
     for (const component of result.address_components) {
-      const types = component.types;
+      const types: string[] = component.types;
       console.log("Address component:", component.long_name, "Types:", types);
 
       // Look for country first
@@ -203,7 +229,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     // If no administrative_area_level_1 found, fall back to locality
     if (!municipality) {
       for (const component of result.address_components) {
-        const types = component.types;
+        const types: string[] = component.types;
         if (types.includes("locality")) {
           municipality = component.long_name;
           console.log("Found municipality (locality fallback):", municipality, "from type:", types);
@@ -217,12 +243,12 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       country,
       formattedAddress: result.formatted_address,
     };
-    
+
     console.log("Final geocoding result:", geocodeResult);
-    
+
     // Cache the successful result
     setCachedResult(lat, lng, geocodeResult);
-    
+
     return geocodeResult;
   } catch (error) {
     console.error("Error in reverse geocoding:", error);
@@ -236,7 +262,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
 
 // Export rate limit status for debugging
 export function getRateLimitStatus() {
-  const now = Date.now();
   return {
     requestsInWindow: rateLimitState.requests.length,
     maxRequests: RATE_LIMIT.maxRequests,
@@ -251,7 +276,7 @@ export function getRateLimitStatus() {
  */
 async function normalizeMunicipalityName(municipalityName: string | null): Promise<string | null> {
   if (!municipalityName) return null;
-  
+
   try {
     // Try to find exact match in official Icelandic municipalities
     const officialMunicipality = await findMunicipalityByName(municipalityName);
@@ -259,7 +284,7 @@ async function normalizeMunicipalityName(municipalityName: string | null): Promi
       console.log(`Normalized municipality: "${municipalityName}" -> "${officialMunicipality.nafn}"`);
       return officialMunicipality.nafn;
     }
-    
+
     // If no exact match found, return the original name
     console.log(`Municipality "${municipalityName}" not found in official registry, using as-is`);
     return municipalityName;

@@ -32,7 +32,7 @@ export function useMunicipalities(): UseMunicipalitiesResult {
   };
 
   useEffect(() => {
-    loadMunicipalities();
+    void loadMunicipalities();
   }, []);
 
   return {

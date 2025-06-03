@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: PlaygroundPageProps) {
       description: `${getTranslation(defaultLocale, 'navigation.map')} ${playground.title} ${getTranslation(defaultLocale, 'playground.title')} ${getTranslation(defaultLocale, 'footer.location')}. ${playground.toddlerFriendly ? getTranslation(defaultLocale, 'playground.toddlerFriendly') : ""
         } ${playground.publiclyAccessible ? getTranslation(defaultLocale, 'playground.publiclyAccessible') : ""} ${getTranslation(defaultLocale, 'playground.title')}.`,
     };
-  } catch (_error) {
+  } catch {
     return {
       title: getTranslation(defaultLocale, 'playground.notFound'),
     };

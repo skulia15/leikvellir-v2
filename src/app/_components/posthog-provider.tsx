@@ -15,7 +15,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_exceptions: true, // This enables capturing exceptions using Error Tracking
       debug: false, // Disable debug mode to reduce console noise
       verbose: false, // Disable verbose logging
-      loaded: (posthog) => {
+      loaded: () => {
         // Additional configuration after PostHog loads
         if (process.env.NODE_ENV === "development") {
           console.log("PostHog initialized");

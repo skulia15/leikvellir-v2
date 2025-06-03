@@ -51,15 +51,15 @@ export async function fetchMunicipalities(): Promise<Municipality[]> {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data: ApiResponse | ApiErrorResponse = await response.json();
+    const data = await response.json() as ApiResponse | ApiErrorResponse;
     
     // Check for error response from our API
     if ('error' in data) {
-      throw new Error((data as ApiErrorResponse).message || 'API returned an error');
+      throw new Error(data.message || 'API returned an error');
     }
     
     // Flatten all municipalities from all regions
-    const municipalities: Municipality[] = (data as ApiResponse).Result.flatMap(region => 
+    const municipalities: Municipality[] = data.Result.flatMap(region => 
       region.Sveitarfelog.map(muni => ({
         svfn: muni.Svfn,
         nafn: muni.Nafn,
@@ -95,14 +95,14 @@ export async function fetchMunicipalitiesByRegion(): Promise<MunicipalityRegion[
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data: ApiResponse | ApiErrorResponse = await response.json();
+    const data = await response.json() as ApiResponse | ApiErrorResponse;
     
     // Check for error response from our API
     if ('error' in data) {
-      throw new Error((data as ApiErrorResponse).message || 'API returned an error');
+      throw new Error(data.message || 'API returned an error');
     }
     
-    return (data as ApiResponse).Result.map(region => ({
+    return data.Result.map(region => ({
       landshluti: region.Landshluti,
       sveitarfelog: region.Sveitarfelog.map(muni => ({
         svfn: muni.Svfn,

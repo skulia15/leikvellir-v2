@@ -78,7 +78,7 @@ export default function EquipmentManagementClient({
         if (confirm(`${t("equipment.delete.confirm")} "${t(equipment.name)}"?`)) {
             try {
                 await deleteMutation.mutateAsync({ id: equipment.id });
-            } catch (_error) {
+            } catch {
                 // Error handling is already done in the mutation onError
             }
         }
@@ -87,7 +87,7 @@ export default function EquipmentManagementClient({
     const handleRestore = async (equipment: Equipment) => {
         try {
             await restoreMutation.mutateAsync({ id: equipment.id });
-        } catch (_error) {
+        } catch {
             // Error handling is already done in the mutation onError
         }
     };

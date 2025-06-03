@@ -45,7 +45,7 @@ import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import { toast } from "sonner";
 import { useTranslation } from "~/lib/i18n";
 import { reverseGeocode } from "~/lib/geocoding";
-import MunicipalitySelector from "~/components/municipality-selector";
+// import MunicipalitySelector from "~/components/municipality-selector"; // Temporarily disabled
 
 // Create a schema that matches the backend update mutation
 const updatePlaygroundSchema = z.object({
@@ -133,7 +133,7 @@ export default function EditPlaygroundDialog({
         setIsDeleting(true);
         try {
             await deletePlayground.mutateAsync({ id: playground.id });
-        } catch (error) {
+        } catch {
             // Error handling is done in the mutation callbacks
         }
     };
@@ -149,7 +149,7 @@ export default function EditPlaygroundDialog({
                 ...data,
                 images: cleanImages,
             });
-        } catch (error) {
+        } catch {
             // Error handling is done in the mutation callbacks
         }
     };
@@ -170,21 +170,23 @@ export default function EditPlaygroundDialog({
     };
 
     // Handle coordinate changes from map
-    const handleMapCoordinateChange = async (lat: number, lng: number) => {
+    const handleMapCoordinateChange = (lat: number, lng: number) => {
         form.setValue("latitude", lat);
         form.setValue("longitude", lng);
         
-        // Auto-fill municipality using reverse geocoding
-        try {
-            const geocodeResult = await reverseGeocode(lat, lng);
-            if (geocodeResult.municipality) {
-                // Always update municipality when map pin is moved
-                form.setValue("municipality", geocodeResult.municipality);
-                console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+        // Auto-fill municipality using reverse geocoding (async)
+        void (async () => {
+            try {
+                const geocodeResult = await reverseGeocode(lat, lng);
+                if (geocodeResult.municipality) {
+                    // Always update municipality when map pin is moved
+                    form.setValue("municipality", geocodeResult.municipality);
+                    console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+                }
+            } catch (error) {
+                console.error("Failed to reverse geocode coordinates:", error);
             }
-        } catch (error) {
-            console.error("Failed to reverse geocode coordinates:", error);
-        }
+        })();
     };
 
     const currentLatitude = form.watch("latitude");
@@ -194,14 +196,14 @@ export default function EditPlaygroundDialog({
     useEffect(() => {
         const currentCoords = { lat: currentLatitude, lng: currentLongitude };
         const previousCoords = previousCoordinatesRef.current;
-        
+
         // Skip if coordinates haven't actually changed
-        if (previousCoords && 
+        if (previousCoords &&
             Math.abs(previousCoords.lat - currentCoords.lat) < 0.000001 &&
             Math.abs(previousCoords.lng - currentCoords.lng) < 0.000001) {
             return;
         }
-        
+
         // Skip if this is the initial form population (no previous coordinates)
         if (!previousCoords) {
             previousCoordinatesRef.current = currentCoords;
@@ -211,19 +213,21 @@ export default function EditPlaygroundDialog({
         // Update the reference for next comparison
         previousCoordinatesRef.current = currentCoords;
 
-        const timeoutId = setTimeout(async () => {
-            if (currentLatitude && currentLongitude) {
-                try {
-                    const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
-                    if (geocodeResult.municipality) {
-                        // Always update municipality when coordinates change
-                        form.setValue("municipality", geocodeResult.municipality);
-                        console.log("Municipality auto-filled:", geocodeResult.municipality);
+        const timeoutId = setTimeout(() => {
+            void (async () => {
+                if (currentLatitude && currentLongitude) {
+                    try {
+                        const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
+                        if (geocodeResult.municipality) {
+                            // Always update municipality when coordinates change
+                            form.setValue("municipality", geocodeResult.municipality);
+                            console.log("Municipality auto-filled:", geocodeResult.municipality);
+                        }
+                    } catch (error) {
+                        console.error("Failed to reverse geocode coordinates:", error);
                     }
-                } catch (error) {
-                    console.error("Failed to reverse geocode coordinates:", error);
                 }
-            }
+            })();
         }, 1000); // Debounce for 1 second
 
         return () => clearTimeout(timeoutId);
@@ -270,8 +274,10 @@ export default function EditPlaygroundDialog({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    onClick={getCurrentLocation}
-                                    className="text-sm"
+                                    onClick={() => {
+                                        void getCurrentLocation();
+                    }}
+                    className="text-sm"
                                 >
                                     <MapPin className="mr-2 h-4 w-4" />
                                     {t('forms.useCurrentLocation')}
@@ -379,15 +385,16 @@ export default function EditPlaygroundDialog({
                                 <FormItem>
                                     <FormLabel>{t('playground.municipality')}</FormLabel>
                                     <FormControl>
-                                        <MunicipalitySelector
-                                            value={field.value || ""}
-                                            onValueChange={field.onChange}
+                                        {/* // TODO: Use municipality selector */}
+                                        <Input
                                             placeholder={t('playground.selectMunicipality')}
+                                            {...field}
+                                            value={field.value || ""}
                                             disabled={isSubmitting}
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        {t('playground.municipalityDescription')}
+                                        {t('playground.municipalityDescription')} (Temporary text input - dropdown disabled)
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -489,7 +496,6 @@ export default function EditPlaygroundDialog({
                                                     form.setValue("coverImage", url);
                                                 }}
                                                 disabled={isSubmitting}
-                                                onReset={() => field.onChange([])}
                                             />
                                         </FormControl>
                                         <FormDescription>

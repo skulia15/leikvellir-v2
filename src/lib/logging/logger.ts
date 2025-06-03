@@ -89,20 +89,20 @@ class Logger {
   }
 
   private isPostHogLog(message: string): boolean {
-    return message.includes('[PostHog.js]') || 
-           message.includes('$snapshot') || 
-           message.includes('$web_vitals') ||
-           message.includes('$pageview') ||
-           message.includes('$pageleave') ||
-           message.includes('$autocapture');
+    return message.includes('[PostHog.js]') ||
+      message.includes('$snapshot') ||
+      message.includes('$web_vitals') ||
+      message.includes('$pageview') ||
+      message.includes('$pageleave') ||
+      message.includes('$autocapture');
   }
 
   private logToConsole(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
-    
+
     // Filter out PostHog logs to reduce console noise
     if (this.isPostHogLog(entry.message)) return;
-    
+
     // Prevent recursion by checking if we're already logging
     if (this.isLogging) {
       // If we're already logging, queue this entry to prevent infinite loops
@@ -113,7 +113,7 @@ class Logger {
     }
 
     this.isLogging = true;
-    
+
     try {
       const message = this.formatMessage(entry.level, entry.message, entry.context);
 
@@ -141,13 +141,13 @@ class Logger {
               }
               break;
           }
-        } catch (err) {
+        } catch {
           // Silently fail to prevent further recursion
         }
       }, 0);
     } finally {
       this.isLogging = false;
-      
+
       // Process any queued logs
       if (this.logQueue.length > 0) {
         const queuedEntry = this.logQueue.shift();
@@ -166,7 +166,7 @@ class Logger {
     // - Custom API endpoint for logging
 
     if (!this.shouldLog(entry.level)) return;
-    
+
     // Prevent recursion in external logging too
     if (this.isLogging) return;
 
@@ -181,7 +181,7 @@ class Logger {
             context: entry.context,
             timestamp: entry.timestamp.toISOString(),
           });
-        } catch (err) {
+        } catch {
           // Silently fail to prevent recursion
         }
       }, 5);
@@ -217,7 +217,7 @@ class Logger {
     if (this.isLogging && level === "error" && message.includes("Maximum call stack size exceeded")) {
       return; // Prevent PostHog recursion specifically
     }
-    
+
     const entry = this.createLogEntry(level, message, context, error, errorInfo);
 
     this.logToConsole(entry);

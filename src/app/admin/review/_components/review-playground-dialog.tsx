@@ -169,16 +169,6 @@ export default function ReviewPlaygroundDialog({
         });
     };
 
-    const formatCoordinates = (lat: number, lng: number) => {
-        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    };
-
-    const displayImages = playground.coverImage
-        ? [playground.coverImage, ...validImages]
-        : validImages.length > 0
-            ? validImages
-            : [];
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -302,7 +292,6 @@ export default function ReviewPlaygroundDialog({
                                                     coverImage={form.watch("coverImage")}
                                                     onCoverImageChange={(url) => form.setValue("coverImage", url)}
                                                     showCoverSelection={true}
-                                                    onReset={() => field.onChange([])}
                                                 />
                                             </FormControl>
                                             <FormDescription>

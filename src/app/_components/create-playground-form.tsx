@@ -123,21 +123,23 @@ export function CreatePlaygroundForm() {
   };
 
   // Handle coordinate changes from map
-  const handleMapCoordinateChange = async (lat: number, lng: number) => {
+  const handleMapCoordinateChange = (lat: number, lng: number) => {
     form.setValue("latitude", lat);
     form.setValue("longitude", lng);
 
-    // Auto-fill municipality using reverse geocoding
-    try {
-      const geocodeResult = await reverseGeocode(lat, lng);
-      if (geocodeResult.municipality) {
-        // Always update municipality when map pin is moved
-        form.setValue("municipality", geocodeResult.municipality);
-        console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+    // Auto-fill municipality using reverse geocoding (async)
+    void (async () => {
+      try {
+        const geocodeResult = await reverseGeocode(lat, lng);
+        if (geocodeResult.municipality) {
+          // Always update municipality when map pin is moved
+          form.setValue("municipality", geocodeResult.municipality);
+          console.log("Municipality auto-filled from map:", geocodeResult.municipality);
+        }
+      } catch (error) {
+        console.error("Failed to reverse geocode coordinates:", error);
       }
-    } catch (error) {
-      console.error("Failed to reverse geocode coordinates:", error);
-    }
+    })();
   };
 
   // Auto-fill municipality when coordinates change (manual entry)
@@ -145,19 +147,21 @@ export function CreatePlaygroundForm() {
   const currentLongitude = form.watch("longitude");
 
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      if (currentLatitude && currentLongitude) {
-        try {
-          const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
-          if (geocodeResult.municipality) {
-            // Always update municipality when coordinates change
-            form.setValue("municipality", geocodeResult.municipality);
-            console.log("Municipality auto-filled:", geocodeResult.municipality);
+    const timeoutId = setTimeout(() => {
+      void (async () => {
+        if (currentLatitude && currentLongitude) {
+          try {
+            const geocodeResult = await reverseGeocode(currentLatitude, currentLongitude);
+            if (geocodeResult.municipality) {
+              // Always update municipality when coordinates change
+              form.setValue("municipality", geocodeResult.municipality);
+              console.log("Municipality auto-filled:", geocodeResult.municipality);
+            }
+          } catch (error) {
+            console.error("Failed to reverse geocode coordinates:", error);
           }
-        } catch (error) {
-          console.error("Failed to reverse geocode coordinates:", error);
         }
-      }
+      })();
     }, 1000); // Debounce for 1 second
 
     return () => clearTimeout(timeoutId);
@@ -422,7 +426,6 @@ export function CreatePlaygroundForm() {
                           maxSize: 4 * 1024 * 1024, // 4MB
                         }}
                         disabled={createPlayground.isPending}
-                        onReset={() => field.onChange([])}
                       />
                     </FormControl>
                     <FormDescription>

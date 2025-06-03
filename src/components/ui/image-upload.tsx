@@ -29,7 +29,6 @@ interface ImageUploadProps {
   config?: Partial<ImageUploadConfig>;
   className?: string;
   disabled?: boolean;
-  onReset?: () => void; // New prop for reset functionality
   // Cover image selection props
   coverImage?: string | null;
   onCoverImageChange?: (url: string | null) => void;
@@ -42,7 +41,6 @@ export function ImageUpload({
   config = {},
   className,
   disabled = false,
-  onReset,
   coverImage,
   onCoverImageChange,
   showCoverSelection = false,
@@ -97,24 +95,6 @@ export function ImageUpload({
       });
     }
   }, [validUrls, files, uploadProgress]);
-
-  // Reset function exposed to parent
-  const resetUpload = useCallback(() => {
-    // Clear local state
-    setFiles([]);
-    setUploadProgress(new Map());
-    setErrors([]);
-    setIsResizing(false);
-    setResizeProgress({ current: 0, total: 0, filename: '' });
-    setResizeResults(new Map());
-    // Call parent reset if provided
-    if (onReset) {
-      onReset();
-    } else {
-      // Fallback to clearing form value
-      onChange([]);
-    }
-  }, [onReset, onChange]);
 
   // Create file preview objects
   const createFileWithPreview = useCallback((file: File): FileWithPreview => {
