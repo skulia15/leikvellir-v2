@@ -179,7 +179,7 @@ export function GoogleMap({
         <Map
           defaultZoom={15}
           defaultCenter={centerToUse}
-          mapId="playground-map"
+          mapId="2f47ad60ce60e620"
           onClick={() => onPlaygroundSelect(null)}
           onBoundsChanged={(ev) => setMapBounds(ev.map.getBounds() ?? null)}
           mapTypeControl={false}
@@ -189,6 +189,7 @@ export function GoogleMap({
           scaleControl={false}
           cameraControl={false}
           gestureHandling="greedy"
+          headingInteractionEnabled={false}
         >
           {/* User location marker */}
           {userLocation && (

@@ -64,3 +64,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+.gm-style-cc,
+.gmnoprint,
+.gmnoscreen {
+  display: none !important;
+}
