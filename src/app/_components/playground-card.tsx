@@ -20,9 +20,9 @@ export default function PlaygroundCard({
   showDistance = false,
 }: PlaygroundCardProps) {
   const t = useT();
-  
+
   return (
-    <Card className="cursor-pointer border-0 py-2 transition-colors">
+    <Card className="cursor-pointer border-0 py-2 transition-all duration-200 ease-in-out group">
       <CardContent className="py-0">
         <div className="flex flex-row gap-3">
           <div className="relative">
@@ -41,7 +41,7 @@ export default function PlaygroundCard({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
-              <CardTitle className="text-lg leading-tight">{playground.title}</CardTitle>
+              <CardTitle className="text-lg leading-tight transition-colors duration-200 group-hover:text-primary">{playground.title}</CardTitle>
             </div>
 
             <div className="mt-2 flex flex-wrap gap-1">

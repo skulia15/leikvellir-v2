@@ -83,8 +83,8 @@ export default function PlaygroundList({
       {filteredAndSortedPlaygrounds.map((playground) => (
         <div
           key={playground.id}
-          className={`cursor-pointer transition-colors ${selectedPlayground?.id === playground.id
-            ? "bg-muted/50"
+          className={`cursor-pointer transition-all duration-200 ease-in-out rounded-lg hover:scale-[1.005] hover:shadow-sm hover:-translate-y-0.5 ${selectedPlayground?.id === playground.id
+            ? "bg-muted/50 shadow-sm"
             : "hover:bg-muted/30"
             }`}
           onClick={() => onPlaygroundSelect(playground)}
