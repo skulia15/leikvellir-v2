@@ -31,6 +31,34 @@ export const translations: Translations = {
 };
 
 export const getTranslation = (locale: Locale, key: string, params?: Record<string, string | number>): string => {
+  // Handle pluralization if count parameter is provided
+  if (params?.count !== undefined) {
+    const count = Number(params.count);
+    const pluralKey = getPluralKey(key, count, locale);
+    const keys = pluralKey.split('.');
+    let value: unknown = translations[locale];
+
+    for (const k of keys) {
+      if (value && typeof value === 'object' && value !== null && k in value) {
+        value = (value as Record<string, unknown>)[k];
+      } else {
+        // If plural key not found, try base key
+        break;
+      }
+    }
+
+    if (typeof value === 'string') {
+      // Replace parameters in the translation
+      if (params) {
+        return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
+          return str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramValue));
+        }, value);
+      }
+      return value;
+    }
+  }
+
+  // Regular translation logic
   const keys = key.split('.');
   let value: unknown = translations[locale];
 
@@ -59,6 +87,23 @@ export const getTranslation = (locale: Locale, key: string, params?: Record<stri
   }
 
   return value;
+};
+
+// Helper function to determine the correct plural key based on count and locale
+const getPluralKey = (baseKey: string, count: number, locale: Locale): string => {
+  switch (locale) {
+    case 'en':
+      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+    case 'is':
+      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+    case 'pl':
+      // Polish plural rules: 1 = one, 2-4 = few, 5+ = many, 0 = many
+      if (count === 1) return `${baseKey}_one`;
+      if (count >= 2 && count <= 4) return `${baseKey}_few`;
+      return `${baseKey}_many`;
+    default:
+      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+  }
 };
 
 export const hasTranslation = (locale: Locale, key: string): boolean => {

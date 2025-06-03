@@ -104,18 +104,18 @@ export default function ReviewPlaygroundsClient({
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Pending Submissions</CardTitle>
+                    <CardTitle>{t('admin.pendingSubmissions')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Playground</TableHead>
-                                <TableHead>Location</TableHead>
-                                <TableHead>Submitted By</TableHead>
-                                <TableHead>Submitted On</TableHead>
-                                <TableHead>Features</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('playground.title')}</TableHead>
+                                <TableHead>{t('playground.location')}</TableHead>
+                                <TableHead>{t('admin.submittedBy')}</TableHead>
+                                <TableHead>{t('admin.submittedOn')}</TableHead>
+                                <TableHead>{t('admin.features')}</TableHead>
+                                <TableHead className="text-right">{t('admin.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -152,17 +152,17 @@ export default function ReviewPlaygroundsClient({
                                         <div className="flex flex-wrap gap-1">
                                             {playground.publiclyAccessible && (
                                                 <Badge variant="outline" className="text-xs">
-                                                    Public
+                                                    {t('admin.publicBadge')}
                                                 </Badge>
                                             )}
                                             {playground.toddlerFriendly && (
                                                 <Badge variant="outline" className="text-xs">
-                                                    Toddler
+                                                    {t('admin.toddlerBadge')}
                                                 </Badge>
                                             )}
                                             {playground.images && playground.images.length > 0 && (
                                                 <Badge variant="outline" className="text-xs">
-                                                    {playground.images.length} Photos
+                                                    {t('admin.photosBadge', { count: playground.images.length })}
                                                 </Badge>
                                             )}
                                         </div>
@@ -176,7 +176,7 @@ export default function ReviewPlaygroundsClient({
                                                 disabled={reviewMutation.isPending}
                                             >
                                                 <Edit className="mr-1 h-3 w-3" />
-                                                Review
+                                                {t('admin.reviewButton')}
                                             </Button>
                                             <Button
                                                 variant="default"
@@ -185,7 +185,7 @@ export default function ReviewPlaygroundsClient({
                                                 disabled={reviewMutation.isPending}
                                             >
                                                 <Check className="mr-1 h-3 w-3" />
-                                                Quick Approve
+                                                {t('admin.quickApprove')}
                                             </Button>
                                         </div>
                                     </TableCell>

@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import Link from "next/link";
+import { getTranslation, defaultLocale } from "~/lib/i18n";
 
 export default async function CreatePlayground() {
   const session = await getServerAuthSession();
@@ -23,7 +24,7 @@ export default async function CreatePlayground() {
       className="flex flex-col items-center justify-center gap-12 pt-12 pb-16"
       id="create-playground"
     >
-      <h1 className="text-3xl font-bold hidden">Submit a new Playground</h1>
+      <h1 className="text-3xl font-bold hidden">{getTranslation(defaultLocale, 'playground.submitNewPlayground')}</h1>
 
       {session?.user ? (
         <>
@@ -34,14 +35,14 @@ export default async function CreatePlayground() {
       ) : (
         <Card className="mx-auto w-full max-w-lg">
           <CardHeader>
-            <CardTitle>Sign In Required</CardTitle>
+            <CardTitle>{getTranslation(defaultLocale, 'playground.signInRequired')}</CardTitle>
             <CardDescription>
-              Please sign in to submit a new playground.
+              {getTranslation(defaultLocale, 'playground.signInToSubmitPlayground')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/signin">Sign In</Link>
+              <Link href="/signin">{getTranslation(defaultLocale, 'navigation.signIn')}</Link>
             </Button>
           </CardContent>
         </Card>

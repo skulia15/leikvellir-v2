@@ -141,6 +141,8 @@
     "locationEnabled": "Location enabled",
     "showing": "Showing",
     "playground": "playground",
+    "playgroundsCount_one": "{{count}} playground",
+    "playgroundsCount_other": "{{count}} playgrounds",
     "sortedByDistance": "Sorted by distance from your location",
     "noPlaygroundsFound": "No Playgrounds Found",
     "beFirstToAdd": "Be the first to add a playground to the database!",

@@ -116,8 +116,7 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
       {/* Playgrounds Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t('playground.showing')} {sortedPlaygrounds.length} {t('playground.playground')}
-          {sortedPlaygrounds.length !== 1 ? "s" : ""}
+          {t('playground.showing')} {t('playground.playgroundsCount', { count: sortedPlaygrounds.length })}
         </p>
         {sortBy === "proximity" && userLocation && (
           <p className="text-sm text-muted-foreground">

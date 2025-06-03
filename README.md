@@ -56,10 +56,17 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Google Maps directions integration - DONE
 - Traffic tracking (PostHog integration)
 - Cloud storage migration for images
+- Specific map pins in different color for ball courts - specific icons for each type
+- when location is allowed - make the map jump to the users location.
+- animation for users current location
+- hover effects for list next to map
 
 ### 📋 Planned Features
 
 - add a change request submission available for all users
+- add icons to "hentar ungabörnum", "opið almenningi" badges.
+- add municipality to each playground - can it be infered from map pin?
+- Skoða island.is kort - hvítt
 
 - **Playground Search Functionality**
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
