@@ -18,6 +18,6 @@ export default async function SignInPage() {
 }
 
 export const metadata = {
-    title: "Sign In - Leikvellir",
-    description: "Sign in to your Leikvellir account to make submissions, check into playgrounds and more.",
+    title: "Sign In - Leiksvæði",
+    description: "Sign in to your Leiksvæði account to make submissions, check into playgrounds and more.",
 }; 

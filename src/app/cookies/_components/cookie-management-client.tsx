@@ -53,7 +53,7 @@ export default function CookieManagementPage() {
             timestamp: new Date().toISOString(),
         };
 
-        localStorage.setItem("leikvellir-cookie-consent", JSON.stringify(consentData));
+        localStorage.setItem("Leiksvæði-cookie-consent", JSON.stringify(consentData));
 
         // Handle analytics based on preference
         if (preferences.analytics) {

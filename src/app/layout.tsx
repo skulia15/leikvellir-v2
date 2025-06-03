@@ -20,7 +20,7 @@ const firaSans = Fira_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Leikvellir",
+  title: "Leiksvæði",
   // TODO: find a better description
   description: "Discover and map playgrounds across Iceland",
   icons: [{ rel: "icon", url: "/favicon.ico" }],

@@ -137,7 +137,7 @@ export function Footer() {
             </div>
 
             {/* <div className="text-xs text-muted-foreground">
-              <span>Leikvellir™ is a trademark of Skúli Arnarsson</span>
+              <span>Leiksvæði is a trademark of Skúli Arnarsson</span>
             </div> */}
           </div>
 

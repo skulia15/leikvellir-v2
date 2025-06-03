@@ -19,7 +19,7 @@ interface LanguageProviderProps {
   initialLocale?: Locale;
 }
 
-const STORAGE_KEY = 'leikvellir-locale';
+const STORAGE_KEY = 'leiksvaedi-locale';
 
 export function LanguageProvider({ children, initialLocale }: LanguageProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale || defaultLocale);

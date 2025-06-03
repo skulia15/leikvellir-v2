@@ -1,6 +1,6 @@
-# Leikvellir v2 🏞️
+# Leiksvæði 🏞️
 
-A modern web application for discovering and mapping playgrounds in Iceland. Built with the T3 Stack, Leikvellir helps parents and families find the perfect playground for their children with detailed information about accessibility, age-appropriateness, and location data.
+A modern web application for discovering and mapping playgrounds in Iceland. Built with the T3 Stack, Leiksvæði helps parents and families find the perfect playground for their children with detailed information about accessibility, age-appropriateness, and location data.
 
 ## 🚀 Features
 

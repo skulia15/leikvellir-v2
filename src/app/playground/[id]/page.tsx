@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PlaygroundPageProps) {
   try {
     const playground = await api.playground.getById({ id: playgroundId });
     return {
-      title: `${playground.title} - Leikvellir`,
+      title: `${playground.title} - Leiksvæði`,
       description: `${getTranslation(defaultLocale, 'navigation.map')} ${playground.title} ${getTranslation(defaultLocale, 'playground.title')} ${getTranslation(defaultLocale, 'footer.location')}. ${playground.toddlerFriendly ? getTranslation(defaultLocale, 'playground.toddlerFriendly') : ""
         } ${playground.publiclyAccessible ? getTranslation(defaultLocale, 'playground.publiclyAccessible') : ""} ${getTranslation(defaultLocale, 'playground.title')}.`,
     };

@@ -50,13 +50,13 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                         >
                             <Image
                                 src="/icon.png"
-                                alt="Leikvellir"
+                                alt="Leiksvæði"
                                 width={62}
                                 height={62}
                                 className="mr-2"
                             />
                             <h1 className="text-sm md:text-xl font-bold text-primary xl:text-2xl">
-                                Leikvellir
+                                Leiksvæði
                             </h1>
                         </Link>
 

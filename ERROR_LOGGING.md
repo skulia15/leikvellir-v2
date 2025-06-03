@@ -1,6 +1,6 @@
 # Comprehensive Error Logging System
 
-This documentation explains the comprehensive error logging system implemented in your Leikvellir application.
+This documentation explains the comprehensive error logging system implemented in your Leiksvæði application.
 
 ## Overview
 

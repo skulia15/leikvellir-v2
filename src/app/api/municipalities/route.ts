@@ -33,7 +33,7 @@ export async function GET() {
     // Fetch fresh data from the Icelandic registry
     const response = await fetch('https://svc.skra.is/talnaefni/api/Sveitarfelog', {
       headers: {
-        'User-Agent': 'Leikvellir-App/1.0',
+        'User-Agent': 'Leiksvæði-App/1.0',
         'Accept': 'application/json',
       },
     });

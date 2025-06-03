@@ -94,7 +94,7 @@ export default function SignInClient() {
             <Card className="w-full max-w-md shadow-xl">
                 <CardHeader className="text-center space-y-2">
                     <CardTitle className="text-2xl font-bold text-gray-900">
-                        {t('auth.welcomeToLeikvellir')}
+                        {t('auth.welcomeToLeiksvaedi')}
                     </CardTitle>
                     <CardDescription className="text-gray-600">
                         {t('auth.signInToDiscover')}

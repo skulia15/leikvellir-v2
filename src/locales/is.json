@@ -32,7 +32,7 @@
     "profile": "Notendaupplýsingar"
   },
   "auth": {
-    "welcomeToLeikvellir": "Velkomin á Leikvelli",
+    "welcomeToLeiksvaedi": "Velkomin á Leiksvæði",
     "signInToDiscover": "Skráðu þig inn til að uppgötva og kortleggja leikvelli um allt land",
     "continueWithGoogle": "Halda áfram með Google",
     "continueWithFacebook": "Halda áfram með Facebook",
@@ -52,7 +52,7 @@
     "failedToSignIn": "Ekki tókst að skrá þig inn með {{provider}}. Vinsamlegast reyndu aftur."
   },
   "footer": {
-    "brand": "Leikvellir",
+    "brand": "Leiksvæði",
     "beta": "Beta",
     "description": "Uppgötvaðu og kortlegðu leikvelli um allt land. Þetta er samfélagsvettvangur til að hjálpa fjölskyldum að finna skemmtileg leiksvæðin fyrir börnin sín.",
     "location": "Hafnarfjörður, Ísland",
@@ -157,7 +157,7 @@
     "notFound": "Leikvöllur fannst ekki",
     "allPlaygrounds": "Allir leikvellir",
     "allPlaygroundsDescription": "Skoðaðu og uppgötvaðu leikvelli um allt land. Finndu skemmtilega leikvelli í nágrenni við þig.",
-    "pageTitle": "Leikvellir - Allir leikvellir",
+    "pageTitle": "Leiksvæði - Allir leikvellir",
     "pageDescription": "Skoðaðu og uppgötvaðu leikvelli. Finndu skemmtilega leikvelli í nágrenni við þig.",
     "submitNewPlayground": "Bæta við nýjum leikvelli",
     "signInToSubmitPlayground": "Vinsamlegast skráðu þig inn til að bæta við nýjum leikvelli."
@@ -273,7 +273,7 @@
     "approve": "Samþykkja",
     "adminDashboard": "Stjórnborð",
     "adminDashboardDescription": "Stjórnaðu leikvöllum í kerfinu. Þú getur breytt upplýsingum eða fjarlægt leikvelli.",
-    "adminDashboardTitle": "Stjórnborð - Leikvellir",
+    "adminDashboardTitle": "Stjórnborð - Leiksvæði",
     "adminDashboardMetaDescription": "Stjórnaðu leikvöllum og kerfisstillingum.",
     "equipmentManagement": "Stjórnun leiktækja",
     "equipmentManagementDescription": "Stjórnaðu tegundum leiktækja og flokkum",
@@ -478,7 +478,7 @@
     "lastUpdated": "Síðast uppfært:",
     "backToMap": "Til baka á kort",
     "overview": "Yfirlit",
-    "overviewText": "Leikvellir skuldbindur sig til að vernda persónuvernd þína. Þessi persónuverndarstefna útskýrir hvernig við söfnum, notum og verndum upplýsingar þínar þegar þú notar vefinn okkar.",
+    "overviewText": "Leiksvæði skuldbindur sig til að vernda persónuvernd þína. Þessi persónuverndarstefna útskýrir hvernig við söfnum, notum og verndum upplýsingar þínar þegar þú notar vefinn okkar.",
     "keyPoints": "Lykilatriði:",
     "keyPointsText": "Við söfnum lágmarksgögnum sem nauðsynleg eru fyrir þjónustuna, notum vafrakökur fyrir greiningar og virkni, og seljum aldrei persónuupplýsingar þínar.",
     "informationWeCollect": "Upplýsingar sem við söfnum",

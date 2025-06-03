@@ -16,9 +16,9 @@ interface UseUserLocationReturn {
 }
 
 const STORAGE_KEYS = {
-    userLocation: "leikvellir-user-location",
-    permission: "leikvellir-location-permission",
-    timestamp: "leikvellir-location-timestamp",
+    userLocation: "leiksvaedi-user-location",
+    permission: "leiksvaedi-location-permission",
+    timestamp: "leiksvaedi-location-timestamp",
 } as const;
 
 // Location cache expires after 5 minutes
@@ -216,7 +216,7 @@ export function useUserLocation(): UseUserLocationReturn {
             component: "useUserLocation",
             action: "request_location",
         });
-        
+
         setIsLoading(true);
         setError(null);
 
@@ -226,7 +226,7 @@ export function useUserLocation(): UseUserLocationReturn {
                 setUserLocation(location);
                 setPermission("granted");
                 cacheLocation(location, "granted");
-                
+
                 logger.info("Successfully granted location access", {
                     component: "useUserLocation",
                     action: "location_granted",
@@ -243,13 +243,13 @@ export function useUserLocation(): UseUserLocationReturn {
 
                 // Cache the denied permission to avoid repeated prompts
                 sessionStorage.setItem(STORAGE_KEYS.permission, "denied");
-                
+
                 logger.warn("Location access denied or failed", {
                     component: "useUserLocation",
                     action: "location_denied",
                     metadata: { errorMessage },
                 }, error);
-                
+
                 reportLocationError(error, "user_request_location");
             } finally {
                 setIsLoading(false);
@@ -262,7 +262,7 @@ export function useUserLocation(): UseUserLocationReturn {
             component: "useUserLocation",
             action: "clear_location",
         });
-        
+
         setUserLocation(null);
         setPermission("prompt");
         setError(null);

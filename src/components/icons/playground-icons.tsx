@@ -1,4 +1,4 @@
-// Custom SVG Icons for Leikvellir
+// Custom SVG Icons for Leiksvæði
 
 import { type LucideProps } from "lucide-react";
 

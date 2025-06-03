@@ -5,7 +5,7 @@ import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
 
 export const metadata: Metadata = {
-    title: `${getTranslation(defaultLocale, 'cookies.cookieManagement')} | Leikvellir`,
+    title: `${getTranslation(defaultLocale, 'cookies.cookieManagement')} | Leiksvæði`,
     description: getTranslation(defaultLocale, 'cookies.manageCookiePreferences'),
 };
 

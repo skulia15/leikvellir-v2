@@ -58,10 +58,10 @@ class Logger {
     if (!this.isClient) return "server";
 
     try {
-      let sessionId = sessionStorage.getItem("leikvellir-session-id");
+      let sessionId = sessionStorage.getItem("leiksvaedi-session-id");
       if (!sessionId) {
         sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-        sessionStorage.setItem("leikvellir-session-id", sessionId);
+        sessionStorage.setItem("leiksvaedi-session-id", sessionId);
       }
       return sessionId;
     } catch {

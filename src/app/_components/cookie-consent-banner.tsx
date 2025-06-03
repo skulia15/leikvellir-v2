@@ -39,7 +39,7 @@ const DEFAULT_PREFERENCES: CookiePreferences = {
   advertising: false,
 };
 
-const STORAGE_KEY = "leikvellir-cookie-consent";
+const STORAGE_KEY = "Leiksvæði-cookie-consent";
 const CONSENT_VERSION = 1;
 
 export function CookieConsentBanner() {

@@ -32,7 +32,7 @@
     "profile": "Profil"
   },
   "auth": {
-    "welcomeToLeikvellir": "Witamy w Leikvellir",
+    "welcomeToLeiksvaedi": "Witamy w Leiksvæði",
     "signInToDiscover": "Zaloguj się, aby odkrywać i mapować place zabaw w całej Islandii",
     "continueWithGoogle": "Kontynuuj z Google",
     "continueWithFacebook": "Kontynuuj z Facebook",
@@ -52,7 +52,7 @@
     "failedToSignIn": "Nie udało się zalogować z {{provider}}. Spróbuj ponownie."
   },
   "footer": {
-    "brand": "Leikvellir",
+    "brand": "Leiksvæði",
     "beta": "Beta",
     "description": "Odkrywaj i mapuj place zabaw w całej Islandii. Platforma społecznościowa pomagająca rodzinom znaleźć idealne miejsca zabaw dla swoich dzieci.",
     "location": "Hafnarfjörður, Islandia",
@@ -158,7 +158,7 @@
     "notFound": "Plac zabaw nie został znaleziony",
     "allPlaygrounds": "Wszystkie place zabaw",
     "allPlaygroundsDescription": "Przeglądaj i odkrywaj place zabaw w całej Islandii. Znajdź idealny plac zabaw dla swojej rodziny.",
-    "pageTitle": "Wszystkie place zabaw - Leikvellir",
+    "pageTitle": "Wszystkie place zabaw - Leiksvæði",
     "pageDescription": "Przeglądaj i odkrywaj place zabaw. Znajdź idealny plac zabaw dla swojej rodziny.",
     "submitNewPlayground": "Prześlij nowy plac zabaw",
     "signInToSubmitPlayground": "Proszę zaloguj się, aby przesłać nowy plac zabaw."
@@ -277,7 +277,7 @@
     "approve": "Zatwierdź",
     "adminDashboard": "Panel administratora",
     "adminDashboardDescription": "Zarządzaj placami zabaw w systemie. Możesz edytować szczegóły lub usuwać place zabaw.",
-    "adminDashboardTitle": "Panel administratora - Leikvellir",
+    "adminDashboardTitle": "Panel administratora - Leiksvæði",
     "adminDashboardMetaDescription": "Zarządzaj placami zabaw i ustawieniami systemu.",
     "equipmentManagement": "Zarządzanie wyposażeniem",
     "equipmentManagementDescription": "Zarządzaj typami wyposażenia placów zabaw i kategoriami",
@@ -484,7 +484,7 @@
     "lastUpdated": "Ostatnio zaktualizowano:",
     "backToMap": "Powrót do mapy",
     "overview": "Przegląd",
-    "overviewText": "Leikvellir zobowiązuje się do ochrony Twojej prywatności. Ta Polityka Prywatności wyjaśnia, jak gromadzimy, używamy i chronimy Twoje informacje podczas korzystania z naszej platformy odkrywania placów zabaw dla Islandii.",
+    "overviewText": "Leiksvæði zobowiązuje się do ochrony Twojej prywatności. Ta Polityka Prywatności wyjaśnia, jak gromadzimy, używamy i chronimy Twoje informacje podczas korzystania z naszej platformy odkrywania placów zabaw dla Islandii.",
     "keyPoints": "Kluczowe punkty:",
     "keyPointsText": "Gromadzimy minimalne dane niezbędne do świadczenia usługi, używamy plików cookie do analiz i funkcjonalności oraz nigdy nie sprzedajemy Twoich danych osobowych.",
     "informationWeCollect": "Informacje, które gromadzimy",
