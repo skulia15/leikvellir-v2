@@ -83,6 +83,7 @@ export function CoordinatePickerMap({
           zoomControl={true}
           scaleControl={false}
           cameraControl={false}
+          clickableIcons={false}
           draggableCursor="default"
           draggingCursor="grabbing"
         >

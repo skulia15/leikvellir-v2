@@ -45,6 +45,7 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                     fullscreenControl={false}
                     streetViewControl={false}
                     zoomControl={true}
+                    clickableIcons={false}
                     scaleControl={false}
                     cameraControl={false}
                 >

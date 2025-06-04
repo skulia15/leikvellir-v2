@@ -74,11 +74,11 @@ export function ContactForm() {
 
     try {
       // Create email content
-      const emailSubject = `[Leiksvæði] ${getCategoryLabel(data.category)} - ${data.subject}`;
+      const emailSubject = `[Leiksvæði] ${t('contact.bugReports')} - ${data.subject}`;
       const emailBody = `
 Name: ${data.name}
 Email: ${data.email}
-Category: ${getCategoryLabel(data.category)}
+Category: ${t('contact.bugReports')}
 ${data.url ? `URL: ${data.url}` : ''}
 ${data.browser ? `Browser: ${data.browser}` : ''}
 
@@ -109,20 +109,6 @@ Sent from Leiksvæði contact form
     }
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case "bug":
-        return t('contact.bugReport').replace('🐛 ', '');
-      case "feature":
-        return t('contact.featureRequest').replace('💡 ', '');
-      case "question":
-        return t('contact.question').replace('❓ ', '');
-      case "other":
-        return t('contact.other').replace('📝 ', '');
-      default:
-        return category;
-    }
-  };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -236,25 +222,25 @@ Sent from Leiksvæði contact form
                       <SelectItem value="bug" className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Bug className="h-4 w-4" />
-                          {getCategoryLabel('bug')}
+                          {t('contact.bugReports')}
                         </div>
                       </SelectItem>
                       <SelectItem value="feature" className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Lightbulb className="h-4 w-4" />
-                          {getCategoryLabel('feature')}
+                          {t('contact.featureIdeas')}
                         </div>
                       </SelectItem>
                       <SelectItem value="question" className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <HelpCircle className="h-4 w-4" />
-                          {getCategoryLabel('question')}
+                          {t('contact.questions')}
                         </div>
                       </SelectItem>
                       <SelectItem value="other" className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          {getCategoryLabel('other')}
+                          {t('contact.other')}
                         </div>
                       </SelectItem>
                     </SelectContent>
