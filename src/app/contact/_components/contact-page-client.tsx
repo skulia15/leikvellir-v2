@@ -73,7 +73,7 @@ export function ContactPageClient() {
               <div className="space-y-2">
                 <Button variant="outline" asChild className="w-full">
                   <a
-                    href="https://github.com/skulia15/leikvellir-v2/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title="
+                    href="https://github.com/skulia15/leikvellir-v2/issues/new?template=bug_report.md"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -83,7 +83,7 @@ export function ContactPageClient() {
                 </Button>
                 <Button variant="outline" asChild className="w-full">
                   <a
-                    href="https://github.com/skulia15/leikvellir-v2/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title="
+                    href="https://github.com/skulia15/leikvellir-v2/issues/new?template=feature-request.md"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

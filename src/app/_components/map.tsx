@@ -244,6 +244,7 @@ export function GoogleMap({
           gestureHandling="greedy"
           headingInteractionEnabled={false}
           clickableIcons={false}
+          draggingCursor="grabbing"
         >
           {/* Map center controller */}
           <MapCenterController
