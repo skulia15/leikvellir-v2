@@ -135,10 +135,9 @@ export default function HomeClient() {
         if (!isMobile || !isOpen) return 0;
 
         const snapPoints = [0.85, 0.6, 0.15];
-        const viewportHeight = window.innerHeight;
         const snapPoint = snapPoints[currentSnapIndex] || 0.15;
 
-        return viewportHeight * snapPoint;
+        return window.innerHeight * snapPoint;
     }, [isMobile, isOpen, currentSnapIndex]);
 
     // Playground list content
@@ -166,7 +165,7 @@ export default function HomeClient() {
     if (isMobile) {
         return (
             <div className="flex flex-col h-screen relative">
-                {/* Map container - takes full viewport height */}
+                {/* Map container - takes full available height */}
                 <div className="absolute inset-0 z-0">
                     <MapErrorBoundary fallback={MapErrorFallback}>
                         <GoogleMap
@@ -177,8 +176,6 @@ export default function HomeClient() {
                             onUserLocationChange={setUserLocation}
                             mapCenter={mapCenter}
                             onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
-                            isMobile={isMobile}
-                            drawerHeight={getDrawerHeight()}
                             shouldCenterOnUserLocation={true}
                         />
                     </MapErrorBoundary>
@@ -273,8 +270,6 @@ export default function HomeClient() {
                         onUserLocationChange={setUserLocation}
                         mapCenter={mapCenter}
                         onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
-                        isMobile={false}
-                        drawerHeight={0}
                         shouldCenterOnUserLocation={true}
                     />
                 </MapErrorBoundary>

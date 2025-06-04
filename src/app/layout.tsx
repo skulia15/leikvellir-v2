@@ -35,6 +35,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${GeistSans.variable} ${firaSans.variable}`}>
+      <head>
+        <meta name="google-site-verification" content="51PPDlaCttszidyW9wyKGGgd729BuUb0wWLY2M9lQAc" />
+      </head>
       <body className="bg-background">
         <Providers session={session}>
           <LayoutClient>

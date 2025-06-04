@@ -65,6 +65,8 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - when location is allowed - make the map jump to the users location.
 - hover effects for list next to map
 - RESTRICT API ACCESS for Maps api key
+- loading skeletons on load
+- standardized sizing of playgrounds in list
 
 ### 📋 Planned Features
 

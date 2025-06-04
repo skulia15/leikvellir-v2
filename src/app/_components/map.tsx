@@ -151,8 +151,6 @@ export function GoogleMap({
   onUserLocationChange,
   mapCenter,
   onVisiblePlaygroundsChange,
-  isMobile: _isMobile = false,
-  drawerHeight: _drawerHeight = 0,
   shouldCenterOnUserLocation = false,
 }: MapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
