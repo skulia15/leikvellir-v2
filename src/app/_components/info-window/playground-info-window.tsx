@@ -1,7 +1,7 @@
 "use client";
 
 import { InfoWindow } from "@vis.gl/react-google-maps";
-import { ChevronLeft, ChevronRight, ExternalLink, MapPin, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -234,7 +234,7 @@ export function PlaygroundInfoWindow({
               size="sm"
               className="w-full h-8 text-sm"
             >
-                <ExternalLink className="mr-1 h-3 w-3" />
+                {/* <ExternalLink className="mr-1 h-3 w-3" /> */}
                 {t('playground.viewDetails')}
               </Button>
             </Link>

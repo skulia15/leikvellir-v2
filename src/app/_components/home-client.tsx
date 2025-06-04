@@ -44,9 +44,9 @@ export default function HomeClient() {
         if (!isMobile) return;
 
         const updateDrawerHeight = () => {
-            const drawerElement = document.querySelector('.react-modal-sheet-container') as HTMLElement;
+            const drawerElement = document.querySelector('.react-modal-sheet-container')!;
             if (drawerElement) {
-                setActualDrawerHeight(drawerElement.offsetHeight);
+                setActualDrawerHeight((drawerElement as HTMLElement).offsetHeight);
             }
         };
 
@@ -55,7 +55,7 @@ export default function HomeClient() {
 
         // Set up a ResizeObserver to watch for drawer changes
         const observer = new ResizeObserver(updateDrawerHeight);
-        const drawerElement = document.querySelector('.react-modal-sheet-container') as HTMLElement;
+        const drawerElement = document.querySelector('.react-modal-sheet-container')!;
         if (drawerElement) {
             observer.observe(drawerElement);
         }
