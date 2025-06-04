@@ -1,15 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import PlaygroundsList from "~/app/_components/playgrounds-list";
+import { PlaygroundsPageSkeleton } from "~/app/_components/playgrounds-page-skeleton";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useT } from "~/lib/i18n";
 
 export default function PlaygroundsPage() {
-  const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+  const { data: playgrounds, isLoading } = api.playground.getAll.useQuery();
+  const [showSkeleton, setShowSkeleton] = useState(true);
   const t = useT();
+
+  // Show skeleton for at least 200ms for better UX
+  useEffect(() => {
+    if (playgrounds) {
+      const timer = setTimeout(() => {
+        setShowSkeleton(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [playgrounds]);
+
+  if (isLoading || showSkeleton || !playgrounds) {
+    return <PlaygroundsPageSkeleton />;
+  }
 
   return (
     <div className="bg-background">

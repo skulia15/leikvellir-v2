@@ -56,9 +56,6 @@ export default function PlaygroundDetail({
     ...(playground.images ?? [])
   ].filter((img, index, arr) => arr.indexOf(img) === index); // Remove duplicates
 
-  const formatCoordinates = (lat: number, lng: number) => {
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  };
 
   const handleGetDirections = () => {
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${playground.latitude},${playground.longitude}`;

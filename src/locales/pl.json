@@ -418,7 +418,9 @@
     "uploadingImages": "Przesyłanie obrazów",
     "uploadProgress": "{{progress}}% przesłano",
     "uploadCompleteMoving": "Przesyłanie zakończone! Przenoszenie do galerii...",
-    "imagesUploadedStats": "{{uploaded}} z {{maxFiles}} obrazów przesłanych"
+    "imagesUploadedStats": "{{uploaded}} z {{maxFiles}} obrazów przesłanych",
+    "submitAnonymously": "Prześlij anonimowo",
+    "submitAnonymouslyDescription": "Twoje imię zostanie ukryte na stronie publicznej, ale administratorzy nadal będą mogli zobaczyć, kto przesłał ten plac zabaw"
   },
   "actions": {
     "quickActions": "Szybkie akcje",

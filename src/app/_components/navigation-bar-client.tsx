@@ -40,7 +40,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
             // Show skeleton for at least 500ms for better UX
             const timer = setTimeout(() => {
                 setIsInitialLoading(false);
-            }, 500);
+            }, 200);
             return () => clearTimeout(timer);
         }
     }, [translationsReady]);

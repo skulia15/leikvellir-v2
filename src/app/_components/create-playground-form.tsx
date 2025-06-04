@@ -1,6 +1,16 @@
 "use client";
 
-import { CheckCircle2, Loader2, MapPin } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  MapPin,
+  Users,
+  Coffee,
+  Shield,
+  Camera,
+  UserX,
+  RotateCcw,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -36,6 +46,7 @@ import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import MunicipalitySelector from "~/components/municipality-selector";
 import { useTranslation } from "~/lib/i18n";
 import { reverseGeocode } from "~/lib/geocoding";
+import { PlaygroundEquipmentIcon } from "~/components/icons";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
@@ -195,7 +206,10 @@ export function CreatePlaygroundForm() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('playground.playgroundName')} *</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    {/* <Type className="h-4 w-4" /> */}
+                    {t('playground.playgroundName')} *
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('playground.enterPlaygroundName')}
@@ -211,7 +225,10 @@ export function CreatePlaygroundForm() {
             {/* Location Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">{t('playground.location')}</h3>
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  {t('playground.location')}
+                </h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -297,7 +314,7 @@ export function CreatePlaygroundForm() {
                       className="h-80 w-full"
                     />
                   </div>
-                  <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
+                  {/* <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-muted-foreground">
                         {t('forms.selectedLatitude')}:
@@ -314,7 +331,7 @@ export function CreatePlaygroundForm() {
                         {currentLongitude.toFixed(6)}
                       </span>
                     </div>
-                  </div>
+                  </div> */}
                 </TabsContent>
               </Tabs>
             </div>
@@ -345,7 +362,10 @@ export function CreatePlaygroundForm() {
 
             {/* Accessibility Options */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('forms.accessibilityAndFeatures')}</h3>
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {t('forms.accessibilityAndFeatures')}
+              </h3>
 
               <FormField
                 control={form.control}
@@ -392,7 +412,10 @@ export function CreatePlaygroundForm() {
 
             {/* Amenities Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('forms.amenities')}</h3>
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Coffee className="h-5 w-5" />
+                {t('forms.amenities')}
+              </h3>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
@@ -481,9 +504,12 @@ export function CreatePlaygroundForm() {
               </div>
             </div>
 
-            {/* Safety & Structure Section */}
+            {/* Safety, Structure & Equipment Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('forms.safetyAndStructure')}</h3>
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                {t('forms.safetyAndStructure')}
+              </h3>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
@@ -528,36 +554,41 @@ export function CreatePlaygroundForm() {
                   )}
                 />
               </div>
-            </div>
 
-            {/* Equipment Selector */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('playground.equipment')}</h3>
+              {/* Equipment Selector within the same section */}
+              <div className="mt-8">
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <PlaygroundEquipmentIcon className="h-5 w-5" style={{ height: "1.4rem", width: "1.4rem" }} />
+                    <h3 className="text-base font-medium">{t('playground.equipment')}</h3>
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="equipmentIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('playground.equipment')}</FormLabel>
-                    <FormControl>
-                      <EquipmentSelector
-                        value={field.value || []}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {t('forms.selectEquipmentDescription')}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="equipmentIds"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <EquipmentSelector
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            variant="inline"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Images Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('forms.uploadImages')}</h3>
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                {t('forms.uploadImages')}
+              </h3>
 
               <FormField
                 control={form.control}
@@ -599,7 +630,8 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-medium">
+                      <FormLabel className="text-sm font-medium flex items-center gap-2">
+                        <UserX className="h-4 w-4" />
                         {t('forms.submitAnonymously')}
                       </FormLabel>
                       <FormDescription className="text-sm text-muted-foreground">
@@ -618,7 +650,9 @@ export function CreatePlaygroundForm() {
                 variant="outline"
                 onClick={handleReset}
                 disabled={createPlayground.isPending}
+                className="flex items-center gap-2"
               >
+                <RotateCcw className="h-4 w-4" />
                 {t('playground.reset')}
               </Button>
               <Button

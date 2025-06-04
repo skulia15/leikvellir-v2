@@ -74,28 +74,30 @@ export default function PlaygroundList({
   }
 
   return (
-    <div className="space-y-1">
+    <div className="">
       {userLocation && (
-        <div className="px-4 py-2 text-xs text-muted-foreground border-b">
+        <div className="px-4 py-3 text-xs text-muted-foreground border-b bg-muted/30">
           {t('playground.sortedByDistance')}
         </div>
       )}
-      {filteredAndSortedPlaygrounds.map((playground) => (
-        <div
-          key={playground.id}
-          className={`cursor-pointer transition-all duration-200 ease-in-out rounded-lg hover:scale-[1.005] hover:shadow-sm hover:-translate-y-0.5 ${selectedPlayground?.id === playground.id
-            ? "bg-muted/50 shadow-sm"
-            : "hover:bg-muted/30"
-            }`}
-          onClick={() => onPlaygroundSelect(playground)}
-        >
-          <PlaygroundCard
-            playground={playground}
-            distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
-            showDistance={!!userLocation}
-          />
-        </div>
-      ))}
+      <div className="divide-y divide-border">
+        {filteredAndSortedPlaygrounds.map((playground) => (
+          <div
+            key={playground.id}
+            className={`cursor-pointer transition-all duration-200 ease-in-out hover:bg-muted/50 ${selectedPlayground?.id === playground.id
+              ? "bg-muted/50"
+              : ""
+              }`}
+            onClick={() => onPlaygroundSelect(playground)}
+          >
+            <PlaygroundCard
+              playground={playground}
+              distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
+              showDistance={!!userLocation}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

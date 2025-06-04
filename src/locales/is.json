@@ -35,9 +35,9 @@
   "auth": {
     "welcomeToLeiksvaedi": "Velkomin á Leiksvæði",
     "signInToDiscover": "Skráðu þig inn til að uppgötva og kortleggja leikvelli um allt land",
-    "continueWithGoogle": "Halda áfram með Google",
-    "continueWithFacebook": "Halda áfram með Facebook",
-    "continueWithDiscord": "Halda áfram með Discord",
+    "continueWithGoogle": "Skrá inn með Google",
+    "continueWithFacebook": "Skrá inn með Facebook",
+    "continueWithDiscord": "Skrá inn með Discord",
     "developmentOnly": "Aðeins í þróun",
     "mockAuthentication": "Prófunarauðkenning",
     "signInWithMockUser": "Skrá inn með prófunarnotanda",
@@ -413,7 +413,9 @@
     "uploadingImages": "Hleð upp myndum",
     "uploadProgress": "{{progress}}% hlaðið upp",
     "uploadCompleteMoving": "Myndum hefur verið hlaðið upp! Færir í myndasafn...",
-    "imagesUploadedStats": "{{uploaded}} af {{maxFiles}} myndum hlaðið upp"
+    "imagesUploadedStats": "{{uploaded}} af {{maxFiles}} myndum hlaðið upp",
+    "submitAnonymously": "Senda nafnlaust",
+    "submitAnonymouslyDescription": "Nafnið þitt verður falið á opinberu síðunni, en stjórnendur geta samt séð hver sendi þennan leikvöll"
   },
   "actions": {
     "quickActions": "Flýtiaðgerðir",

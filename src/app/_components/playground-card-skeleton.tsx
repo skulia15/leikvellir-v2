@@ -1,39 +1,36 @@
-import { Card, CardContent } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
 
 export function PlaygroundCardSkeleton() {
   return (
-    <Card className="border-0 py-2">
-      <CardContent className="py-0">
-        <div className="flex flex-row gap-3">
-          {/* Image skeleton */}
-          <Skeleton className="h-20 w-20 rounded-md" />
+    <div className="px-4 py-4">
+      <div className="flex flex-row gap-4">
+        {/* Image skeleton */}
+        <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-md flex-shrink-0" />
+        
+        <div className="flex-1 min-w-0">
+          {/* Title skeleton */}
+          <Skeleton className="h-5 sm:h-6 w-3/4 mb-2" />
           
-          <div className="flex-1 min-w-0">
-            {/* Title skeleton */}
-            <Skeleton className="h-6 w-3/4 mb-2" />
-            
-            {/* Badges skeleton */}
-            <div className="mt-2 flex flex-wrap gap-1">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="h-5 w-14 rounded-full" />
-            </div>
+          {/* Badges skeleton */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-5 w-14 rounded-full" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 export function PlaygroundListSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="space-y-1">
-      {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-lg">
-          <PlaygroundCardSkeleton />
-        </div>
-      ))}
+    <div className="">
+      <div className="divide-y divide-border">
+        {Array.from({ length: count }).map((_, index) => (
+          <PlaygroundCardSkeleton key={index} />
+        ))}
+      </div>
     </div>
   );
 }

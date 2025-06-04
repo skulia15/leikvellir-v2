@@ -12,7 +12,7 @@ interface PlaygroundDetailClientProps {
 
 export default function PlaygroundDetailClient({ playgroundId }: PlaygroundDetailClientProps) {
   const [showSkeleton, setShowSkeleton] = useState(true);
-  
+
   const { data: playground, isLoading, error } = api.playground.getById.useQuery(
     { id: playgroundId },
     {
@@ -20,12 +20,12 @@ export default function PlaygroundDetailClient({ playgroundId }: PlaygroundDetai
     }
   );
 
-  // Show skeleton for at least 300ms for better UX
+  // Show skeleton for at least 200ms for better UX
   useEffect(() => {
     if (playground) {
       const timer = setTimeout(() => {
         setShowSkeleton(false);
-      }, 300);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [playground]);

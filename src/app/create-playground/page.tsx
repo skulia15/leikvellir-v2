@@ -5,6 +5,7 @@ import { FormErrorBoundary } from "~/components/ui/error-boundary";
 import { FormErrorFallback } from "~/components/ui/error-fallbacks";
 import { CreatePlaygroundForm } from "../_components/create-playground-form";
 import { Button } from "~/components/ui/button";
+import { User, Shield } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -35,14 +36,20 @@ export default async function CreatePlayground() {
       ) : (
         <Card className="mx-auto w-full max-w-lg">
           <CardHeader>
-            <CardTitle>{getTranslation(defaultLocale, 'playground.signInRequired')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              {getTranslation(defaultLocale, 'playground.signInRequired')}
+            </CardTitle>
             <CardDescription>
               {getTranslation(defaultLocale, 'playground.signInToSubmitPlayground')}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild>
-              <Link href="/signin">{getTranslation(defaultLocale, 'navigation.signIn')}</Link>
+            <Button asChild className="flex items-center gap-2">
+              <Link href="/signin">
+                <User className="h-4 w-4" />
+                {getTranslation(defaultLocale, 'navigation.signIn')}
+              </Link>
             </Button>
           </CardContent>
         </Card>

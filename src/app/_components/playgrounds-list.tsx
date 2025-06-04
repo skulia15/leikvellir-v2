@@ -15,22 +15,24 @@ import {
 } from "~/components/ui/select";
 import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
+import { PlaygroundsListSkeleton } from "./playgrounds-page-skeleton";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, sortPlaygroundsByDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
 
 interface PlaygroundsListProps {
   playgrounds: Playground[];
+  isLoading?: boolean;
 }
 
 type SortOption = "proximity" | "popularity" | "newest" | "name";
 
-export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
+export default function PlaygroundsList({ playgrounds, isLoading = false }: PlaygroundsListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
   const t = useT();
 
-  const { userLocation, isLoading, permission, requestLocation } = useUserLocation();
+  const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
 
   // Sort playgrounds based on selected option
   useEffect(() => {
@@ -57,6 +59,11 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
 
     setSortedPlaygrounds(sorted);
   }, [sortBy, userLocation, playgrounds]);
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <PlaygroundsListSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -95,11 +102,11 @@ export default function PlaygroundsList({ playgrounds }: PlaygroundsListProps) {
                 variant="outline"
                 size="sm"
                 onClick={requestLocation}
-                disabled={isLoading}
+                disabled={locationLoading}
                 className="flex items-center gap-2"
               >
                 <Navigation className="h-4 w-4" />
-                {isLoading ? t('playground.finding') : t('playground.enableLocationSorting')}
+                {locationLoading ? t('playground.finding') : t('playground.enableLocationSorting')}
               </Button>
             )}
 

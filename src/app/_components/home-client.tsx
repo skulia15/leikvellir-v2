@@ -77,7 +77,7 @@ export default function HomeClient() {
             // Small delay to show skeleton briefly even if data loads very quickly
             const timer = setTimeout(() => {
                 setIsInitialLoading(false);
-            }, 500);
+            }, 200);
             return () => clearTimeout(timer);
         }
     }, [playgrounds]);

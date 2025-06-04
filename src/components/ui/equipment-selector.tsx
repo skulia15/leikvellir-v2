@@ -21,9 +21,10 @@ interface EquipmentSelectorProps {
     value: number[];
     onChange: (equipmentIds: number[]) => void;
     disabled?: boolean;
+    variant?: "card" | "inline";
 }
 
-export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelectorProps) {
+export function EquipmentSelector({ value, onChange, disabled, variant = "card" }: EquipmentSelectorProps) {
     const t = useT();
     const [expandedCategories, setExpandedCategories] = useState<Set<EquipmentCategory>>(
         new Set(["core_equipment"])
@@ -52,27 +53,35 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
     };
 
     if (isLoading) {
-        return (
+        const content = (
+            <div className="flex items-center justify-center py-6">
+                <div className="text-muted-foreground">{t('equipment.loadingEquipment')}</div>
+            </div>
+        );
+
+        return variant === "card" ? (
             <Card>
                 <CardContent className="py-6">
-                    <div className="flex items-center justify-center">
-                        <div className="text-muted-foreground">{t('equipment.loadingEquipment')}</div>
-                    </div>
+                    {content}
                 </CardContent>
             </Card>
-        );
+        ) : content;
     }
 
     if (!equipment || equipment.length === 0) {
-        return (
+        const content = (
+            <div className="text-center text-muted-foreground py-6">
+                {t('equipment.noEquipmentAvailable')}
+            </div>
+        );
+
+        return variant === "card" ? (
             <Card>
                 <CardContent className="py-6">
-                    <div className="text-center text-muted-foreground">
-                        {t('equipment.noEquipmentAvailable')}
-                    </div>
+                    {content}
                 </CardContent>
             </Card>
-        );
+        ) : content;
     }
 
     // Group equipment by category
@@ -86,7 +95,109 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
 
     const selectedCount = value.length;
 
-    return (
+    const content = (
+        <div className="space-y-4">
+            {variant === "card" && (
+                <div className="flex items-center gap-2 mb-4">
+                    <PlaygroundEquipmentIcon className="h-5 w-5" />
+                    <span className="font-semibold">{t('equipment.playgroundEquipment')}</span>
+                    {selectedCount > 0 && (
+                        <Badge variant="secondary">
+                            {selectedCount} {t('equipment.selected')}
+                        </Badge>
+                    )}
+                </div>
+            )}
+
+            {/* Description text above the selection */}
+            <div className="text-sm text-muted-foreground mb-4">
+                {t('forms.selectEquipmentDescription')}
+            </div>
+
+            {Object.entries(equipmentByCategory).map(([category, categoryEquipment]) => {
+                const isExpanded = expandedCategories.has(category as EquipmentCategory);
+                const categorySelectedCount = categoryEquipment.filter(eq =>
+                    value.includes(eq.id)
+                ).length;
+
+                return (
+                    <Collapsible
+                        key={category}
+                        open={isExpanded}
+                        onOpenChange={() => toggleCategory(category as EquipmentCategory)}
+                    >
+                        <CollapsibleTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-between p-3 h-auto"
+                                disabled={disabled}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="font-medium">
+                                        {t(`equipment.categories.${category as EquipmentCategory}`)}
+                                    </span>
+                                    {categorySelectedCount > 0 && (
+                                        <Badge variant="outline" className="text-xs">
+                                            {categorySelectedCount}/{categoryEquipment.length}
+                                        </Badge>
+                                    )}
+                                </div>
+                                <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
+                                        }`}
+                                />
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-2 pt-2">
+                            <div className="grid grid-cols-1 gap-2 pl-6">
+                                {categoryEquipment.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                                    >
+                                        <Checkbox
+                                            checked={value.includes(item.id)}
+                                            onCheckedChange={() => toggleEquipment(item.id)}
+                                            disabled={disabled}
+                                        />
+                                        <div
+                                            className="flex-1 min-w-0 cursor-pointer"
+                                            onClick={() => !disabled && toggleEquipment(item.id)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {item.image && (
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={t(item.name)}
+                                                        width={32}
+                                                        height={32}
+                                                        className="w-8 h-8 rounded object-cover"
+                                                    />
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-sm select-none">
+                                                        {t(item.name)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {item.description && (
+                                                <div className="text-xs text-muted-foreground mt-1 select-none">
+                                                    {t(item.description)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                );
+            })}
+
+        </div>
+    );
+
+    return variant === "card" ? (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -99,98 +210,9 @@ export function EquipmentSelector({ value, onChange, disabled }: EquipmentSelect
                     )}
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-                {Object.entries(equipmentByCategory).map(([category, categoryEquipment]) => {
-                    const isExpanded = expandedCategories.has(category as EquipmentCategory);
-                    const categorySelectedCount = categoryEquipment.filter(eq =>
-                        value.includes(eq.id)
-                    ).length;
-
-                    return (
-                        <Collapsible
-                            key={category}
-                            open={isExpanded}
-                            onOpenChange={() => toggleCategory(category as EquipmentCategory)}
-                        >
-                            <CollapsibleTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="w-full justify-between p-3 h-auto"
-                                    disabled={disabled}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-medium">
-                                            {t(`equipment.categories.${category as EquipmentCategory}`)}
-                                        </span>
-                                        {categorySelectedCount > 0 && (
-                                            <Badge variant="outline" className="text-xs">
-                                                {categorySelectedCount}/{categoryEquipment.length}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <ChevronDown
-                                        className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
-                                            }`}
-                                    />
-                                </Button>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="space-y-2 pt-2">
-                                <div className="grid grid-cols-1 gap-2 pl-6">
-                                    {categoryEquipment.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                                        >
-                                            <Checkbox
-                                                checked={value.includes(item.id)}
-                                                onCheckedChange={() => toggleEquipment(item.id)}
-                                                disabled={disabled}
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    {item.image && (
-                                                        <Image
-                                                            src={item.image}
-                                                            alt={t(item.name)}
-                                                            width={32}
-                                                            height={32}
-                                                            className="w-8 h-8 rounded object-cover"
-                                                        />
-                                                    )}
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-sm">
-                                                            {t(item.name)}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {item.description && (
-                                                    <div className="text-xs text-muted-foreground mt-1">
-                                                        {t(item.description)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    );
-                })}
-
-                {selectedCount > 0 && (
-                    <div className="pt-4 border-t">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onChange([])}
-                            disabled={disabled}
-                            className="w-full"
-                        >
-                            {t('equipment.clearAllSelections')}
-                        </Button>
-                    </div>
-                )}
+            <CardContent>
+                {content}
             </CardContent>
         </Card>
-    );
+    ) : content;
 } 

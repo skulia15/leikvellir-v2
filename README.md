@@ -47,33 +47,34 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Multi-language support (Icelandic/English/Polish)
 - Cloud storage migration for images - DONE
 - Google Maps directions integration - DONE
+- Traffic tracking (PostHog integration) - DONE
+- hover effects for list next to map - DONE
+- List of available playground equipment - DONE
 
 ### 🚧 In Progress
 
 - Interactive Map View improvements
-  - Enhanced markers showing different playground types (shaded, fenced, toddler-friendly)
+  - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
 - Playground detail pages with comprehensive information
 - Error handling and loading states optimization
 - Responsive layout optimization
-- List of available playground equipment and activities
 
-- fix list display on detail pages
+- fix playground equipment list display on detail pages
 - get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog
 
-- Traffic tracking (PostHog integration)
 - Specific map pins in different color for ball courts - specific icons for each type
 - when location is allowed - make the map jump to the users location.
-- hover effects for list next to map
 - RESTRICT API ACCESS for Maps api key
 - loading skeletons on load
 - standardized sizing of playgrounds in list
+- add sitemap
 
 ### 📋 Planned Features
 
 - add a change request submission available for all users
-- add icons to "hentar ungabörnum", "opið almenningi" badges.
+- add icons to "hentar ungabörnum", "opið almenningi" badges. - missing in map pin detail window
 - add municipality to each playground - can it be infered from map pin?
-- bæta við aðgengi - hjólastóla og svoleiðis
+- bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
 
 - **Playground Search Functionality**
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
