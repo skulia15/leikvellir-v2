@@ -33,11 +33,41 @@ export default function HomeClient() {
     const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
     const [isOpen, setOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
-    const [currentSnapIndex, setCurrentSnapIndex] = useState(2); // Start at minimized
+    const [actualDrawerHeight, setActualDrawerHeight] = useState(0);
     const ref = useRef<SheetRef>();
 
     const searchParams = useSearchParams();
     const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+
+    // Observe drawer height changes
+    useEffect(() => {
+        if (!isMobile) return;
+
+        const updateDrawerHeight = () => {
+            const drawerElement = document.querySelector('.react-modal-sheet-container') as HTMLElement;
+            if (drawerElement) {
+                setActualDrawerHeight(drawerElement.offsetHeight);
+            }
+        };
+
+        // Update immediately
+        updateDrawerHeight();
+
+        // Set up a ResizeObserver to watch for drawer changes
+        const observer = new ResizeObserver(updateDrawerHeight);
+        const drawerElement = document.querySelector('.react-modal-sheet-container') as HTMLElement;
+        if (drawerElement) {
+            observer.observe(drawerElement);
+        }
+
+        // Also update on interval as fallback
+        const interval = setInterval(updateDrawerHeight, 100);
+
+        return () => {
+            observer.disconnect();
+            clearInterval(interval);
+        };
+    }, [isMobile]);
 
     // Check if mobile
     // TODO: use tailwind to style for mobile instead, if possible. 
@@ -130,15 +160,18 @@ export default function HomeClient() {
         }
     }, [isMobile]);
 
-    // Calculate drawer height based on snap point
+    // Handle minimizing drawer (for mobile)
+    const handleMinimizeDrawer = useCallback(() => {
+        if (isMobile && ref.current) {
+            ref.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
+        }
+    }, [isMobile]);
+
+    // Calculate drawer height based on actual DOM element instead of state
     const getDrawerHeight = useCallback(() => {
         if (!isMobile || !isOpen) return 0;
-
-        const snapPoints = [0.85, 0.6, 0.15];
-        const snapPoint = snapPoints[currentSnapIndex] || 0.15;
-
-        return window.innerHeight * snapPoint;
-    }, [isMobile, isOpen, currentSnapIndex]);
+        return actualDrawerHeight;
+    }, [isMobile, isOpen, actualDrawerHeight]);
 
     // Playground list content
     const playgroundContent = (
@@ -176,7 +209,10 @@ export default function HomeClient() {
                             onUserLocationChange={setUserLocation}
                             mapCenter={mapCenter}
                             onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                            isMobile={isMobile}
+                            drawerHeight={getDrawerHeight()}
                             shouldCenterOnUserLocation={true}
+                            onMinimizeDrawer={handleMinimizeDrawer}
                         />
                     </MapErrorBoundary>
                 </div>
@@ -189,8 +225,6 @@ export default function HomeClient() {
                     snapPoints={[0.85, 0.6, 0.15]} // More intuitive heights
                     initialSnap={2} // Start minimized
                     onSnap={(snapIndex) => {
-                        console.log("> Current snap point index:", snapIndex);
-                        setCurrentSnapIndex(snapIndex);
                         // Keep track of open state based on snap point
                         if (snapIndex === 2) {
                             // At the smallest snap point, consider it "minimized" but still open
@@ -270,6 +304,8 @@ export default function HomeClient() {
                         onUserLocationChange={setUserLocation}
                         mapCenter={mapCenter}
                         onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                        isMobile={false}
+                        drawerHeight={getDrawerHeight()}
                         shouldCenterOnUserLocation={true}
                     />
                 </MapErrorBoundary>

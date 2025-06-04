@@ -301,3 +301,15 @@ Details: Previous mobile overflow fix inadvertently changed desktop behavior - f
 [2025-06-04] Desktop Footer Visibility Fix – Restored footer visibility on desktop front page
 
 Details: Footer was completely hidden on desktop front page due to overly broad footer hiding logic (setShouldShowFooter(!isFrontPage)). Fixed by making footer visibility device-specific: 1) Updated LayoutClient to only hide footer on mobile front page (!(isFrontPage && isMobileDevice)), 2) Desktop front page now shows footer when scrolled to bottom, 3) Added resize listener to updateFooterVisibility function to handle device orientation changes. Desktop users can now scroll down to see footer on front page while mobile maintains no-scroll behavior.
+
+[2025-06-04] Mobile User Location Centering Fix – Fixed mobile map centering by adding missing props for padding calculation
+
+Details: User location on mobile was not properly centered (120px difference from top to bottom) despite map padding implementation. Root cause: Mobile GoogleMap component was missing isMobile and drawerHeight props needed for MapPaddingController to calculate proper padding. Fixed by: 1) Added missing isMobile={isMobile} and drawerHeight={getDrawerHeight()} props to mobile GoogleMap call, 2) Added consistent isMobile={false} and drawerHeight={0} props to desktop GoogleMap call, 3) Ensured getDrawerHeight() uses full window.innerHeight to match actual drawer behavior. Mobile user location now centers properly in visible map area accounting for bottom drawer.
+
+[2025-06-04] MapPaddingController Implementation Fix – Added missing MapPaddingController component to map.tsx
+
+Details: Follow-up investigation revealed that while isMobile and drawerHeight props were being passed to GoogleMap component, the MapPaddingController component was completely missing from map.tsx. Fixed by: 1) Added MapPaddingController function component that uses useMap() hook to access map instance, 2) Calculates padding based on isMobile and drawerHeight props, 3) Sets padding using map.set('padding', paddingObject) on the Google Maps API, 4) Added MapPaddingController to Map component children before MapCenterController. Now mobile map properly applies bottom padding to account for drawer, ensuring user location appears centered in visible area.
+
+[2025-06-04] Drawer Height Calculation Fix – Fixed incorrect drawer height by using actual DOM measurements instead of state
+
+Details: Mobile centering still not working despite MapPaddingController implementation. Investigation showed drawer height calculation was wrong: state indicated 100px (15% snap) but actual DOM showed 567px (85% snap). Root cause: react-modal-sheet initialSnap={2} not working as expected, causing mismatch between state and reality. Fixed by: 1) Added actualDrawerHeight state to track real DOM height, 2) Added ResizeObserver and interval to monitor .react-modal-sheet-container element, 3) Updated getDrawerHeight() to return actualDrawerHeight instead of calculated value, 4) Added console.log debugging to MapPaddingController. Now drawer height accurately reflects actual DOM element size for proper map padding calculation.

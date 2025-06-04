@@ -28,6 +28,7 @@ interface MapProps {
   isMobile?: boolean;
   drawerHeight?: number;
   shouldCenterOnUserLocation?: boolean; // New prop to control auto-centering
+  onMinimizeDrawer?: () => void; // New prop to minimize drawer
 }
 
 const defaultCenter = {
@@ -53,8 +54,10 @@ function UserLocationMarker() {
 
 function UserLocationButton({
   onLocationFound,
+  onMinimizeDrawer,
 }: {
   onLocationFound: (location: UserLocation) => void;
+  onMinimizeDrawer?: () => void;
 }) {
   const map = useMap();
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +70,12 @@ function UserLocationButton({
     }
 
     setIsLoading(true);
+
+    // Minimize the drawer when starting to find location
+    if (onMinimizeDrawer) {
+      onMinimizeDrawer();
+    }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const location = {
@@ -91,7 +100,7 @@ function UserLocationButton({
         maximumAge: 60000,
       },
     );
-  }, [map, onLocationFound, t]);
+  }, [map, onLocationFound, onMinimizeDrawer, t]);
 
   return (
     <Button
@@ -152,6 +161,9 @@ export function GoogleMap({
   mapCenter,
   onVisiblePlaygroundsChange,
   shouldCenterOnUserLocation = false,
+  isMobile = false,
+  drawerHeight = 0,
+  onMinimizeDrawer,
 }: MapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
@@ -160,6 +172,23 @@ export function GoogleMap({
 
   // Calculate the center to use - either from prop or default
   const centerToUse = mapCenter ?? defaultCenter;
+
+  // Calculate map container height based on mobile drawer
+  const mapContainerStyle = useMemo(() => {
+    if (isMobile && drawerHeight > 0) {
+      // The drawer might be reporting its full potential height (743px)
+      // but we only need to account for the visible portion that covers the map
+      // Let's try a smaller fixed offset that accounts for the visible drawer header
+      const effectiveOffset = 150; // Fixed offset - adjust based on actual drawer visible height
+      return {
+        height: `calc(100vh - ${effectiveOffset}px)`,
+        transition: 'height 0.3s ease-in-out',
+      };
+    }
+    return {
+      height: '100%'
+    };
+  }, [isMobile, drawerHeight]);
 
   // Filter playgrounds based on the provided filters
   const filteredPlaygrounds = useMemo(() => {
@@ -226,7 +255,7 @@ export function GoogleMap({
 
   return (
     <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
-      <div className="relative h-full">
+      <div className="relative" style={mapContainerStyle}>
         <Map
           defaultZoom={15}
           defaultCenter={centerToUse}
@@ -289,7 +318,10 @@ export function GoogleMap({
         </Map>
 
         {/* User location button */}
-        <UserLocationButton onLocationFound={onUserLocationChange} />
+        <UserLocationButton
+          onLocationFound={onUserLocationChange}
+          onMinimizeDrawer={onMinimizeDrawer}
+        />
       </div>
     </APIProvider>
   );
