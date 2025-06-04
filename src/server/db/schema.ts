@@ -121,6 +121,7 @@ export const playgrounds = createTable(
     createdById: varchar("created_by", { length: 255 })
       .notNull()
       .references(() => users.id),
+    submitAnonymously: boolean("submit_anonymously").notNull().default(false), // Whether to hide submitter name publicly
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

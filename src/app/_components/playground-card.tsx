@@ -2,7 +2,7 @@ import { Card, CardContent, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import Image from "next/image";
 import { type Playground } from "~/types";
-import { MapPin } from "lucide-react";
+import { Baby, MapPin, Users } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
 
@@ -46,12 +46,14 @@ export default function PlaygroundCard({
 
             <div className="mt-2 flex flex-wrap gap-1">
               {playground.toddlerFriendly && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                  <Baby className="h-3 w-3" />
                   {t('playground.toddlerFriendly')}
                 </Badge>
               )}
               {playground.publiclyAccessible && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs flex items-center gap-1">
+                  <Users className="h-3 w-3" />
                   {t('forms.publicAccess')}
                 </Badge>
               )}

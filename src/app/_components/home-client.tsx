@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { List } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -20,6 +20,7 @@ import { api } from "~/trpc/react";
 import { GoogleMap } from "./map";
 import PlaygroundList from "./playground-list";
 import PlaygroundFilters, { type PlaygroundFilters as PlaygroundFiltersType } from "./playground-filters";
+import { PlaygroundListSkeleton } from "./playground-card-skeleton";
 import { type Playground } from "~/types";
 import { type UserLocation } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
@@ -38,6 +39,7 @@ export default function HomeClient() {
 
     const searchParams = useSearchParams();
     const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     // Observe drawer height changes
     useEffect(() => {
@@ -68,6 +70,17 @@ export default function HomeClient() {
             clearInterval(interval);
         };
     }, [isMobile]);
+
+    // Handle initial loading state
+    useEffect(() => {
+        if (playgrounds) {
+            // Small delay to show skeleton briefly even if data loads very quickly
+            const timer = setTimeout(() => {
+                setIsInitialLoading(false);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [playgrounds]);
 
     // Check if mobile
     // TODO: use tailwind to style for mobile instead, if possible. 
@@ -133,17 +146,21 @@ export default function HomeClient() {
     }, [searchParams, playgrounds]);
 
     // Calculate filtered playground count for the filter component
-    const filteredPlaygroundCount = visiblePlaygrounds.length > 0
-        ? visiblePlaygrounds.length
-        : playgrounds?.filter((playground: Playground) => {
-            if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
-                return false;
-            }
-            if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
-                return false;
-            }
-            return true;
-        }).length || 0;
+    const filteredPlaygroundCount = useMemo(() => {
+        if (isInitialLoading || !playgrounds) return 0;
+
+        return visiblePlaygrounds.length > 0
+            ? visiblePlaygrounds.length
+            : playgrounds.filter((playground: Playground) => {
+                if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
+                    return false;
+                }
+                if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
+                    return false;
+                }
+                return true;
+            }).length;
+    }, [playgrounds, isInitialLoading, visiblePlaygrounds, filters]);
 
     // Stable callback to prevent infinite loops
     const handleVisiblePlaygroundsChange = useCallback((newVisiblePlaygrounds: (Playground & { distance?: number | null })[]) => {
@@ -184,13 +201,17 @@ export default function HomeClient() {
             />
 
             {/* Playground list */}
-            <PlaygroundList
-                filters={filters}
-                userLocation={userLocation}
-                selectedPlayground={selectedPlayground}
-                onPlaygroundSelect={handlePlaygroundSelect}
-                visiblePlaygrounds={visiblePlaygrounds}
-            />
+            {isInitialLoading ? (
+                <PlaygroundListSkeleton count={6} />
+            ) : (
+                <PlaygroundList
+                    filters={filters}
+                    userLocation={userLocation}
+                    selectedPlayground={selectedPlayground}
+                    onPlaygroundSelect={handlePlaygroundSelect}
+                    visiblePlaygrounds={visiblePlaygrounds}
+                />
+            )}
         </DataErrorBoundary>
     );
 

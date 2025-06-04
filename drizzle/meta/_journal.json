@@ -36,6 +36,13 @@
       "when": 1748946942457,
       "tag": "0004_uneven_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1749040841272,
+      "tag": "0005_burly_synch",
+      "breakpoints": true
     }
   ]
 }

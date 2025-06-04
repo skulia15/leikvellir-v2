@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { api } from "~/trpc/server";
-import PlaygroundDetail from "~/app/_components/playground-detail";
+import PlaygroundDetailClient from "~/app/_components/playground-detail-client";
 import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
+import { api } from "~/trpc/server";
 
 interface PlaygroundPageProps {
   params: Promise<{ id: string }>;
@@ -16,13 +16,14 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
     notFound();
   }
 
+  // Prefetch the data on the server for better performance
   try {
-    const playground = await api.playground.getById({ id: playgroundId });
-    return <PlaygroundDetail playground={playground} />;
-  } catch (error) {
-    console.error("Failed to fetch playground:", error);
-    notFound();
+    void api.playground.getById.prefetch({ id: playgroundId });
+  } catch {
+    // If prefetch fails, let the client handle it
   }
+
+  return <PlaygroundDetailClient playgroundId={playgroundId} />;
 }
 
 // Generate metadata for SEO

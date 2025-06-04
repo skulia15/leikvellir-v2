@@ -62,6 +62,7 @@ export function CreatePlaygroundForm() {
       hasGarbageCan: false,
       hasBathroomNearby: false,
       hasSoftPlayArea: false,
+      submitAnonymously: false,
       equipmentIds: [],
       images: [],
     },
@@ -392,7 +393,7 @@ export function CreatePlaygroundForm() {
             {/* Amenities Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">{t('forms.amenities')}</h3>
-              
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -483,7 +484,7 @@ export function CreatePlaygroundForm() {
             {/* Safety & Structure Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">{t('forms.safetyAndStructure')}</h3>
-              
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -579,6 +580,32 @@ export function CreatePlaygroundForm() {
                       {t('forms.playgroundImagesDescriptionBatch')}
                     </FormDescription>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Anonymous Submission */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="submitAnonymously"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-medium">
+                        {t('forms.submitAnonymously')}
+                      </FormLabel>
+                      <FormDescription className="text-sm text-muted-foreground">
+                        {t('forms.submitAnonymouslyDescription')}
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />

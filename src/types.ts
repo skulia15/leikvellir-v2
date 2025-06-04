@@ -122,6 +122,7 @@ export const CreatePlaygroundSchema = z.object({
   hasGarbageCan: z.boolean(),
   hasBathroomNearby: z.boolean(),
   hasSoftPlayArea: z.boolean(),
+  submitAnonymously: z.boolean(),
   equipmentIds: z.array(z.number()),
   images: z
     .array(
@@ -172,6 +173,7 @@ export type Playground = {
   hasGarbageCan: boolean;
   hasBathroomNearby: boolean;
   hasSoftPlayArea: boolean;
+  submitAnonymously: boolean;
   coverImage: string | null;
   images: string[] | null;
   status: PlaygroundStatus;

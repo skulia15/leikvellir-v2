@@ -162,7 +162,9 @@
     "pageTitle": "All Playgrounds - Leiksvæði",
     "pageDescription": "Browse and discover playgrounds. Find the perfect playground for your family.",
     "submitNewPlayground": "Submit a new Playground",
-    "signInToSubmitPlayground": "Please sign in to submit a new playground."
+    "signInToSubmitPlayground": "Please sign in to submit a new playground.",
+    "submittedBy": "Submitted by",
+    "anonymousSubmission": "Anonymous"
   },
   "equipment": {
     "categories": {
@@ -348,7 +350,7 @@
     "imageUploadError": "Image upload error",
     "invalidFileType": "Invalid file type",
     "fileTooLarge": "File too large",
-    "publicAccess": "Open to the public",
+    "publicAccess": "Public Access",
     "restrictedAccessDescription": "Restricted access (may be part of school grounds)",
     "ageSuitability": "Age Suitability",
     "suitableForToddlers": "Suitable for toddlers and young children",
@@ -415,7 +417,9 @@
     "uploadProgress": "{{progress}}% uploaded",
     "uploadCompleteMoving": "Upload complete! Moving to gallery...",
     "imagesUploadedStats": "{{uploaded}} of {{maxFiles}} images uploaded",
-    "imagesUploadedBatchStats": "{{uploaded}} images uploaded, {{pending}} pending (max {{maxPerBatch}} per batch)"
+    "imagesUploadedBatchStats": "{{uploaded}} images uploaded, {{pending}} pending (max {{maxPerBatch}} per batch)",
+    "submitAnonymously": "Submit anonymously",
+    "submitAnonymouslyDescription": "Your name will be hidden from the public page, but administrators can still see who submitted this playground"
   },
   "actions": {
     "quickActions": "Quick Actions",

@@ -1,0 +1,1 @@
+ALTER TABLE "leikvellir_v2_playground" ADD COLUMN if not exists "submit_anonymously" boolean DEFAULT false NOT NULL;

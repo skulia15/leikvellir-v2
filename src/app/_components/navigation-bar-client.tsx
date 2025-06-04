@@ -4,9 +4,11 @@ import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, Clipb
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,6 +30,22 @@ interface NavigationBarClientProps {
 export default function NavigationBarClient({ session }: NavigationBarClientProps) {
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
     const t = useT();
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+    // Check if translations are ready and manage initial loading state
+    const translationsReady = t('navigation.map') !== 'navigation.map';
+
+    useEffect(() => {
+        if (translationsReady) {
+            // Show skeleton for at least 500ms for better UX
+            const timer = setTimeout(() => {
+                setIsInitialLoading(false);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [translationsReady]);
+
+    const shouldShowSkeleton = isInitialLoading || !translationsReady;
 
     const getInitials = (name: string) => {
         return name
@@ -71,93 +89,124 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
 
                     {/* Desktop Navigation Links */}
                     <div className="hidden items-center space-x-6 md:flex">
-                        <Link
-                            href="/"
-                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <Map className="h-4 w-4" />
-                            <span>{t('navigation.map')}</span>
-                        </Link>
+                        {!shouldShowSkeleton ? (
+                            <>
+                                <Link
+                                    href="/"
+                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    <Map className="h-4 w-4" />
+                                    <span>{t('navigation.map')}</span>
+                                </Link>
 
-                        <Link
-                            href="/playgrounds"
-                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <List className="h-4 w-4" />
-                            <span>{t('navigation.allPlaygrounds')}</span>
-                        </Link>
+                                <Link
+                                    href="/playgrounds"
+                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    <List className="h-4 w-4" />
+                                    <span>{t('navigation.allPlaygrounds')}</span>
+                                </Link>
 
-                        <Link
-                            href="/create-playground"
-                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>{t('navigation.addPlayground')}</span>
-                        </Link>
+                                <Link
+                                    href="/create-playground"
+                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span>{t('navigation.addPlayground')}</span>
+                                </Link>
 
-                        <Link
-                            href="/contact"
-                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <MessageCircle className="h-4 w-4" />
-                            <span>{t('navigation.contact')}</span>
-                        </Link>
+                                <Link
+                                    href="/contact"
+                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    <span>{t('navigation.contact')}</span>
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center space-x-2">
+                                    <Skeleton className="h-4 w-4" />
+                                    <Skeleton className="h-4 w-8" />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Skeleton className="h-4 w-4" />
+                                    <Skeleton className="h-4 w-20" />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Skeleton className="h-4 w-4" />
+                                    <Skeleton className="h-4 w-24" />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Skeleton className="h-4 w-4" />
+                                    <Skeleton className="h-4 w-14" />
+                                </div>
+                            </>
+                        )}
 
                         {session && (
                             <>
                                 {!isLoading && isAdminMode && canAccessAdmin && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground h-auto p-2"
-                                            >
-                                                <Settings className="h-4 w-4" />
-                                                <span>{t('navigation.admin')}</span>
-                                                <ChevronDown className="h-3 w-3" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start">
-                                            <DropdownMenuItem asChild className="cursor-pointer">
-                                                <Link
-                                                    href="/admin"
-                                                    className="flex items-center space-x-2"
+                                    !shouldShowSkeleton ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground h-auto p-2"
                                                 >
                                                     <Settings className="h-4 w-4" />
-                                                    <span>{t('admin.adminDashboard')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild className="cursor-pointer">
-                                                <Link
-                                                    href="/admin/review"
-                                                    className="flex items-center space-x-2"
-                                                >
-                                                    <ClipboardCheck className="h-4 w-4" />
-                                                    <span>{t('navigation.review')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild className="cursor-pointer">
-                                                <Link
-                                                    href="/admin/equipment"
-                                                    className="flex items-center space-x-2"
-                                                >
-                                                    <PlaygroundEquipmentIcon className="h-4 w-4" />
-                                                    <span>{t('navigation.equipment')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            {userRole === "super_admin" && (
+                                                    <span>{t('navigation.admin')}</span>
+                                                    <ChevronDown className="h-3 w-3" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start">
                                                 <DropdownMenuItem asChild className="cursor-pointer">
                                                     <Link
-                                                        href="/admin/users"
+                                                        href="/admin"
                                                         className="flex items-center space-x-2"
                                                     >
-                                                        <Users className="h-4 w-4" />
-                                                        <span>{t('navigation.users')}</span>
+                                                        <Settings className="h-4 w-4" />
+                                                        <span>{t('admin.adminDashboard')}</span>
                                                     </Link>
                                                 </DropdownMenuItem>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                                <DropdownMenuItem asChild className="cursor-pointer">
+                                                    <Link
+                                                        href="/admin/review"
+                                                        className="flex items-center space-x-2"
+                                                    >
+                                                        <ClipboardCheck className="h-4 w-4" />
+                                                        <span>{t('navigation.review')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild className="cursor-pointer">
+                                                    <Link
+                                                        href="/admin/equipment"
+                                                        className="flex items-center space-x-2"
+                                                    >
+                                                        <PlaygroundEquipmentIcon className="h-4 w-4" />
+                                                        <span>{t('navigation.equipment')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                {userRole === "super_admin" && (
+                                                    <DropdownMenuItem asChild className="cursor-pointer">
+                                                        <Link
+                                                            href="/admin/users"
+                                                            className="flex items-center space-x-2"
+                                                        >
+                                                            <Users className="h-4 w-4" />
+                                                            <span>{t('navigation.users')}</span>
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : (
+                                        <div className="flex items-center space-x-2">
+                                            <Skeleton className="h-4 w-4" />
+                                            <Skeleton className="h-4 w-12" />
+                                            <Skeleton className="h-3 w-3" />
+                                        </div>
+                                    )
                                 )}
                             </>
                         )}
@@ -401,61 +450,69 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                         <>
                             {/* Desktop Sign In */}
                             <div className="hidden md:block">
-                                <Link href="/signin">
-                                    <Button variant="default" size="sm">
-                                        <User className="mr-2 h-4 w-4" />
-                                        {t('navigation.signIn')}
-                                    </Button>
-                                </Link>
+                                {!shouldShowSkeleton ? (
+                                    <Link href="/signin">
+                                        <Button variant="default" size="sm">
+                                            <User className="mr-2 h-4 w-4" />
+                                            {t('navigation.signIn')}
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Skeleton className="h-8 w-20" />
+                                )}
                             </div>
 
                             {/* Mobile Menu for Unauthenticated Users */}
                             <div className="md:hidden">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <Menu className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-56" align="end">
-                                        <DropdownMenuGroup>
+                                {!shouldShowSkeleton ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <Menu className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56" align="end">
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/" className="flex items-center">
+                                                        <Home className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.home')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/playgrounds" className="flex items-center">
+                                                        <List className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.allPlaygrounds')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/create-playground" className="flex items-center">
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.addPlayground')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/contact" className="flex items-center">
+                                                        <MessageCircle className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.contact')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
                                             <DropdownMenuItem asChild>
-                                                <Link href="/" className="flex items-center">
-                                                    <Home className="mr-2 h-4 w-4" />
-                                                    <span>{t('navigation.home')}</span>
+                                                <Link
+                                                    href="/signin"
+                                                    className="flex items-center"
+                                                >
+                                                    <User className="mr-2 h-4 w-4" />
+                                                    <span>{t('navigation.signIn')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link href="/playgrounds" className="flex items-center">
-                                                    <List className="mr-2 h-4 w-4" />
-                                                    <span>{t('navigation.allPlaygrounds')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link href="/create-playground" className="flex items-center">
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    <span>{t('navigation.addPlayground')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link href="/contact" className="flex items-center">
-                                                    <MessageCircle className="mr-2 h-4 w-4" />
-                                                    <span>{t('navigation.contact')}</span>
-                                                </Link>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuGroup>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem asChild>
-                                            <Link
-                                                href="/signin"
-                                                className="flex items-center"
-                                            >
-                                                <User className="mr-2 h-4 w-4" />
-                                                <span>{t('navigation.signIn')}</span>
-                                            </Link>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <Skeleton className="h-8 w-8" />
+                                )}
                             </div>
                         </>
                     )}

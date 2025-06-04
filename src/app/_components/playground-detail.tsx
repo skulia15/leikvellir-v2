@@ -391,32 +391,26 @@ export default function PlaygroundDetail({
                   playground={playground}
                   className="h-64 w-full"
                 />
-              </CardContent>
-            </Card>
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('playground.quickActions')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={handleGetDirections}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Navigation className="mr-2 h-4 w-4" />
-                  {t('playground.getDirections')}
-                </Button>
+                <div className="p-4 flex gap-2">
+                  <Button
+                    onClick={handleGetDirections}
+                    className="flex-1"
+                    size="sm"
+                  >
+                    <Navigation className="mr-2 h-4 w-4" />
+                    {t('playground.getDirections')}
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  size="lg"
-                  onClick={handleViewOnMap}
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {t('playground.viewOnMap')}
-                </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    size="sm"
+                    onClick={handleViewOnMap}
+                  >
+                    <MapPin className="mr-2 h-4 w-4" />
+                    {t('playground.viewOnMap')}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -429,7 +423,7 @@ export default function PlaygroundDetail({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       {t('playground.location')}:
                     </span>
@@ -439,7 +433,7 @@ export default function PlaygroundDetail({
                         playground.longitude,
                       )}
                     </span>
-                  </div>
+                  </div> */}
 
                   {playground.municipality && (
                     <div className="flex justify-between">
@@ -451,6 +445,17 @@ export default function PlaygroundDetail({
                       </span>
                     </div>
                   )}
+
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {t('playground.submittedBy')}:
+                    </span>
+                    <span className="font-medium">
+                      {playground.submitAnonymously
+                        ? t('playground.anonymousSubmission')
+                        : playground.createdBy?.name || t('playground.unknown')}
+                    </span>
+                  </div>
 
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
