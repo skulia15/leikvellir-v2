@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, Package } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -87,49 +87,77 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                             <span>{t('navigation.allPlaygrounds')}</span>
                         </Link>
 
+                        <Link
+                            href="/create-playground"
+                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <Plus className="h-4 w-4" />
+                            <span>{t('navigation.addPlayground')}</span>
+                        </Link>
+
+                        <Link
+                            href="/contact"
+                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <MessageCircle className="h-4 w-4" />
+                            <span>{t('navigation.contact')}</span>
+                        </Link>
+
                         {session && (
                             <>
-                                <Link
-                                    href="/create-playground"
-                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span>{t('navigation.addPlayground')}</span>
-                                </Link>
-
                                 {!isLoading && isAdminMode && canAccessAdmin && (
-                                    <>
-                                        <Link
-                                            href="/admin"
-                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                        >
-                                            <Settings className="h-4 w-4" />
-                                            <span>{t('navigation.admin')}</span>
-                                        </Link>
-                                        <Link
-                                            href="/admin/review"
-                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                        >
-                                            <ClipboardCheck className="h-4 w-4" />
-                                            <span>{t('navigation.review')}</span>
-                                        </Link>
-                                        <Link
-                                            href="/admin/equipment"
-                                            className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                        >
-                                            <PlaygroundEquipmentIcon className="h-4 w-4" />
-                                            <span>{t('navigation.equipment')}</span>
-                                        </Link>
-                                        {userRole === "super_admin" && (
-                                            <Link
-                                                href="/admin/users"
-                                                className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground h-auto p-2"
                                             >
-                                                <Users className="h-4 w-4" />
-                                                <span>{t('navigation.users')}</span>
-                                            </Link>
-                                        )}
-                                    </>
+                                                <Settings className="h-4 w-4" />
+                                                <span>{t('navigation.admin')}</span>
+                                                <ChevronDown className="h-3 w-3" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            <DropdownMenuItem asChild className="cursor-pointer">
+                                                <Link
+                                                    href="/admin"
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <Settings className="h-4 w-4" />
+                                                    <span>{t('admin.adminDashboard')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer">
+                                                <Link
+                                                    href="/admin/review"
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <ClipboardCheck className="h-4 w-4" />
+                                                    <span>{t('navigation.review')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer">
+                                                <Link
+                                                    href="/admin/equipment"
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <PlaygroundEquipmentIcon className="h-4 w-4" />
+                                                    <span>{t('navigation.equipment')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            {userRole === "super_admin" && (
+                                                <DropdownMenuItem asChild className="cursor-pointer">
+                                                    <Link
+                                                        href="/admin/users"
+                                                        className="flex items-center space-x-2"
+                                                    >
+                                                        <Users className="h-4 w-4" />
+                                                        <span>{t('navigation.users')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 )}
                             </>
                         )}
@@ -224,7 +252,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                             <div className="md:hidden">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="p-0">
+                                        <Button variant="ghost" size="sm" className="p-0 relative">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage
                                                     src={
@@ -241,6 +269,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                         : "U"}
                                                 </AvatarFallback>
                                             </Avatar>
+                                            <ChevronDown className="h-3 w-3 absolute -bottom-0.5 -right-0.5 bg-background rounded-full border" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end">
@@ -279,12 +308,15 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link
-                                                    href="/create-playground"
-                                                    className="flex items-center"
-                                                >
+                                                <Link href="/create-playground" className="flex items-center">
                                                     <Plus className="mr-2 h-4 w-4" />
                                                     <span>{t('navigation.addPlayground')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/contact" className="flex items-center">
+                                                    <MessageCircle className="mr-2 h-4 w-4" />
+                                                    <span>{t('navigation.contact')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             {!isLoading && isAdminMode && canAccessAdmin && (
@@ -295,7 +327,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             className="flex items-center"
                                                         >
                                                             <Settings className="mr-2 h-4 w-4" />
-                                                            <span>{t('navigation.admin')}</span>
+                                                            <span>{t('admin.adminDashboard')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem asChild>
@@ -312,7 +344,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                             href="/admin/equipment"
                                                             className="flex items-center"
                                                         >
-                                                            <Package className="mr-2 h-4 w-4" />
+                                                            <PlaygroundEquipmentIcon className="mr-2 h-4 w-4" />
                                                             <span>{t('navigation.equipment')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
@@ -397,6 +429,18 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                                 <Link href="/playgrounds" className="flex items-center">
                                                     <List className="mr-2 h-4 w-4" />
                                                     <span>{t('navigation.allPlaygrounds')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/create-playground" className="flex items-center">
+                                                    <Plus className="mr-2 h-4 w-4" />
+                                                    <span>{t('navigation.addPlayground')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/contact" className="flex items-center">
+                                                    <MessageCircle className="mr-2 h-4 w-4" />
+                                                    <span>{t('navigation.contact')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                         </DropdownMenuGroup>

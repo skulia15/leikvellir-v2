@@ -12,6 +12,8 @@ import { Providers } from "./_components/providers";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 import { MainContent } from "./_components/main-content";
+import { FloatingFeedbackButton } from "~/components/ui/floating-feedback-button";
+import { LayoutClient } from "./_components/layout-client";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -35,13 +37,14 @@ export default async function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${firaSans.variable}`}>
       <body className="bg-background">
         <Providers session={session}>
-          <div className="flex flex-col">
+          <LayoutClient>
             <NavigationBar />
             <MainContent>
               {children}
             </MainContent>
             <Footer />
-          </div>
+          </LayoutClient>
+          <FloatingFeedbackButton />
           <Toaster />
           <CookieConsentBanner />
           {/* {process.env.NODE_ENV === "development" && <ErrorDashboard />} */}

@@ -71,7 +71,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - add a change request submission available for all users
 - add icons to "hentar ungabörnum", "opið almenningi" badges.
 - add municipality to each playground - can it be infered from map pin?
-- Skoða island.is kort - hvítt
+- bæta við aðgengi - hjólastóla og svoleiðis
 
 - **Playground Search Functionality**
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
@@ -104,6 +104,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - svg boundary overlay á map
   - Create a mock instance of the application where everyone has admin privileges in order to test the app
   - remove localhost from oauth consent screens
+  - Test feedback form - issues with github links and emain sending should be done using a maining service so that users dont need to send from their personal email
 
 ## 🛠️ Tech Stack
 

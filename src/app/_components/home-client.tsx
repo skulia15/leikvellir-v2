@@ -167,7 +167,7 @@ export default function HomeClient() {
         return (
             <div className="flex flex-col h-screen relative">
                 {/* Map container - takes full viewport height */}
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 z-0">
                     <MapErrorBoundary fallback={MapErrorFallback}>
                         <GoogleMap
                             selectedPlayground={selectedPlayground}
@@ -202,7 +202,7 @@ export default function HomeClient() {
                     }}
                     disableScrollLocking
                     style={{
-                        zIndex: 40, // Lower than cookie banner (z-50)
+                        zIndex: 30, // Lower z-index to avoid conflicts
                     }}
                 >
                     <Sheet.Container
@@ -210,9 +210,10 @@ export default function HomeClient() {
                             borderTopLeftRadius: "20px",
                             borderTopRightRadius: "20px",
                             boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
+                            backgroundColor: "var(--background)", // Ensure solid background
                         }}
                     >
-                        <Sheet.Header className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm">
+                        <Sheet.Header className="px-4 py-3 border-b bg-background">
                             {/* Improved drag handle */}
                             <div className="mx-auto h-1.5 w-12 rounded-full bg-muted-foreground/40 mb-2" />
                             <div className="text-center">
@@ -221,7 +222,7 @@ export default function HomeClient() {
                                 </h2>
                             </div>
                         </Sheet.Header>
-                        <Sheet.Content className="bg-background/95 backdrop-blur-sm">
+                        <Sheet.Content className="bg-background">
                             <ScrollArea className="h-full px-2">
                                 <div className="pb-safe-area-inset-bottom">
                                     {playgroundContent}
@@ -229,7 +230,6 @@ export default function HomeClient() {
                             </ScrollArea>
                         </Sheet.Content>
                     </Sheet.Container>
-                    <Sheet.Backdrop className="bg-transparent" />
                 </Sheet>
 
                 {/* Floating button to reopen drawer when closed */}

@@ -13,10 +13,17 @@ import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { useT } from "~/lib/i18n";
+import { useLayout } from "./layout-client";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const t = useT();
+  const { shouldShowFooter } = useLayout();
+
+  // Don't render footer if context says we shouldn't
+  if (!shouldShowFooter) {
+    return null;
+  }
 
   return (
     <footer className="border-t bg-background">
@@ -60,18 +67,18 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/create-playground"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t('footer.addPlayground')}
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/playgrounds"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {t('footer.browsePlaygrounds')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t('footer.contact')}
                 </Link>
               </li>
               <li>
