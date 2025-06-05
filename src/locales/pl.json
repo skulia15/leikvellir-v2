@@ -83,7 +83,7 @@
     "selectMunicipality": "Wybierz gminę",
     "searchMunicipality": "Szukaj gminy",
     "noMunicipalityFound": "Nie znaleziono gminy",
-    "municipalityDescription": "Gmina, w której znajduje się plac zabaw (automatycznie wypełniana na podstawie współrzędnych)",
+    "municipalityDescription": "Gmina",
     "publiclyAccessible": "Publicznie dostępny",
     "restrictedAccess": "Ograniczony dostęp",
     "toddlerFriendly": "Przyjazny dla maluchów",

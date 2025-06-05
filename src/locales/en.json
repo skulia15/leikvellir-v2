@@ -83,7 +83,7 @@
     "selectMunicipality": "Select municipality",
     "searchMunicipality": "Search municipality",
     "noMunicipalityFound": "No municipality found",
-    "municipalityDescription": "Municipality where the playground is located (auto-filled from coordinates)",
+    "municipalityDescription": "Municipality",
     "publiclyAccessible": "Publicly Accessible",
     "restrictedAccess": "Restricted Access",
     "toddlerFriendly": "Toddler Friendly",
