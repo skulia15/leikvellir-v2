@@ -164,7 +164,16 @@
     "submitNewPlayground": "Submit a new Playground",
     "signInToSubmitPlayground": "Please sign in to submit a new playground.",
     "submittedBy": "Submitted by",
-    "anonymousSubmission": "Anonymous"
+    "anonymousSubmission": "Anonymous",
+    "accessibleNow": "Accessible Now",
+    "excludesSchoolHours": "excludes school hours",
+    "schoolGround": "School Ground",
+    "preschool": "Preschool",
+    "elementary": "Elementary School",
+    "availableAfterSchoolHours": "Available after school hours",
+    "schoolHours": "School hours: Mon-Fri 8:00-17:00",
+    "currentlyInSchoolHours": "Currently in school hours",
+    "accessibleAfterSchoolHours": "Accessible after school hours"
   },
   "equipment": {
     "categories": {
@@ -419,7 +428,15 @@
     "imagesUploadedStats": "{{uploaded}} of {{maxFiles}} images uploaded",
     "imagesUploadedBatchStats": "{{uploaded}} images uploaded, {{pending}} pending (max {{maxPerBatch}} per batch)",
     "submitAnonymously": "Submit anonymously",
-    "submitAnonymouslyDescription": "Your name will be hidden from the public page, but administrators can still see who submitted this playground"
+    "submitAnonymouslyDescription": "Your name will be hidden from the public page, but administrators can still see who submitted this playground",
+    "schoolGroundSettings": "School Ground Settings",
+    "isSchoolGround": "Part of School Grounds",
+    "isSchoolGroundDescription": "This playground is located on school grounds (accessible outside school hours)",
+    "schoolType": "School Type",
+    "selectSchoolType": "Select school type",
+    "preschoolType": "Preschool (leikskóli)",
+    "elementaryType": "Elementary School (grunnskóli)",
+    "schoolTypeDescription": "Select the type of school this playground belongs to"
   },
   "actions": {
     "quickActions": "Quick Actions",

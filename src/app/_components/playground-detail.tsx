@@ -19,6 +19,11 @@ import {
   Heart,
   Coffee,
   Eye,
+  GraduationCap,
+  RotateCcw,
+  Sparkles,
+  Star,
+  Puzzle
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -31,6 +36,7 @@ import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
+import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT } from "~/lib/i18n";
 
@@ -50,6 +56,12 @@ export default function PlaygroundDetail({
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
 
+  // Get school ground accessibility status
+  const accessibilityInfo = getAccessibilityStatus(
+    playground.isSchoolGround,
+    playground.schoolType
+  );
+
   // Get all images including cover image
   const displayImages = [
     ...(playground.coverImage ? [playground.coverImage] : []),
@@ -66,7 +78,27 @@ export default function PlaygroundDetail({
     router.push(`/?lat=${playground.latitude}&lng=${playground.longitude}&playground=${playground.id}`);
   };
 
-  // Helper function to group equipment by category
+  // Helper function to get category icon
+  const getCategoryIcon = (category: EquipmentCategory) => {
+    switch (category) {
+      case 'core_equipment':
+        return <Star className="h-5 w-5 text-yellow-500" />;
+      case 'climbing_and_movement':
+        return <ArrowLeft className="h-5 w-5 text-green-600 rotate-45" />; // Represents climbing/movement
+      case 'imaginative_and_themed':
+        return <Sparkles className="h-5 w-5 text-fuchsia-400" />; // Represents creativity and imagination
+      case 'spinning_and_motion':
+        return <RotateCcw className="h-5 w-5 text-blue-500" />; // Represents spinning/rotation
+      case 'fitness_and_obstacle':
+        return <Route className="h-5 w-5 text-orange-500" />; // Represents paths/obstacles
+      case 'toddler_friendly':
+        return <Baby className="h-5 w-5 text-pink-500" />; // Perfect for toddler equipment
+      case 'additional_common_equipment':
+        return <Puzzle className="h-5 w-5 text-cyan-400" />; // Represents additional amenities
+      default:
+        return <PlaygroundEquipmentIcon className="h-5 w-5 text-primary" />;
+    }
+  };
   const getEquipmentByCategory = (): Record<EquipmentCategory, Equipment[]> => {
     if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, Equipment[]>;
 
@@ -189,6 +221,31 @@ export default function PlaygroundDetail({
                       </div>
                     </div>
 
+                    {/* School Ground Information */}
+                    {playground.isSchoolGround && (
+                      <div className="flex items-center gap-3">
+                        <GraduationCap className={`h-5 w-5 ${accessibilityInfo.isAccessible ? 'text-amber-500' : 'text-red-500'
+                          }`} />
+                        <div>
+                          <p className="font-medium">{t('playground.schoolGround')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {playground.schoolType && (
+                              <span>{t(formatSchoolType(playground.schoolType))} • </span>
+                            )}
+                            {accessibilityInfo.isAccessible ? (
+                              <span className="text-amber-600 font-medium">
+                                {t('playground.accessibleAfterSchoolHours')}
+                              </span>
+                            ) : (
+                              <span className="text-red-600 font-medium">
+                                {t('playground.currentlyInSchoolHours')}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-3">
                       <Baby className="h-5 w-5 text-pink-500" />
                       <div>
@@ -200,6 +257,8 @@ export default function PlaygroundDetail({
                         </p>
                       </div>
                     </div>
+
+
                   </div>
                 </div>
 
@@ -314,47 +373,50 @@ export default function PlaygroundDetail({
                     {t('playground.playgroundEquipment')}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {(Object.keys(equipmentByCategory) as EquipmentCategory[]).map((category) => {
-                    const equipment = equipmentByCategory[category];
-                    return (
-                      <div key={category} className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-sm text-primary">
-                            {t(`equipment.categories.${category}`)}
-                          </h4>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {equipment.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
-                            >
-                              {item.image && (
-                                <Image
-                                  src={item.image}
-                                  alt={t(item.name)}
-                                  width={40}
-                                  height={40}
-                                  className="w-10 h-10 rounded object-cover"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm">
-                                  {t(item.name)}
-                                </div>
-                                {item.description && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {t(item.description)}
-                                  </div>
+                <CardContent className="space-y-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {(Object.keys(equipmentByCategory) as EquipmentCategory[]).map((category) => {
+                      const equipment = equipmentByCategory[category];
+                      return (
+                        <div key={category} className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            {getCategoryIcon(category)}
+                            <h4 className="font-semibold text-lg text-foreground">
+                              {t(`equipment.categories.${category}`)}
+                            </h4>
+                          </div>
+                          <div className="space-y-3 ml-8">
+                            {equipment.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex items-center gap-3 py-1.5"
+                              >
+                                {item.image && (
+                                  <Image
+                                    src={item.image}
+                                    alt={t(item.name)}
+                                    width={32}
+                                    height={32}
+                                    className="w-8 h-8 rounded object-cover flex-shrink-0"
+                                  />
                                 )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm">
+                                    {t(item.name)}
+                                  </div>
+                                  {item.description && (
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                      {t(item.description)}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -435,7 +497,7 @@ export default function PlaygroundDetail({
                   {playground.municipality && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        Municipality:
+                        {t('playground.municipality')}:
                       </span>
                       <span className="font-medium text-primary">
                         {playground.municipality}
@@ -443,16 +505,16 @@ export default function PlaygroundDetail({
                     </div>
                   )}
 
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('playground.submittedBy')}:
-                    </span>
-                    <span className="font-medium">
-                      {playground.submitAnonymously
-                        ? t('playground.anonymousSubmission')
-                        : playground.createdBy?.name || t('playground.unknown')}
-                    </span>
-                  </div>
+                  {!playground.submitAnonymously && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('playground.submittedBy')}:
+                      </span>
+                      <span className="font-medium">
+                        {playground.createdBy?.name || t('playground.unknown')}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">

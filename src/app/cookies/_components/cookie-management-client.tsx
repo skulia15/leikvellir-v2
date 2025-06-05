@@ -84,31 +84,30 @@ export default function CookieManagementPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="bg-background">
             {/* Header */}
             <div className="border-b bg-white">
-                <div className="container mx-auto px-4 py-6">
-                    <div className="flex items-center gap-4">
-                        <Button asChild variant="ghost" size="sm">
-                            <Link href="/" className="flex items-center gap-2">
-                                <ArrowLeft className="h-4 w-4" />
-                                {t('common.back')}
-                            </Link>
-                        </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold flex items-center gap-2">
-                                <Cookie className="h-8 w-8" />
-                                {t('cookies.cookieManagement')}
-                            </h1>
-                            <p className="text-muted-foreground">
-                                {t('cookies.manageCookiePreferences')}
-                            </p>
-                        </div>
-                    </div>
+                <div className="container mx-auto py-4">
+                    <Button asChild variant="ghost" size="sm" className="w-fit">
+                        <Link href="/" className="flex items-center gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            {t('common.back')}
+                        </Link>
+                    </Button>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8 max-w-2xl">
+            <div className="container mx-auto py-8 max-w-2xl">
+                {/* Page Title */}
+                <div className="mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                        <Cookie className="h-6 w-6 sm:h-8 sm:w-8" />
+                        {t('cookies.cookieManagement')}
+                    </h1>
+                    <p className="text-sm sm:text-base text-muted-foreground mt-2">
+                        {t('cookies.manageCookiePreferences')}
+                    </p>
+                </div>
                 <div className="space-y-6">
                     {/* Status Messages */}
                     {saved && (
@@ -130,57 +129,58 @@ export default function CookieManagementPage() {
                                 {t('cookies.cookieInformation')}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-0 divide-y">
                             {/* Essential Cookies */}
-                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <h3 className="font-semibold">{t('cookies.essentialCookies')}</h3>
                                         <Badge variant="secondary">{t('admin.approved')}</Badge>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mb-2">
+                                    <p className="text-sm text-muted-foreground">
                                         {t('cookies.essentialCookiesDescription')}
                                     </p>
                                 </div>
                                 <Switch
                                     checked={true}
                                     disabled={true}
-                                    className="opacity-50"
+                                    className="opacity-50 ml-4"
                                 />
                             </div>
 
                             {/* Analytics Cookies */}
-                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <h3 className="font-semibold">{t('cookies.analyticsCookies')}</h3>
                                         {preferences.analytics && <Badge variant="default">{t('admin.approved')}</Badge>}
                                     </div>
-                                    <p className="text-sm text-muted-foreground mb-2">
+                                    <p className="text-sm text-muted-foreground">
                                         {t('cookies.analyticsCookiesDescription')}
                                     </p>
                                 </div>
                                 <Switch
                                     checked={preferences.analytics}
                                     onCheckedChange={(checked) => updatePreference("analytics", checked)}
+                                    className="ml-4"
                                 />
                             </div>
 
                             {/* Marketing Cookies */}
-                            <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
+                            <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0 opacity-60">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <h3 className="font-semibold">{t('cookies.marketingCookies')}</h3>
                                         <Badge variant="outline">{t('admin.rejected')}</Badge>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mb-2">
+                                    <p className="text-sm text-muted-foreground">
                                         {t('cookies.marketingCookiesDescription')}
                                     </p>
                                 </div>
                                 <Switch
                                     checked={false}
                                     disabled={true}
-                                    className="opacity-50"
+                                    className="opacity-50 ml-4"
                                 />
                             </div>
                         </CardContent>

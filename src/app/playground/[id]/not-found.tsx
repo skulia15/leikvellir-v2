@@ -6,7 +6,7 @@ import { getTranslation, defaultLocale } from "~/lib/i18n";
 
 export default function PlaygroundNotFound() {
   return (
-    <div className="flex items-center justify-center bg-background">
+    <div className="flex items-center justify-center bg-background py-16">
       <div className="container mx-auto px-4">
         <Card className="mx-auto max-w-md">
           <CardHeader className="text-center">

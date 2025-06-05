@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MapPin, Trash2 } from "lucide-react";
+import { MapPin, Trash2, GraduationCap } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import {
@@ -38,6 +38,13 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import ImageUpload from "~/components/ui/image-upload";
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
@@ -62,6 +69,9 @@ const updatePlaygroundSchema = z.object({
     hasGarbageCan: z.boolean(),
     hasBathroomNearby: z.boolean(),
     hasSoftPlayArea: z.boolean(),
+    // School ground properties
+    isSchoolGround: z.boolean(),
+    schoolType: z.enum(["preschool", "elementary"]).nullable(),
     coverImage: z.string().nullable(),
     images: z.array(z.string()),
     equipmentIds: z.array(z.number()),
@@ -105,6 +115,9 @@ export default function EditPlaygroundDialog({
             hasGarbageCan: playground.hasGarbageCan ?? false,
             hasBathroomNearby: playground.hasBathroomNearby ?? false,
             hasSoftPlayArea: playground.hasSoftPlayArea ?? false,
+            // School ground defaults
+            isSchoolGround: playground.isSchoolGround ?? false,
+            schoolType: playground.schoolType ?? null,
             coverImage: playground.coverImage,
             images: playground.images ?? [],
             equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [],
@@ -187,7 +200,7 @@ export default function EditPlaygroundDialog({
     const handleMapCoordinateChange = (lat: number, lng: number) => {
         form.setValue("latitude", lat);
         form.setValue("longitude", lng);
-        
+
         // Auto-fill municipality using reverse geocoding (async)
         void (async () => {
             try {
@@ -290,8 +303,8 @@ export default function EditPlaygroundDialog({
                                     size="sm"
                                     onClick={() => {
                                         void getCurrentLocation();
-                    }}
-                    className="text-sm"
+                                    }}
+                                    className="text-sm"
                                 >
                                     <MapPin className="mr-2 h-4 w-4" />
                                     {t('forms.useCurrentLocation')}
@@ -415,6 +428,66 @@ export default function EditPlaygroundDialog({
                             )}
                         />
 
+                        {/* School Ground Settings */}
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium flex items-center gap-2">
+                                <GraduationCap className="h-5 w-5" />
+                                {t('forms.schoolGroundSettings')}
+                            </h3>
+
+                            <FormField
+                                control={form.control}
+                                name="isSchoolGround"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>{t('forms.isSchoolGround')}</FormLabel>
+                                            <FormDescription>
+                                                {t('forms.isSchoolGroundDescription')}
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* School Type - only show if isSchoolGround is true */}
+                            {form.watch('isSchoolGround') && (
+                                <FormField
+                                    control={form.control}
+                                    name="schoolType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{t('forms.schoolType')}</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value ?? undefined}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder={t('forms.selectSchoolType')} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="preschool">{t('forms.preschoolType')}</SelectItem>
+                                                    <SelectItem value="elementary">{t('forms.elementaryType')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormDescription>
+                                                {t('forms.schoolTypeDescription')}
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+                        </div>
+
                         {/* Accessibility Options */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-medium">{t('forms.accessibilityAndFeatures')}</h3>
@@ -465,7 +538,7 @@ export default function EditPlaygroundDialog({
                         {/* Amenities Section */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-medium">{t('forms.amenities')}</h3>
-                            
+
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <FormField
                                     control={form.control}
@@ -556,7 +629,7 @@ export default function EditPlaygroundDialog({
                         {/* Safety & Structure Section */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-medium">{t('forms.safetyAndStructure')}</h3>
-                            
+
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <FormField
                                     control={form.control}

@@ -10,6 +10,7 @@ import {
   Camera,
   UserX,
   RotateCcw,
+  GraduationCap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -36,6 +37,13 @@ import {
 } from "~/components/ui/form";
 import ImageUpload from "~/components/ui/image-upload";
 import { Input } from "~/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 import { api } from "~/trpc/react";
@@ -47,11 +55,13 @@ import MunicipalitySelector from "~/components/municipality-selector";
 import { useTranslation } from "~/lib/i18n";
 import { reverseGeocode } from "~/lib/geocoding";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
+import { useAdmin } from "~/lib/admin-context";
 
 export function CreatePlaygroundForm() {
   const utils = api.useUtils();
   const router = useRouter();
   const { t } = useTranslation();
+  const { canAccessAdmin, isAdminMode } = useAdmin();
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
     "map",
   );
@@ -73,6 +83,9 @@ export function CreatePlaygroundForm() {
       hasGarbageCan: false,
       hasBathroomNearby: false,
       hasSoftPlayArea: false,
+      // School ground defaults
+      isSchoolGround: false,
+      schoolType: null,
       submitAnonymously: false,
       equipmentIds: [],
       images: [],
@@ -243,6 +256,8 @@ export function CreatePlaygroundForm() {
                 </Button>
               </div>
 
+
+
               <Tabs
                 value={coordinateMethod}
                 onValueChange={(value) =>
@@ -336,293 +351,43 @@ export function CreatePlaygroundForm() {
               </Tabs>
             </div>
 
-            {/* Municipality Field */}
-            <FormField
-              control={form.control}
-              name="municipality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('playground.municipality')}</FormLabel>
-                  <FormControl>
-                    <MunicipalitySelector
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder={t('playground.selectMunicipality')}
-                      disabled={createPlayground.isPending}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('playground.municipalityDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-
-            {/* Accessibility Options */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {t('forms.accessibilityAndFeatures')}
-              </h3>
-
+            {/* Municipality Field - Only visible to admin users in admin mode */}
+            {canAccessAdmin && isAdminMode && (
               <FormField
                 control={form.control}
-                name="publiclyAccessible"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>{t('forms.publiclyAccessible')}</FormLabel>
-                      <FormDescription>
-                        {t('forms.publiclyAccessibleDescription')}
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="toddlerFriendly"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>{t('forms.toddlerFriendly')}</FormLabel>
-                      <FormDescription>
-                        {t('forms.toddlerFriendlyDescription')}
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Amenities Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Coffee className="h-5 w-5" />
-                {t('forms.amenities')}
-              </h3>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="hasSeating"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasSeating')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasSeatingDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hasPicnicTable"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasPicnicTable')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasPicnicTableDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hasGarbageCan"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasGarbageCan')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasGarbageCanDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hasBathroomNearby"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasBathroomNearby')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasBathroomNearbyDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Safety, Structure & Equipment Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                {t('forms.safetyAndStructure')}
-              </h3>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="hasFencing"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasFencing')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasFencingDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hasSoftPlayArea"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasSoftPlayArea')}</FormLabel>
-                        <FormDescription>
-                          {t('forms.hasSoftPlayAreaDescription')}
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Equipment Selector within the same section */}
-              <div className="mt-8">
-                <div className="mt-6 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <PlaygroundEquipmentIcon className="h-5 w-5" style={{ height: "1.4rem", width: "1.4rem" }} />
-                    <h3 className="text-base font-medium">{t('playground.equipment')}</h3>
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="equipmentIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <EquipmentSelector
-                            value={field.value || []}
-                            onChange={field.onChange}
-                            variant="inline"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Images Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                {t('forms.uploadImages')}
-              </h3>
-
-              <FormField
-                control={form.control}
-                name="images"
+                name="municipality"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('playground.playgroundImages')}</FormLabel>
+                    <FormLabel>{t('playground.municipality')}</FormLabel>
                     <FormControl>
-                      <ImageUpload
-                        value={field.value || []}
-                        onChange={field.onChange}
-                        config={{
-                          maxFiles: 8, // Max files per upload batch (unlimited total)
-                          maxSize: 4 * 1024 * 1024, // 4MB
-                        }}
+                      <MunicipalitySelector
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={t('playground.selectMunicipality')}
                         disabled={createPlayground.isPending}
                       />
                     </FormControl>
                     <FormDescription>
-                      {t('forms.playgroundImagesDescriptionBatch')}
+                      {t('playground.municipalityDescription')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
-            {/* Anonymous Submission */}
+            {/* School Ground Settings */}
             <div className="space-y-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                {t('forms.schoolGroundSettings')}
+              </h3>
+
               <FormField
                 control={form.control}
-                name="submitAnonymously"
+                name="isSchoolGround"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -630,52 +395,360 @@ export function CreatePlaygroundForm() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-medium flex items-center gap-2">
-                        <UserX className="h-4 w-4" />
-                        {t('forms.submitAnonymously')}
-                      </FormLabel>
-                      <FormDescription className="text-sm text-muted-foreground">
-                        {t('forms.submitAnonymouslyDescription')}
+                      <FormLabel>{t('forms.isSchoolGround')}</FormLabel>
+                      <FormDescription>
+                        {t('forms.isSchoolGroundDescription')}
                       </FormDescription>
                     </div>
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleReset}
-                disabled={createPlayground.isPending}
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                {t('playground.reset')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={createPlayground.isPending}
-                className="min-w-32"
-                onClick={() => {
-                  console.log("Submit button clicked!");
-                  // This is to debug - the form's onSubmit should still handle the actual submission
-                }}
-              >
-                {createPlayground.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('playground.creating')}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    {t('playground.submitPlayground')}
-                  </>
-                )}
-              </Button>
+              {/* School Type - only show if isSchoolGround is true */}
+              {form.watch('isSchoolGround') && (
+                <FormField
+                  control={form.control}
+                  name="schoolType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('forms.schoolType')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('forms.selectSchoolType')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="preschool">{t('forms.preschoolType')}</SelectItem>
+                          <SelectItem value="elementary">{t('forms.elementaryType')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        {t('forms.schoolTypeDescription')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Accessibility Options */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {t('forms.accessibilityAndFeatures')}
+                </h3>
+
+                <FormField
+                  control={form.control}
+                  name="publiclyAccessible"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>{t('forms.publiclyAccessible')}</FormLabel>
+                        <FormDescription>
+                          {t('forms.publiclyAccessibleDescription')}
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="toddlerFriendly"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>{t('forms.toddlerFriendly')}</FormLabel>
+                        <FormDescription>
+                          {t('forms.toddlerFriendlyDescription')}
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Amenities Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Coffee className="h-5 w-5" />
+                  {t('forms.amenities')}
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="hasSeating"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasSeating')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasSeatingDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hasPicnicTable"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasPicnicTable')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasPicnicTableDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hasGarbageCan"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasGarbageCan')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasGarbageCanDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hasBathroomNearby"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasBathroomNearby')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasBathroomNearbyDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Safety, Structure & Equipment Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  {t('forms.safetyAndStructure')}
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="hasFencing"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasFencing')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasFencingDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="hasSoftPlayArea"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{t('forms.hasSoftPlayArea')}</FormLabel>
+                          <FormDescription>
+                            {t('forms.hasSoftPlayAreaDescription')}
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Equipment Selector within the same section */}
+                <div className="mt-8">
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <PlaygroundEquipmentIcon className="h-5 w-5" style={{ height: "1.4rem", width: "1.4rem" }} />
+                      <h3 className="text-base font-medium">{t('playground.equipment')}</h3>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="equipmentIds"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <EquipmentSelector
+                              value={field.value || []}
+                              onChange={field.onChange}
+                              variant="inline"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Images Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  {t('forms.uploadImages')}
+                </h3>
+
+                <FormField
+                  control={form.control}
+                  name="images"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('playground.playgroundImages')}</FormLabel>
+                      <FormControl>
+                        <ImageUpload
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          config={{
+                            maxFiles: 8, // Max files per upload batch (unlimited total)
+                            maxSize: 4 * 1024 * 1024, // 4MB
+                          }}
+                          disabled={createPlayground.isPending}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t('forms.playgroundImagesDescriptionBatch')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Anonymous Submission */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="submitAnonymously"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <UserX className="h-4 w-4" />
+                          {t('forms.submitAnonymously')}
+                        </FormLabel>
+                        <FormDescription className="text-sm text-muted-foreground">
+                          {t('forms.submitAnonymouslyDescription')}
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReset}
+                  disabled={createPlayground.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {t('playground.reset')}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createPlayground.isPending}
+                  className="min-w-32"
+                  onClick={() => {
+                    console.log("Submit button clicked!");
+                    // This is to debug - the form's onSubmit should still handle the actual submission
+                  }}
+                >
+                  {createPlayground.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('playground.creating')}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {t('playground.submitPlayground')}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>

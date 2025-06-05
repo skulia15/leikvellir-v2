@@ -284,7 +284,7 @@ Details: TypeScript error occurred because @vis.gl/react-google-maps Map compone
 
 [2025-06-04] Height Chain Fix – Fixed map visibility issues by establishing proper height inheritance chain
 
-Details: Map not displaying with h-full but showing with h-screen + scrollbars due to broken height inheritance. Root cause: h-full requires explicit heights all the way up DOM tree. Fixed by: 1) Added height: 100% to html and body in globals.css, 2) Added #__next { height: 100% } for Next.js root, 3) Updated LayoutClient to use min-h-screen, 4) Ensured MainContent has proper flex-1 class, 5) Updated mobile drawer height calculation to use available height (innerHeight - 64px) instead of full viewport. Now h-full works correctly without scrollbars while maintaining proper layout.
+Details: Map not displaying with h-full but showing with h-screen + scrollbars due to broken height inheritance. Root cause: h-full requires explicit heights all the way up DOM tree. Fixed by: 1) Added height: 100% to html and body in globals.css, 2) Added #\_\_next { height: 100% } for Next.js root, 3) Updated LayoutClient to use min-h-screen, 4) Ensured MainContent has proper flex-1 class, 5) Updated mobile drawer height calculation to use available height (innerHeight - 64px) instead of full viewport. Now h-full works correctly without scrollbars while maintaining proper layout.
 
 [2025-06-04] Footer Scrolling Fix – Eliminated vertical scrolling by hiding footer on front page
 
@@ -310,6 +310,86 @@ Details: User location on mobile was not properly centered (120px difference fro
 
 Details: Follow-up investigation revealed that while isMobile and drawerHeight props were being passed to GoogleMap component, the MapPaddingController component was completely missing from map.tsx. Fixed by: 1) Added MapPaddingController function component that uses useMap() hook to access map instance, 2) Calculates padding based on isMobile and drawerHeight props, 3) Sets padding using map.set('padding', paddingObject) on the Google Maps API, 4) Added MapPaddingController to Map component children before MapCenterController. Now mobile map properly applies bottom padding to account for drawer, ensuring user location appears centered in visible area.
 
-[2025-06-04] Drawer Height Calculation Fix – Fixed incorrect drawer height by using actual DOM measurements instead of state
+[2025-06-04] School Grounds Playground Feature Implementation – Major feature addition for playgrounds on school grounds with time-based accessibility
 
-Details: Mobile centering still not working despite MapPaddingController implementation. Investigation showed drawer height calculation was wrong: state indicated 100px (15% snap) but actual DOM showed 567px (85% snap). Root cause: react-modal-sheet initialSnap={2} not working as expected, causing mismatch between state and reality. Fixed by: 1) Added actualDrawerHeight state to track real DOM height, 2) Added ResizeObserver and interval to monitor .react-modal-sheet-container element, 3) Updated getDrawerHeight() to return actualDrawerHeight instead of calculated value, 4) Added console.log debugging to MapPaddingController. Now drawer height accurately reflects actual DOM element size for proper map padding calculation.
+Details: Implemented comprehensive school grounds functionality including: 1) Database schema already supports isSchoolGround boolean and schoolType enum (preschool/elementary) with proper indexes, 2) Created complete school-hours.ts utility with functions for checking school hours (Mon-Fri 8:00-17:00), accessibility logic, marker color determination, and school type formatting, 3) Updated map.tsx with different markers for school grounds - green MapPin for regular playgrounds, amber/red GraduationCap icons for school grounds based on accessibility, 4) Enhanced filtering system with accessibleNow filter that includes publicly accessible + school grounds during accessible hours, 5) Added translation keys for English, Icelandic, and Polish covering all school ground terminology, accessibility status, and form fields, 6) Fixed create-playground-form.tsx with properly positioned school ground section including checkbox for isSchoolGround and conditional dropdown for schoolType, 7) Updated edit-playground-dialog.tsx with school ground fields in schema, form defaults, and UI components, 8) Enhanced playground-detail.tsx to display school ground information with accessibility status, school type, and real-time availability using color-coded GraduationCap icons. Feature is now complete with proper form handling, visual indicators, comprehensive school hours logic, and full internationalization support across all three languages.
+
+[2025-06-04] Edit Dialog JSX Structure Fix – Fixed TypeScript parsing error caused by incorrect component nesting
+
+Details: Parsing error "Unexpected token Dialog. Expected jsx identifier" at line 264 caused by improper JSX structure in edit-playground-dialog.tsx. Root cause: School Ground Settings section was incorrectly nested inside Location Section div, breaking JSX structure when Tabs component appeared at wrong nesting level. Fixed by: 1) Moving School Ground Settings to be separate top-level section in form, 2) Properly closing Location Section div after municipality field, 3) Reorganizing component hierarchy so each major section is at same level within form. JSX now parses correctly with proper component structure.
+
+[2025-06-04] School Ground Properties Save Fix – Fixed school ground checkbox not saving to database
+
+Details: School ground properties (isSchoolGround, schoolType) were not being saved when editing playgrounds despite UI appearing to work. Root cause: 1) School ground properties were missing from create mutation insert values in playground router, 2) Schema type mismatch between CreatePlaygroundSchema (.optional()) and UpdatePlaygroundSchema (.nullable()). Fixed by: 1) Added isSchoolGround and schoolType to create mutation values in playground router, 2) Changed CreatePlaygroundSchema schoolType from .optional() to .nullable() for consistency with update schema. School ground settings now properly save to database for both create and edit operations.
+
+[2025-06-04] School Ground Select Component TypeScript Fix – Fixed type error with Select component value prop
+
+Details: TypeScript error "Type 'null' is not assignable to type 'string | undefined'" occurred in Select components for schoolType field. Root cause: Radix UI Select component expects string | undefined but our schema uses nullable enum which includes null. Fixed by: 1) Updated Select value prop from field.value to field.value ?? undefined in both create-playground-form.tsx and edit-playground-dialog.tsx, 2) Changed create form default value from undefined to null for consistency with schema. Select components now properly handle null values by converting to undefined for Radix UI compatibility.
+
+[2025-06-04] Municipality Field Admin-Only Access – Hidden municipality field from non-admin users in create playground form
+
+Details: Municipality field was visible to all users in create playground form, but should only be accessible to admin users. Fixed by: 1) Imported useAdmin hook from admin-context, 2) Added canAccessAdmin check to conditionally render municipality field only for users with admin privileges, 3) Non-admin users no longer see municipality field while admins retain full functionality including auto-fill from geocoding. Edit playground dialog was already admin-only so no changes needed there.
+
+[2025-06-04] Municipality Field Admin Mode Requirement – Municipality field now respects admin mode toggle
+
+Details: Municipality field was showing for admin users even when they were in user mode, which broke the user/admin mode experience. Fixed by: 1) Added isAdminMode to the useAdmin hook destructuring, 2) Updated conditional check from canAccessAdmin to canAccessAdmin && isAdminMode, 3) Now admin users only see municipality field when they're actively in admin mode, maintaining consistent user experience when toggling between modes.
+
+[2025-06-04] School Ground and Public Access Logic Discussion – Identified potential redundancy in playground accessibility properties
+
+Details: User raised important question about logical relationship between isSchoolGround and publiclyAccessible properties in Icelandic context. In Iceland, all school ground playgrounds are publicly accessible after school hours, making these properties potentially redundant when both are checked. Current system treats them as: publiclyAccessible (24/7 access) vs isSchoolGround (time-restricted access after school hours). However, "Accessible 24/7 except during school hours" and "Accessible after school hours and weekends" describe the same access pattern. Potential solutions discussed: 1) Auto-check publiclyAccessible when isSchoolGround is selected, 2) Make properties mutually exclusive, 3) Redefine publiclyAccessible meaning, 4) Remove redundancy entirely. Decision pending - user will decide on preferred approach later.
+
+[2025-06-04] Playground List Image Size Enhancement – Increased playground card image size and quality
+
+Details: Enhanced playground images on /playgrounds page list view for better visual appeal and quality. Changes: 1) Increased Next.js Image component dimensions from 80x80px to 150x150px for higher resolution, 2) Updated responsive Tailwind classes from w-16 h-16 to w-24 h-24 (base), sm:w-28 h-28 (small), md:w-32 h-32 (medium), lg:w-36 h-36 (large), 3) Maintained object-cover and rounded-md styling for consistent appearance. Images now display significantly larger across all breakpoints while maintaining aspect ratio and responsive design.
+
+[2025-06-04] Playground List Separators – Added visual separators between playground items
+
+Details: Added separators between playground items on /playgrounds page for better visual organization. Changes: 1) Wrapped playground list in container div with divide-y divide-border classes for automatic border separators, 2) Wrapped each playground item in individual div container, 3) Reduced hover scale effect from 1.02 to 1.005 for more subtle animation that works better with separators, 4) Maintained existing responsive design and functionality. List now has clean horizontal dividers between each playground item for improved readability.
+
+[2025-06-04] Equipment List Design Simplification – Made playground equipment list more condensed without borders and backgrounds
+
+Details: Simplified the playground equipment display in playground-detail.tsx for better visual clarity and reduced clutter. Changes: 1) Removed grid layout (grid-cols-1 sm:grid-cols-2) in favor of single column space-y-3 layout, 2) Removed border, background (bg-muted/30), hover effects, and padding from equipment items, 3) Reduced image size from 40x40px to 32x32px (w-10 h-10 to w-8 h-8), 4) Added flex-shrink-0 to images, 5) Reduced description margin from mt-1 to mt-0.5, 6) Changed padding from p-3 to py-1 for more condensed appearance. Equipment list now displays as a clean, minimal list without visual noise.
+
+[2025-06-04] Equipment Section Visual Enhancement – Improved headings, spacing, and added category icons
+
+Details: Enhanced the visual appeal of equipment section in playground-detail.tsx for better hierarchy and readability. Changes: 1) Increased category headings from text-sm to text-lg and font-medium to font-semibold, 2) Added circular icon containers (w-8 h-8 rounded-full bg-primary/10) with PlaygroundEquipmentIcon for each category, 3) Increased spacing between categories from space-y-6 to space-y-8, 4) Indented equipment items with ml-11 to align with icon container, 5) Increased item padding from py-1 to py-1.5, 6) Changed heading color from text-primary to text-foreground for better contrast. Equipment section now has clear visual hierarchy with prominent category headings and better organized content.
+
+[2025-06-04] Equipment Category Icons and Layout Enhancement – Added unique icons for each category, removed circle backgrounds, and implemented 2-column layout
+
+Details: Further enhanced equipment section with category-specific icons and improved layout. Changes: 1) Created getCategoryIcon() function with unique icons for each equipment category (Shield for climbing, Heart for imaginative, Navigation for spinning, Users for fitness, Baby for toddler, Coffee for additional), 2) Removed circular background containers, displaying icons directly with category-specific colors, 3) Implemented responsive 2-column grid layout (grid-cols-1 lg:grid-cols-2 gap-8) for better space utilization on larger screens, 4) Adjusted indentation from ml-11 to ml-8 to match smaller icon footprint, 5) Wrapped all categories in grid container for consistent column distribution. Equipment section now has distinctive visual identity for each category and better space efficiency.
+
+[2025-06-04] Equipment Category Icon Relevance Fix – Updated icons to better represent each equipment category
+
+Details: Replaced generic icons with more relevant ones that actually represent the equipment categories. Updated icon mappings: 1) Climbing & Movement: ArrowLeft with rotate-45 (represents upward movement/climbing), 2) Imaginative & Themed: Users (represents role play and social interaction), 3) Spinning & Motion: RotateCcw (represents spinning and rotational movement), 4) Fitness & Obstacle: Route (represents paths and obstacle courses), 5) Toddler Friendly: Baby (perfect match), 6) Additional Common: Coffee (represents amenities), 7) Core Equipment: PlaygroundEquipmentIcon (default playground icon). Icons now provide meaningful visual context for each equipment category type.
+
+[2025-06-04] Equipment Icon Duplication Fix – Resolved duplicate Baby icon usage with different colors
+
+Details: Fixed icon conflict where both 'imaginative_and_themed' and 'toddler_friendly' categories were using Baby icons but with different colors, and Users icon was duplicated between imaginative category and public access feature. Changed imaginative_and_themed category to use Heart icon (pink) which better represents creativity and imagination, while keeping Baby icon (purple) for toddler_friendly category. This eliminates visual confusion and provides clearer category distinction.
+
+[2025-06-04] Icon Color Consistency Fix – Standardized same icons to use same colors across the page
+
+Details: Fixed color inconsistency where the same icons appeared with different colors in different sections of the playground detail page. Changed Baby icon in toddler_friendly equipment category from text-purple-500 to text-pink-500 to match the Baby icon used in the "Age Suitability" section. This ensures visual consistency where the same icon always represents the same concept with the same color throughout the page.
+
+[2025-06-05] Playground Detail UI Improvements – Fixed school type capitalization and consistent icon coloring
+
+Details: Updated formatSchoolType() function in src/lib/school-hours.ts to return proper translation keys instead of hardcoded strings. School types now use t('forms.preschoolType') and t('forms.elementaryType') for proper i18n support across English ("Preschool (leikskóli)"), Icelandic ("Leikskóli"), and Polish ("Przedszkole"). Updated clock icon in playground detail to match text color conditionally (amber when accessible, red during school hours). Simplified school ground information section to match consistent pattern of other feature elements.
+
+[2025-06-05] Translation System Enhancements – Added missing playground detail translation keys
+
+Details: Added submittedBy and anonymousSubmission keys to playground section in all three language files (is.json, en.json, pl.json). Fixed hardcoded "Municipality:" label to use t('playground.municipality'). Updated anonymous submission display logic to hide "Submitted by" section entirely when playground.submitAnonymously is true, providing cleaner UI that respects user privacy choice.
+
+[2025-06-05] Privacy Page Mobile Layout Fix – Improved mobile responsiveness and moved title alignment
+
+Details: Enhanced privacy page layout by moving back button to header-only section and relocating title/subtitle into main content container for proper alignment with page content. Added responsive typography (text-2xl sm:text-3xl for title, text-sm sm:text-base for subtitle). Applied same layout improvements to cookies page. Fixed nested border issue in cookie management by removing inner borders from preference sections and using divide-y for clean visual separation.
+
+[2025-06-05] Date Localization Fix – Implemented locale-aware date formatting for privacy page
+
+Details: Created LocalizedDate client component that uses user's selected language for date formatting. Maps locale codes to proper date locales (is → is-IS, pl → pl-PL, en → en-US). Privacy page "Last updated" date now displays in user's chosen language instead of hardcoded English. Component uses useTranslation hook to dynamically format current date with proper month names for each locale.
+
+[2025-06-05] Privacy Page Complete Translation Implementation – Converted entire privacy page to use user's selected locale
+
+Details: Created PrivacyPageClient component that uses useTranslation() hook to access user's current locale instead of hardcoded defaultLocale. Moved all page content from server-side page.tsx to client-side privacy-page-client.tsx component, maintaining server-side metadata generation for SEO. All text content now properly translates when user switches languages: titles, descriptions, lists, contact information, and cookie details. Privacy page now fully respects user's language choice across English, Icelandic, and Polish.
+
+[2025-06-05] Icelandic Date Formatting Fix – Fixed LocalizedDate component to properly format dates in Icelandic
+
+Details: Fixed issue where Icelandic dates were displaying in English format instead of proper Icelandic. Replaced browser locale mapping with custom formatDateForLocale function that handles Icelandic manually using proper month names array (janúar, febrúar, mars, etc.) and Icelandic date format "5. júní 2025". Polish and English continue using browser's toLocaleDateString with proper locales. Now displays correct formats: EN "June 5, 2025", PL "5 czerwca 2025", IS "5. júní 2025".

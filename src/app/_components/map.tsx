@@ -6,7 +6,7 @@ import {
   Map,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, Navigation, GraduationCap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { env } from "~/env";
@@ -15,6 +15,7 @@ import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { PlaygroundInfoWindow } from "./info-window";
 import { type PlaygroundFilters } from "./playground-filters";
+import { getPlaygroundMarkerColor, isSchoolGroundAccessible } from "~/lib/school-hours";
 import { useT } from "~/lib/i18n";
 
 interface MapProps {
@@ -152,6 +153,31 @@ function MapCenterController({
   return null;
 }
 
+// function MapPaddingController({
+//   isMobile,
+//   drawerHeight,
+// }: {
+//   isMobile?: boolean;
+//   drawerHeight?: number;
+// }) {
+//   const map = useMap();
+
+//   useEffect(() => {
+//     if (!map) return;
+
+//     const padding = {
+//       top: 0,
+//       right: 0,
+//       bottom: isMobile && drawerHeight ? drawerHeight + 20 : 0,
+//       left: 0,
+//     };
+
+//     map.set('padding', padding);
+//   }, [map, isMobile, drawerHeight]);
+
+//   return null;
+// }
+
 export function GoogleMap({
   selectedPlayground,
   onPlaygroundSelect,
@@ -173,6 +199,7 @@ export function GoogleMap({
   // Calculate the center to use - either from prop or default
   const centerToUse = mapCenter ?? defaultCenter;
 
+
   // Calculate map container height based on mobile drawer
   const mapContainerStyle = useMemo(() => {
     if (isMobile && drawerHeight > 0) {
@@ -190,6 +217,7 @@ export function GoogleMap({
     };
   }, [isMobile, drawerHeight]);
 
+
   // Filter playgrounds based on the provided filters
   const filteredPlaygrounds = useMemo(() => {
     return playgrounds?.filter((playground) => {
@@ -198,6 +226,14 @@ export function GoogleMap({
       }
       if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
         return false;
+      }
+      // Handle accessibleNow filter - includes publicly accessible + school grounds during accessible hours
+      if (filters.accessibleNow !== undefined && filters.accessibleNow) {
+        const isAccessible = playground.publiclyAccessible ||
+          (playground.isSchoolGround && isSchoolGroundAccessible(playground.isSchoolGround));
+        if (!isAccessible) {
+          return false;
+        }
       }
       return true;
     }) || [];
@@ -273,12 +309,13 @@ export function GoogleMap({
           clickableIcons={false}
           draggingCursor="grabbing"
         >
-          {/* Map center controller */}
+          {/* Map controllers */}
           <MapCenterController
             userLocation={userLocation}
             mapCenter={mapCenter}
             shouldCenterOnUserLocation={shouldCenterOnUserLocation}
           />
+
 
           {/* User location marker */}
           {userLocation && (
@@ -291,21 +328,39 @@ export function GoogleMap({
           )}
 
           {/* Playground markers */}
-          {playgroundsWithDistance.map((playground) => (
-            <AdvancedMarker
-              key={playground.id}
-              position={{
-                lat: playground.latitude,
-                lng: playground.longitude,
-              }}
-              title={playground.title}
-              onClick={() => onPlaygroundSelect(playground)}
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-xl">
-                <MapPin className="h-5 w-5" />
-              </div>
-            </AdvancedMarker>
-          ))}
+          {playgroundsWithDistance.map((playground) => {
+            const markerColor = getPlaygroundMarkerColor(playground.isSchoolGround, playground.schoolType);
+            const isSchoolGround = playground.isSchoolGround;
+            const isAccessible = !isSchoolGround || isSchoolGroundAccessible(isSchoolGround);
+
+            return (
+              <AdvancedMarker
+                key={playground.id}
+                position={{
+                  lat: playground.latitude,
+                  lng: playground.longitude,
+                }}
+                title={playground.title}
+                onClick={() => onPlaygroundSelect(playground)}
+              >
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg cursor-pointer transition-all duration-200 hover:scale-110 hover:shadow-xl ${isSchoolGround
+                    ? isAccessible
+                      ? 'bg-amber-500 hover:bg-amber-600'
+                      : 'bg-red-500 hover:bg-red-600'
+                    : 'bg-green-500 hover:bg-green-600'
+                    }`}
+                  style={{ backgroundColor: markerColor }}
+                >
+                  {isSchoolGround ? (
+                    <GraduationCap className="h-5 w-5" />
+                  ) : (
+                    <MapPin className="h-5 w-5" />
+                  )}
+                </div>
+              </AdvancedMarker>
+            );
+          })}
 
           {/* Info window for selected playground */}
           {selectedPlayground && (

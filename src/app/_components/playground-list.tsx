@@ -6,6 +6,7 @@ import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
 import { type PlaygroundFilters } from "./playground-filters";
 import { sortPlaygroundsByDistance, getPlaygroundDistance, type UserLocation } from "~/lib/geo-utils";
+import { isSchoolGroundAccessible } from "~/lib/school-hours";
 import { useT } from "~/lib/i18n";
 
 interface PlaygroundListProps {
@@ -37,12 +38,27 @@ export default function PlaygroundList({
 
     // Original filtering logic for fallback
     const filtered = playgroundsToUse.filter((playground) => {
+      // Toddler friendly filter
       if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
         return false;
       }
+      
+      // Publicly accessible filter
       if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
         return false;
       }
+      
+      // Accessible now filter (publicly accessible OR school grounds that are currently accessible)
+      if (filters.accessibleNow !== undefined && filters.accessibleNow) {
+        const isCurrentlyAccessible = 
+          playground.publiclyAccessible || 
+          (playground.isSchoolGround && isSchoolGroundAccessible(playground.isSchoolGround));
+        
+        if (!isCurrentlyAccessible) {
+          return false;
+        }
+      }
+      
       return true;
     });
 

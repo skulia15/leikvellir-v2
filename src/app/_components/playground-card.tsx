@@ -21,7 +21,7 @@ export default function PlaygroundCard({
   const t = useT();
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-2 py-4">
       <div className="flex flex-row gap-4">
         <div className="relative flex-shrink-0">
           <Image
@@ -31,9 +31,9 @@ export default function PlaygroundCard({
                 : "/playground.jpg"
             }
             alt="Playground"
-            width={80}
-            height={80}
-            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-md object-cover"
+            width={150}
+            height={150}
+            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-md object-cover"
           />
         </div>
 

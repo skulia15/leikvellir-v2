@@ -10,13 +10,15 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "~/components/ui/dropdown-menu";
-import { Filter, X, List } from "lucide-react";
+import { Filter, X, List, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useT } from "~/lib/i18n";
+import { isSchoolHours } from "~/lib/school-hours";
 
 export interface PlaygroundFilters {
     toddlerFriendly?: boolean;
     publiclyAccessible?: boolean;
+    accessibleNow?: boolean; // Includes publicly accessible + school grounds during accessible hours
 }
 
 interface PlaygroundFiltersProps {
@@ -75,6 +77,29 @@ export default function PlaygroundFilters({
                         <div className="space-y-2">
                             <label className="text-sm font-medium">{t('forms.accessibility')}</label>
                             <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="accessible-now"
+                                        checked={filters.accessibleNow === true}
+                                        onCheckedChange={(checked) => {
+                                            handleFilterChange(
+                                                "accessibleNow",
+                                                checked ? true : undefined,
+                                            );
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor="accessible-now"
+                                        className="text-sm cursor-pointer flex items-center gap-1"
+                                    >
+                                        <Clock className="h-3 w-3" />
+                                        {t('playground.accessibleNow')}
+                                        {isSchoolHours() && (
+                                            <span className="text-xs text-muted-foreground">({t('playground.excludesSchoolHours')})</span>
+                                        )}
+                                    </label>
+                                </div>
+
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="toddler-friendly"
@@ -142,6 +167,18 @@ export default function PlaygroundFilters({
 
             {/* Active filter badges */}
             <div className="flex flex-wrap gap-1">
+                {filters.accessibleNow && (
+                    <Badge variant="secondary" className="text-xs">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {t('playground.accessibleNow')}
+                        <button
+                            onClick={() => handleFilterChange("accessibleNow", undefined)}
+                            className="ml-1 hover:bg-background/20 rounded-full p-0.5"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    </Badge>
+                )}
                 {filters.toddlerFriendly && (
                     <Badge variant="secondary" className="text-xs">
                         {t('playground.toddlerFriendly')}

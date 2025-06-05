@@ -165,7 +165,18 @@
     "submitNewPlayground": "Prześlij nowy plac zabaw",
     "signInToSubmitPlayground": "Proszę zaloguj się, aby przesłać nowy plac zabaw.",
     "amenities": "Udogodnienia",
-    "safetyAndStructure": "Bezpieczeństwo i struktura"
+    "safetyAndStructure": "Bezpieczeństwo i struktura",
+    "accessibleNow": "Dostępne teraz",
+    "excludesSchoolHours": "wyklucza godziny szkolne",
+    "schoolGround": "Teren szkolny",
+    "preschool": "Przedszkole",
+    "elementary": "Szkoła podstawowa",
+    "availableAfterSchoolHours": "Dostępne po godzinach szkolnych",
+    "schoolHours": "Godziny szkolne: Pon-Pt 8:00-17:00",
+    "currentlyInSchoolHours": "Obecnie w godzinach szkolnych",
+    "accessibleAfterSchoolHours": "Dostępne po godzinach szkolnych",
+    "submittedBy": "Zgłoszone przez",
+    "anonymousSubmission": "Anonimowe"
   },
   "equipment": {
     "categories": {
@@ -420,7 +431,15 @@
     "uploadCompleteMoving": "Przesyłanie zakończone! Przenoszenie do galerii...",
     "imagesUploadedStats": "{{uploaded}} z {{maxFiles}} obrazów przesłanych",
     "submitAnonymously": "Prześlij anonimowo",
-    "submitAnonymouslyDescription": "Twoje imię zostanie ukryte na stronie publicznej, ale administratorzy nadal będą mogli zobaczyć, kto przesłał ten plac zabaw"
+    "submitAnonymouslyDescription": "Twoje imię zostanie ukryte na stronie publicznej, ale administratorzy nadal będą mogli zobaczyć, kto przesłał ten plac zabaw",
+    "schoolGroundSettings": "Ustawienia terenu szkolnego",
+    "isSchoolGround": "Część terenu szkolnego",
+    "isSchoolGroundDescription": "Ten plac zabaw znajduje się na terenie szkolnym (dostępny poza godzinami szkolnymi)",
+    "schoolType": "Typ szkoły",
+    "selectSchoolType": "Wybierz typ szkoły",
+    "preschoolType": "Przedszkole",
+    "elementaryType": "Szkoła podstawowa",
+    "schoolTypeDescription": "Wybierz typ szkoły, do której należy ten plac zabaw"
   },
   "actions": {
     "quickActions": "Szybkie akcje",

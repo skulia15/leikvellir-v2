@@ -145,19 +145,22 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
             </CardContent>
           </Card>
         ) : (
-          sortedPlaygrounds.map((playground) => (
-            <Link
-              key={playground.id}
-              href={`/playground/${playground.id}`}
-              className="block transition-transform hover:scale-[1.02]"
-            >
-              <PlaygroundCard
-                playground={playground}
-                distance={playground.distance || getPlaygroundDistance(playground, userLocation)}
-                showDistance={!!userLocation}
-              />
-            </Link>
-          ))
+          <div className="divide-y divide-border">
+            {sortedPlaygrounds.map((playground) => (
+              <div key={playground.id}>
+                <Link
+                  href={`/playground/${playground.id}`}
+                  className="block transition-transform hover:scale-[1.005]"
+                >
+                  <PlaygroundCard
+                    playground={playground}
+                    distance={playground.distance || getPlaygroundDistance(playground, userLocation)}
+                    showDistance={!!userLocation}
+                  />
+                </Link>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

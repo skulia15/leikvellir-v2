@@ -50,31 +50,47 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Traffic tracking (PostHog integration) - DONE
 - hover effects for list next to map - DONE
 - List of available playground equipment - DONE
+- Credits system for user submissions - done
+- when location is allowed - make the map jump to the users location. - DONE
+- Playground detail pages with comprehensive information - DONE
+- get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog - DONE
+- add icons to "hentar ungabörnum", "opið almenningi" badges. - DONE
+- add municipality to each playground - it be infered from map pin - DONE
 
 ### 🚧 In Progress
 
+- Location cache issue á playground review korti - ef leikvöllur er reviewaður og svo næsti opnaður eru gömul hnit / pin sýnd
+- vantar back button á contact page og playground page, og fleiri. passa að texti sé eins og athuga hvort til baka takki vísi á '/' eða bara á síðuna sem þú varst
+- Senda mér tölvupóst þegar að nýr leikvöllur er sendur inn
+- playground review should display all every playground property
+- submissions should dispplay the name of a user isntead of their ID
+- Fara yfir mobile utlit
+- laga filter view utlit
+- laga file too large error i image upload - ætti að vera hægt að setja inn stórar myndir ef þeim er þjappað
+- disable submit playground button while images are being uploaded
+- Playground list elements need more info (skólalóð, fleira) to use the empty space
+
 - Interactive Map View improvements
   - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
-- Playground detail pages with comprehensive information
-- Error handling and loading states optimization
+- Error handling and loading states optimization - some pages may still need a loading skeleton
 - Responsive layout optimization
+- stjorna siddebar stærð á non-mobile
 
 - fix playground equipment list display on detail pages
-- get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog
 
 - Specific map pins in different color for ball courts - specific icons for each type
-- when location is allowed - make the map jump to the users location.
 - RESTRICT API ACCESS for Maps api key
 - loading skeletons on load
-- standardized sizing of playgrounds in list
+- standardized sizing of playgrounds in list - missing in playground list page
+- Notify users if their submission is approved
 - add sitemap
 
 ### 📋 Planned Features
 
 - add a change request submission available for all users
-- add icons to "hentar ungabörnum", "opið almenningi" badges. - missing in map pin detail window
-- add municipality to each playground - can it be infered from map pin?
 - bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
+- School hours - uppfæra virkni með frídögum o.þ.h
+- getur skólalóð verið bæði skólalóð og public access á sama tíma?
 
 - **Playground Search Functionality**
   - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
@@ -86,10 +102,9 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - User-contributed playground reviews and ratings
   - Check-in system for playgrounds
   - Star rating system for playgrounds
-  - Credits system for user submissions
 - **Reporting System**
   - Playground issue reporting (broken equipment, safety hazards)
-  - Direct submission to Hafnarfjörður municipality
+  - Direct broken equipment, information or safety hazard submission to municipality of playground ( begin with Hafnarfjörður)
   - Image attachment for reports
 - **Advanced Features**
   - Sort by rating or other criteria
@@ -237,15 +252,6 @@ For easy development and testing, the app includes mock authentication that does
 2. Add your Discord OAuth credentials
 3. Restart the development server
 
-### Production Mode (OAuth)
-
-For production, set up Discord OAuth:
-
-1. Create a Discord application at [Discord Developer Portal](https://discord.com/developers/applications)
-2. Add OAuth2 redirect URL: `https://yourdomain.com/api/auth/callback/discord`
-3. Set `ENABLE_MOCK_AUTH=false` (or remove the variable)
-4. Add `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` to your environment
-
 ## 📁 Project Structure
 
 ```
@@ -279,9 +285,8 @@ The application uses a PostgreSQL database with the following main entities:
 
 The app is ready for deployment on:
 
-- **[Vercel](https://vercel.com)** (recommended for Next.js)
-- **[Railway](https://railway.app)**
-- **[Fly.io](https://fly.io)**
+- **[Production](https://leisvæði.is)**
+- **[Vercel](https://leikvellir-v2.vercel.app)**
 
 ## 🤝 Contributing
 
@@ -293,7 +298,7 @@ This is currently a personal project, but contributions and suggestions are welc
 
 ## 📄 License
 
-This project is private and intended for personal/educational use.
+This project is private and intended for personal use.
 
 ## 🏗️ Architecture Notes
 

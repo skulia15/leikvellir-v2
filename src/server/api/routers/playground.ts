@@ -21,6 +21,9 @@ const UpdatePlaygroundSchema = z.object({
   municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
+  // School ground properties
+  isSchoolGround: z.boolean(),
+  schoolType: z.enum(["preschool", "elementary"]).nullable(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
@@ -69,6 +72,9 @@ export const playgroundRouter = createTRPCRouter({
             municipality: input.municipality,
             publiclyAccessible: input.publiclyAccessible,
             toddlerFriendly: input.toddlerFriendly,
+            // School ground properties
+            isSchoolGround: input.isSchoolGround,
+            schoolType: input.schoolType,
             // Amenity properties
             hasSeating: input.hasSeating,
             hasPicnicTable: input.hasPicnicTable,

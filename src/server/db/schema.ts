@@ -49,6 +49,12 @@ export const equipmentCategoryEnum = pgEnum("equipment_category", [
   "additional_common_equipment"
 ]);
 
+// Enum for school types
+export const schoolTypeEnum = pgEnum("school_type", [
+  "preschool", // leikskóli
+  "elementary", // grunnskóli
+]);
+
 // Equipment table for managing playground equipment types
 export const equipment = createTable(
   "equipment",
@@ -104,6 +110,9 @@ export const playgrounds = createTable(
     municipality: varchar("municipality", { length: 256 }), // Municipality where playground is located
     publiclyAccessible: boolean("publicly_accessible").notNull().default(true),
     toddlerFriendly: boolean("toddler_friendly").notNull().default(false),
+    // School ground properties
+    isSchoolGround: boolean("is_school_ground").notNull().default(false), // Whether this is part of school grounds
+    schoolType: schoolTypeEnum("school_type"), // Type of school (preschool/elementary) - null if not a school ground
     // Amenity properties
     hasSeating: boolean("has_seating").notNull().default(false), // Bench/seating available
     hasPicnicTable: boolean("has_picnic_table").notNull().default(false), // Picnic table available
@@ -133,6 +142,8 @@ export const playgrounds = createTable(
     titleIdx: index("playground_title_idx").on(example.title),
     statusIdx: index("playground_status_idx").on(example.status),
     municipalityIdx: index("playground_municipality_idx").on(example.municipality),
+    isSchoolGroundIdx: index("playground_is_school_ground_idx").on(example.isSchoolGround),
+    schoolTypeIdx: index("playground_school_type_idx").on(example.schoolType),
   }),
 );
 

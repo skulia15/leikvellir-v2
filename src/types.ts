@@ -4,6 +4,9 @@ import { z } from "zod";
 // User role types
 export type UserRole = "user" | "admin" | "super_admin";
 
+// School type for playgrounds on school grounds
+export type SchoolType = "preschool" | "elementary";
+
 // Equipment category types
 export type EquipmentCategory =
   | "core_equipment"
@@ -115,6 +118,9 @@ export const CreatePlaygroundSchema = z.object({
   municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
+  // School ground properties
+  isSchoolGround: z.boolean(),
+  schoolType: z.enum(["preschool", "elementary"]).nullable(),
   // Amenity properties
   hasSeating: z.boolean(),
   hasPicnicTable: z.boolean(),
@@ -166,6 +172,9 @@ export type Playground = {
   municipality: string | null;
   publiclyAccessible: boolean;
   toddlerFriendly: boolean;
+  // School ground properties
+  isSchoolGround: boolean;
+  schoolType: SchoolType | null;
   // Amenity properties
   hasSeating: boolean;
   hasPicnicTable: boolean;
@@ -218,6 +227,9 @@ export const ReviewPlaygroundSchema = z.object({
   municipality: z.string().max(256).optional(),
   publiclyAccessible: z.boolean().optional(),
   toddlerFriendly: z.boolean().optional(),
+  // School ground properties
+  isSchoolGround: z.boolean().optional(),
+  schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
