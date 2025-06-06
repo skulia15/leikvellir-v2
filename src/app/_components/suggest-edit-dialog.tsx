@@ -32,6 +32,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -292,19 +293,28 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="schoolType"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-3">
                       <FormLabel>{t('forms.schoolType')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value ?? undefined}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('forms.selectSchoolType')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="preschool">{t('forms.preschoolType')}</SelectItem>
-                          <SelectItem value="elementary">{t('forms.elementaryType')}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                          className="flex flex-col space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="preschool" id="preschool-suggest" />
+                            <FormLabel htmlFor="preschool-suggest" className="font-normal cursor-pointer">
+                              {t('forms.preschoolType')}
+                            </FormLabel>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="elementary" id="elementary-suggest" />
+                            <FormLabel htmlFor="elementary-suggest" className="font-normal cursor-pointer">
+                              {t('forms.elementaryType')}
+                            </FormLabel>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
                       <FormDescription>
                         {t('forms.schoolTypeDescription')}
                       </FormDescription>
