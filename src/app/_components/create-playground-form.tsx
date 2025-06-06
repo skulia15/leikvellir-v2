@@ -361,7 +361,7 @@ export function CreatePlaygroundForm() {
                     <FormLabel>{t('playground.municipality')}</FormLabel>
                     <FormControl>
                       <MunicipalitySelector
-                        value={field.value}
+                        value={field.value ?? ""}
                         onValueChange={field.onChange}
                         placeholder={t('playground.selectMunicipality')}
                         disabled={createPlayground.isPending}

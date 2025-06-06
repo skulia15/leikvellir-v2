@@ -7,6 +7,7 @@ import { X, Upload, AlertCircle, CheckCircle2, Loader2, Star, Zap } from "lucide
 import Image from "next/image";
 
 import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
 import { Progress } from "~/components/ui/progress";
 import { cn } from "~/lib/utils";
 import {
@@ -33,6 +34,11 @@ interface ImageUploadProps {
   coverImage?: string | null;
   onCoverImageChange?: (url: string | null) => void;
   showCoverSelection?: boolean;
+  // Mark images for removal instead of actually removing them
+  allowRemoval?: boolean;
+  // Track which images are marked for removal (without actually removing them)
+  markedForRemoval?: string[];
+  onMarkForRemoval?: (url: string, marked: boolean) => void;
 }
 
 export function ImageUpload({
@@ -44,6 +50,9 @@ export function ImageUpload({
   coverImage,
   onCoverImageChange,
   showCoverSelection = false,
+  allowRemoval = false,
+  markedForRemoval = [],
+  onMarkForRemoval,
 }: ImageUploadProps) {
   const finalConfig = useMemo(
     () => ({ ...DEFAULT_UPLOAD_CONFIG, ...config }),
@@ -425,35 +434,47 @@ export function ImageUpload({
     });
   };
 
-  // Remove existing uploaded image
-  const removeExistingImage = async (url: string) => {
-    try {
-      // For Vercel Blob Storage, we can pass the full URL
-      if (url.includes('vercel-storage.com') || url.includes('blob.vercel-storage.com')) {
-        // Delete using the full blob URL
-        await fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
-          method: 'DELETE',
-        });
-      } else {
-        // Fallback for local files (backward compatibility)
-        const filename = url.split('/').pop();
-        if (filename && url.startsWith('/uploads/playgrounds/')) {
-          await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+  // Handle existing uploaded image (either mark for removal or actually remove)
+  const handleExistingImage = async (url: string) => {
+    if (onMarkForRemoval) {
+      // If we're using the mark-for-removal pattern
+      const isCurrentlyMarked = markedForRemoval.includes(url);
+      onMarkForRemoval(url, !isCurrentlyMarked);
+
+      // If the image was the cover and it's being marked for removal, clear cover selection
+      if (!isCurrentlyMarked && showCoverSelection && coverImage === url && onCoverImageChange) {
+        onCoverImageChange(null);
+      }
+    } else {
+      // Use the original removal logic - actually remove from the array
+      try {
+        // For Vercel Blob Storage, we can pass the full URL
+        if (url.includes('vercel-storage.com') || url.includes('blob.vercel-storage.com')) {
+          // Delete using the full blob URL
+          await fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
             method: 'DELETE',
           });
+        } else {
+          // Fallback for local files (backward compatibility)
+          const filename = url.split('/').pop();
+          if (filename && url.startsWith('/uploads/playgrounds/')) {
+            await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+              method: 'DELETE',
+            });
+          }
         }
+      } catch (error) {
+        console.warn('Failed to delete file from server:', error);
+        // Don't block the UI operation if file deletion fails
       }
-    } catch (error) {
-      console.warn('Failed to delete file from server:', error);
-      // Don't block the UI operation if file deletion fails
-    }
 
-    const newUrls = value.filter((existingUrl) => existingUrl !== url);
-    onChange(newUrls);
+      const newUrls = value.filter((existingUrl) => existingUrl !== url);
+      onChange(newUrls);
 
-    // If removed image was the cover, clear cover selection
-    if (showCoverSelection && coverImage === url && onCoverImageChange) {
-      onCoverImageChange(null);
+      // If removed image was the cover, clear cover selection
+      if (showCoverSelection && coverImage === url && onCoverImageChange) {
+        onCoverImageChange(null);
+      }
     }
   };
 
@@ -591,19 +612,40 @@ export function ImageUpload({
                       </div>
                     )}
 
-                    {/* Remove button */}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute right-2 top-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeExistingImage(url);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                    {/* Remove button or marked-for-removal indicator */}
+                    {/* Always show removal button, regardless of allowRemoval setting */}
+                    {markedForRemoval.includes(url) ? (
+                      <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                        <Badge variant="destructive" className="px-2 py-1 text-xs">
+                          {t('forms.markedForRemoval')}
+                        </Badge>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="absolute right-2 top-2 h-6 w-6 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExistingImage(url);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        className="absolute right-2 top-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExistingImage(url);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Image label */}

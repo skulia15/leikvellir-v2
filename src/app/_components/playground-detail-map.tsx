@@ -40,7 +40,7 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                     mapId="playground-detail-map"
                     className="h-full w-full rounded-md"
                     onZoomChanged={(ev) => setMapZoom(ev.detail.zoom)}
-                    gestureHandling="greedy"
+                    // gestureHandling="greedy"
                     mapTypeControl={false}
                     fullscreenControl={false}
                     streetViewControl={false}

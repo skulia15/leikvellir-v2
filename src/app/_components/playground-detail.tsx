@@ -29,10 +29,12 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
 import { type Playground, type EquipmentCategory, type Equipment } from "~/types";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
 import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog";
+import SuggestEditDialog from "./suggest-edit-dialog";
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
@@ -48,9 +50,11 @@ export default function PlaygroundDetail({
   playground,
 }: PlaygroundDetailProps) {
   const router = useRouter();
-  const { isAdminMode } = useAdmin();
+  const { data: session } = useSession();
+  const { isAdminMode, canAccessAdmin } = useAdmin();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
   const t = useT();
 
   // Calculate distance from user location
@@ -141,6 +145,19 @@ export default function PlaygroundDetail({
             >
               <Edit className="h-4 w-4" />
               {t('playground.editPlayground')}
+            </Button>
+          )}
+
+          {/* User Suggest Edit Button - Desktop only */}
+          {session && !isAdminMode && playground.status === "approved" && (
+            <Button
+              onClick={() => setIsSuggestEditDialogOpen(true)}
+              variant="outline"
+              size="sm"
+              className="hidden md:flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              {t('playground.suggestEdit')}
             </Button>
           )}
         </div>
@@ -540,6 +557,20 @@ export default function PlaygroundDetail({
             </Card>
           </div>
         </div>
+
+        {/* Mobile Suggest Edit Button - At bottom of content */}
+        {session && !isAdminMode && playground.status === "approved" && (
+          <div className="md:hidden mt-8 mb-4 px-4">
+            <Button
+              onClick={() => setIsSuggestEditDialogOpen(true)}
+              variant="default"
+              className="w-full"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              {t('playground.suggestEdit')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Edit Dialog */}
@@ -548,6 +579,15 @@ export default function PlaygroundDetail({
           playground={playground}
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
+        />
+      )}
+
+      {/* Suggest Edit Dialog */}
+      {session && !isAdminMode && isSuggestEditDialogOpen && (
+        <SuggestEditDialog
+          playground={playground}
+          open={isSuggestEditDialogOpen}
+          onOpenChange={setIsSuggestEditDialogOpen}
         />
       )}
     </div>

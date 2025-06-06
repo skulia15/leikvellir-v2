@@ -16,9 +16,9 @@ interface ProvidersProps {
 
 export function Providers({ children, session }: ProvidersProps) {
   return (
-    <AppErrorBoundary>
-      <ErrorProvider>
-        <LanguageProvider>
+    <ErrorProvider>
+      <LanguageProvider>
+        <AppErrorBoundary>
           <PostHogProvider>
             <SessionProvider session={session}>
               <TRPCReactProvider>
@@ -26,8 +26,8 @@ export function Providers({ children, session }: ProvidersProps) {
               </TRPCReactProvider>
             </SessionProvider>
           </PostHogProvider>
-        </LanguageProvider>
-      </ErrorProvider>
-    </AppErrorBoundary>
+        </AppErrorBoundary>
+      </LanguageProvider>
+    </ErrorProvider>
   );
 }

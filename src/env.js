@@ -67,6 +67,8 @@ export const env = createEnv({
     // PostHog Analytics
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
+    // Base URL for sitemap generation
+    NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
   },
 
   /**
@@ -92,6 +94,8 @@ export const env = createEnv({
     // PostHog Analytics
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    // Base URL for sitemap generation
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

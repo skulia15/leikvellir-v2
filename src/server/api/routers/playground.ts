@@ -7,8 +7,8 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { playgrounds, playgroundEquipment } from "~/server/db/schema";
-import { CreatePlaygroundSchema, PlaygroundNotFoundError, ReviewPlaygroundSchema } from "~/types";
+import { playgrounds, playgroundEquipment, playgroundEditSuggestions, playgroundEditSuggestionEquipment } from "~/server/db/schema";
+import { CreatePlaygroundSchema, PlaygroundNotFoundError, ReviewPlaygroundSchema, CreateEditSuggestionSchema } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { logDbError, logger } from "~/lib/logging/logger";
 
@@ -34,6 +34,33 @@ const UpdatePlaygroundSchema = z.object({
   equipmentIds: z.array(z.number()).default([]),
   coverImage: z.string().nullable().optional(),
   images: z.array(z.string()),
+});
+
+// Schema for reviewing edit suggestions
+const ReviewEditSuggestionSchema = z.object({
+  id: z.number(),
+  action: z.enum(["approve", "reject"]),
+  rejectionReason: z.string().optional(),
+  // Allow reviewer to modify the final values before approval
+  finalValues: z.object({
+    title: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    municipality: z.string().optional(),
+    publiclyAccessible: z.boolean().optional(),
+    toddlerFriendly: z.boolean().optional(),
+    isSchoolGround: z.boolean().optional(),
+    schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+    hasSeating: z.boolean().optional(),
+    hasPicnicTable: z.boolean().optional(),
+    hasFencing: z.boolean().optional(),
+    hasGarbageCan: z.boolean().optional(),
+    hasBathroomNearby: z.boolean().optional(),
+    hasSoftPlayArea: z.boolean().optional(),
+    coverImage: z.string().nullable().optional(),
+    images: z.array(z.string()).optional(),
+    equipmentIds: z.array(z.number()).optional(),
+  }).optional(),
 });
 
 export const playgroundRouter = createTRPCRouter({
@@ -205,7 +232,7 @@ export const playgroundRouter = createTRPCRouter({
   review: protectedProcedure
     .input(ReviewPlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, action, rejectionReason, ...playgroundUpdates } = input;
+      const { id, action, rejectionReason, equipmentIds, ...playgroundUpdates } = input;
 
       // Get the current playground to compare image changes
       const currentPlayground = await ctx.db.query.playgrounds.findFirst({
@@ -246,6 +273,24 @@ export const playgroundRouter = createTRPCRouter({
 
       if (!updatedPlayground) {
         throw new PlaygroundNotFoundError(id);
+      }
+
+      // Update equipment relationships if equipmentIds provided
+      if (equipmentIds !== undefined) {
+        // Remove existing equipment relationships
+        await ctx.db
+          .delete(playgroundEquipment)
+          .where(eq(playgroundEquipment.playgroundId, id));
+
+        // Add new equipment relationships if any
+        if (equipmentIds.length > 0) {
+          const equipmentRelations = equipmentIds.map(equipmentId => ({
+            playgroundId: id,
+            equipmentId: equipmentId,
+          }));
+
+          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+        }
       }
 
       // Clean up orphaned files after successful review/update
@@ -443,4 +488,319 @@ export const playgroundRouter = createTRPCRouter({
 
       return deletedPlayground;
     }),
+
+  createEditSuggestion: protectedProcedure
+    .input(CreateEditSuggestionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const {
+        playgroundId,
+        equipmentIds,
+        removeImages,
+        removeCoverImage,
+        ...suggestionData
+      } = input;
+
+      logger.info("Creating edit suggestion", {
+        component: "PlaygroundRouter",
+        action: "create_edit_suggestion",
+        userId,
+        metadata: {
+          playgroundId,
+          equipmentCount: equipmentIds?.length ?? 0,
+        },
+      });
+
+      try {
+        // Check if the playground exists and is approved
+        const existingPlayground = await ctx.db.query.playgrounds.findFirst({
+          where: (playgrounds, { eq, and }) =>
+            and(
+              eq(playgrounds.id, playgroundId),
+              eq(playgrounds.status, "approved")
+            ),
+        });
+
+        if (!existingPlayground) {
+          throw new Error("Playground not found or not approved for editing");
+        }
+
+        // Process image removal
+        let imagesToKeep = [...(existingPlayground.images || [])];
+        let coverImageValue = suggestionData.coverImage;
+
+        // Handle explicit cover image removal
+        if (removeCoverImage) {
+          coverImageValue = null;
+        }
+
+        // Handle additional image removal
+        if (removeImages && removeImages.length > 0 && existingPlayground.images) {
+          imagesToKeep = existingPlayground.images.filter((_, index) =>
+            index >= removeImages.length || !removeImages[index]
+          );
+
+          // Only update if there's an actual change
+          if (imagesToKeep.length !== existingPlayground.images.length) {
+            suggestionData.images = imagesToKeep;
+          }
+        }
+
+        // Create the edit suggestion
+        const [newSuggestion] = await ctx.db
+          .insert(playgroundEditSuggestions)
+          .values({
+            playgroundId,
+            ...suggestionData,
+            coverImage: coverImageValue,
+            equipmentIds,
+            createdById: userId,
+            status: "pending",
+          })
+          .returning();
+
+        if (!newSuggestion) {
+          throw new Error("Failed to create edit suggestion");
+        }
+
+        // Add equipment relationships if any equipment changes suggested
+        if (equipmentIds && equipmentIds.length > 0) {
+          const equipmentRelations = equipmentIds.map(equipmentId => ({
+            suggestionId: newSuggestion.id,
+            equipmentId: equipmentId,
+          }));
+
+          await ctx.db.insert(playgroundEditSuggestionEquipment).values(equipmentRelations);
+        }
+
+        logger.info("Edit suggestion created successfully", {
+          component: "PlaygroundRouter",
+          action: "create_edit_suggestion_success",
+          userId,
+          metadata: {
+            suggestionId: newSuggestion.id,
+            playgroundId,
+            equipmentCount: equipmentIds?.length ?? 0,
+            imagesRemoved: (existingPlayground.images?.length || 0) - imagesToKeep.length,
+            coverImageRemoved: removeCoverImage,
+          },
+        });
+
+        return newSuggestion;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logDbError("edit_suggestion_creation", err, {
+          component: "PlaygroundRouter",
+          action: "create_edit_suggestion",
+          userId,
+          metadata: { playgroundId },
+        });
+        throw err;
+      }
+    }),
+
+  reviewEditSuggestion: protectedProcedure
+    .input(ReviewEditSuggestionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { id, action, rejectionReason } = input;
+
+      logger.info("Reviewing edit suggestion", {
+        component: "PlaygroundRouter",
+        action: "review_edit_suggestion",
+        userId,
+        metadata: {
+          suggestionId: id,
+          reviewAction: action,
+        },
+      });
+
+      try {
+        // Get the edit suggestion with the original playground
+        const editSuggestion = await ctx.db.query.playgroundEditSuggestions.findFirst({
+          where: (suggestions, { eq }) => eq(suggestions.id, id),
+          with: {
+            playground: {
+              with: {
+                playgroundEquipment: {
+                  with: {
+                    equipment: true,
+                  },
+                },
+              },
+            },
+            suggestionEquipment: {
+              with: {
+                equipment: true,
+              },
+            },
+          },
+        });
+
+        if (!editSuggestion) {
+          throw new Error("Edit suggestion not found");
+        }
+
+        if (editSuggestion.status !== "pending") {
+          throw new Error("Edit suggestion has already been reviewed");
+        }
+
+        // Update the edit suggestion status
+        const [updatedSuggestion] = await ctx.db
+          .update(playgroundEditSuggestions)
+          .set({
+            status: action === "approve" ? "approved" : "rejected",
+            reviewedById: userId,
+            reviewedAt: new Date(),
+            rejectionReason: action === "reject" ? rejectionReason : null,
+          })
+          .where(eq(playgroundEditSuggestions.id, id))
+          .returning();
+
+        if (!updatedSuggestion) {
+          throw new Error("Failed to update edit suggestion");
+        }
+
+        // If approved, apply the changes to the playground
+        if (action === "approve") {
+          const updateData: Record<string, any> = {
+            updatedAt: new Date(),
+          };
+
+          // Apply all non-null changes from the suggestion
+          if (editSuggestion.title !== null) updateData.title = editSuggestion.title;
+          if (editSuggestion.latitude !== null) updateData.latitude = editSuggestion.latitude;
+          if (editSuggestion.longitude !== null) updateData.longitude = editSuggestion.longitude;
+          if (editSuggestion.municipality !== null) updateData.municipality = editSuggestion.municipality;
+          if (editSuggestion.publiclyAccessible !== null) updateData.publiclyAccessible = editSuggestion.publiclyAccessible;
+          if (editSuggestion.toddlerFriendly !== null) updateData.toddlerFriendly = editSuggestion.toddlerFriendly;
+          if (editSuggestion.isSchoolGround !== null) updateData.isSchoolGround = editSuggestion.isSchoolGround;
+          if (editSuggestion.schoolType !== null) updateData.schoolType = editSuggestion.schoolType;
+          if (editSuggestion.hasSeating !== null) updateData.hasSeating = editSuggestion.hasSeating;
+          if (editSuggestion.hasPicnicTable !== null) updateData.hasPicnicTable = editSuggestion.hasPicnicTable;
+          if (editSuggestion.hasFencing !== null) updateData.hasFencing = editSuggestion.hasFencing;
+          if (editSuggestion.hasGarbageCan !== null) updateData.hasGarbageCan = editSuggestion.hasGarbageCan;
+          if (editSuggestion.hasBathroomNearby !== null) updateData.hasBathroomNearby = editSuggestion.hasBathroomNearby;
+          if (editSuggestion.hasSoftPlayArea !== null) updateData.hasSoftPlayArea = editSuggestion.hasSoftPlayArea;
+          if (editSuggestion.coverImage !== null) updateData.coverImage = editSuggestion.coverImage;
+          if (editSuggestion.images !== null) updateData.images = editSuggestion.images;
+
+          // Update the playground
+          await ctx.db
+            .update(playgrounds)
+            .set(updateData)
+            .where(eq(playgrounds.id, editSuggestion.playgroundId));
+
+          // Update equipment if changed
+          if (editSuggestion.equipmentIds !== null) {
+            // Remove existing equipment relationships
+            await ctx.db
+              .delete(playgroundEquipment)
+              .where(eq(playgroundEquipment.playgroundId, editSuggestion.playgroundId));
+
+            // Add new equipment relationships if any
+            if (editSuggestion.equipmentIds.length > 0) {
+              const equipmentRelations = editSuggestion.equipmentIds.map(equipmentId => ({
+                playgroundId: editSuggestion.playgroundId,
+                equipmentId: equipmentId,
+              }));
+
+              await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+            }
+          }
+        }
+
+        logger.info("Edit suggestion reviewed successfully", {
+          component: "PlaygroundRouter",
+          action: "review_edit_suggestion_success",
+          userId,
+          metadata: {
+            suggestionId: id,
+            reviewAction: action,
+            playgroundId: editSuggestion.playgroundId,
+          },
+        });
+
+        return updatedSuggestion;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logDbError("edit_suggestion_review", err, {
+          component: "PlaygroundRouter",
+          action: "review_edit_suggestion",
+          userId,
+          metadata: { suggestionId: id },
+        });
+        throw err;
+      }
+    }),
+
+  getPendingEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
+    const pendingSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
+      where: (suggestions, { eq }) => eq(suggestions.status, "pending"),
+      orderBy: (suggestions, { asc }) => [asc(suggestions.createdAt)],
+      with: {
+        playground: {
+          with: {
+            playgroundEquipment: {
+              with: {
+                equipment: true,
+              },
+            },
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        suggestionEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+      },
+    });
+
+    return pendingSuggestions ?? [];
+  }),
+
+  getAllEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
+    const allSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
+      orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
+      with: {
+        playground: {
+          with: {
+            playgroundEquipment: {
+              with: {
+                equipment: true,
+              },
+            },
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        reviewedBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        suggestionEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+      },
+    });
+
+    return allSuggestions ?? [];
+  }),
 });

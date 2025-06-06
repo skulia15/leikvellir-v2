@@ -1,0 +1,351 @@
+{
+  "id": "5f6a7b8c-3e4f-4a5b-9c2d-1e8f7a6b5c4d",
+  "prevId": "4e5a6b7c-2d3e-4f5a-8b1c-0d7e6a5b4c3d",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.leikvellir_v2_account": {
+      "name": "leikvellir_v2_account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true
+        }
+      }
+    },
+    "public.leikvellir_v2_playground_edit_suggestion": {
+      "name": "leikvellir_v2_playground_edit_suggestion",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "playground_id": {
+          "name": "playground_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "edit_suggestion_status",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "municipality": {
+          "name": "municipality",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "publicly_accessible": {
+          "name": "publicly_accessible",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "toddler_friendly": {
+          "name": "toddler_friendly",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_school_ground": {
+          "name": "is_school_ground",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "school_type": {
+          "name": "school_type",
+          "type": "school_type",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_seating": {
+          "name": "has_seating",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_picnic_table": {
+          "name": "has_picnic_table",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_fencing": {
+          "name": "has_fencing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_garbage_can": {
+          "name": "has_garbage_can",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_bathroom_nearby": {
+          "name": "has_bathroom_nearby",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "has_soft_play_area": {
+          "name": "has_soft_play_area",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cover_image": {
+          "name": "cover_image",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "images": {
+          "name": "images",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "equipment_ids": {
+          "name": "equipment_ids",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submit_anonymously": {
+          "name": "submit_anonymously",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_by": {
+          "name": "reviewed_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "playground_edit_suggestion_playground_id_idx": {
+          "name": "playground_edit_suggestion_playground_id_idx",
+          "columns": [
+            "playground_id"
+          ],
+          "isUnique": false
+        },
+        "playground_edit_suggestion_status_idx": {
+          "name": "playground_edit_suggestion_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        },
+        "playground_edit_suggestion_created_by_idx": {
+          "name": "playground_edit_suggestion_created_by_idx",
+          "columns": [
+            "created_by"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "leikvellir_v2_playground_edit_suggestion_playground_id_leikvellir_v2_playground_id_fk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_playground_id_leikvellir_v2_playground_id_fk",
+          "tableFrom": "leikvellir_v2_playground_edit_suggestion",
+          "tableTo": "leikvellir_v2_playground",
+          "columnsFrom": [
+            "playground_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "leikvellir_v2_playground_edit_suggestion_reviewed_by_leikvellir_v2_user_id_fk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_reviewed_by_leikvellir_v2_user_id_fk",
+          "tableFrom": "leikvellir_v2_playground_edit_suggestion",
+          "tableTo": "leikvellir_v2_user",
+          "columnsFrom": [
+            "reviewed_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "leikvellir_v2_playground_edit_suggestion_created_by_leikvellir_v2_user_id_fk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_created_by_leikvellir_v2_user_id_fk",
+          "tableFrom": "leikvellir_v2_playground_edit_suggestion",
+          "tableTo": "leikvellir_v2_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.leikvellir_v2_playground_edit_suggestion_equipment": {
+      "name": "leikvellir_v2_playground_edit_suggestion_equipment",
+      "schema": "",
+      "columns": {
+        "suggestion_id": {
+          "name": "suggestion_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipment_id": {
+          "name": "equipment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "playground_edit_suggestion_equipment_suggestion_idx": {
+          "name": "playground_edit_suggestion_equipment_suggestion_idx",
+          "columns": [
+            "suggestion_id"
+          ],
+          "isUnique": false
+        },
+        "playground_edit_suggestion_equipment_equipment_idx": {
+          "name": "playground_edit_suggestion_equipment_equipment_idx",
+          "columns": [
+            "equipment_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "leikvellir_v2_playground_edit_suggestion_equipment_suggestion_id_leikvellir_v2_playground_edit_suggestion_id_fk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_equipment_suggestion_id_leikvellir_v2_playground_edit_suggestion_id_fk",
+          "tableFrom": "leikvellir_v2_playground_edit_suggestion_equipment",
+          "tableTo": "leikvellir_v2_playground_edit_suggestion",
+          "columnsFrom": [
+            "suggestion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "leikvellir_v2_playground_edit_suggestion_equipment_equipment_id_leikvellir_v2_equipment_id_fk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_equipment_equipment_id_leikvellir_v2_equipment_id_fk",
+          "tableFrom": "leikvellir_v2_playground_edit_suggestion_equipment",
+          "tableTo": "leikvellir_v2_equipment",
+          "columnsFrom": [
+            "equipment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "leikvellir_v2_playground_edit_suggestion_equipment_suggestion_id_equipment_id_pk": {
+          "name": "leikvellir_v2_playground_edit_suggestion_equipment_suggestion_id_equipment_id_pk",
+          "columns": [
+            "suggestion_id",
+            "equipment_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "public.edit_suggestion_status": {
+      "name": "edit_suggestion_status",
+      "values": {
+        "pending": "pending",
+        "approved": "approved",
+        "rejected": "rejected"
+      }
+    }
+  },
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

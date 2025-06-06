@@ -25,7 +25,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import { Pencil, Trash2, Eye, MapPin } from "lucide-react";
+import { Pencil, Trash2, Eye, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useT } from "~/lib/i18n";
@@ -57,10 +57,6 @@ export default function AdminPlaygroundsClient() {
 
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString();
-    };
-
-    const formatCoordinates = (lat: number, lng: number) => {
-        return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     };
 
     const getStatusBadge = (status: Playground["status"]) => {
@@ -148,9 +144,9 @@ export default function AdminPlaygroundsClient() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>{t('admin.name')}</TableHead>
-                                    <TableHead>{t('admin.location')}</TableHead>
+                                    <TableHead>{t('playground.municipality')}</TableHead>
                                     <TableHead>{t('admin.status')}</TableHead>
-                                    <TableHead>{t('admin.features')}</TableHead>
+                                    <TableHead>{t('admin.submittedBy')}</TableHead>
                                     <TableHead>{t('admin.created')}</TableHead>
                                     <TableHead>{t('admin.actions')}</TableHead>
                                 </TableRow>
@@ -159,26 +155,33 @@ export default function AdminPlaygroundsClient() {
                                 {playgrounds.map((playground) => (
                                     <TableRow key={playground.id}>
                                         <TableCell className="font-medium">
-                                            {playground.title}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {formatCoordinates(playground.latitude, playground.longitude)}
+                                            <div>
+                                                <div className="font-medium">{playground.title}</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    ID #{playground.id}
+                                                </div>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
-                                            {getStatusBadge(playground.status)}
+                                            <div className="text-sm font-medium">
+                                                {playground.municipality ? (
+                                                    <span className="text-foreground">{playground.municipality}</span>
+                                                ) : (
+                                                    <span className="text-muted-foreground italic">{t('admin.noMunicipality')}</span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-wrap gap-1">
-                                                {playground.toddlerFriendly && (
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        {t('playground.toddlerFriendly')}
-                                                    </Badge>
-                                                )}
-                                                {playground.publiclyAccessible && (
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {t('playground.publicAccess')}
-                                                    </Badge>
-                                                )}
+                                                {getStatusBadge(playground.status)}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <User className="h-4 w-4 text-muted-foreground" />
+                                                <span className="text-sm">
+                                                    {playground.createdBy?.name || playground.createdBy?.email || playground.createdById}
+                                                </span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground">

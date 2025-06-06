@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
+import MunicipalitySelector from "~/components/municipality-selector";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -20,6 +21,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "~/components/ui/dialog";
+import { EquipmentSelector } from "~/components/ui/equipment-selector";
 import {
     Form,
     FormControl,
@@ -31,6 +33,13 @@ import {
 } from "~/components/ui/form";
 import ImageUpload from "~/components/ui/image-upload";
 import { Input } from "~/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
@@ -42,10 +51,24 @@ const reviewFormSchema = z.object({
     title: z.string().min(1, "Title is required").max(256),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
+    municipality: z.string().nullable(),
     publiclyAccessible: z.boolean(),
     toddlerFriendly: z.boolean(),
+    // School ground properties
+    isSchoolGround: z.boolean(),
+    schoolType: z.enum(["preschool", "elementary"]).nullable(),
+    // Amenity properties
+    hasSeating: z.boolean(),
+    hasPicnicTable: z.boolean(),
+    hasFencing: z.boolean(),
+    hasGarbageCan: z.boolean(),
+    hasBathroomNearby: z.boolean(),
+    hasSoftPlayArea: z.boolean(),
+    // Equipment and images
+    equipmentIds: z.array(z.number()),
     coverImage: z.string().nullable(),
     images: z.array(z.string()),
+    submitAnonymously: z.boolean(),
     rejectionReason: z.string().optional(),
 });
 
@@ -79,10 +102,24 @@ export default function ReviewPlaygroundDialog({
             title: playground.title,
             latitude: playground.latitude,
             longitude: playground.longitude,
+            municipality: playground.municipality,
             publiclyAccessible: playground.publiclyAccessible,
             toddlerFriendly: playground.toddlerFriendly,
+            // School ground properties
+            isSchoolGround: playground.isSchoolGround ?? false,
+            schoolType: playground.schoolType ?? null,
+            // Amenity properties
+            hasSeating: playground.hasSeating ?? false,
+            hasPicnicTable: playground.hasPicnicTable ?? false,
+            hasFencing: playground.hasFencing ?? false,
+            hasGarbageCan: playground.hasGarbageCan ?? false,
+            hasBathroomNearby: playground.hasBathroomNearby ?? false,
+            hasSoftPlayArea: playground.hasSoftPlayArea ?? false,
+            // Equipment and images
+            equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipment.id) ?? [],
             coverImage: defaultCoverImage,
             images: validImages,
+            submitAnonymously: playground.submitAnonymously ?? false,
             rejectionReason: "",
         },
     });
@@ -184,8 +221,10 @@ export default function ReviewPlaygroundDialog({
 
                 <Form {...form}>
                     <Tabs defaultValue="details" className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-5">
                             <TabsTrigger value="details">{t('admin.details')}</TabsTrigger>
+                            <TabsTrigger value="equipment">{t('admin.equipment')}</TabsTrigger>
+                            <TabsTrigger value="amenities">{t('admin.amenities')}</TabsTrigger>
                             <TabsTrigger value="images">{t('admin.images')}</TabsTrigger>
                             <TabsTrigger value="location">{t('admin.location')}</TabsTrigger>
                         </TabsList>
@@ -201,6 +240,26 @@ export default function ReviewPlaygroundDialog({
                                             <FormControl>
                                                 <Input {...field} />
                                             </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="municipality"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{t('playground.municipality')}</FormLabel>
+                                            <FormControl>
+                                                <MunicipalitySelector
+                                                    value={field.value ?? ""}
+                                                    onValueChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                {t('playground.municipalityDescription')}
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -242,6 +301,84 @@ export default function ReviewPlaygroundDialog({
                                             </FormItem>
                                         )}
                                     />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="submitAnonymously"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <Checkbox
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                <div className="space-y-1 leading-none">
+                                                    <FormLabel>{t('playground.submitAnonymously')}</FormLabel>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* School Ground Settings */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">{t('forms.schoolGroundSettings')}</h3>
+                                <div className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="isSchoolGround"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <Checkbox
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                <div className="space-y-1 leading-none">
+                                                    <FormLabel>{t('forms.isSchoolGround')}</FormLabel>
+                                                    <FormDescription className="text-xs">
+                                                        {t('forms.isSchoolGroundDescription')}
+                                                    </FormDescription>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {form.watch("isSchoolGround") && (
+                                        <FormField
+                                            control={form.control}
+                                            name="schoolType"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>{t('forms.schoolType')}</FormLabel>
+                                                    <Select
+                                                        value={field.value ?? undefined}
+                                                        onValueChange={field.onChange}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder={t('forms.selectSchoolType')} />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="preschool">
+                                                                {t('forms.preschoolType')}
+                                                            </SelectItem>
+                                                            <SelectItem value="elementary">
+                                                                {t('forms.elementaryType')}
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -252,13 +389,179 @@ export default function ReviewPlaygroundDialog({
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <span className="text-muted-foreground">{t('admin.submittedBy')}:</span>
-                                        <span className="ml-2 font-medium">{playground.createdById}</span>
+                                        <span className="ml-2 font-medium">{playground.createdBy?.name || playground.createdBy?.email || playground.createdById}</span>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">{t('admin.submittedOn')}:</span>
                                         <span className="ml-2 font-medium">
                                             {new Date(playground.createdAt).toLocaleDateString()}
                                         </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="equipment" className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="equipmentIds"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t('playground.equipment')}</FormLabel>
+                                        <FormControl>
+                                            <EquipmentSelector
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            {t('playground.equipmentDescription')}
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </TabsContent>
+
+                        <TabsContent value="amenities" className="space-y-4">
+                            <div className="space-y-6">
+                                {/* Amenities Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold">{t('forms.amenities')}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="hasSeating"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasSeating')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasSeatingDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="hasPicnicTable"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasPicnicTable')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasPicnicTableDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="hasGarbageCan"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasGarbageCan')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasGarbageCanDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="hasBathroomNearby"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasBathroomNearby')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasBathroomNearbyDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                {/* Safety & Structure Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold">{t('forms.safetyAndStructure')}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="hasFencing"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasFencing')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasFencingDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="hasSoftPlayArea"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>{t('forms.hasSoftPlayArea')}</FormLabel>
+                                                        <FormDescription className="text-xs">
+                                                            {t('forms.hasSoftPlayAreaDescription')}
+                                                        </FormDescription>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -12,8 +12,11 @@ export default async function ReviewPage() {
         redirect("/signin");
     }
 
-    // Get pending submissions
-    const pendingSubmissions = await api.playground.getPendingSubmissions();
+    // Get pending submissions and edit suggestions
+    const [pendingSubmissions, pendingEditSuggestions] = await Promise.all([
+        api.playground.getPendingSubmissions(),
+        api.playground.getPendingEditSuggestions(),
+    ]);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -24,7 +27,10 @@ export default async function ReviewPage() {
                 </p>
             </div>
 
-            <ReviewPlaygroundsClient initialData={pendingSubmissions} />
+            <ReviewPlaygroundsClient 
+                initialSubmissions={pendingSubmissions} 
+                initialEditSuggestions={pendingEditSuggestions}
+            />
         </div>
     );
 } 

@@ -26,6 +26,87 @@ export type Coordinates = {
   longitude: Longitude;
 };
 
+// Edit suggestion status enum
+export type EditSuggestionStatus = "pending" | "approved" | "rejected";
+
+// Edit suggestion type
+export type PlaygroundEditSuggestion = {
+  id: number;
+  playgroundId: number;
+  status: EditSuggestionStatus;
+  // Only include fields that can be changed (nullable - only populated if being changed)
+  title: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  municipality: string | null;
+  publiclyAccessible: boolean | null;
+  toddlerFriendly: boolean | null;
+  // School ground properties
+  isSchoolGround: boolean | null;
+  schoolType: SchoolType | null;
+  // Amenity properties
+  hasSeating: boolean | null;
+  hasPicnicTable: boolean | null;
+  hasFencing: boolean | null;
+  hasGarbageCan: boolean | null;
+  hasBathroomNearby: boolean | null;
+  hasSoftPlayArea: boolean | null;
+  // Images and metadata
+  coverImage: string | null;
+  images: string[] | null;
+  equipmentIds: number[] | null;
+  submitAnonymously: boolean | null;
+  // Review fields
+  reviewedById: string | null;
+  reviewedAt: Date | null;
+  rejectionReason: string | null;
+  // User who suggested the edit
+  createdById: string;
+  createdAt: Date;
+  updatedAt: Date | null;
+  // Relationships
+  playground?: Playground;
+  createdBy?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+  reviewedBy?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+};
+
+// Schema for creating edit suggestions
+export const CreateEditSuggestionSchema = z.object({
+  playgroundId: z.number(),
+  // Only include fields that are being changed (all optional)
+  title: z.string().min(1).max(256).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  municipality: z.string().max(256).nullable().optional(),
+  publiclyAccessible: z.boolean().optional(),
+  toddlerFriendly: z.boolean().optional(),
+  // School ground properties
+  isSchoolGround: z.boolean().optional(),
+  schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+  // Amenity properties
+  hasSeating: z.boolean().optional(),
+  hasPicnicTable: z.boolean().optional(),
+  hasFencing: z.boolean().optional(),
+  hasGarbageCan: z.boolean().optional(),
+  hasBathroomNearby: z.boolean().optional(),
+  hasSoftPlayArea: z.boolean().optional(),
+  // Equipment and images
+  equipmentIds: z.array(z.number()).optional(),
+  coverImage: z.string().nullable().optional(),
+  images: z.array(z.string()).optional(),
+  submitAnonymously: z.boolean().optional(),
+});
+
+export type CreateEditSuggestionInput = z.infer<typeof CreateEditSuggestionSchema>;
+
 // Playground status enum
 export type PlaygroundStatus = "pending" | "approved" | "rejected";
 
@@ -115,7 +196,7 @@ export const CreatePlaygroundSchema = z.object({
     .min(1, "Title is required")
     .max(256, "Title must be less than 256 characters"),
   ...CoordinatesSchema.shape,
-  municipality: z.string().max(256).optional(),
+  municipality: z.string().max(256).nullable().optional(),
   publiclyAccessible: z.boolean(),
   toddlerFriendly: z.boolean(),
   // School ground properties
@@ -224,12 +305,12 @@ export const ReviewPlaygroundSchema = z.object({
   title: z.string().min(1).max(256).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
-  municipality: z.string().max(256).optional(),
+  municipality: z.string().max(256).nullish(),
   publiclyAccessible: z.boolean().optional(),
   toddlerFriendly: z.boolean().optional(),
   // School ground properties
   isSchoolGround: z.boolean().optional(),
-  schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+  schoolType: z.enum(["preschool", "elementary"]).nullish(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
@@ -237,8 +318,10 @@ export const ReviewPlaygroundSchema = z.object({
   hasGarbageCan: z.boolean().optional(),
   hasBathroomNearby: z.boolean().optional(),
   hasSoftPlayArea: z.boolean().optional(),
-  coverImage: z.string().nullable().optional(),
+  equipmentIds: z.array(z.number()).optional(),
+  coverImage: z.string().nullish(),
   images: z.array(z.string()).optional(),
+  submitAnonymously: z.boolean().optional(),
 });
 
 export type ReviewPlaygroundInput = z.infer<typeof ReviewPlaygroundSchema>;

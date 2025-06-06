@@ -56,9 +56,16 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog - DONE
 - add icons to "hentar ungabörnum", "opið almenningi" badges. - DONE
 - add municipality to each playground - it be infered from map pin - DONE
+- add animations when items appear or disappear from the list in map view - DONE
+- Review playground submission - location is missing - DONE
 
 ### 🚧 In Progress
 
+- test and fix obvious errors in the edit playground review dialog
+- when adding playground - the users should be able to remove images they are uplaoding
+- Test if changing location in edit review changes when admin sets it - NO the users suggested location is used instead!
+- Move suggest edit button on detail page so that it is side by side with add images button under the additional information section
+- create production db?
 - Location cache issue á playground review korti - ef leikvöllur er reviewaður og svo næsti opnaður eru gömul hnit / pin sýnd
 - vantar back button á contact page og playground page, og fleiri. passa að texti sé eins og athuga hvort til baka takki vísi á '/' eða bara á síðuna sem þú varst
 - Senda mér tölvupóst þegar að nýr leikvöllur er sendur inn
@@ -70,6 +77,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - disable submit playground button while images are being uploaded
 - Playground list elements need more info (skólalóð, fleira) to use the empty space
 
+- create playground form - simplify type of school so no dropdown is used - a value has to be selected, only 2 options
 - Interactive Map View improvements
   - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
 - Error handling and loading states optimization - some pages may still need a loading skeleton
@@ -77,13 +85,14 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - stjorna siddebar stærð á non-mobile
 
 - fix playground equipment list display on detail pages
-
+- Update tests
 - Specific map pins in different color for ball courts - specific icons for each type
 - RESTRICT API ACCESS for Maps api key
+- Restrict google maps api usage so that I dont get billed anything
 - loading skeletons on load
 - standardized sizing of playgrounds in list - missing in playground list page
 - Notify users if their submission is approved
-- add sitemap
+- add sitemap - done?
 
 ### 📋 Planned Features
 

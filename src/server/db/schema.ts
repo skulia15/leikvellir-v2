@@ -31,6 +31,13 @@ export const playgroundStatusEnum = pgEnum("playground_status", [
   "rejected"
 ]);
 
+// Enum for edit suggestion status
+export const editSuggestionStatusEnum = pgEnum("edit_suggestion_status", [
+  "pending",
+  "approved", 
+  "rejected"
+]);
+
 // Enum for user roles
 export const userRoleEnum = pgEnum("user_role", [
   "user",
@@ -144,6 +151,87 @@ export const playgrounds = createTable(
     municipalityIdx: index("playground_municipality_idx").on(example.municipality),
     isSchoolGroundIdx: index("playground_is_school_ground_idx").on(example.isSchoolGround),
     schoolTypeIdx: index("playground_school_type_idx").on(example.schoolType),
+  }),
+);
+
+// Playground edit suggestions table - for suggesting changes to existing approved playgrounds
+export const playgroundEditSuggestions = createTable(
+  "playground_edit_suggestion",
+  {
+    id: serial("id").primaryKey(),
+    playgroundId: integer("playground_id")
+      .notNull()
+      .references(() => playgrounds.id), // The playground being edited
+    status: editSuggestionStatusEnum("status").notNull().default("pending"),
+    
+    // Only include fields that can be changed (nullable - only populated if being changed)
+    title: varchar("title", { length: 256 }),
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
+    municipality: varchar("municipality", { length: 256 }),
+    publiclyAccessible: boolean("publicly_accessible"),
+    toddlerFriendly: boolean("toddler_friendly"),
+    
+    // School ground properties
+    isSchoolGround: boolean("is_school_ground"),
+    schoolType: schoolTypeEnum("school_type"),
+    
+    // Amenity properties  
+    hasSeating: boolean("has_seating"),
+    hasPicnicTable: boolean("has_picnic_table"),
+    hasFencing: boolean("has_fencing"),
+    hasGarbageCan: boolean("has_garbage_can"),
+    hasBathroomNearby: boolean("has_bathroom_nearby"),
+    hasSoftPlayArea: boolean("has_soft_play_area"),
+    
+    // Images and metadata
+    coverImage: varchar("cover_image", { length: 512 }),
+    images: json("images").$type<string[]>(), // Can suggest adding images
+    equipmentIds: json("equipment_ids").$type<number[]>(), // Equipment changes
+    submitAnonymously: boolean("submit_anonymously"),
+    
+    // Review fields
+    reviewedById: varchar("reviewed_by", { length: 255 })
+      .references(() => users.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    
+    // User who suggested the edit
+    createdById: varchar("created_by", { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (table) => ({
+    playgroundIdIdx: index("playground_edit_suggestion_playground_id_idx").on(table.playgroundId),
+    statusIdx: index("playground_edit_suggestion_status_idx").on(table.status),
+    createdByIdx: index("playground_edit_suggestion_created_by_idx").on(table.createdById),
+  }),
+);
+
+// Junction table for playground edit suggestion equipment
+export const playgroundEditSuggestionEquipment = createTable(
+  "playground_edit_suggestion_equipment",
+  {
+    suggestionId: integer("suggestion_id")
+      .notNull()
+      .references(() => playgroundEditSuggestions.id, { onDelete: "cascade" }),
+    equipmentId: integer("equipment_id")
+      .notNull()
+      .references(() => equipment.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.suggestionId, table.equipmentId] }),
+    suggestionIdx: index("playground_edit_suggestion_equipment_suggestion_idx").on(table.suggestionId),
+    equipmentIdx: index("playground_edit_suggestion_equipment_equipment_idx").on(table.equipmentId),
   }),
 );
 
@@ -265,6 +353,33 @@ export const playgroundsRelations = relations(playgrounds, ({ many, one }) => ({
   }),
   reviewedBy: one(users, {
     fields: [playgrounds.reviewedById],
+    references: [users.id],
+  }),
+}));
+
+export const playgroundEditSuggestionEquipmentRelations = relations(playgroundEditSuggestionEquipment, ({ one }) => ({
+  suggestion: one(playgroundEditSuggestions, {
+    fields: [playgroundEditSuggestionEquipment.suggestionId],
+    references: [playgroundEditSuggestions.id],
+  }),
+  equipment: one(equipment, {
+    fields: [playgroundEditSuggestionEquipment.equipmentId],
+    references: [equipment.id],
+  }),
+}));
+
+export const playgroundEditSuggestionsRelations = relations(playgroundEditSuggestions, ({ many, one }) => ({
+  playground: one(playgrounds, {
+    fields: [playgroundEditSuggestions.playgroundId],
+    references: [playgrounds.id],
+  }),
+  suggestionEquipment: many(playgroundEditSuggestionEquipment),
+  createdBy: one(users, {
+    fields: [playgroundEditSuggestions.createdById],
+    references: [users.id],
+  }),
+  reviewedBy: one(users, {
+    fields: [playgroundEditSuggestions.reviewedById],
     references: [users.id],
   }),
 }));

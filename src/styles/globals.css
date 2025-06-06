@@ -70,3 +70,87 @@
 .gmnoscreen {
   display: none !important;
 }
+
+/* Smooth playground list animations */
+@layer utilities {
+  /* Enter animations */
+  .animate-in {
+    animation-fill-mode: both;
+  }
+  
+  .slide-in-from-right {
+    animation-name: slide-in-from-right;
+  }
+  
+  .fade-in {
+    animation-name: fade-in;
+  }
+  
+  /* Exit animations */
+  .animate-out {
+    animation-fill-mode: both;
+  }
+  
+  .slide-out-to-left {
+    animation-name: slide-out-to-left;
+  }
+  
+  .fade-out {
+    animation-name: fade-out;
+  }
+  
+  /* Duration classes */
+  .duration-300 {
+    animation-duration: 300ms;
+  }
+  
+  .duration-400 {
+    animation-duration: 400ms;
+  }
+  
+  /* Easing classes */
+  .ease-out {
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  
+  .ease-in-out {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Keyframe definitions */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(12px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-to-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
