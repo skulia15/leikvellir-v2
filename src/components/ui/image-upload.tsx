@@ -35,7 +35,7 @@ interface ImageUploadProps {
   onCoverImageChange?: (url: string | null) => void;
   showCoverSelection?: boolean;
   // Mark images for removal instead of actually removing them
-  allowRemoval?: boolean;
+  _allowRemoval?: boolean;
   // Track which images are marked for removal (without actually removing them)
   markedForRemoval?: string[];
   onMarkForRemoval?: (url: string, marked: boolean) => void;
@@ -50,7 +50,7 @@ export function ImageUpload({
   coverImage,
   onCoverImageChange,
   showCoverSelection = false,
-  allowRemoval = false,
+  _allowRemoval = false,
   markedForRemoval = [],
   onMarkForRemoval,
 }: ImageUploadProps) {
@@ -228,7 +228,7 @@ export function ImageUpload({
         });
       }
     },
-    [onChange, value, showCoverSelection, coverImage, onCoverImageChange],
+    [onChange, showCoverSelection, coverImage, onCoverImageChange],
   );
 
   // Handle file drop/selection with automatic resizing
@@ -351,7 +351,6 @@ export function ImageUpload({
     },
     [
       files.length,
-      validUrls.length,
       finalConfig,
       createFileWithPreview,
       disabled,
@@ -451,15 +450,19 @@ export function ImageUpload({
         // For Vercel Blob Storage, we can pass the full URL
         if (url.includes('vercel-storage.com') || url.includes('blob.vercel-storage.com')) {
           // Delete using the full blob URL
-          await fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
+          fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
             method: 'DELETE',
+          }).catch(() => {
+            // Silently ignore deletion errors for blob storage
           });
         } else {
           // Fallback for local files (backward compatibility)
           const filename = url.split('/').pop();
           if (filename && url.startsWith('/uploads/playgrounds/')) {
-            await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+            fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
               method: 'DELETE',
+            }).catch(() => {
+              // Silently ignore deletion errors for local files
             });
           }
         }

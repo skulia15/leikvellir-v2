@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import {
   Check,
@@ -24,7 +25,6 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -118,7 +118,7 @@ function EquipmentReviewSelector({
 
   const addedEquipment = suggestedEquipment.filter(eq => !originalEquipmentIds.includes(eq.id));
   const removedEquipment = currentEquipment.filter(eq => !suggestedEquipmentIds.includes(eq.id));
-  const unchangedEquipment = currentEquipment.filter(eq => suggestedEquipmentIds.includes(eq.id));
+  const _unchangedEquipment = currentEquipment.filter(eq => suggestedEquipmentIds.includes(eq.id));
 
   const toggleEquipment = (equipmentId: number) => {
     const newIds = finalEquipmentIds.includes(equipmentId)
@@ -211,11 +211,12 @@ function EquipmentReviewSelector({
 // Individual field change component with editable final value
 interface EditableFieldChangeProps {
   label: string;
-  originalValue: any;
-  suggestedValue: any;
-  finalValue: any;
-  onFinalValueChange: (value: any) => void;
+  originalValue: string | number | boolean | string[] | number[] | null | undefined;
+  suggestedValue: string | number | boolean | string[] | number[] | null | undefined;
+  finalValue: string | number | boolean | string[] | number[] | null | undefined;
+  onFinalValueChange: (value: string | number | boolean | string[] | number[] | null | undefined) => void;
   type?: "text" | "boolean" | "coordinate" | "school_type" | "number" | "equipment" | "image" | "image_array";
+  onImageClick?: (imageUrl: string) => void;
 }
 
 function EditableFieldChange({
@@ -226,10 +227,10 @@ function EditableFieldChange({
   onFinalValueChange,
   type = "text",
   onImageClick
-}: EditableFieldChangeProps & { onImageClick?: (imageUrl: string) => void }) {
+}: EditableFieldChangeProps) {
   const { t } = useTranslation();
 
-  const formatDisplayValue = (value: any, valueType: string) => {
+  const formatDisplayValue = (value: string | number | boolean | string[] | number[] | null | undefined, valueType: string) => {
     if (value === null || value === undefined) return t('common.notSet');
 
     switch (valueType) {
@@ -246,23 +247,27 @@ function EditableFieldChange({
         return `${value.length} ${value.length === 1 ? t('equipment.itemSingular') : t('equipment.items')}`;
       case "image":
         return value ? (
-          <img
-            src={value}
+          <Image
+            src={value as string}
             alt="Cover image"
+            width={64}
+            height={64}
             className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
             loading="lazy"
-            onClick={() => onImageClick?.(value)}
+            onClick={() => onImageClick?.(value as string)}
           />
         ) : t('common.notSet');
       case "image_array":
         if (!Array.isArray(value) || value.length === 0) return t('common.notSet');
         return (
           <div className="flex flex-wrap gap-2">
-            {value.map((imageUrl: string, index: number) => (
-              <img
+            {(value as string[]).map((imageUrl: string, index: number) => (
+              <Image
                 key={index}
                 src={imageUrl}
                 alt={`Additional image ${index + 1}`}
+                width={64}
+                height={64}
                 className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
                 loading="lazy"
                 onClick={() => onImageClick?.(imageUrl)}
@@ -271,7 +276,7 @@ function EditableFieldChange({
           </div>
         );
       default:
-        return value?.toString() || t('common.notSet');
+        return value?.toString() ?? t('common.notSet');
     }
   };
 
@@ -281,7 +286,7 @@ function EditableFieldChange({
         return (
           <div className="flex items-center space-x-2">
             <Switch
-              checked={finalValue ?? false}
+              checked={Boolean(finalValue ?? false)}
               onCheckedChange={onFinalValueChange}
             />
             <span className="text-sm">
@@ -292,7 +297,7 @@ function EditableFieldChange({
 
       case "school_type":
         return (
-          <Select value={finalValue || "not_set"} onValueChange={(value) => onFinalValueChange(value === "not_set" ? null : value)}>
+          <Select value={String(finalValue || "not_set")} onValueChange={(value) => onFinalValueChange(value === "not_set" ? null : value)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={t('forms.selectSchoolType')} />
             </SelectTrigger>
@@ -310,7 +315,7 @@ function EditableFieldChange({
           <Input
             type="number"
             step={type === "coordinate" ? "0.000001" : "1"}
-            value={finalValue?.toString() || ""}
+            value={finalValue?.toString() ?? ""}
             onChange={(e) => onFinalValueChange(e.target.value ? parseFloat(e.target.value) : null)}
             className="w-full"
           />
@@ -319,10 +324,10 @@ function EditableFieldChange({
       case "equipment":
         return (
           <EquipmentReviewSelector
-            originalEquipmentIds={Array.isArray(originalValue) ? originalValue : []}
-            suggestedEquipmentIds={Array.isArray(suggestedValue) ? suggestedValue : []}
-            finalEquipmentIds={Array.isArray(finalValue) ? finalValue : (Array.isArray(suggestedValue) ? suggestedValue : [])}
-            onFinalEquipmentChange={onFinalValueChange}
+            originalEquipmentIds={Array.isArray(originalValue) ? originalValue as number[] : []}
+            suggestedEquipmentIds={Array.isArray(suggestedValue) ? suggestedValue as number[] : []}
+            finalEquipmentIds={Array.isArray(finalValue) ? finalValue as number[] : (Array.isArray(suggestedValue) ? suggestedValue as number[] : [])}
+            onFinalEquipmentChange={onFinalValueChange as (equipmentIds: number[]) => void}
           />
         );
       case "image":
@@ -339,7 +344,7 @@ function EditableFieldChange({
         return (
           <Input
             type="text"
-            value={finalValue?.toString() || ""}
+            value={finalValue?.toString() ?? ""}
             onChange={(e) => onFinalValueChange(e.target.value || null)}
             className="w-full"
           />
@@ -387,7 +392,7 @@ export default function EditSuggestionReviewDialog({
   // Calculate image changes
   const originalImages = originalPlayground.images || [];
   const newImages = editSuggestion.images ? editSuggestion.images.filter(img => !originalImages.includes(img)) : [];
-  const removedImages = originalPlayground.images ? originalPlayground.images.filter(img => !editSuggestion.images || !editSuggestion.images.includes(img)) : [];
+  const removedImages = originalPlayground.images?.filter(img => !editSuggestion.images?.includes(img)) || [];
   const hasImageChanges = newImages.length > 0 || removedImages.length > 0;
   const imageChangeCount = newImages.length + removedImages.length;
   const { t } = useTranslation();
@@ -421,7 +426,7 @@ export default function EditSuggestionReviewDialog({
     equipmentIds: editSuggestion.equipmentIds,
   });
 
-  const updateFinalValue = (field: string, value: any) => {
+  const updateFinalValue = (field: string, value: string | number | boolean | string[] | number[] | null | undefined) => {
     setFinalValues(prev => ({ ...prev, [field]: value }));
   };
 
@@ -577,11 +582,11 @@ export default function EditSuggestionReviewDialog({
     },
 
     // Equipment
-    editSuggestion.equipmentIds !== null && JSON.stringify(editSuggestion.equipmentIds?.sort()) !== JSON.stringify(originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId).sort()) && {
+    editSuggestion.equipmentIds !== null && JSON.stringify(editSuggestion.equipmentIds?.sort()) !== JSON.stringify(originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId).sort() ?? []) && {
       section: 'equipment',
       field: 'equipmentIds',
       label: t('forms.equipment'),
-      original: originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId) || [],
+      original: originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [],
       suggested: editSuggestion.equipmentIds,
       type: 'equipment'
     },
@@ -591,8 +596,8 @@ export default function EditSuggestionReviewDialog({
     section: string;
     field: string;
     label: string;
-    original: any;
-    suggested: any;
+    original: string | number | boolean | string[] | number[] | null | undefined;
+    suggested: string | number | boolean | string[] | number[] | null | undefined;
     type: string;
   }>;
 
@@ -686,7 +691,7 @@ export default function EditSuggestionReviewDialog({
                       suggestedValue={change.suggested}
                       finalValue={finalValues[change.field as keyof typeof finalValues]}
                       onFinalValueChange={(value) => updateFinalValue(change.field, value)}
-                      type={change.type as any}
+                      type={change.type as "text" | "boolean" | "coordinate" | "school_type" | "number" | "equipment" | "image" | "image_array"}
                       onImageClick={setSelectedImage}
                     />
                   ))}
@@ -726,13 +731,15 @@ export default function EditSuggestionReviewDialog({
                             const isApproved = approvedImages.includes(imageUrl);
                             return (
                               <div key={index} className="relative w-24 h-24">
-                                <img
+                                <Image
                                   src={imageUrl}
                                   alt={`New additional image ${index + 1}`}
                                   className={`w-full h-full object-cover rounded border shadow-sm transition-opacity cursor-pointer hover:opacity-75 ${isApproved ? 'opacity-100' : 'opacity-50'
                                     }`}
                                   loading="lazy"
                                   onClick={() => setSelectedImage(imageUrl)}
+                                  width={64}
+                                  height={64}
                                 />
                                 <button
                                   type="button"
@@ -776,12 +783,14 @@ export default function EditSuggestionReviewDialog({
                         <div className="flex flex-wrap gap-4">
                           {removedImages.map((imageUrl: string, index: number) => (
                             <div key={index} className="relative w-24 h-24">
-                              <img
+                              <Image
                                 src={imageUrl}
                                 alt={`Removed image ${index + 1}`}
                                 className="w-full h-full object-cover rounded border border-red-300 shadow-sm opacity-60 cursor-pointer hover:opacity-80"
                                 loading="lazy"
                                 onClick={() => setSelectedImage(imageUrl)}
+                                width={64}
+                                height={64}
                               />
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <X className="h-6 w-6 text-red-500 bg-white rounded-full p-1" />
@@ -818,7 +827,7 @@ export default function EditSuggestionReviewDialog({
                     <CoordinatePickerMap
                       latitude={originalPlayground.latitude}
                       longitude={originalPlayground.longitude}
-                      onCoordinateChange={() => { }} // Read-only map
+                      onCoordinateChange={() => { /* Read-only map */ }}
                       className="h-64 w-full"
                     />
                   </div>
@@ -834,7 +843,7 @@ export default function EditSuggestionReviewDialog({
                     <CoordinatePickerMap
                       latitude={editSuggestion.latitude ?? originalPlayground.latitude}
                       longitude={editSuggestion.longitude ?? originalPlayground.longitude}
-                      onCoordinateChange={() => { }} // Read-only map
+                      onCoordinateChange={() => { /* Read-only map */ }}
                       className="h-64 w-full"
                     />
                   </div>
@@ -958,9 +967,11 @@ export default function EditSuggestionReviewDialog({
         <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] p-2">
             <div className="relative">
-              <img
+              <Image
                 src={selectedImage}
                 alt="Full size image"
+                width={1200}
+                height={800}
                 className="w-full h-auto max-h-[80vh] object-contain rounded"
                 loading="lazy"
               />

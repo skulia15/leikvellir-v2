@@ -102,6 +102,9 @@ export const CreateEditSuggestionSchema = z.object({
   equipmentIds: z.array(z.number()).optional(),
   coverImage: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
+  // Image removal tracking
+  removeImages: z.array(z.boolean()).optional(),
+  removeCoverImage: z.boolean().optional(),
   submitAnonymously: z.boolean().optional(),
 });
 

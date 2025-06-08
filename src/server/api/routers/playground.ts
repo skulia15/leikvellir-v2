@@ -663,7 +663,7 @@ export const playgroundRouter = createTRPCRouter({
 
         // If approved, apply the changes to the playground
         if (action === "approve") {
-          const updateData: Record<string, any> = {
+          const updateData: Record<string, unknown> = {
             updatedAt: new Date(),
           };
 

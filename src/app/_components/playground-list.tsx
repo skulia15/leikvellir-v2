@@ -26,7 +26,7 @@ export default function PlaygroundList({
 }: PlaygroundListProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const t = useT();
-  
+
   // Track playground IDs for smooth animations
   const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
   const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(new Set());
@@ -46,23 +46,23 @@ export default function PlaygroundList({
       if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
         return false;
       }
-      
+
       // Publicly accessible filter
       if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
         return false;
       }
-      
+
       // Accessible now filter (publicly accessible OR school grounds that are currently accessible)
       if (filters.accessibleNow !== undefined && filters.accessibleNow) {
-        const isCurrentlyAccessible = 
-          playground.publiclyAccessible || 
+        const isCurrentlyAccessible =
+          playground.publiclyAccessible ||
           (playground.isSchoolGround && isSchoolGroundAccessible(playground.isSchoolGround));
-        
+
         if (!isCurrentlyAccessible) {
           return false;
         }
       }
-      
+
       return true;
     });
 
@@ -73,17 +73,14 @@ export default function PlaygroundList({
   // Handle playground list animations with staggered timing
   useEffect(() => {
     const currentIds = new Set(filteredAndSortedPlaygrounds.map(p => p.id));
-    const displayedIds = new Set(displayedPlaygrounds.map(p => p.id));
-    
+
     // Find playgrounds that need to be removed (exit animation)
     const playgroundsToRemove = displayedPlaygrounds.filter(p => !currentIds.has(p.id));
-    // Find playgrounds that are new (enter animation)
-    const playgroundsToAdd = filteredAndSortedPlaygrounds.filter(p => !displayedIds.has(p.id));
-    
+
     if (playgroundsToRemove.length > 0) {
       // Start exit animation for removed playgrounds
       setExitingPlaygrounds(new Set(playgroundsToRemove.map(p => p.id)));
-      
+
       // Remove them after animation completes (longer duration for smoother exit)
       setTimeout(() => {
         setDisplayedPlaygrounds(filteredAndSortedPlaygrounds);
@@ -130,21 +127,19 @@ export default function PlaygroundList({
           const isExiting = exitingPlaygrounds.has(playground.id);
           const currentlyVisible = filteredAndSortedPlaygrounds.some(p => p.id === playground.id);
           const isNewItem = !exitingPlaygrounds.has(playground.id) && currentlyVisible;
-          
+
           return (
             <div
               key={playground.id}
               className={`
                 cursor-pointer hover:bg-muted/50
-                ${
-                  selectedPlayground?.id === playground.id
-                    ? "bg-muted/50"
-                    : ""
+                ${selectedPlayground?.id === playground.id
+                  ? "bg-muted/50"
+                  : ""
                 }
-                ${
-                  isExiting
-                    ? "animate-out slide-out-to-left fade-out duration-300 ease-in-out pointer-events-none"
-                    : isNewItem
+                ${isExiting
+                  ? "animate-out slide-out-to-left fade-out duration-300 ease-in-out pointer-events-none"
+                  : isNewItem
                     ? "animate-in slide-in-from-right fade-in duration-400 ease-out"
                     : "opacity-100 transform-none"
                 }

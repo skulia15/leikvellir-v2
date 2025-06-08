@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, MapPin, User, Check, Edit, FileEdit, Plus } from "lucide-react";
+import { Clock, User, Check, Edit, FileEdit, Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -51,9 +51,9 @@ interface PlaygroundEditSuggestion {
     rejectionReason?: string | null;
     // Relations
     playground?: Playground;
-    createdBy?: {
+    createdBy: {
         id: string;
-        name?: string | null;
+        name: string | null;
         email: string;
     };
 }

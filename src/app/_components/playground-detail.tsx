@@ -51,7 +51,7 @@ export default function PlaygroundDetail({
 }: PlaygroundDetailProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { isAdminMode, canAccessAdmin } = useAdmin();
+  const { isAdminMode } = useAdmin();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);

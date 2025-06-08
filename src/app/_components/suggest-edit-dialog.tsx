@@ -33,13 +33,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Checkbox } from "~/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import ImageUpload from "~/components/ui/image-upload";
 import { useTranslation } from "~/lib/i18n";
@@ -572,7 +566,7 @@ export default function SuggestEditDialog({
                           maxFiles: 8,
                           maxSize: 4 * 1024 * 1024, // 4MB
                         }}
-                        allowRemoval={true}
+                        _allowRemoval={true}
                         markedForRemoval={imagesMarkedForRemoval}
                         onMarkForRemoval={(url, marked) => {
                           setImagesMarkedForRemoval(prev =>
