@@ -5,13 +5,18 @@ import { env } from '~/env';
  * Handles different environments: development, Vercel deployments, and production
  */
 export function getBaseUrl(): string {
-  // Check if we have a configured base URL
+  // Always use configured base URL in production
+  if (process.env.NODE_ENV === 'production' && env.NEXT_PUBLIC_BASE_URL) {
+    return env.NEXT_PUBLIC_BASE_URL;
+  }
+  
+  // Check if we have a configured base URL (for any environment)
   if (env.NEXT_PUBLIC_BASE_URL) {
     return env.NEXT_PUBLIC_BASE_URL;
   }
   
-  // Check for Vercel URL (automatically provided by Vercel)
-  if (process.env.VERCEL_URL) {
+  // Check for Vercel URL (only for preview deployments)
+  if (process.env.VERCEL_URL && process.env.NODE_ENV !== 'production') {
     return `https://${process.env.VERCEL_URL}`;
   }
   
@@ -20,6 +25,6 @@ export function getBaseUrl(): string {
     return 'http://localhost:3000';
   }
   
-  // Production fallback - you should set NEXT_PUBLIC_BASE_URL in production
+  // Production fallback - use your actual domain
   return 'https://leiksvaedi.is';
 }

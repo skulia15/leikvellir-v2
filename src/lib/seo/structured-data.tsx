@@ -14,7 +14,7 @@ export function OrganizationSchema({
   name = 'Leiksvæði',
   description = 'Finndu og kortleggðu leiksvæði víðsvegar um landið',
   url = BASE_URL,
-  logo = `${BASE_URL}/logo-512.png`
+  logo = `${BASE_URL}/android-chrome-512x512.png`
 }: OrganizationSchemaProps = {}) {
   const organizationData = {
     '@context': 'https://schema.org',
