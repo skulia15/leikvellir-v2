@@ -229,6 +229,40 @@ export function CreatePlaygroundForm() {
             />
 
 
+            {/* Images Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                {t('forms.uploadImages')}
+              </h3>
+
+              <FormField
+                control={form.control}
+                name="images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('playground.playgroundImages')}</FormLabel>
+                    <FormControl>
+                      <ImageUpload
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        config={{
+                          maxFiles: 8, // Max files per upload batch (unlimited total)
+                          maxSize: 4 * 1024 * 1024, // 4MB
+                        }}
+                        disabled={createPlayground.isPending}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t('forms.playgroundImagesDescriptionBatch')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+
             {/* Location Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -658,38 +692,6 @@ export function CreatePlaygroundForm() {
                 </div>
               </div>
 
-              {/* Images Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium flex items-center gap-2">
-                  <Camera className="h-5 w-5" />
-                  {t('forms.uploadImages')}
-                </h3>
-
-                <FormField
-                  control={form.control}
-                  name="images"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('playground.playgroundImages')}</FormLabel>
-                      <FormControl>
-                        <ImageUpload
-                          value={field.value || []}
-                          onChange={field.onChange}
-                          config={{
-                            maxFiles: 8, // Max files per upload batch (unlimited total)
-                            maxSize: 4 * 1024 * 1024, // 4MB
-                          }}
-                          disabled={createPlayground.isPending}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {t('forms.playgroundImagesDescriptionBatch')}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
               {/* Anonymous Submission */}
               <div className="space-y-4">

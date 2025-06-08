@@ -98,10 +98,10 @@ export function CoordinatePickerMap({
           <p className="font-medium text-foreground">
             {t('map.clickToSetLocation')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          {/* <p className="text-xs text-muted-foreground">
             {t('playground.latitude')}: {markerPosition.lat.toFixed(6)}, {t('playground.longitude')}:{" "}
             {markerPosition.lng.toFixed(6)}
-          </p>
+          </p> */}
         </div>
       </div>
     </APIProvider>
