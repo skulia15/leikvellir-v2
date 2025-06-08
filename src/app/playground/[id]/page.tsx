@@ -3,6 +3,9 @@ import PlaygroundDetailClient from "~/app/_components/playground-detail-client";
 import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
 import { api } from "~/trpc/server";
+import { generatePlaygroundMetadata } from "~/lib/seo/metadata";
+import { PlaygroundSchema, BreadcrumbSchema } from "~/lib/seo/structured-data";
+import { getBaseUrl } from "~/lib/seo/base-url";
 
 interface PlaygroundPageProps {
   params: Promise<{ id: string }>;
@@ -16,6 +19,14 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
     notFound();
   }
 
+  // Get playground data for structured data
+  let playground;
+  try {
+    playground = await api.playground.getById({ id: playgroundId });
+  } catch {
+    notFound();
+  }
+
   // Prefetch the data on the server for better performance
   try {
     void api.playground.getById.prefetch({ id: playgroundId });
@@ -23,7 +34,36 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
     // If prefetch fails, let the client handle it
   }
 
-  return <PlaygroundDetailClient playgroundId={playgroundId} />;
+  const BASE_URL = getBaseUrl();
+
+  return (
+    <>
+      {/* Structured Data */}
+      <PlaygroundSchema
+        playground={{
+          id: playground.id.toString(),
+          name: playground.title,
+          municipality: playground.municipality,
+          latitude: playground.latitude,
+          longitude: playground.longitude,
+          images: playground.images,
+          createdAt: playground.createdAt,
+          updatedAt: playground.updatedAt,
+        }}
+      />
+      
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Heim', url: BASE_URL },
+          { name: 'Leikvellir', url: `${BASE_URL}/playgrounds` },
+          { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` }
+        ]}
+      />
+      
+      <PlaygroundDetailClient playgroundId={playgroundId} />
+    </>
+  );
 }
 
 // Generate metadata for SEO
@@ -39,11 +79,14 @@ export async function generateMetadata({ params }: PlaygroundPageProps) {
 
   try {
     const playground = await api.playground.getById({ id: playgroundId });
-    return {
-      title: `${playground.title} - Leiksvæði`,
-      description: `${getTranslation(defaultLocale, 'navigation.map')} ${playground.title} ${getTranslation(defaultLocale, 'playground.title')} ${getTranslation(defaultLocale, 'footer.location')}. ${playground.toddlerFriendly ? getTranslation(defaultLocale, 'playground.toddlerFriendly') : ""
-        } ${playground.publiclyAccessible ? getTranslation(defaultLocale, 'playground.publiclyAccessible') : ""} ${getTranslation(defaultLocale, 'playground.title')}.`,
-    };
+    return generatePlaygroundMetadata({
+      id: playground.id.toString(),
+      name: playground.title,
+      municipality: playground.municipality,
+      latitude: playground.latitude,
+      longitude: playground.longitude,
+      images: playground.images,
+    });
   } catch {
     return {
       title: getTranslation(defaultLocale, 'playground.notFound'),

@@ -2,12 +2,11 @@ import { type MetadataRoute } from 'next';
 import { db } from '~/server/db';
 import { playgrounds } from '~/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { env } from '~/env';
-
-// Base URL for the site - fallback to default if not configured
-const BASE_URL = env.NEXT_PUBLIC_BASE_URL || 'https://leiksvaedi.is';
+import { getBaseUrl } from '~/lib/seo/base-url';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const BASE_URL = getBaseUrl();
+  
   // Static pages with their priorities and change frequencies
   const staticPages: MetadataRoute.Sitemap = [
     {

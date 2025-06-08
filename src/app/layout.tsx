@@ -14,6 +14,8 @@ import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 import { MainContent } from "./_components/main-content";
 import { FloatingFeedbackButton } from "~/components/ui/floating-feedback-button";
 import { LayoutClient } from "./_components/layout-client";
+import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
+import { OrganizationSchema, WebsiteSchema } from "~/lib/seo/structured-data";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -21,12 +23,7 @@ const firaSans = Fira_Sans({
   variable: "--font-fira-sans",
 });
 
-export const metadata: Metadata = {
-  title: "Leiksvæði",
-  // TODO: find a better description
-  description: "Discover and map playgrounds across Iceland",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
-};
+export const metadata: Metadata = generateSEOMetadata();
 
 export default async function RootLayout({
   children,
@@ -34,9 +31,10 @@ export default async function RootLayout({
   const session = await getServerAuthSession();
 
   return (
-    <html lang="en" className={`${GeistSans.variable} ${firaSans.variable}`}>
+    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable}`}>
       <head>
-        <meta name="google-site-verification" content="51PPDlaCttszidyW9wyKGGgd729BuUb0wWLY2M9lQAc" />
+        <OrganizationSchema />
+        <WebsiteSchema />
       </head>
       <body className="bg-background">
         <Providers session={session}>
