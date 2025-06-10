@@ -103,7 +103,8 @@ export function generateMetadata({
       canonical: url,
       languages: {
         'is': url,
-        'en': url.replace('leiksvaedi.is', 'leiksvaedi.is/en'),
+        // TODO: there is no /en suffix in the url on english version
+        'en': url.replace('leiksvæði.is', 'leiksvæði.is/en'),
       },
     },
 

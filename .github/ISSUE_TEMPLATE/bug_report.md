@@ -43,7 +43,7 @@ If applicable, add screenshots to help explain your problem.
 The URL where you encountered the bug (if applicable):
 
 ```
-https://leiksvaedi.is/...
+https://leiksvæði.is/...
 ```
 
 ## 📋 Additional Context

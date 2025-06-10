@@ -710,7 +710,7 @@
     "subject": "Subject",
     "subjectPlaceholder": "Brief description of your message",
     "pageUrl": "Page URL (if applicable)",
-    "pageUrlPlaceholder": "https://leiksvaedi.is/...",
+    "pageUrlPlaceholder": "https://leiksvæði.is/...",
     "pageUrlDescription": "The page where you encountered the issue",
     "relatedPageUrl": "Related Page URL",
     "browserDevice": "Browser & Device (optional)",

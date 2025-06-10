@@ -2,7 +2,7 @@ import { type MetadataRoute } from 'next';
 import { env } from '~/env';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = env.NEXT_PUBLIC_BASE_URL || 'https://leiksvaedi.is';
+  const baseUrl = env.NEXT_PUBLIC_BASE_URL || 'https://leiksvæði.is';
 
   return {
     rules: [

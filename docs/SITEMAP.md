@@ -5,6 +5,7 @@ This project includes automatic sitemap generation for better SEO and search eng
 ## Files Created
 
 ### `src/app/sitemap.ts`
+
 - **Purpose**: Generates XML sitemap dynamically using Next.js 15's built-in sitemap functionality
 - **URL**: Accessible at `/sitemap.xml`
 - **Features**:
@@ -15,6 +16,7 @@ This project includes automatic sitemap generation for better SEO and search eng
   - Uses environment configuration for base URL
 
 ### `src/app/robots.ts`
+
 - **Purpose**: Generates robots.txt file for search engine crawling guidelines
 - **URL**: Accessible at `/robots.txt`
 - **Features**:
@@ -27,15 +29,17 @@ This project includes automatic sitemap generation for better SEO and search eng
 ### Environment Variables
 
 Add to your `.env` file:
+
 ```bash
 NEXT_PUBLIC_BASE_URL="https://your-domain.com"
 ```
 
-This determines the base URL used in sitemap generation. Defaults to `https://leiksvaedi.is` if not set.
+This determines the base URL used in sitemap generation. Defaults to `https://leiksvæði.is` if not set.
 
 ### Automatic Generation
 
 The sitemap:
+
 - **Static pages**: Always included with predefined priorities
 - **Playground pages**: Generated from database queries of approved playgrounds
 - **Update frequency**: Reflects actual content change patterns
@@ -44,6 +48,7 @@ The sitemap:
 ## URL Structure
 
 ### Static Pages (included)
+
 - `/` - Homepage (priority: 1.0)
 - `/playgrounds` - Playground listing (priority: 0.8)
 - `/create-playground` - Create playground form (priority: 0.6)
@@ -52,9 +57,11 @@ The sitemap:
 - `/cookies` - Cookie policy (priority: 0.3)
 
 ### Dynamic Pages (included)
+
 - `/playground/[id]` - Individual playground pages (priority: 0.7)
 
 ### Excluded Pages
+
 - `/admin/*` - Admin interfaces
 - `/api/*` - API endpoints
 - `/signin` - Authentication page
@@ -79,6 +86,7 @@ The sitemap:
 ## Monitoring
 
 The sitemap can be monitored through:
+
 - Google Search Console sitemap submission
 - Direct access at `your-domain.com/sitemap.xml`
 - Server logs for generation errors
