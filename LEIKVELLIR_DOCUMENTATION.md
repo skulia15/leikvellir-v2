@@ -6,7 +6,7 @@ Leikvellir is a modern web application that helps families in Iceland discover a
 
 ## Project Description
 
-Leikvellir (Icelandic for "playgrounds") is a comprehensive playground mapping platform built specifically for Iceland. The application combines a modern tech stack with user-friendly design to create a valuable resource for parents and caregivers. 
+Leikvellir (Icelandic for "playgrounds") is a comprehensive playground mapping platform built specifically for Iceland. The application combines a modern tech stack with user-friendly design to create a valuable resource for parents and caregivers.
 
 Using the T3 Stack (TypeScript, tRPC, Tailwind CSS, Next.js), Leikvellir offers an interactive Google Maps integration showing playground locations throughout Iceland. Users can filter playgrounds by distance, age-appropriateness, accessibility features, and more. The platform includes detailed information about each playground, including available equipment, photos, and whether it's accessible to the public during school hours.
 
