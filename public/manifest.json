@@ -36,14 +36,14 @@
       "short_name": "Finna",
       "description": "Finndu leiksvæði í þínu nágrenni",
       "url": "/playgrounds",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Bæta við leikvelli",
       "short_name": "Bæta við",
       "description": "Bættu nýjum leikvelli við kortið",
       "url": "/create-playground",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ]
 }
