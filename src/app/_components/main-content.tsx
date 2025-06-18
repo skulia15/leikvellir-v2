@@ -26,8 +26,8 @@ export function MainContent({ children }: MainContentProps) {
     // Desktop front page should allow normal scrolling behavior
     const getMainClasses = () => {
         if (isFrontPage) {
-            return isMobile 
-                ? "flex-1 pt-16 overflow-hidden" 
+            return isMobile
+                ? "flex-1 pt-16 overflow-hidden"
                 : "flex-1 pt-16";
         }
         return "flex-1 pt-16 p-4 md:p-16";

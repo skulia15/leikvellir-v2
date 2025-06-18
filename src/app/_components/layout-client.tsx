@@ -21,10 +21,10 @@ export function LayoutClient({ children }: LayoutClientProps) {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-    const isFrontPage = pathname === "/";
-    
-    // Hide footer only on mobile front page to prevent scrolling
-    // Desktop front page should show footer when scrolled to bottom
+        const isFrontPage = pathname === "/";
+
+        // Hide footer only on mobile front page to prevent scrolling
+        // Desktop front page should show footer when scrolled to bottom
         const updateFooterVisibility = () => {
             const isMobileDevice = window.innerWidth < 768;
             setShouldShowFooter(!(isFrontPage && isMobileDevice));
