@@ -33,6 +33,7 @@ export default async function RootLayout({
   return (
     <html lang="is" className={`${GeistSans.variable} ${firaSans.variable}`}>
       <head>
+        <meta name="google-site-verification" content="T6ALXq-rzn0arBTQuAPGDqNpTKMf49319JZIAsW3Mfo" />
         <OrganizationSchema />
         <WebsiteSchema />
       </head>
