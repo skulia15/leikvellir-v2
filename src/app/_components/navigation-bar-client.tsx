@@ -71,7 +71,7 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                                 alt="Leiksvæði"
                                 width={62}
                                 height={62}
-                                className="mr-2"
+                                className="mr-0.5 p-1.5"
                             />
                             <h1 className="text-sm md:text-xl font-bold text-primary xl:text-2xl">
                                 Leiksvæði
