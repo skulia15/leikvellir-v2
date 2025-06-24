@@ -61,6 +61,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 🚧 In Progress
 
+- Setup separate Dev and production db's
 - Performance optimizations, lighthouse
 - WEBSOCKET fyrir location tracking over time
 - test and fix obvious errors in the edit playground review dialog

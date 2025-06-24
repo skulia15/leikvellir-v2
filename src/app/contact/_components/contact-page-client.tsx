@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Github, MessageSquare, Bug, Lightbulb, HelpCircle } from "lucide-react";
+import { Mail, Github, Bug, Lightbulb, HelpCircle } from "lucide-react";
 
 import {
   Card,
