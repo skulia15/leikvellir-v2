@@ -37,7 +37,12 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
   const BASE_URL = getBaseUrl();
 
   // Get the first image for preloading (LCP optimization)
-  const firstImage = playground.images?.[0];
+  // This must match the image order in playground-detail.tsx
+  const displayImages = [
+    ...(playground.coverImage ? [playground.coverImage] : []),
+    ...(playground.images ?? [])
+  ].filter((img, index, arr) => arr.indexOf(img) === index);
+  const firstImage = displayImages[0];
 
   return (
     <>
@@ -48,6 +53,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
           as="image"
           href={firstImage}
           fetchPriority="high"
+          imageSizes="(max-width: 640px) 265px, (max-width: 768px) 400px, (max-width: 1024px) 500px, 600px"
         />
       )}
 
