@@ -3,7 +3,7 @@
 import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -27,7 +27,10 @@ interface NavigationBarClientProps {
     session: Session | null;
 }
 
-export default function NavigationBarClient({ session }: NavigationBarClientProps) {
+export default function NavigationBarClient({ session: serverSession }: NavigationBarClientProps) {
+    const { data: clientSession, status: sessionStatus } = useSession();
+    const session = clientSession || serverSession;
+    const isSessionLoading = sessionStatus === "loading";
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
     const t = useT();
     const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -217,7 +220,18 @@ export default function NavigationBarClient({ session }: NavigationBarClientProp
                 <div className="flex items-center space-x-3">
                     {/* Language Switcher */}
                     <LanguageSwitcher />
-                    {session ? (
+                    {isSessionLoading ? (
+                        <>
+                            {/* Desktop Loading Skeleton */}
+                            <div className="hidden md:flex items-center space-x-3">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                            </div>
+                            {/* Mobile Loading Skeleton */}
+                            <div className="md:hidden">
+                                <Skeleton className="h-8 w-8 rounded-md" />
+                            </div>
+                        </>
+                    ) : session ? (
                         <>
                             {/* Desktop User Info with Dropdown */}
                             <div className="hidden items-center space-x-3 md:flex">
