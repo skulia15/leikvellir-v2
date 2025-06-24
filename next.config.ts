@@ -51,6 +51,15 @@ const config: NextConfig = {
       static: 180, // 3 minutes for static pages
     },
   },
+  
+  // Modern browser targeting to reduce polyfills
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  
+  // Target modern browsers to reduce JavaScript size
+  target: "serverless",
   // Enables externals bundling for Pages Router like in App Router
   bundlePagesRouterDependencies: true,
 
@@ -104,6 +113,16 @@ const config: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Optimize page caching for bfcache
+      {
+        source: "/(playground|playgrounds)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
           },
         ],
       },

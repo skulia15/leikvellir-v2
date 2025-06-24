@@ -46,15 +46,31 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
 
   return (
     <>
-      {/* Preload LCP Image */}
+      {/* Preload LCP Image with Next.js optimization */}
       {firstImage && (
-        <link
-          rel="preload"
-          as="image"
-          href={firstImage}
-          fetchPriority="high"
-          imageSizes="(max-width: 640px) 265px, (max-width: 768px) 400px, (max-width: 1024px) 500px, 600px"
-        />
+        <>
+          <link
+            rel="preload"
+            as="image"
+            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=640&q=85`}
+            fetchPriority="high"
+            media="(max-width: 640px)"
+          />
+          <link
+            rel="preload"
+            as="image"
+            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=828&q=85`}
+            fetchPriority="high"
+            media="(max-width: 768px)"
+          />
+          <link
+            rel="preload"
+            as="image"
+            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=1080&q=85`}
+            fetchPriority="high"
+            media="(min-width: 769px)"
+          />
+        </>
       )}
 
       {/* Structured Data */}
