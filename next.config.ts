@@ -58,8 +58,6 @@ const config: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   
-  // Target modern browsers to reduce JavaScript size
-  target: "serverless",
   // Enables externals bundling for Pages Router like in App Router
   bundlePagesRouterDependencies: true,
 
