@@ -9,7 +9,6 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed-equipment": "tsx scripts/seed-equipment.ts",
     "dev": "next dev --turbo -p 3000",
     "dev:fallback": "next dev",
     "lint": "next lint",
