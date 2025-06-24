@@ -1,23 +1,28 @@
-# Leikvellir Code Review - Solutions
+# Leiksvæði Code Review - Solutions
 
 ## Executive Summary
-Leikvellir is a well-architected playground mapping application built with the T3 Stack, demonstrating solid understanding of modern TypeScript, React patterns, and database design. The codebase shows good architectural decisions with proper separation of concerns, comprehensive authentication, and type-safe APIs. However, critical security vulnerabilities (exposed API keys), minimal test coverage, and performance concerns significantly impact the overall quality. The application has strong foundations but requires immediate attention to security, testing, and optimization before production deployment. **Grade: C+**
+
+Leiksvæði is a well-architected playground mapping application built with the T3 Stack, demonstrating solid understanding of modern TypeScript, React patterns, and database design. The codebase shows good architectural decisions with proper separation of concerns, comprehensive authentication, and type-safe APIs. However, critical security vulnerabilities (exposed API keys), minimal test coverage, and performance concerns significantly impact the overall quality. The application has strong foundations but requires immediate attention to security, testing, and optimization before production deployment. **Grade: C+**
 
 ## Identified Issues and Solutions
 
 ### Critical Issues
 
 #### LK-001: Google Maps API Key Exposure
+
 **Issue:** Google Maps API key is exposed in client-side code via NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable  
-**Impact:** Anyone can inspect the source code and extract the API key, potentially leading to unauthorized usage and unexpected billing charges  
+**Impact:** Anyone can inspect the source code and extract the API key, potentially leading to unauthorized usage and unexpected billing charges
 
 **Solution:**
+
 1. **Create server-side proxy for Google Maps operations:**
+
    - Create `src/app/api/maps/geocode/route.ts` for geocoding requests
    - Create `src/app/api/maps/directions/route.ts` for directions requests
    - Keep the public key but restrict it to specific domains in Google Cloud Console
 
 2. **Restrict API key in Google Cloud Console:**
+
    - Add domain restrictions: `yourdomain.com/*`, `localhost:3000/*`
    - Restrict to specific APIs: Maps JavaScript API, Places API
    - Set usage quotas to prevent billing surprises
@@ -29,32 +34,38 @@ Leikvellir is a well-architected playground mapping application built with the T
    ```
 
 **Files to create/modify:**
+
 - `src/app/api/maps/geocode/route.ts`
-- `src/app/api/maps/directions/route.ts`  
+- `src/app/api/maps/directions/route.ts`
 - `src/env.js`
 
 #### LK-002: Minimal Test Coverage
+
 **Issue:** Minimal test coverage across the application with only basic test files present  
-**Impact:** High risk of regressions, difficult to maintain code quality, and reduced confidence in deployments  
+**Impact:** High risk of regressions, difficult to maintain code quality, and reduced confidence in deployments
 
 **Solution:**
+
 1. **Install additional testing dependencies:**
+
    ```bash
    pnpm add -D @testing-library/jest-dom @testing-library/user-event msw
    ```
 
 2. **Create comprehensive test files:**
+
    - `src/__tests__/api/playground.test.ts` - Test tRPC playground router
    - `src/__tests__/components/playground-card.test.tsx` - Test UI components
    - `src/__tests__/lib/geo-utils.test.ts` - Test utility functions
    - `src/__tests__/integration/playground-flow.test.tsx` - Test user flows
 
 3. **Setup MSW for API mocking:**
+
    ```typescript
    // src/test/mocks/handlers.ts
-   import { createTRPCMsw } from 'msw-trpc';
-   import { type AppRouter } from '~/server/api/root';
-   
+   import { createTRPCMsw } from "msw-trpc";
+   import { type AppRouter } from "~/server/api/root";
+
    export const trpcMsw = createTRPCMsw<AppRouter>();
    export const handlers = [
      trpcMsw.playground.getAll.query(() => mockPlaygrounds),
@@ -62,19 +73,23 @@ Leikvellir is a well-architected playground mapping application built with the T
    ```
 
 **Files to create:**
+
 - `src/test/mocks/handlers.ts`
 - `src/test/mocks/data.ts`
 - `src/__tests__/api/playground.test.ts`
 - `src/__tests__/components/playground-card.test.tsx`
 
 #### LK-003: Large Component Refactoring
+
 **Issue:** Large component (336 lines) with multiple responsibilities and potential memory leaks from useEffect dependencies  
-**Impact:** Difficult to maintain, test, and debug. Potential performance issues on mobile devices  
+**Impact:** Difficult to maintain, test, and debug. Potential performance issues on mobile devices
 
 **Solution:**
+
 1. **Split home-client.tsx into smaller components:**
 
 **Create these new components:**
+
 ```typescript
 // src/app/_components/mobile-drawer.tsx
 interface MobileDrawerProps {
@@ -98,6 +113,7 @@ interface PlaygroundContentProps {
 ```
 
 2. **Extract custom hooks:**
+
 ```typescript
 // src/lib/hooks/use-mobile-detection.ts
 export function useMobileDetection() {
@@ -113,6 +129,7 @@ export function useUserLocation() {
 ```
 
 **Files to create:**
+
 - `src/app/_components/mobile-drawer.tsx`
 - `src/app/_components/desktop-sidebar.tsx`
 - `src/app/_components/playground-content.tsx`
@@ -122,21 +139,25 @@ export function useUserLocation() {
 ### High Priority Issues
 
 #### LK-004: Rate Limiting Implementation
+
 **Issue:** No rate limiting or API protection measures implemented  
-**Impact:** Vulnerable to abuse, DoS attacks, and excessive resource consumption  
+**Impact:** Vulnerable to abuse, DoS attacks, and excessive resource consumption
 
 **Solution:**
+
 1. **Install rate limiting dependency:**
+
    ```bash
    pnpm add @upstash/ratelimit @upstash/redis
    ```
 
 2. **Create rate limiting middleware:**
+
    ```typescript
    // src/lib/rate-limit.ts
    import { Ratelimit } from "@upstash/ratelimit";
    import { Redis } from "@upstash/redis";
-   
+
    export const ratelimit = new Ratelimit({
      redis: Redis.fromEnv(),
      limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
@@ -156,16 +177,20 @@ export function useUserLocation() {
    ```
 
 **Files to create/modify:**
+
 - `src/lib/rate-limit.ts`
 - `src/server/api/routers/playground.ts`
 - `src/env.js` (add Redis URL)
 
 #### LK-005: Mobile Breakpoint and Accessibility
+
 **Issue:** Mobile breakpoint hardcoded (768px) instead of using Tailwind config, accessibility concerns with mobile drawer  
-**Impact:** Inconsistent responsive behavior and potential accessibility issues for users with disabilities  
+**Impact:** Inconsistent responsive behavior and potential accessibility issues for users with disabilities
 
 **Solution:**
+
 1. **Move breakpoint to Tailwind config:**
+
    ```typescript
    // In tailwind.config.ts, ensure screens are defined:
    screens: {
@@ -176,11 +201,12 @@ export function useUserLocation() {
    ```
 
 2. **Replace hardcoded breakpoint:**
+
    ```typescript
    // In src/lib/hooks/use-mobile-detection.ts
-   import resolveConfig from 'tailwindcss/resolveConfig';
-   import tailwindConfig from '../../tailwind.config';
-   
+   import resolveConfig from "tailwindcss/resolveConfig";
+   import tailwindConfig from "../../tailwind.config";
+
    const config = resolveConfig(tailwindConfig);
    const mdBreakpoint = parseInt(config.theme.screens.md);
    ```
@@ -193,13 +219,14 @@ export function useUserLocation() {
      aria-label="Playground list"
      onOpenChange={onOpenChange}
    >
-     <Sheet.Content 
+     <Sheet.Content
        aria-describedby="playground-list-description"
        onKeyDown={handleKeyDown} // Add keyboard navigation
      >
    ```
 
 **Files to modify:**
+
 - `tailwind.config.ts`
 - `src/lib/hooks/use-mobile-detection.ts`
 - `src/app/_components/mobile-drawer.tsx`
@@ -207,26 +234,32 @@ export function useUserLocation() {
 ### Medium Priority Issues
 
 #### LK-006: Comprehensive Error Handling
+
 **Issue:** Error handling is incomplete - some database operations don't properly handle connection failures or validation errors  
-**Impact:** Application may crash or provide poor user experience during database issues  
+**Impact:** Application may crash or provide poor user experience during database issues
 
 **Solution:**
+
 1. **Create error handling utilities:**
+
    ```typescript
    // src/lib/error-handling.ts
    export class PlaygroundError extends Error {
-     constructor(message: string, public code: string) {
+     constructor(
+       message: string,
+       public code: string,
+     ) {
        super(message);
-       this.name = 'PlaygroundError';
+       this.name = "PlaygroundError";
      }
    }
-   
+
    export function handleDbError(error: unknown, operation: string) {
      logger.error(`Database error in ${operation}`, { error });
      if (error instanceof Error) {
-       throw new PlaygroundError(`Failed to ${operation}`, 'DB_ERROR');
+       throw new PlaygroundError(`Failed to ${operation}`, "DB_ERROR");
      }
-     throw new PlaygroundError('Unknown database error', 'UNKNOWN_ERROR');
+     throw new PlaygroundError("Unknown database error", "UNKNOWN_ERROR");
    }
    ```
 
@@ -237,20 +270,24 @@ export function useUserLocation() {
      const result = await ctx.db.query.playgrounds.findMany();
      return result;
    } catch (error) {
-     return handleDbError(error, 'fetch playgrounds');
+     return handleDbError(error, "fetch playgrounds");
    }
    ```
 
 **Files to create:**
+
 - `src/lib/error-handling.ts`
 - Update all router files to use error handling
 
 #### LK-007: Database Pagination
+
 **Issue:** Database queries lack pagination and could return large datasets causing performance issues  
-**Impact:** Slow page loads and potential memory issues when dealing with large numbers of playgrounds  
+**Impact:** Slow page loads and potential memory issues when dealing with large numbers of playgrounds
 
 **Solution:**
+
 1. **Add pagination schema:**
+
    ```typescript
    // src/lib/schemas/pagination.ts
    export const PaginationSchema = z.object({
@@ -266,17 +303,17 @@ export function useUserLocation() {
      .input(PaginationSchema.optional())
      .query(async ({ ctx, input }) => {
        const { limit = 20, offset = 0 } = input ?? {};
-       
+
        const playgrounds = await ctx.db.query.playgrounds.findMany({
          where: eq(playgrounds.status, "approved"),
          limit: limit + 1, // Get one extra to check if there's more
          offset,
          orderBy: desc(playgrounds.createdAt),
        });
-       
+
        const hasMore = playgrounds.length > limit;
        const items = hasMore ? playgrounds.slice(0, -1) : playgrounds;
-       
+
        return {
          items,
          hasMore,
@@ -286,6 +323,7 @@ export function useUserLocation() {
    ```
 
 **Files to create/modify:**
+
 - `src/lib/schemas/pagination.ts`
 - `src/server/api/routers/playground.ts`
 - Frontend components to handle pagination
@@ -293,11 +331,14 @@ export function useUserLocation() {
 ### Low Priority Issues
 
 #### LK-008: API Documentation
+
 **Issue:** API endpoints lack JSDoc documentation and formal API documentation  
-**Impact:** Difficult for team members to understand API contracts and for future maintenance  
+**Impact:** Difficult for team members to understand API contracts and for future maintenance
 
 **Solution:**
+
 1. **Add JSDoc to all tRPC procedures:**
+
    ```typescript
    /**
     * Creates a new playground submission
@@ -312,10 +353,11 @@ export function useUserLocation() {
    ```
 
 2. **Create API documentation generator:**
+
    ```typescript
    // scripts/generate-api-docs.ts
-   import { appRouter } from '../src/server/api/root';
-   
+   import { appRouter } from "../src/server/api/root";
+
    // Generate markdown documentation from tRPC router
    function generateApiDocs(router: typeof appRouter) {
      // Implementation to extract JSDoc and generate docs
@@ -323,16 +365,20 @@ export function useUserLocation() {
    ```
 
 **Files to create/modify:**
+
 - Add JSDoc to all files in `src/server/api/routers/`
 - `scripts/generate-api-docs.ts`
 - `docs/API.md`
 
 #### LK-009: Code Style and TODO Cleanup
+
 **Issue:** Inconsistent variable naming (isMobile vs isInitialLoading) and some TODO comments left in production code  
-**Impact:** Reduced code readability and potential confusion for maintainers  
+**Impact:** Reduced code readability and potential confusion for maintainers
 
 **Solution:**
+
 1. **Create style guide and enforce with ESLint:**
+
    ```typescript
    // In .eslintrc.cjs, add rules:
    rules: {
@@ -348,25 +394,26 @@ export function useUserLocation() {
    ```
 
 2. **Create TODO tracking script:**
+
    ```typescript
    // scripts/track-todos.ts
-   import { globSync } from 'glob';
-   import fs from 'fs';
-   
-   const files = globSync('src/**/*.{ts,tsx}');
+   import { globSync } from "glob";
+   import fs from "fs";
+
+   const files = globSync("src/**/*.{ts,tsx}");
    const todos = [];
-   
-   files.forEach(file => {
-     const content = fs.readFileSync(file, 'utf8');
-     const lines = content.split('\n');
+
+   files.forEach((file) => {
+     const content = fs.readFileSync(file, "utf8");
+     const lines = content.split("\n");
      lines.forEach((line, index) => {
-       if (line.includes('TODO') || line.includes('FIXME')) {
+       if (line.includes("TODO") || line.includes("FIXME")) {
          todos.push({ file, line: index + 1, content: line.trim() });
        }
      });
    });
-   
-   console.log('Found TODOs:', todos);
+
+   console.log("Found TODOs:", todos);
    ```
 
 3. **Fix naming inconsistencies:**
@@ -375,6 +422,7 @@ export function useUserLocation() {
    - Standardize component props: use consistent interfaces
 
 **Files to create/modify:**
+
 - `.eslintrc.cjs`
 - `scripts/track-todos.ts`
 - Rename variables throughout codebase for consistency

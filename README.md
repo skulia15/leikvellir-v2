@@ -61,6 +61,8 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 🚧 In Progress
 
+- Performance optimizations, lighthouse
+- WEBSOCKET fyrir location tracking over time
 - test and fix obvious errors in the edit playground review dialog
 - when adding playground - the users should be able to remove images they are uplaoding
 - Test if changing location in edit review changes when admin sets it - NO the users suggested location is used instead!
@@ -96,6 +98,8 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 📋 Planned Features
 
+- progressive image loading
+- reduce carousel size in mobile detail page.
 - add a change request submission available for all users
 - bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
 - School hours - uppfæra virkni með frídögum o.þ.h
@@ -294,7 +298,7 @@ The application uses a PostgreSQL database with the following main entities:
 
 The app is ready for deployment on:
 
-- **[Production](https://leisvæði.is)**
+- **[Production](https://leiksvæði.is)**
 - **[Vercel](https://leikvellir-v2.vercel.app)**
 
 ## 🤝 Contributing

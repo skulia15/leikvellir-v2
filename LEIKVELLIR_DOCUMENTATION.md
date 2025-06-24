@@ -1,16 +1,16 @@
-# Leikvellir - Playground Discovery Platform
+# Leiksvæði - Playground Discovery Platform
 
 ## Elevator Pitch
 
-Leikvellir is a modern web application that helps families in Iceland discover and explore playgrounds. With an interactive map, detailed playground information, and community contributions, Leikvellir makes it easy to find the perfect playground that matches your family's needs - whether you're looking for toddler-friendly equipment, accessible facilities, or playgrounds near your current location.
+Leiksvæði is a modern web application that helps families in Iceland discover and explore playgrounds. With an interactive map, detailed playground information, and community contributions, Leiksvæði makes it easy to find the perfect playground that matches your family's needs - whether you're looking for toddler-friendly equipment, accessible facilities, or playgrounds near your current location.
 
 ## Project Description
 
-Leikvellir (Icelandic for "playgrounds") is a comprehensive playground mapping platform built specifically for Iceland. The application combines a modern tech stack with user-friendly design to create a valuable resource for parents and caregivers.
+Leiksvæði (Icelandic for "playgrounds") is a comprehensive playground mapping platform built specifically for Iceland. The application combines a modern tech stack with user-friendly design to create a valuable resource for parents and caregivers.
 
-Using the T3 Stack (TypeScript, tRPC, Tailwind CSS, Next.js), Leikvellir offers an interactive Google Maps integration showing playground locations throughout Iceland. Users can filter playgrounds by distance, age-appropriateness, accessibility features, and more. The platform includes detailed information about each playground, including available equipment, photos, and whether it's accessible to the public during school hours.
+Using the T3 Stack (TypeScript, tRPC, Tailwind CSS, Next.js), Leiksvæði offers an interactive Google Maps integration showing playground locations throughout Iceland. Users can filter playgrounds by distance, age-appropriateness, accessibility features, and more. The platform includes detailed information about each playground, including available equipment, photos, and whether it's accessible to the public during school hours.
 
-The application features a responsive design optimized for both desktop and mobile use, ensuring parents can find playgrounds whether planning at home or on the go. With multi-language support (Icelandic, English, and Polish), Leikvellir serves Iceland's diverse population.
+The application features a responsive design optimized for both desktop and mobile use, ensuring parents can find playgrounds whether planning at home or on the go. With multi-language support (Icelandic, English, and Polish), Leiksvæði serves Iceland's diverse population.
 
 ## Project Goals
 
@@ -24,6 +24,7 @@ The application features a responsive design optimized for both desktop and mobi
 ## Current Features
 
 ### Interactive Map System
+
 - Google Maps integration showing playground locations
 - Custom markers with different colors for different playground types
 - Current location tracking with "find nearby" functionality
@@ -31,6 +32,7 @@ The application features a responsive design optimized for both desktop and mobi
 - Directions integration with Google Maps
 
 ### Comprehensive Playground Database
+
 - Detailed playground information including:
   - Geographic coordinates
   - Accessibility status
@@ -42,24 +44,28 @@ The application features a responsive design optimized for both desktop and mobi
   - Cover images and photo galleries
 
 ### User Authentication System
+
 - Secure login system using NextAuth.js
 - OAuth integration for production
 - Mock authentication for development (no OAuth setup required)
 - Role-based access control with user, admin, and super_admin roles
 
 ### Admin Panel
+
 - User management dashboard (for super admin)
 - Playground review and approval system
 - Role-based navigation and features
 - Admin mode toggle with persistent state
 
 ### Image Management
+
 - Multiple image upload support for playgrounds
 - Drag-and-drop interface with validation
 - Admin cover image selection during review
 - Cloud storage integration for images
 
 ### Playground Submission System
+
 - Public submission with admin approval workflow
 - Form validation with React Hook Form + Zod
 - Status tracking (pending, approved, rejected)
@@ -67,12 +73,14 @@ The application features a responsive design optimized for both desktop and mobi
 - Rejection reasons and feedback
 
 ### User Interface
+
 - Responsive design foundation with Tailwind CSS
 - Multi-language support (Icelandic/English/Polish)
 - Accessibility-focused components using Radix UI
 - Modern design with shadcn/ui components
 
 ### Technical Infrastructure
+
 - End-to-end type safety with TypeScript and tRPC
 - Database migrations with Drizzle ORM
 - SEO optimization with dynamic sitemap generation
@@ -82,6 +90,7 @@ The application features a responsive design optimized for both desktop and mobi
 ## Planned Features
 
 ### Enhanced Community Features
+
 - User-contributed playground reviews and ratings
 - Check-in system for playgrounds
 - Star rating system
@@ -89,24 +98,28 @@ The application features a responsive design optimized for both desktop and mobi
 - User notification system for approved submissions
 
 ### Advanced Playground Information
+
 - Facilities information (bathrooms, benches, shade, parking)
 - Safety features (fencing, soft ground, etc.)
 - School hours integration with holidays and schedule
 - Maintenance status and reporting
 
 ### Reporting System
+
 - Playground issue reporting (broken equipment, safety hazards)
 - Direct submission to municipality of playground
 - Image attachment for reports
 - Status tracking for reported issues
 
 ### Search and Filter Enhancements
+
 - Advanced filtering by equipment type, age group, and facilities
 - Sort by rating, distance, or other criteria
 - Search by address or landmark
 - Filter by current accessibility (considering school hours)
 
 ### Technical Improvements
+
 - Dark theme support
 - Production monitoring and logging with Sentry
 - Automated image optimization and thumbnails
@@ -114,9 +127,10 @@ The application features a responsive design optimized for both desktop and mobi
 
 ## Technology Stack
 
-Leikvellir is built on the T3 Stack, a modern, type-safe full-stack TypeScript framework:
+Leiksvæði is built on the T3 Stack, a modern, type-safe full-stack TypeScript framework:
 
 ### Core Technologies
+
 - **Next.js 14** - React framework with App Router
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
@@ -126,6 +140,7 @@ Leikvellir is built on the T3 Stack, a modern, type-safe full-stack TypeScript f
 - **PostgreSQL** - Database
 
 ### UI & Components
+
 - **Radix UI** - Unstyled, accessible components
 - **shadcn/ui** - Beautiful component library
 - **Lucide React** - Icon library
@@ -133,6 +148,7 @@ Leikvellir is built on the T3 Stack, a modern, type-safe full-stack TypeScript f
 - **React Hook Form** - Performant forms with validation
 
 ### Development & Deployment
+
 - **PNPM** - Fast, disk space efficient package manager
 - **ESLint & Prettier** - Code linting and formatting
 - **Drizzle Kit** - Database migrations
