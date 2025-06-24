@@ -40,7 +40,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
 
     useEffect(() => {
         if (translationsReady) {
-            // Show skeleton for at least 500ms for better UX
+            // Show skeleton for at least 200ms for better UX
             const timer = setTimeout(() => {
                 setIsInitialLoading(false);
             }, 200);

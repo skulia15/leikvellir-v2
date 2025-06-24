@@ -203,6 +203,7 @@ export function PlaygroundInfoWindow({
                         onClick={previousImage}
                         disabled={isTransitioning}
                         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+                        aria-label="Previous image"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
@@ -210,6 +211,7 @@ export function PlaygroundInfoWindow({
                         onClick={nextImage}
                         disabled={isTransitioning}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+                        aria-label="Next image"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
@@ -236,6 +238,7 @@ export function PlaygroundInfoWindow({
                           ? 'bg-primary'
                           : 'bg-muted-foreground/30'
                           }`}
+                        aria-label={`Go to image ${index + 1}`}
                       />
                     ))}
                   </div>
