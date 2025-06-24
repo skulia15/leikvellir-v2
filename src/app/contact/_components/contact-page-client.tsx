@@ -28,7 +28,7 @@ export function ContactPageClient() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Contact Methods */}
         <div className="space-y-6">
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -38,7 +38,7 @@ export function ContactPageClient() {
                 {t('contact.sendMessageDescription')}
               </CardDescription>
             </CardHeader>
-          </Card>
+          </Card> */}
 
           <Card>
             <CardHeader>
