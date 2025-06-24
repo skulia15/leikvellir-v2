@@ -34,6 +34,9 @@ export default async function RootLayout({
     <html lang="is" className={`${GeistSans.variable} ${firaSans.variable}`}>
       <head>
         <meta name="google-site-verification" content="T6ALXq-rzn0arBTQuAPGDqNpTKMf49319JZIAsW3Mfo" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
         <OrganizationSchema />
         <WebsiteSchema />
       </head>
