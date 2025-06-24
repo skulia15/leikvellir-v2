@@ -107,6 +107,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
                     fetchPriority={index === 0 ? "high" : "low"}
+                    quality={85}
                   />
                 </div>
               ))}
@@ -179,6 +180,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                       fill
                       sizes="64px"
                       className="object-cover"
+                      quality={75}
                     />
                   </button>
                 ))}
