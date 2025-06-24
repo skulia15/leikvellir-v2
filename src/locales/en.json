@@ -71,7 +71,6 @@
     "softwareDeveloper": "Software Developer",
     "allRightsReserved": "{{year}} Skúli Arnarsson. All rights reserved.",
     "builtWith": "Built with Next.js & TypeScript",
-    "version": "v1.0.0-beta",
     "contact": "Contact"
   },
   "playground": {

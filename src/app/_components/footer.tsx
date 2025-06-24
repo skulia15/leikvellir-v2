@@ -156,7 +156,7 @@ export function Footer() {
 
             <span>•</span>
 
-            <span>{t('footer.version')}</span>
+            <span>v1.0.1-beta</span>
           </div>
         </div>
 

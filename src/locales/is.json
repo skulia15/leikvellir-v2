@@ -71,7 +71,6 @@
     "softwareDeveloper": "Tölvunarfræðingur / Forritari",
     "allRightsReserved": "{{year}} Skúli Arnarsson. Öll réttindi áskilin.",
     "builtWith": "Byggt með Next.js og TypeScript",
-    "version": "v1.0.0-beta",
     "contact": "Hafa samband"
   },
   "playground": {

@@ -74,7 +74,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
         <div className="relative">
           {/* Main Carousel */}
           <div
-            className="relative h-[600px] w-full overflow-hidden rounded-t-lg touch-pan-y select-none"
+            className="relative h-[265px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden rounded-t-lg touch-pan-y select-none"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
