@@ -17,7 +17,13 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         capture_exceptions: true, // This enables capturing exceptions using Error Tracking
         debug: false, // Disable debug mode to reduce console noise
         verbose: false, // Disable verbose logging
-
+        
+        // Optimize performance and caching
+        persistence: "localStorage+cookie", // Use localStorage for better caching
+        persistence_name: "ph_leiksvæði", // Custom persistence name
+        cross_subdomain_cookie: false, // Optimize for single domain
+        secure_cookie: true, // Secure cookies in production
+        
         loaded: () => {
           // Additional configuration after PostHog loads
           if (process.env.NODE_ENV === "development") {
