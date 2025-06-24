@@ -119,6 +119,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                   onClick={previousImage}
                   disabled={isTransitioning}
                   className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors disabled:opacity-50"
+                  aria-label="Previous image"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -126,6 +127,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                   onClick={nextImage}
                   disabled={isTransitioning}
                   className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors disabled:opacity-50"
+                  aria-label="Next image"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -149,6 +151,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     disabled={isTransitioning}
                     className={`h-3 w-3 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex ? 'bg-white' : 'bg-white/40'
                       }`}
+                    aria-label={`Go to image ${index + 1}`}
                   />
                 ))}
               </div>
@@ -168,6 +171,7 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                       ? 'border-primary shadow-md'
                       : 'border-transparent hover:border-muted-foreground/50'
                       }`}
+                    aria-label={`View image ${index + 1}`}
                   >
                     <Image
                       src={image ?? "/playground.jpg"}

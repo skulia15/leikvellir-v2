@@ -7,21 +7,35 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: "/ingest",
-      ui_host: "https://eu.posthog.com",
-      capture_pageview: false, // We capture pageviews manually
-      capture_pageleave: true, // Enable pageleave capture
-      capture_exceptions: true, // This enables capturing exceptions using Error Tracking
-      debug: false, // Disable debug mode to reduce console noise
-      verbose: false, // Disable verbose logging
-      loaded: () => {
-        // Additional configuration after PostHog loads
-        if (process.env.NODE_ENV === "development") {
-          console.log("PostHog initialized");
-        }
-      },
-    });
+    // Defer PostHog initialization to reduce main thread blocking
+    const initializePostHog = () => {
+      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+        api_host: "/ingest",
+        ui_host: "https://eu.posthog.com",
+        capture_pageview: false, // We capture pageviews manually
+        capture_pageleave: true, // Enable pageleave capture
+        capture_exceptions: true, // This enables capturing exceptions using Error Tracking
+        debug: false, // Disable debug mode to reduce console noise
+        verbose: false, // Disable verbose logging
+
+        loaded: () => {
+          // Additional configuration after PostHog loads
+          if (process.env.NODE_ENV === "development") {
+            console.log("PostHog initialized");
+          }
+        },
+      });
+    };
+
+    // Use requestIdleCallback to defer initialization until the browser is idle
+    if (typeof window !== "undefined") {
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(initializePostHog, { timeout: 2000 });
+      } else {
+        // Fallback for browsers that don't support requestIdleCallback
+        setTimeout(initializePostHog, 1000);
+      }
+    }
   }, []);
 
   return (

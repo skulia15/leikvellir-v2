@@ -21,6 +21,8 @@ const firaSans = Fira_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-fira-sans",
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = generateSEOMetadata();
@@ -37,6 +39,11 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
+        {/* Preconnect to Google APIs to improve performance */}
+        <link rel="preconnect" href="https://maps.googleapis.com" />
+        <link rel="preconnect" href="https://maps.gstatic.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <OrganizationSchema />
         <WebsiteSchema />
       </head>

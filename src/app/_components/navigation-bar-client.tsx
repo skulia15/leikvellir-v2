@@ -71,7 +71,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                         >
                             <Image
                                 src="/icon.png"
-                                alt="Leiksvæði"
+                                alt=""
                                 width={62}
                                 height={62}
                                 className="mr-0.5 p-1.5"
