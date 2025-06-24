@@ -54,6 +54,62 @@ const config: NextConfig = {
   // Enables externals bundling for Pages Router like in App Router
   bundlePagesRouterDependencies: true,
 
+  // Optimize cache headers for better performance
+  async headers() {
+    return [
+      // Cache static assets (JS, CSS, images) for 1 year
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache images optimized by Next.js for 1 year
+      {
+        source: "/_next/image/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Cache PostHog static assets for longer (1 week)
+      {
+        source: "/ingest/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      // Cache public assets (favicon, manifest, etc.) for 1 week
+      {
+        source: "/(favicon.ico|icon.png|manifest.json|robots.txt|sitemap.xml)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      // Cache font files for 1 year
+      {
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
+
   // PostHog rewrites to proxy analytics requests
   async rewrites() {
     return [
