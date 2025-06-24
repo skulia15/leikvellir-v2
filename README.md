@@ -58,6 +58,8 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - add municipality to each playground - it be infered from map pin - DONE
 - add animations when items appear or disappear from the list in map view - DONE
 - Review playground submission - location is missing - DONE
+- SEO optimization
+- add a change request submission available for all users
 
 ### 🚧 In Progress
 
@@ -68,12 +70,11 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - when adding playground - the users should be able to remove images they are uplaoding
 - Test if changing location in edit review changes when admin sets it - NO the users suggested location is used instead!
 - Move suggest edit button on detail page so that it is side by side with add images button under the additional information section
-- create production db?
 - Location cache issue á playground review korti - ef leikvöllur er reviewaður og svo næsti opnaður eru gömul hnit / pin sýnd
 - vantar back button á contact page og playground page, og fleiri. passa að texti sé eins og athuga hvort til baka takki vísi á '/' eða bara á síðuna sem þú varst
 - Senda mér tölvupóst þegar að nýr leikvöllur er sendur inn
 - playground review should display all every playground property
-- submissions should dispplay the name of a user isntead of their ID
+- submissions should display the name of a user instead of their ID
 - Fara yfir mobile utlit
 - laga filter view utlit
 - laga file too large error i image upload - ætti að vera hægt að setja inn stórar myndir ef þeim er þjappað
@@ -85,7 +86,7 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
 - Error handling and loading states optimization - some pages may still need a loading skeleton
 - Responsive layout optimization
-- stjorna siddebar stærð á non-mobile
+- stjorna sidebar stærð á non-mobile
 
 - fix playground equipment list display on detail pages
 - Update tests
@@ -96,12 +97,11 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - standardized sizing of playgrounds in list - missing in playground list page
 - Notify users if their submission is approved
 - add sitemap - done?
+- reduce carousel size in mobile detail page.
 
 ### 📋 Planned Features
 
 - progressive image loading
-- reduce carousel size in mobile detail page.
-- add a change request submission available for all users
 - bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
 - School hours - uppfæra virkni með frídögum o.þ.h
 - getur skólalóð verið bæði skólalóð og public access á sama tíma?
@@ -126,7 +126,6 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
   - Event listings and calendar integration
 - **Technical Improvements**
 
-  - SEO optimization
   - Accessibility enhancements
   - Dark theme support
   - Production monitoring and logging - Connect with Sentry

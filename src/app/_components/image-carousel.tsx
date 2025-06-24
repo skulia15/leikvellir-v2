@@ -102,9 +102,11 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
                     src={image ?? "/playground.jpg"}
                     alt={`${alt} - Image ${index + 1}`}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
+                    sizes="(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1200px) 960px, 1200px"
                     className="object-contain p-2"
                     priority={index === 0}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "low"}
                   />
                 </div>
               ))}

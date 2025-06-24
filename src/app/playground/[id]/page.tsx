@@ -36,8 +36,21 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
 
   const BASE_URL = getBaseUrl();
 
+  // Get the first image for preloading (LCP optimization)
+  const firstImage = playground.images?.[0];
+
   return (
     <>
+      {/* Preload LCP Image */}
+      {firstImage && (
+        <link
+          rel="preload"
+          as="image"
+          href={firstImage}
+          fetchPriority="high"
+        />
+      )}
+
       {/* Structured Data */}
       <PlaygroundSchema
         playground={{
@@ -51,7 +64,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
           updatedAt: playground.updatedAt,
         }}
       />
-      
+
       {/* Breadcrumb Schema */}
       <BreadcrumbSchema
         items={[
@@ -60,7 +73,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
           { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` }
         ]}
       />
-      
+
       <PlaygroundDetailClient playgroundId={playgroundId} />
     </>
   );
