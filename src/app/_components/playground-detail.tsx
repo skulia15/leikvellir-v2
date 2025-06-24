@@ -40,7 +40,8 @@ import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
-import { useT } from "~/lib/i18n";
+import { useT, useLanguage } from "~/lib/i18n";
+import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -56,6 +57,7 @@ export default function PlaygroundDetail({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
   const t = useT();
+  const currentLanguage = useLanguage();
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -411,7 +413,7 @@ export default function PlaygroundDetail({
                                 {item.image && (
                                   <Image
                                     src={item.image}
-                                    alt={t(item.name)}
+                                    alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
                                     width={32}
                                     height={32}
                                     className="w-8 h-8 rounded object-cover flex-shrink-0"
@@ -419,7 +421,7 @@ export default function PlaygroundDetail({
                                 )}
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-sm">
-                                    {t(item.name)}
+                                    {getEquipmentDisplayName(item.name, currentLanguage, t)}
                                   </div>
                                   {item.description && (
                                     <div className="text-xs text-muted-foreground mt-0.5">

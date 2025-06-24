@@ -113,10 +113,17 @@ export type CreateEditSuggestionInput = z.infer<typeof CreateEditSuggestionSchem
 // Playground status enum
 export type PlaygroundStatus = "pending" | "approved" | "rejected";
 
+// Multilingual name type for equipment
+export type MultilingualName = {
+  is: string; // Icelandic (required)
+  en?: string; // English (optional)
+  pl?: string; // Polish (optional)
+};
+
 // Equipment type
 export type Equipment = {
   id: number;
-  name: string; // Translation key (e.g., "equipment.slide")
+  name: MultilingualName; // Multilingual names with Icelandic required
   category: EquipmentCategory;
   image: string | null;
   description: string | null; // Optional description translation key
@@ -133,9 +140,16 @@ export const CoordinatesSchema = z.object({
 
 export type ValidatedCoordinates = z.infer<typeof CoordinatesSchema>;
 
+// Multilingual name validation schema
+export const MultilingualNameSchema = z.object({
+  is: z.string().min(1, "Icelandic name is required").max(256),
+  en: z.string().max(256).optional(),
+  pl: z.string().max(256).optional(),
+});
+
 // Equipment management schemas
 export const CreateEquipmentSchema = z.object({
-  name: z.string().min(1, "Playground equipment name key is required").max(256),
+  name: MultilingualNameSchema,
   category: z.enum([
     "core_equipment",
     "climbing_and_movement",
@@ -151,7 +165,7 @@ export const CreateEquipmentSchema = z.object({
 
 export const UpdateEquipmentSchema = z.object({
   id: z.number(),
-  name: z.string().min(1).max(256).optional(),
+  name: MultilingualNameSchema.optional(),
   category: z.enum([
     "core_equipment",
     "climbing_and_movement",

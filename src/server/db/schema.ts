@@ -67,7 +67,7 @@ export const equipment = createTable(
   "equipment",
   {
     id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }).notNull(), // Translation key (e.g., "equipment.slide")
+    name: json("name").notNull().$type<{ is: string; en?: string; pl?: string }>(), // Multilingual names with Icelandic required
     category: equipmentCategoryEnum("category").notNull(),
     image: varchar("image", { length: 512 }), // Optional equipment image URL
     description: text("description"), // Optional description translation key
@@ -80,7 +80,6 @@ export const equipment = createTable(
     ),
   },
   (table) => ({
-    nameIdx: index("equipment_name_idx").on(table.name),
     categoryIdx: index("equipment_category_idx").on(table.category),
     isActiveIdx: index("equipment_is_active_idx").on(table.isActive),
   }),

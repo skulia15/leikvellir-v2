@@ -34,9 +34,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
-import { useTranslation } from "~/lib/i18n";
+import { useLanguage, useTranslation } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { type Playground, type Equipment } from "~/types";
+import { handleMixedNameFormat } from "~/lib/multilingual-utils";
 
 // Type for the edit suggestion (based on the schema)
 interface PlaygroundEditSuggestion {
@@ -88,6 +89,7 @@ interface EquipmentReviewSelectorProps {
   onFinalEquipmentChange: (equipmentIds: number[]) => void;
 }
 
+
 function EquipmentReviewSelector({
   originalEquipmentIds,
   suggestedEquipmentIds,
@@ -95,6 +97,8 @@ function EquipmentReviewSelector({
   onFinalEquipmentChange,
 }: EquipmentReviewSelectorProps) {
   const { t } = useTranslation();
+  const currentLanguage = useLanguage();
+
   const { data: allEquipment } = api.equipment.getAll.useQuery();
 
   if (!allEquipment) {
@@ -127,6 +131,7 @@ function EquipmentReviewSelector({
     onFinalEquipmentChange(newIds);
   };
 
+
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-green-50">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -136,7 +141,7 @@ function EquipmentReviewSelector({
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {currentEquipment.map((equipment) => (
               <div key={equipment.id} className="flex items-center gap-2 text-sm bg-red-50 p-2 rounded">
-                <span className="flex-1">{t(equipment.name)}</span>
+                <span className="flex-1">{handleMixedNameFormat(equipment.name, currentLanguage)}</span>
                 {removedEquipment.some(eq => eq.id === equipment.id) && (
                   <Badge variant="destructive" className="text-xs">Removing</Badge>
                 )}
@@ -154,13 +159,13 @@ function EquipmentReviewSelector({
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {addedEquipment.map((equipment) => (
               <div key={equipment.id} className="flex items-center gap-2 text-sm bg-green-50 p-2 rounded">
-                <span className="flex-1">{t(equipment.name)}</span>
+                <span className="flex-1">{handleMixedNameFormat(equipment.name, currentLanguage)}</span>
                 <Badge variant="secondary" className="text-xs bg-green-100">Adding</Badge>
               </div>
             ))}
             {removedEquipment.map((equipment) => (
               <div key={equipment.id} className="flex items-center gap-2 text-sm bg-red-50 p-2 rounded">
-                <span className="flex-1">{t(equipment.name)}</span>
+                <span className="flex-1">{handleMixedNameFormat(equipment.name, currentLanguage)}</span>
                 <Badge variant="destructive" className="text-xs">Removing</Badge>
               </div>
             ))}
@@ -180,7 +185,7 @@ function EquipmentReviewSelector({
                   checked={true}
                   onCheckedChange={() => toggleEquipment(equipment.id)}
                 />
-                <span className="flex-1">{t(equipment.name)}</span>
+                <span className="flex-1">{handleMixedNameFormat(equipment.name, currentLanguage)}</span>
               </div>
             ))}
           </div>

@@ -83,3 +83,9 @@ export function useLocale() {
   const { locale, setLocale } = useTranslation();
   return { locale, setLocale };
 }
+
+// Hook for getting the current language code (compatible with multilingual utils)
+export function useLanguage() {
+  const { locale } = useTranslation();
+  return locale;
+}

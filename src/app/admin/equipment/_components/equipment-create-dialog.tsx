@@ -38,6 +38,8 @@ import { CreateEquipmentSchema, type CreateEquipmentInput } from "~/types";
 import { toast } from "sonner";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT } from "~/lib/i18n";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { createMultilingualName } from "~/lib/multilingual-utils";
 
 interface EquipmentCreateDialogProps {
     onSuccess: () => void;
@@ -55,7 +57,11 @@ export default function EquipmentCreateDialog({
         resolver: zodResolver(CreateEquipmentSchema),
         mode: "onChange",
         defaultValues: {
-            name: "",
+            name: {
+                is: "",
+                en: "",
+                pl: "",
+            },
             category: (category as CreateEquipmentInput["category"]) || "core_equipment",
             description: "",
             image: "",
@@ -75,9 +81,14 @@ export default function EquipmentCreateDialog({
     });
 
     const onSubmit = (data: CreateEquipmentInput) => {
-        // Clean up empty strings
+        // Clean up empty strings and create proper multilingual name
         const cleanData = {
             ...data,
+            name: createMultilingualName(
+                data.name.is.trim(),
+                data.name.en?.trim(),
+                data.name.pl?.trim()
+            ),
             description: data.description?.trim() || undefined,
             image: data.image?.trim() || undefined,
         };
@@ -106,23 +117,68 @@ export default function EquipmentCreateDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('equipment.equipmentName')} *</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder={t('equipment.enterEquipmentName')}
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        <div className="space-y-4">
+                            <div>
+                                <FormLabel className="text-sm font-medium">{t('equipment.equipmentName')} *</FormLabel>
+                                <Tabs defaultValue="is" className="mt-2">
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="is">Íslenska *</TabsTrigger>
+                                        <TabsTrigger value="en">English</TabsTrigger>
+                                        <TabsTrigger value="pl">Polski</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="is" className="mt-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="name.is"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="Sláðu inn íslenskt heiti"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value="en" className="mt-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="name.en"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="Enter English name (optional)"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value="pl" className="mt-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="name.pl"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="Wpisz polską nazwę (opcjonalne)"
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </TabsContent>
+                                </Tabs>
+                            </div>
                         </div>
 
                         <FormField

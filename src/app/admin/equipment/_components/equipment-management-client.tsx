@@ -20,7 +20,8 @@ import { toast } from "sonner";
 import EquipmentEditDialog from "./equipment-edit-dialog";
 import EquipmentCreateDialog from "./equipment-create-dialog";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
-import { useT } from "~/lib/i18n";
+import { useT, useLanguage } from "~/lib/i18n";
+import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 
 interface EquipmentManagementClientProps {
     initialData: Equipment[];
@@ -42,6 +43,7 @@ export default function EquipmentManagementClient({
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const t = useT();
+    const currentLanguage = useLanguage();
 
     // Use tRPC query with initial data
     const { data: equipment, refetch } = api.equipment.getAllAdmin.useQuery(
@@ -75,7 +77,8 @@ export default function EquipmentManagementClient({
     };
 
     const handleDelete = async (equipment: Equipment) => {
-        if (confirm(`${t("equipment.delete.confirm")} "${t(equipment.name)}"?`)) {
+        const equipmentName = getEquipmentDisplayName(equipment.name, currentLanguage, t);
+        if (confirm(`${t("equipment.delete.confirm")} "${equipmentName}"?`)) {
             try {
                 await deleteMutation.mutateAsync({ id: equipment.id });
             } catch {
@@ -178,14 +181,14 @@ export default function EquipmentManagementClient({
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <div>
-                                                    <div className="font-medium">{t(item.name)}</div>
+                                                    <div className="font-medium">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 {item.image ? (
                                                     <Image
                                                         src={item.image}
-                                                        alt={t(item.name)}
+                                                        alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
                                                         width={48}
                                                         height={48}
                                                         className="w-12 h-12 rounded object-cover"

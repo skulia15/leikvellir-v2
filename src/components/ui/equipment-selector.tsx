@@ -14,8 +14,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/trpc/react";
 import { type Equipment, type EquipmentCategory } from "~/types";
-import { useT } from "~/lib/i18n";
+import { useLanguage, useT } from "~/lib/i18n";
 import { PlaygroundEquipmentIcon } from "../icons/playground-icons";
+import { handleMixedNameFormat } from "~/lib/multilingual-utils";
 
 interface EquipmentSelectorProps {
     value: number[];
@@ -51,6 +52,8 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
 
         onChange(newValue);
     };
+
+    const currentLanguage = useLanguage();
 
     if (isLoading) {
         const content = (
@@ -168,7 +171,7 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
                                                 {item.image && (
                                                     <Image
                                                         src={item.image}
-                                                        alt={t(item.name)}
+                                                        alt={handleMixedNameFormat(item.name, currentLanguage)}
                                                         width={32}
                                                         height={32}
                                                         className="w-8 h-8 rounded object-cover"
@@ -176,7 +179,7 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
                                                 )}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="font-medium text-sm select-none">
-                                                        {t(item.name)}
+                                                        {handleMixedNameFormat(item.name, currentLanguage)}
                                                     </div>
                                                 </div>
                                             </div>

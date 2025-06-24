@@ -37,6 +37,8 @@ import { UpdateEquipmentSchema, type Equipment, type UpdateEquipmentInput } from
 import { toast } from "sonner";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT } from "~/lib/i18n";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { createMultilingualName } from "~/lib/multilingual-utils";
 
 interface EquipmentEditDialogProps {
     equipment: Equipment | null;
@@ -71,9 +73,18 @@ export default function EquipmentEditDialog({
     // Reset form when equipment changes
     useEffect(() => {
         if (equipment) {
+            // Handle both legacy string names and new multilingual names
+            const nameValue = typeof equipment.name === 'string' 
+                ? { is: equipment.name, en: "", pl: "" }
+                : {
+                    is: equipment.name.is || "",
+                    en: equipment.name.en || "",
+                    pl: equipment.name.pl || "",
+                  };
+
             form.reset({
                 id: equipment.id,
-                name: equipment.name,
+                name: nameValue,
                 category: equipment.category,
                 description: equipment.description || "",
                 image: equipment.image || "",
@@ -84,9 +95,14 @@ export default function EquipmentEditDialog({
     const onSubmit = (data: UpdateEquipmentInput) => {
         if (!equipment) return;
 
-        // Clean up empty strings
+        // Clean up empty strings and create proper multilingual name
         const cleanData = {
             ...data,
+            name: data.name ? createMultilingualName(
+                data.name.is.trim(),
+                data.name.en?.trim(),
+                data.name.pl?.trim()
+            ) : undefined,
             description: data.description?.trim() || null,
             image: data.image?.trim() || null,
         };
@@ -111,22 +127,69 @@ export default function EquipmentEditDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('equipment.equipmentName')} *</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={t('equipment.enterEquipmentName')}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div>
+                            <FormLabel className="text-sm font-medium">{t('equipment.equipmentName')} *</FormLabel>
+                            <Tabs defaultValue="is" className="mt-2">
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="is">Íslenska *</TabsTrigger>
+                                    <TabsTrigger value="en">English</TabsTrigger>
+                                    <TabsTrigger value="pl">Polski</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="is" className="mt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="name.is"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Sláðu inn íslenskt heiti"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="en" className="mt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="name.en"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Enter English name (optional)"
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="pl" className="mt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="name.pl"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Wpisz polską nazwę (opcjonalne)"
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                        </div>
 
                         <FormField
                             control={form.control}

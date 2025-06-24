@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { equipment } from "~/server/db/schema";
-import { CreateEquipmentSchema, UpdateEquipmentSchema, DeleteEquipmentSchema, type EquipmentCategory } from "~/types";
+import { CreateEquipmentSchema, UpdateEquipmentSchema, DeleteEquipmentSchema, type EquipmentCategory, type MultilingualName } from "~/types";
 import { TRPCError } from "@trpc/server";
 import { users } from "~/server/db/schema";
 
@@ -10,7 +10,7 @@ export const equipmentRouter = createTRPCRouter({
     getAll: publicProcedure.query(async ({ ctx }) => {
         return await ctx.db.query.equipment.findMany({
             where: eq(equipment.isActive, true),
-            orderBy: [equipment.category, equipment.name],
+            orderBy: [equipment.category, sql`${equipment.name}->>'is'`],
         });
     }),
 
@@ -29,7 +29,7 @@ export const equipmentRouter = createTRPCRouter({
         }
 
         return await ctx.db.query.equipment.findMany({
-            orderBy: [equipment.category, equipment.name],
+            orderBy: [equipment.category, sql`${equipment.name}->>'is'`],
         });
     }),
 
@@ -39,7 +39,7 @@ export const equipmentRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             return await ctx.db.query.equipment.findMany({
                 where: eq(equipment.category, input.category),
-                orderBy: [equipment.name],
+                orderBy: [sql`${equipment.name}->>'is'`],
             });
         }),
 
@@ -119,7 +119,7 @@ export const equipmentRouter = createTRPCRouter({
             }
 
             const updateData: Partial<{
-                name: string;
+                name: MultilingualName;
                 category: EquipmentCategory;
                 description: string | null;
                 image: string | null;
