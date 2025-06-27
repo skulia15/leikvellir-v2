@@ -1,71 +1,51 @@
 // types.ts
 import { z } from "zod";
-import { playgrounds, schoolTypeEnum } from "./server/db/schema";
-import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import type {
+  playgrounds,
+  equipment,
+  playgroundEditSuggestions
+} from "./server/db/schema";
+import {
+  schoolTypeEnum,
+  equipmentCategoryEnum,
+  userRoleEnum,
+  playgroundStatusEnum,
+  editSuggestionStatusEnum
+} from "./server/db/schema";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
-// User role types
-export type UserRole = "user" | "admin" | "super_admin";
+// Schema-derived enum types for type safety
+export type UserRole = typeof userRoleEnum.enumValues[number];
+export type SchoolType = typeof schoolTypeEnum.enumValues[number];
+export type EquipmentCategory = typeof equipmentCategoryEnum.enumValues[number];
+export type PlaygroundStatus = typeof playgroundStatusEnum.enumValues[number];
+export type EditSuggestionStatus = typeof editSuggestionStatusEnum.enumValues[number];
 
-// School type for playgrounds on school grounds
-export type SchoolType = "preschool" | "elementary";
-
-// Equipment category types
-export type EquipmentCategory =
-  | "core_equipment"
-  | "climbing_and_movement"
-  | "imaginative_and_themed"
-  | "spinning_and_motion"
-  | "fitness_and_obstacle"
-  | "toddler_friendly"
-  | "additional_common_equipment";
-
-// Branded types for coordinates
+// Branded types for type safety
 export type Latitude = number & { __brand: "latitude" };
 export type Longitude = number & { __brand: "longitude" };
+export type PlaygroundId = number & { __brand: "playgroundId" };
+export type EquipmentId = number & { __brand: "equipmentId" };
+export type UserId = string & { __brand: "userId" };
 
 export type Coordinates = {
   latitude: Latitude;
   longitude: Longitude;
 };
 
-// Edit suggestion status enum
-export type EditSuggestionStatus = "pending" | "approved" | "rejected";
+// Type guards for runtime validation
+export const isValidLatitude = (lat: number): lat is Latitude =>
+  lat >= -90 && lat <= 90;
 
-// Edit suggestion type
-export type PlaygroundEditSuggestion = {
-  id: number;
-  playgroundId: number;
-  status: EditSuggestionStatus;
-  // Only include fields that can be changed (nullable - only populated if being changed)
-  title: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  municipality: string | null;
-  publiclyAccessible: boolean | null;
-  toddlerFriendly: boolean | null;
-  // School ground properties
-  isSchoolGround: boolean | null;
-  schoolType: SchoolType | null;
-  // Amenity properties
-  hasSeating: boolean | null;
-  hasPicnicTable: boolean | null;
-  hasFencing: boolean | null;
-  hasGarbageCan: boolean | null;
-  hasBathroomNearby: boolean | null;
-  hasSoftPlayArea: boolean | null;
-  // Images and metadata
-  coverImage: string | null;
-  images: string[] | null;
-  equipmentIds: number[] | null;
-  submitAnonymously: boolean | null;
-  // Review fields
-  reviewedById: string | null;
-  reviewedAt: Date | null;
-  rejectionReason: string | null;
-  // User who suggested the edit
-  createdById: string;
-  createdAt: Date;
-  updatedAt: Date | null;
+export const isValidLongitude = (lng: number): lng is Longitude =>
+  lng >= -180 && lng <= 180;
+
+export const isValidCoordinates = (coords: { latitude: number; longitude: number }): coords is Coordinates =>
+  isValidLatitude(coords.latitude) && isValidLongitude(coords.longitude);
+
+
+// Edit suggestion type derived from database schema
+export type PlaygroundEditSuggestion = InferSelectModel<typeof playgroundEditSuggestions> & {
   // Relationships
   playground?: Playground;
   createdBy?: {
@@ -80,6 +60,20 @@ export type PlaygroundEditSuggestion = {
   } | null;
 };
 
+export type NewPlaygroundEditSuggestion = InferInsertModel<typeof playgroundEditSuggestions>;
+
+// Schema utilities for type-safe validation
+export const SchoolTypeSchema = z.enum(schoolTypeEnum.enumValues);
+export const EquipmentCategorySchema = z.enum(equipmentCategoryEnum.enumValues);
+export const UserRoleSchema = z.enum(userRoleEnum.enumValues);
+export const PlaygroundStatusSchema = z.enum(playgroundStatusEnum.enumValues);
+export const EditSuggestionStatusSchema = z.enum(editSuggestionStatusEnum.enumValues);
+
+// Review action schema
+export const ReviewActionSchema = z.enum(["approve", "reject"]);
+export type ReviewAction = z.infer<typeof ReviewActionSchema>;
+
+
 // Schema for creating edit suggestions
 export const CreateEditSuggestionSchema = z.object({
   playgroundId: z.number(),
@@ -92,7 +86,7 @@ export const CreateEditSuggestionSchema = z.object({
   toddlerFriendly: z.boolean().optional(),
   // School ground properties
   isSchoolGround: z.boolean().optional(),
-  schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+  schoolType: SchoolTypeSchema.nullable().optional(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
@@ -112,8 +106,6 @@ export const CreateEditSuggestionSchema = z.object({
 
 export type CreateEditSuggestionInput = z.infer<typeof CreateEditSuggestionSchema>;
 
-// Playground status enum
-export type PlaygroundStatus = "pending" | "approved" | "rejected";
 
 // Multilingual name type for equipment
 export type MultilingualName = {
@@ -122,17 +114,9 @@ export type MultilingualName = {
   pl?: string; // Polish (optional)
 };
 
-// Equipment type
-export type Equipment = {
-  id: number;
-  name: MultilingualName; // Multilingual names with Icelandic required
-  category: EquipmentCategory;
-  image: string | null;
-  description: string | null; // Optional description translation key
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date | null;
-};
+// Equipment type derived from database schema
+export type Equipment = InferSelectModel<typeof equipment>;
+export type NewEquipment = InferInsertModel<typeof equipment>;
 
 // Zod schema for runtime validation of coordinates
 export const CoordinatesSchema = z.object({
@@ -141,6 +125,14 @@ export const CoordinatesSchema = z.object({
 });
 
 export type ValidatedCoordinates = z.infer<typeof CoordinatesSchema>;
+
+// Utility types for better type safety
+export type WithId<T> = T & { id: number };
+export type WithTimestamps<T> = T & {
+  createdAt: Date;
+  updatedAt: Date | null;
+};
+export type WithStatus<T, S = PlaygroundStatus> = T & { status: S };
 
 // Multilingual name validation schema
 export const MultilingualNameSchema = z.object({
@@ -152,15 +144,7 @@ export const MultilingualNameSchema = z.object({
 // Equipment management schemas
 export const CreateEquipmentSchema = z.object({
   name: MultilingualNameSchema,
-  category: z.enum([
-    "core_equipment",
-    "climbing_and_movement",
-    "imaginative_and_themed",
-    "spinning_and_motion",
-    "fitness_and_obstacle",
-    "toddler_friendly",
-    "additional_common_equipment"
-  ]),
+  category: EquipmentCategorySchema,
   description: z.string().optional(),
   image: z.string().optional(),
 });
@@ -168,15 +152,7 @@ export const CreateEquipmentSchema = z.object({
 export const UpdateEquipmentSchema = z.object({
   id: z.number(),
   name: MultilingualNameSchema.optional(),
-  category: z.enum([
-    "core_equipment",
-    "climbing_and_movement",
-    "imaginative_and_themed",
-    "spinning_and_motion",
-    "fitness_and_obstacle",
-    "toddler_friendly",
-    "additional_common_equipment"
-  ]).optional(),
+  category: EquipmentCategorySchema.optional(),
   description: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
 });
@@ -192,7 +168,7 @@ export type DeleteEquipmentInput = z.infer<typeof DeleteEquipmentSchema>;
 // User management schemas
 export const UpdateUserRoleSchema = z.object({
   userId: z.string(),
-  role: z.enum(["user", "admin", "super_admin"]),
+  role: UserRoleSchema,
 });
 
 export const BanUserSchema = z.object({
@@ -208,8 +184,6 @@ export type UpdateUserRoleInput = z.infer<typeof UpdateUserRoleSchema>;
 export type BanUserInput = z.infer<typeof BanUserSchema>;
 export type UnbanUserInput = z.infer<typeof UnbanUserSchema>;
 
-// Create shared enum from schema
-export const SchoolTypeSchema = z.enum(schoolTypeEnum.enumValues);
 
 // export const PlaygroundOutput = z.object({
 
@@ -275,37 +249,8 @@ export const CreatePlaygroundSchema = z.object({
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
 
-// export type Playground = InferSelectModel<typeof playgrounds>;
-export type NewPlayground = InferInsertModel<typeof playgrounds>;
-
-export type Playground = {
-  id: number;
-  createdById: string;
-  createdAt: Date;
-  updatedAt: Date | null;
-  title: string;
-  latitude: number;
-  longitude: number;
-  municipality: string | null;
-  publiclyAccessible: boolean;
-  toddlerFriendly: boolean;
-  // School ground properties
-  isSchoolGround: boolean;
-  schoolType: SchoolType | null;
-  // Amenity properties
-  hasSeating: boolean;
-  hasPicnicTable: boolean;
-  hasFencing: boolean;
-  hasGarbageCan: boolean;
-  hasBathroomNearby: boolean;
-  hasSoftPlayArea: boolean;
-  submitAnonymously: boolean;
-  coverImage: string | null;
-  images: string[] | null;
-  status: PlaygroundStatus;
-  reviewedById: string | null;
-  reviewedAt: Date | null;
-  rejectionReason: string | null;
+// Playground types derived from database schema
+export type Playground = InferSelectModel<typeof playgrounds> & {
   // Equipment relationships
   playgroundEquipment?: Array<{
     createdAt: Date;
@@ -326,16 +271,19 @@ export type Playground = {
   } | null;
 };
 
+export type NewPlayground = InferInsertModel<typeof playgrounds>;
+
 // PlaygroundInput type used specifically for form submissions
+// Improved type for form submissions
 export type PlaygroundInput = Omit<
   Playground,
-  "id" | "createdById" | "createdAt" | "updatedAt" | "status" | "reviewedById" | "reviewedAt" | "rejectionReason"
+  "id" | "createdById" | "createdAt" | "updatedAt" | "status" | "reviewedById" | "reviewedAt" | "rejectionReason" | "playgroundEquipment" | "createdBy" | "reviewedBy"
 >;
 
 // Review decision schema
 export const ReviewPlaygroundSchema = z.object({
   id: z.number(),
-  action: z.enum(["approve", "reject"]),
+  action: ReviewActionSchema,
   rejectionReason: z.string().optional(),
   // Allow editing playground details during review
   title: z.string().min(1).max(256).optional(),
@@ -374,7 +322,7 @@ export const UpdatePlaygroundSchema = z.object({
   toddlerFriendly: z.boolean(),
   // School ground properties
   isSchoolGround: z.boolean(),
-  schoolType: z.enum(["preschool", "elementary"]).nullable(),
+  schoolType: SchoolTypeSchema.nullable(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
@@ -393,7 +341,7 @@ export type UpdatePlaygroundInput = z.infer<typeof UpdatePlaygroundSchema>;
 // Schema for reviewing edit suggestions
 export const ReviewEditSuggestionSchema = z.object({
   id: z.number(),
-  action: z.enum(["approve", "reject"]),
+  action: ReviewActionSchema,
   rejectionReason: z.string().optional(),
   // Allow reviewer to modify the final values before approval
   finalValues: z.object({
@@ -404,7 +352,7 @@ export const ReviewEditSuggestionSchema = z.object({
     publiclyAccessible: z.boolean().optional(),
     toddlerFriendly: z.boolean().optional(),
     isSchoolGround: z.boolean().optional(),
-    schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+    schoolType: SchoolTypeSchema.nullable().optional(),
     hasSeating: z.boolean().optional(),
     hasPicnicTable: z.boolean().optional(),
     hasFencing: z.boolean().optional(),
