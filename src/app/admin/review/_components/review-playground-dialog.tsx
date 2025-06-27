@@ -124,6 +124,38 @@ export default function ReviewPlaygroundDialog({
         },
     });
 
+    // Reset form and state when playground changes
+    useEffect(() => {
+        const validImages = (playground.images ?? []).filter(img => img && img.trim() !== "");
+        const firstImage = validImages.length > 0 ? validImages[0] : null;
+        const defaultCoverImage = playground.coverImage ?? firstImage;
+
+        setSelectedAction(null);
+        setShowRejectionReason(false);
+        
+        form.reset({
+            title: playground.title,
+            latitude: playground.latitude,
+            longitude: playground.longitude,
+            municipality: playground.municipality,
+            publiclyAccessible: playground.publiclyAccessible,
+            toddlerFriendly: playground.toddlerFriendly,
+            isSchoolGround: playground.isSchoolGround ?? false,
+            schoolType: playground.schoolType ?? null,
+            hasSeating: playground.hasSeating ?? false,
+            hasPicnicTable: playground.hasPicnicTable ?? false,
+            hasFencing: playground.hasFencing ?? false,
+            hasGarbageCan: playground.hasGarbageCan ?? false,
+            hasBathroomNearby: playground.hasBathroomNearby ?? false,
+            hasSoftPlayArea: playground.hasSoftPlayArea ?? false,
+            equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [],
+            coverImage: defaultCoverImage,
+            images: validImages,
+            submitAnonymously: playground.submitAnonymously ?? false,
+            rejectionReason: "",
+        });
+    }, [playground.id, form, playground]);
+
     // Auto-select first image as cover if no cover is selected
     useEffect(() => {
         const currentImages = form.getValues("images") || [];

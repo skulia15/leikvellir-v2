@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -122,7 +122,6 @@ function EquipmentReviewSelector({
 
   const addedEquipment = suggestedEquipment.filter(eq => !originalEquipmentIds.includes(eq.id));
   const removedEquipment = currentEquipment.filter(eq => !suggestedEquipmentIds.includes(eq.id));
-  const _unchangedEquipment = currentEquipment.filter(eq => suggestedEquipmentIds.includes(eq.id));
 
   const toggleEquipment = (equipmentId: number) => {
     const newIds = finalEquipmentIds.includes(equipmentId)
@@ -404,6 +403,11 @@ export default function EditSuggestionReviewDialog({
   const [showRejectionReason, setShowRejectionReason] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Reset selected image when edit suggestion changes
+  useEffect(() => {
+    setSelectedImage(null);
+  }, [editSuggestion.id]);
 
   // State for managing which images the reviewer wants to approve
   const [approvedImages, setApprovedImages] = useState<string[]>(
