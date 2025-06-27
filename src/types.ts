@@ -294,7 +294,7 @@ export const ReviewPlaygroundSchema = z.object({
   toddlerFriendly: z.boolean().optional(),
   // School ground properties
   isSchoolGround: z.boolean().optional(),
-  schoolType: SchoolTypeSchema.nullable(),
+  schoolType: SchoolTypeSchema.nullable().optional(),
   // schoolType: z.enum(["preschool", "elementary"]).nullish(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
