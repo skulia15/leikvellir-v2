@@ -40,7 +40,7 @@ import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
 import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
-import { useT, useLanguage } from "~/lib/i18n";
+import { useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 
 interface PlaygroundDetailProps {
@@ -57,7 +57,7 @@ export default function PlaygroundDetail({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
   const t = useT();
-  const currentLanguage = useLanguage();
+  const currentLanguage = useLocale().locale;
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);

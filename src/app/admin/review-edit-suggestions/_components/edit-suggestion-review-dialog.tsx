@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
-import { useLanguage, useTranslation } from "~/lib/i18n";
+import { useLocale, useTranslation } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { type Playground, type Equipment } from "~/types";
 import { handleMixedNameFormat } from "~/lib/multilingual-utils";
@@ -97,7 +97,7 @@ function EquipmentReviewSelector({
   onFinalEquipmentChange,
 }: EquipmentReviewSelectorProps) {
   const { t } = useTranslation();
-  const currentLanguage = useLanguage();
+  const currentLanguage = useLocale().locale;
 
   const { data: allEquipment } = api.equipment.getAll.useQuery();
 

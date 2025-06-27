@@ -17,6 +17,8 @@ const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 
 /**
  * Simple rate limiting check
+ * TODO: Use Redis in production
+ * TODO: Add a rate limit for the entire API
  */
 function checkRateLimit(userId: string): boolean {
   const now = Date.now();
@@ -197,8 +199,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         }
 
         // For backward compatibility, construct the blob URL from filename
-        // This will need to be updated based on your actual blob store URL
-        blobUrl = `https://your-blob-store.vercel-storage.com/playgrounds/${filename}`;
+        blobUrl = `https://vjivtetjvhz2zp6d.public.blob.vercel-storage.com/playgrounds/${filename}`;
       } else {
         return NextResponse.json(
           { success: false, error: "Invalid parameters" },

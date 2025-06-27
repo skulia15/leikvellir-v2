@@ -60,9 +60,12 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - Review playground submission - location is missing - DONE
 - SEO optimization
 - add a change request submission available for all users
+- create playground form - simplify type of school so no dropdown is used - a value has to be selected, only 2 options
 
 ### 🚧 In Progress
 
+- Use tRPC effectivly in backend, use shared type definitions instead of defining schema
+  - Use Drizzle type inference for base types
 - Setup separate Dev and production db's
 - Performance optimizations, lighthouse
 - WEBSOCKET fyrir location tracking over time
@@ -81,7 +84,6 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - disable submit playground button while images are being uploaded
 - Playground list elements need more info (skólalóð, fleira) to use the empty space
 
-- create playground form - simplify type of school so no dropdown is used - a value has to be selected, only 2 options
 - Interactive Map View improvements
   - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
 - Error handling and loading states optimization - some pages may still need a loading skeleton
@@ -101,7 +103,9 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### 📋 Planned Features
 
-- progressive image loading
+- Better image image optimization using tools like cloudinary
+- add audit trail for suggested playground changes vs reviewer approved changes along with changes from the reviewer
+- progressive image loading - next handles this but would like to add blur-up image load
 - bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
 - School hours - uppfæra virkni með frídögum o.þ.h
 - getur skólalóð verið bæði skólalóð og public access á sama tíma?

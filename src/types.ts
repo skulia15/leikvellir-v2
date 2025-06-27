@@ -1,5 +1,7 @@
 // types.ts
 import { z } from "zod";
+import { playgrounds, schoolTypeEnum } from "./server/db/schema";
+import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // User role types
 export type UserRole = "user" | "admin" | "super_admin";
@@ -206,6 +208,18 @@ export type UpdateUserRoleInput = z.infer<typeof UpdateUserRoleSchema>;
 export type BanUserInput = z.infer<typeof BanUserSchema>;
 export type UnbanUserInput = z.infer<typeof UnbanUserSchema>;
 
+// Create shared enum from schema
+export const SchoolTypeSchema = z.enum(schoolTypeEnum.enumValues);
+
+// export const PlaygroundOutput = z.object({
+
+//   id: z.number(),
+//   title: z.string(),
+//   latitude: z.number(),
+//   longitude: z.number(),
+//   municipality: z.string().nullable(),
+// });
+
 // Comprehensive playground creation schema
 export const CreatePlaygroundSchema = z.object({
   title: z
@@ -218,7 +232,9 @@ export const CreatePlaygroundSchema = z.object({
   toddlerFriendly: z.boolean(),
   // School ground properties
   isSchoolGround: z.boolean(),
-  schoolType: z.enum(["preschool", "elementary"]).nullable(),
+  schoolType: SchoolTypeSchema.nullable(),
+  // schoolType: z.enum(["preschool", "elementary"]).nullish(),
+
   // Amenity properties
   hasSeating: z.boolean(),
   hasPicnicTable: z.boolean(),
@@ -258,6 +274,9 @@ export const CreatePlaygroundSchema = z.object({
 });
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
+
+// export type Playground = InferSelectModel<typeof playgrounds>;
+export type NewPlayground = InferInsertModel<typeof playgrounds>;
 
 export type Playground = {
   id: number;
@@ -327,7 +346,8 @@ export const ReviewPlaygroundSchema = z.object({
   toddlerFriendly: z.boolean().optional(),
   // School ground properties
   isSchoolGround: z.boolean().optional(),
-  schoolType: z.enum(["preschool", "elementary"]).nullish(),
+  schoolType: SchoolTypeSchema.nullable(),
+  // schoolType: z.enum(["preschool", "elementary"]).nullish(),
   // Amenity properties
   hasSeating: z.boolean().optional(),
   hasPicnicTable: z.boolean().optional(),
@@ -342,6 +362,62 @@ export const ReviewPlaygroundSchema = z.object({
 });
 
 export type ReviewPlaygroundInput = z.infer<typeof ReviewPlaygroundSchema>;
+
+// Update schema for playground editing
+export const UpdatePlaygroundSchema = z.object({
+  id: z.number(),
+  title: z.string().min(1, "Title is required").max(256, "Title too long"),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  municipality: z.string().max(256).optional(),
+  publiclyAccessible: z.boolean(),
+  toddlerFriendly: z.boolean(),
+  // School ground properties
+  isSchoolGround: z.boolean(),
+  schoolType: z.enum(["preschool", "elementary"]).nullable(),
+  // Amenity properties
+  hasSeating: z.boolean().optional(),
+  hasPicnicTable: z.boolean().optional(),
+  hasFencing: z.boolean().optional(),
+  hasGarbageCan: z.boolean().optional(),
+  hasBathroomNearby: z.boolean().optional(),
+  hasSoftPlayArea: z.boolean().optional(),
+  equipmentIds: z.array(z.number()).default([]),
+  coverImage: z.string().nullable().optional(),
+  images: z.array(z.string()),
+});
+
+export type UpdatePlaygroundInput = z.infer<typeof UpdatePlaygroundSchema>;
+
+
+// Schema for reviewing edit suggestions
+export const ReviewEditSuggestionSchema = z.object({
+  id: z.number(),
+  action: z.enum(["approve", "reject"]),
+  rejectionReason: z.string().optional(),
+  // Allow reviewer to modify the final values before approval
+  finalValues: z.object({
+    title: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    municipality: z.string().optional(),
+    publiclyAccessible: z.boolean().optional(),
+    toddlerFriendly: z.boolean().optional(),
+    isSchoolGround: z.boolean().optional(),
+    schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
+    hasSeating: z.boolean().optional(),
+    hasPicnicTable: z.boolean().optional(),
+    hasFencing: z.boolean().optional(),
+    hasGarbageCan: z.boolean().optional(),
+    hasBathroomNearby: z.boolean().optional(),
+    hasSoftPlayArea: z.boolean().optional(),
+    coverImage: z.string().nullable().optional(),
+    images: z.array(z.string()).optional(),
+    equipmentIds: z.array(z.number()).optional(),
+  }).optional(),
+});
+
+export type ReviewEditSuggestionInput = z.infer<typeof ReviewEditSuggestionSchema>;
 
 // Custom error types
 export class PlaygroundNotFoundError extends Error {

@@ -12,6 +12,7 @@ interface ApiResult {
 }
 
 // Cache the municipalities data to avoid excessive API calls
+// TODO: Find a better caching strategy for this data
 let municipalitiesCache: {
   data: ApiResult;
   timestamp: number;

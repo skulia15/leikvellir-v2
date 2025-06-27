@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import EquipmentEditDialog from "./equipment-edit-dialog";
 import EquipmentCreateDialog from "./equipment-create-dialog";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
-import { useT, useLanguage } from "~/lib/i18n";
+import { useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 
 interface EquipmentManagementClientProps {
@@ -43,7 +43,7 @@ export default function EquipmentManagementClient({
     const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const t = useT();
-    const currentLanguage = useLanguage();
+    const currentLanguage = useLocale().locale;
 
     // Use tRPC query with initial data
     const { data: equipment, refetch } = api.equipment.getAllAdmin.useQuery(

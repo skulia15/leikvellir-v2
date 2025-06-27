@@ -19,23 +19,23 @@ export const usersRouter = createTRPCRouter({
         }
 
         // Auto-promote first user to super admin if no super admins exist
-        if (currentUser.role === "user") {
-            const superAdminCount = await ctx.db
-                .select()
-                .from(users)
-                .where(eq(users.role, "super_admin"));
+        // if (currentUser.role === "user") {
+        //     const superAdminCount = await ctx.db
+        //         .select()
+        //         .from(users)
+        //         .where(eq(users.role, "super_admin"));
 
-            if (superAdminCount.length === 0) {
-                // Promote this user to super admin
-                const promotedUser = await ctx.db
-                    .update(users)
-                    .set({ role: "super_admin" })
-                    .where(eq(users.id, ctx.session.user.id))
-                    .returning();
+        //     if (superAdminCount.length === 0) {
+        //         // Promote this user to super admin
+        //         const promotedUser = await ctx.db
+        //             .update(users)
+        //             .set({ role: "super_admin" })
+        //             .where(eq(users.id, ctx.session.user.id))
+        //             .returning();
 
-                return promotedUser[0] ?? currentUser;
-            }
-        }
+        //         return promotedUser[0] ?? currentUser;
+        //     }
+        // }
 
         return currentUser;
     }),

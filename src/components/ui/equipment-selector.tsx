@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/trpc/react";
 import { type Equipment, type EquipmentCategory } from "~/types";
-import { useLanguage, useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { PlaygroundEquipmentIcon } from "../icons/playground-icons";
 import { handleMixedNameFormat } from "~/lib/multilingual-utils";
 
@@ -53,7 +53,7 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
         onChange(newValue);
     };
 
-    const currentLanguage = useLanguage();
+    const currentLanguage = useLocale().locale;
 
     if (isLoading) {
         const content = (

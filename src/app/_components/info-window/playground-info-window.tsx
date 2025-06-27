@@ -36,6 +36,11 @@ export function PlaygroundInfoWindow({
     return () => clearTimeout(timer);
   }, []);
 
+  // Reset image index when playground changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [playground.id]);
+
   // Handle closing animation
   const handleClose = () => {
     setIsClosing(true);
@@ -99,6 +104,7 @@ export function PlaygroundInfoWindow({
     isDragging,
     style
   } = swipeHandlers;
+
   return (
     <InfoWindow
       position={{
@@ -108,47 +114,48 @@ export function PlaygroundInfoWindow({
       onCloseClick={handleClose}
       pixelOffset={[0, -40]}
       headerDisabled={true}
-
     >
       <div className="border-0 bg-transparent p-0 m-0">
         <Card
-          className={`w-full max-w-[280px] shadow-lg bg-white rounded-lg overflow-hidden transition-all duration-200 ease-out border-0 ${isVisible && !isClosing
+          className={`w-[280px]  shadow-lg bg-white rounded-lg overflow-hidden transition-all duration-200 ease-out border-0 ${isVisible && !isClosing
             ? 'opacity-100 scale-100'
             : 'opacity-0 scale-95'
             }`}
         >
-          <CardContent className="p-0">
-            {/* Header with close button */}
-            <div className="px-4 pt-4 pb-3 bg-white">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <h3 className="font-semibold text-lg leading-tight flex-1 min-w-0 text-gray-900">
+          {/* Close button positioned absolutely at top-right */}
+          <button
+            onClick={handleClose}
+            className="absolute top-0 right-0 z-10 p-1  rounded-full  hover:bg-gray-100 transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5 text-gray-700 -mr-[1px]" />
+          </button>
+
+          <CardContent className="p-0 h-full flex flex-col">
+            {/* Header - Fixed height */}
+            <div className="pl-2 pt-1 pb-2 bg-white flex-shrink-0">
+              <div className="pr-8 mb-2">
+                <h3 className="font-medium text-base lg:text-md leading-snug text-gray-900 line-clamp-2 antialiased">
                   {playground.title}
                 </h3>
-                <button
-                  onClick={handleClose}
-                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4 text-gray-500" />
-                </button>
               </div>
 
-              {/* Distance and badges row */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Distance and badges row - Fixed height */}
+              <div className="flex items-center pb-1 gap-1 flex-wrap min-h-[24px]">
                 {distance && (
-                  <Badge variant="secondary" className="text-xs flex items-center gap-1.5 px-2 py-1">
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1 px-2 py-1">
                     <MapPin className="h-3 w-3" />
                     {formatDistance(distance)}
                   </Badge>
                 )}
                 {playground.toddlerFriendly && (
-                  <Badge variant="outline" className="text-xs px-2 py-1 flex items-center gap-1.5">
+                  <Badge variant="outline" className="text-xs px-2 py-1 flex items-center gap-1">
                     <Baby className="h-3 w-3" />
                     {t('playground.toddlerFriendly')}
                   </Badge>
                 )}
                 {playground.publiclyAccessible && (
-                  <Badge variant="outline" className="text-xs px-2 py-1 flex items-center gap-1.5">
+                  <Badge variant="outline" className="text-xs px-2 py-1 flex items-center gap-1">
                     <Users className="h-3 w-3" />
                     {t('playground.publicAccess')}
                   </Badge>
@@ -156,98 +163,104 @@ export function PlaygroundInfoWindow({
               </div>
             </div>
 
-            {/* Image section */}
-            {hasImages && (
-              <div className="relative">
-                <div
-                  className="relative h-48 w-full overflow-hidden bg-gray-50 group"
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                  onMouseDown={onMouseDown}
-                  onMouseMove={onMouseMove}
-                  onMouseUp={onMouseUp}
-                  onMouseLeave={onMouseLeave}
-                  style={style}
-                >
-                  {/* Image container */}
+            {/* Image section - Always present with consistent height */}
+            <div className="relative flex-1 flex flex-col">
+              {hasImages ? (
+                <>
                   <div
-                    className={`flex h-full ${isDragging ? '' : 'transition-transform duration-300 ease-in-out'}`}
-                    style={{
-                      transform: `translateX(calc(-${currentImageIndex * (100 / images.length)}% + ${dragOffset}px))`,
-                      width: `${images.length * 100}%`
-                    }}
+                    className="relative h-[200px] w-full overflow-hidden bg-gray-50 group"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                    onMouseDown={onMouseDown}
+                    onMouseMove={onMouseMove}
+                    onMouseUp={onMouseUp}
+                    onMouseLeave={onMouseLeave}
+                    style={style}
                   >
-                    {images.map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative h-full flex-shrink-0"
-                        style={{ width: `${100 / images.length}%` }}
-                      >
-                        <Image
-                          src={image ?? "/playground.jpg"}
-                          alt={`${playground.title} - Image ${index + 1}`}
-                          fill
-                          sizes="280px"
-                          className="object-cover"
-                          priority={index === 0}
-                        />
+                    {/* Image container */}
+                    <div
+                      className={`flex h-full ${isDragging ? '' : 'transition-transform duration-300 ease-in-out'}`}
+                      style={{
+                        transform: `translateX(calc(-${currentImageIndex * (100 / images.length)}% + ${dragOffset}px))`,
+                        width: `${images.length * 100}%`
+                      }}
+                    >
+                      {images.map((image, index) => (
+                        <div
+                          key={index}
+                          className="relative h-full flex-shrink-0"
+                          style={{ width: `${100 / images.length}%` }}
+                        >
+                          <Image
+                            src={image ?? "/playground.jpg"}
+                            alt={`${playground.title} - Image ${index + 1}`}
+                            fill
+                            sizes="280px"
+                            className="object-cover"
+                            priority={index === 0}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Navigation arrows */}
+                    {hasMultipleImages && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button
+                          onClick={previousImage}
+                          disabled={isTransitioning}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+                          aria-label="Previous image"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          disabled={isTransitioning}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+                          aria-label="Next image"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
                       </div>
-                    ))}
+                    )}
+
+                    {/* Image counter */}
+                    {hasMultipleImages && (
+                      <div className="absolute top-2 right-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white backdrop-blur-sm">
+                        {currentImageIndex + 1}/{images.length}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Navigation arrows */}
+                  {/* Compact dots indicator */}
                   {hasMultipleImages && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button
-                        onClick={previousImage}
-                        disabled={isTransitioning}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
-                        aria-label="Previous image"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        disabled={isTransitioning}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
-                        aria-label="Next image"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
+                    <div className="flex justify-center gap-1 mt-2">
+                      {images.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => changeImage(index)}
+                          disabled={isTransitioning}
+                          className={`h-1.5 w-1.5 rounded-full transition-colors disabled:opacity-50 ${index === currentImageIndex
+                            ? 'bg-primary'
+                            : 'bg-muted-foreground/30'
+                            }`}
+                          aria-label={`Go to image ${index + 1}`}
+                        />
+                      ))}
                     </div>
                   )}
-
-                  {/* Image counter */}
-                  {hasMultipleImages && (
-                    <div className="absolute top-2 right-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                      {currentImageIndex + 1}/{images.length}
-                    </div>
-                  )}
+                </>
+              ) : (
+                <div className="h-[200px] w-full bg-gray-100 flex items-center justify-center">
+                  <p className="text-gray-500 text-sm">{t('playground.noImages')}</p>
                 </div>
-
-                {/* Compact dots indicator */}
-                {hasMultipleImages && (
-                  <div className="flex justify-center gap-1 mt-2">
-                    {images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => changeImage(index)}
-                        disabled={isTransitioning}
-                        className={`h-1.5 w-1.5 rounded-full transition-colors disabled:opacity-50 ${index === currentImageIndex
-                          ? 'bg-primary'
-                          : 'bg-muted-foreground/30'
-                          }`}
-                        aria-label={`Go to image ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Action button */}
-            <div className="p-4 bg-white">
+            <div className="pt-4 pb-1 px-0 bg-white">
               <Link href={`/playground/${playground.id}`}>
                 <Button
                   variant="default"

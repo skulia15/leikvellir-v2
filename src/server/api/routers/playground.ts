@@ -7,70 +7,25 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { playgrounds, playgroundEquipment, playgroundEditSuggestions, playgroundEditSuggestionEquipment } from "~/server/db/schema";
-import { CreatePlaygroundSchema, PlaygroundNotFoundError, ReviewPlaygroundSchema, CreateEditSuggestionSchema } from "~/types";
+import {
+  playgrounds,
+  playgroundEquipment,
+  playgroundEditSuggestions,
+  playgroundEditSuggestionEquipment,
+} from "~/server/db/schema";
+import {
+  CreatePlaygroundSchema,
+  PlaygroundNotFoundError,
+  ReviewPlaygroundSchema,
+  CreateEditSuggestionSchema,
+  UpdatePlaygroundSchema,
+  ReviewEditSuggestionSchema,
+} from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { logDbError, logger } from "~/lib/logging/logger";
 
-// Update schema for playground editing
-const UpdatePlaygroundSchema = z.object({
-  id: z.number(),
-  title: z.string().min(1, "Title is required").max(256, "Title too long"),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-  municipality: z.string().max(256).optional(),
-  publiclyAccessible: z.boolean(),
-  toddlerFriendly: z.boolean(),
-  // School ground properties
-  isSchoolGround: z.boolean(),
-  schoolType: z.enum(["preschool", "elementary"]).nullable(),
-  // Amenity properties
-  hasSeating: z.boolean().optional(),
-  hasPicnicTable: z.boolean().optional(),
-  hasFencing: z.boolean().optional(),
-  hasGarbageCan: z.boolean().optional(),
-  hasBathroomNearby: z.boolean().optional(),
-  hasSoftPlayArea: z.boolean().optional(),
-  equipmentIds: z.array(z.number()).default([]),
-  coverImage: z.string().nullable().optional(),
-  images: z.array(z.string()),
-});
-
-// Schema for reviewing edit suggestions
-const ReviewEditSuggestionSchema = z.object({
-  id: z.number(),
-  action: z.enum(["approve", "reject"]),
-  rejectionReason: z.string().optional(),
-  // Allow reviewer to modify the final values before approval
-  finalValues: z.object({
-    title: z.string().optional(),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-    municipality: z.string().optional(),
-    publiclyAccessible: z.boolean().optional(),
-    toddlerFriendly: z.boolean().optional(),
-    isSchoolGround: z.boolean().optional(),
-    schoolType: z.enum(["preschool", "elementary"]).nullable().optional(),
-    hasSeating: z.boolean().optional(),
-    hasPicnicTable: z.boolean().optional(),
-    hasFencing: z.boolean().optional(),
-    hasGarbageCan: z.boolean().optional(),
-    hasBathroomNearby: z.boolean().optional(),
-    hasSoftPlayArea: z.boolean().optional(),
-    coverImage: z.string().nullable().optional(),
-    images: z.array(z.string()).optional(),
-    equipmentIds: z.array(z.number()).optional(),
-  }).optional(),
-});
 
 export const playgroundRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello, playground router is working! ${input.text}`,
-      };
-    }),
 
   create: protectedProcedure
     .input(CreatePlaygroundSchema)
