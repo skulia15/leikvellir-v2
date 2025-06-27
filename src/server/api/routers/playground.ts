@@ -558,7 +558,7 @@ export const playgroundRouter = createTRPCRouter({
     .input(ReviewEditSuggestionSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { id, action, rejectionReason } = input;
+      const { id, action, rejectionReason, finalValues } = input;
 
       logger.info("Reviewing edit suggestion", {
         component: "PlaygroundRouter",
@@ -622,23 +622,26 @@ export const playgroundRouter = createTRPCRouter({
             updatedAt: new Date(),
           };
 
-          // Apply all non-null changes from the suggestion
-          if (editSuggestion.title !== null) updateData.title = editSuggestion.title;
-          if (editSuggestion.latitude !== null) updateData.latitude = editSuggestion.latitude;
-          if (editSuggestion.longitude !== null) updateData.longitude = editSuggestion.longitude;
-          if (editSuggestion.municipality !== null) updateData.municipality = editSuggestion.municipality;
-          if (editSuggestion.publiclyAccessible !== null) updateData.publiclyAccessible = editSuggestion.publiclyAccessible;
-          if (editSuggestion.toddlerFriendly !== null) updateData.toddlerFriendly = editSuggestion.toddlerFriendly;
-          if (editSuggestion.isSchoolGround !== null) updateData.isSchoolGround = editSuggestion.isSchoolGround;
-          if (editSuggestion.schoolType !== null) updateData.schoolType = editSuggestion.schoolType;
-          if (editSuggestion.hasSeating !== null) updateData.hasSeating = editSuggestion.hasSeating;
-          if (editSuggestion.hasPicnicTable !== null) updateData.hasPicnicTable = editSuggestion.hasPicnicTable;
-          if (editSuggestion.hasFencing !== null) updateData.hasFencing = editSuggestion.hasFencing;
-          if (editSuggestion.hasGarbageCan !== null) updateData.hasGarbageCan = editSuggestion.hasGarbageCan;
-          if (editSuggestion.hasBathroomNearby !== null) updateData.hasBathroomNearby = editSuggestion.hasBathroomNearby;
-          if (editSuggestion.hasSoftPlayArea !== null) updateData.hasSoftPlayArea = editSuggestion.hasSoftPlayArea;
-          if (editSuggestion.coverImage !== null) updateData.coverImage = editSuggestion.coverImage;
-          if (editSuggestion.images !== null) updateData.images = editSuggestion.images;
+          // Use finalValues if provided (admin modifications), otherwise use original suggestion values
+          const valuesToApply = finalValues || editSuggestion;
+          
+          // Apply all non-null changes from the final values (admin-approved modifications)
+          if (valuesToApply.title !== null && valuesToApply.title !== undefined) updateData.title = valuesToApply.title;
+          if (valuesToApply.latitude !== null && valuesToApply.latitude !== undefined) updateData.latitude = valuesToApply.latitude;
+          if (valuesToApply.longitude !== null && valuesToApply.longitude !== undefined) updateData.longitude = valuesToApply.longitude;
+          if (valuesToApply.municipality !== null && valuesToApply.municipality !== undefined) updateData.municipality = valuesToApply.municipality;
+          if (valuesToApply.publiclyAccessible !== null && valuesToApply.publiclyAccessible !== undefined) updateData.publiclyAccessible = valuesToApply.publiclyAccessible;
+          if (valuesToApply.toddlerFriendly !== null && valuesToApply.toddlerFriendly !== undefined) updateData.toddlerFriendly = valuesToApply.toddlerFriendly;
+          if (valuesToApply.isSchoolGround !== null && valuesToApply.isSchoolGround !== undefined) updateData.isSchoolGround = valuesToApply.isSchoolGround;
+          if (valuesToApply.schoolType !== null && valuesToApply.schoolType !== undefined) updateData.schoolType = valuesToApply.schoolType;
+          if (valuesToApply.hasSeating !== null && valuesToApply.hasSeating !== undefined) updateData.hasSeating = valuesToApply.hasSeating;
+          if (valuesToApply.hasPicnicTable !== null && valuesToApply.hasPicnicTable !== undefined) updateData.hasPicnicTable = valuesToApply.hasPicnicTable;
+          if (valuesToApply.hasFencing !== null && valuesToApply.hasFencing !== undefined) updateData.hasFencing = valuesToApply.hasFencing;
+          if (valuesToApply.hasGarbageCan !== null && valuesToApply.hasGarbageCan !== undefined) updateData.hasGarbageCan = valuesToApply.hasGarbageCan;
+          if (valuesToApply.hasBathroomNearby !== null && valuesToApply.hasBathroomNearby !== undefined) updateData.hasBathroomNearby = valuesToApply.hasBathroomNearby;
+          if (valuesToApply.hasSoftPlayArea !== null && valuesToApply.hasSoftPlayArea !== undefined) updateData.hasSoftPlayArea = valuesToApply.hasSoftPlayArea;
+          if (valuesToApply.coverImage !== null && valuesToApply.coverImage !== undefined) updateData.coverImage = valuesToApply.coverImage;
+          if (valuesToApply.images !== null && valuesToApply.images !== undefined) updateData.images = valuesToApply.images;
 
           // Update the playground
           await ctx.db
@@ -647,15 +650,15 @@ export const playgroundRouter = createTRPCRouter({
             .where(eq(playgrounds.id, editSuggestion.playgroundId));
 
           // Update equipment if changed
-          if (editSuggestion.equipmentIds !== null) {
+          if (valuesToApply.equipmentIds !== null && valuesToApply.equipmentIds !== undefined) {
             // Remove existing equipment relationships
             await ctx.db
               .delete(playgroundEquipment)
               .where(eq(playgroundEquipment.playgroundId, editSuggestion.playgroundId));
 
             // Add new equipment relationships if any
-            if (editSuggestion.equipmentIds.length > 0) {
-              const equipmentRelations = editSuggestion.equipmentIds.map(equipmentId => ({
+            if (valuesToApply.equipmentIds.length > 0) {
+              const equipmentRelations = valuesToApply.equipmentIds.map(equipmentId => ({
                 playgroundId: editSuggestion.playgroundId,
                 equipmentId: equipmentId,
               }));
