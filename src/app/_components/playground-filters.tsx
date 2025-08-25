@@ -19,6 +19,8 @@ export interface PlaygroundFilters {
     toddlerFriendly?: boolean;
     publiclyAccessible?: boolean;
     accessibleNow?: boolean; // Includes publicly accessible + school grounds during accessible hours
+    hasFootballField?: boolean;
+    hasJumpingPillow?: boolean;
 }
 
 interface PlaygroundFiltersProps {
@@ -135,6 +137,44 @@ export default function PlaygroundFilters({
                                         className="text-sm cursor-pointer"
                                     >
                                         {t('playground.publiclyAccessible')}
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="has-football-field"
+                                        checked={filters.hasFootballField === true}
+                                        onCheckedChange={(checked) => {
+                                            handleFilterChange(
+                                                "hasFootballField",
+                                                checked ? true : undefined,
+                                            );
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor="has-football-field"
+                                        className="text-sm cursor-pointer"
+                                    >
+                                        Fótboltavöllur
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="has-jumping-pillow"
+                                        checked={filters.hasJumpingPillow === true}
+                                        onCheckedChange={(checked) => {
+                                            handleFilterChange(
+                                                "hasJumpingPillow",
+                                                checked ? true : undefined,
+                                            );
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor="has-jumping-pillow"
+                                        className="text-sm cursor-pointer"
+                                    >
+                                        Ærslabelgur
                                     </label>
                                 </div>
                             </div>

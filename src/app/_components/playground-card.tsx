@@ -1,7 +1,7 @@
 import { Badge } from "~/components/ui/badge";
 import Image from "next/image";
 import { type Playground } from "~/types";
-import { Baby, MapPin, Users } from "lucide-react";
+import { Baby, MapPin, Users, GraduationCap } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
 
@@ -55,6 +55,12 @@ export default function PlaygroundCard({
               <Badge variant="outline" className="text-xs flex items-center gap-1">
                 <Users className="h-3 w-3" />
                 {t('forms.publicAccess')}
+              </Badge>
+            )}
+            {playground.isSchoolGround && (
+              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                <GraduationCap className="h-3 w-3" />
+                {t('playground.schoolGround')}
               </Badge>
             )}
             {showDistance && distance !== undefined && (

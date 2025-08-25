@@ -63,6 +63,23 @@ export default function PlaygroundList({
         }
       }
 
+      // Equipment filters
+      if (filters.hasFootballField && !playground.playgroundEquipment?.some(pe => {
+        const isName = pe.equipment.name?.is?.toLowerCase() || '';
+        const enName = pe.equipment.name?.en?.toLowerCase() || '';
+        return isName.includes('fótbolt') || enName.includes('football') || enName.includes('soccer');
+      })) {
+        return false;
+      }
+
+      if (filters.hasJumpingPillow && !playground.playgroundEquipment?.some(pe => {
+        const isName = pe.equipment.name?.is?.toLowerCase() || '';
+        const enName = pe.equipment.name?.en?.toLowerCase() || '';
+        return isName.includes('ærslabelgur') || enName.includes('jumping pillow');
+      })) {
+        return false;
+      }
+
       return true;
     });
 

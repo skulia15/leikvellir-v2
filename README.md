@@ -61,16 +61,16 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - SEO optimization
 - add a change request submission available for all users
 - create playground form - simplify type of school so no dropdown is used - a value has to be selected, only 2 options
+- Use tRPC effectivly in backend, use shared type definitions instead of defining schema
+  - Use Drizzle type inference for base types
 
 ### 🚧 In Progress
 
-- Use tRPC effectivly in backend, use shared type definitions instead of defining schema
-  - Use Drizzle type inference for base types
 - Setup separate Dev and production db's
 - Performance optimizations, lighthouse
 - WEBSOCKET fyrir location tracking over time
 - test and fix obvious errors in the edit playground review dialog
-- when adding playground - the users should be able to remove images they are uplaoding
+- when adding playground - the users should be able to remove images they are uploading
 - Test if changing location in edit review changes when admin sets it - NO the users suggested location is used instead!
 - Move suggest edit button on detail page so that it is side by side with add images button under the additional information section
 - Location cache issue á playground review korti - ef leikvöllur er reviewaður og svo næsti opnaður eru gömul hnit / pin sýnd

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Navigation, SortAsc } from "lucide-react";
+import { MapPin, Navigation, SortAsc, Filter, Map } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Checkbox } from "~/components/ui/checkbox";
 import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
 import { PlaygroundsListSkeleton } from "./playgrounds-page-skeleton";
@@ -30,21 +31,60 @@ type SortOption = "proximity" | "popularity" | "newest" | "name";
 export default function PlaygroundsList({ playgrounds, isLoading = false }: PlaygroundsListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
+  const [filters, setFilters] = useState({
+    toddlerFriendly: false,
+    publiclyAccessible: false,
+    hasFootballField: false,
+    hasJumpingPillow: false,
+  });
   const t = useT();
 
   const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
 
-  // Sort playgrounds based on selected option
+  // Filter and sort playgrounds based on selected options
   useEffect(() => {
-    let sorted = [...playgrounds];
+    let filtered = [...playgrounds];
 
+    // Apply filters
+    if (filters.toddlerFriendly) {
+      filtered = filtered.filter(p => p.toddlerFriendly);
+    }
+    if (filters.publiclyAccessible) {
+      filtered = filtered.filter(p => p.publiclyAccessible);
+    }
+    if (filters.hasFootballField) {
+      filtered = filtered.filter(p => {
+        // Check if playground has football field equipment
+        return p.playgroundEquipment?.some(pe => {
+          const isName = pe.equipment.name?.is?.toLowerCase() || '';
+          const enName = pe.equipment.name?.en?.toLowerCase() || '';
+          
+          return isName.includes('fótbolt') ||
+                 enName.includes('football') ||
+                 enName.includes('soccer');
+        });
+      });
+    }
+    if (filters.hasJumpingPillow) {
+      filtered = filtered.filter(p => {
+        // Check if playground has jumping pillow equipment (ærslabelgur)
+        return p.playgroundEquipment?.some(pe => {
+          const isName = pe.equipment.name?.is?.toLowerCase() || '';
+          const enName = pe.equipment.name?.en?.toLowerCase() || '';
+
+          return isName.includes('ærslabelgur') ||
+            enName.includes('jumping pillow');
+        });
+      });
+    }
+
+    // Sort filtered results
+    let sorted = [...filtered];
     switch (sortBy) {
       case "proximity":
-        // Use shared utility for distance sorting
-        sorted = sortPlaygroundsByDistance(playgrounds, userLocation);
+        sorted = sortPlaygroundsByDistance(filtered, userLocation);
         break;
       case "popularity":
-        // Placeholder for popularity sorting - will use rating when implemented
         sorted = sorted.map(p => ({ ...p })).sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "newest":
@@ -58,7 +98,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
     }
 
     setSortedPlaygrounds(sorted);
-  }, [sortBy, userLocation, playgrounds]);
+  }, [sortBy, userLocation, playgrounds, filters]);
 
   // Show skeleton while loading
   if (isLoading) {
@@ -116,6 +156,122 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
                 {t('playground.locationEnabled')}
               </Badge>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{t('playground.filters')}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="toddler-friendly"
+                  checked={filters.toddlerFriendly}
+                  onCheckedChange={(checked) =>
+                    setFilters(prev => ({ ...prev, toddlerFriendly: !!checked }))
+                  }
+                />
+                <label
+                  htmlFor="toddler-friendly"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Hentar ungabörnum
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="publicly-accessible"
+                  checked={filters.publiclyAccessible}
+                  onCheckedChange={(checked) =>
+                    setFilters(prev => ({ ...prev, publiclyAccessible: !!checked }))
+                  }
+                />
+                <label
+                  htmlFor="publicly-accessible"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Aðgengilegt núna
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="has-football"
+                  checked={filters.hasFootballField}
+                  onCheckedChange={(checked) =>
+                    setFilters(prev => ({ ...prev, hasFootballField: !!checked }))
+                  }
+                />
+                <label
+                  htmlFor="has-football"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Fótboltavöllur
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="has-jumping-pillow"
+                  checked={filters.hasJumpingPillow}
+                  onCheckedChange={(checked) =>
+                    setFilters(prev => ({ ...prev, hasJumpingPillow: !!checked }))
+                  }
+                />
+                <label
+                  htmlFor="has-jumping-pillow"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Ærslabelgur
+                </label>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-between items-center">
+              {/* Clear filters button */}
+              {(filters.toddlerFriendly || filters.publiclyAccessible || filters.hasFootballField || filters.hasJumpingPillow) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters({
+                    toddlerFriendly: false,
+                    publiclyAccessible: false,
+                    hasFootballField: false,
+                    hasJumpingPillow: false,
+                  })}
+                >
+                  {t('playground.clearFilters')}
+                </Button>
+              )}
+              
+              {/* View on map button */}
+              <Link
+                href={{
+                  pathname: '/',
+                  query: {
+                    ...(filters.toddlerFriendly && { toddlerFriendly: 'true' }),
+                    ...(filters.publiclyAccessible && { publiclyAccessible: 'true' }),
+                    ...(filters.hasFootballField && { hasFootballField: 'true' }),
+                    ...(filters.hasJumpingPillow && { hasJumpingPillow: 'true' }),
+                  }
+                }}
+                className="ml-auto"
+              >
+                <Button variant="default" size="sm" className="flex items-center gap-2">
+                  <Map className="h-4 w-4" />
+                  {t('playground.viewOnMap')}
+                </Button>
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

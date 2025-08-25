@@ -123,11 +123,17 @@ export default function HomeClient() {
         );
     }, []);
 
-    // Handle URL parameters for deep linking from playground detail page
+    // Handle URL parameters for deep linking from playground detail page and filters
     useEffect(() => {
         const lat = searchParams.get('lat');
         const lng = searchParams.get('lng');
         const playgroundId = searchParams.get('playground');
+        
+        // Handle filter parameters
+        const toddlerFriendly = searchParams.get('toddlerFriendly') === 'true';
+        const publiclyAccessible = searchParams.get('publiclyAccessible') === 'true';
+        const hasFootballField = searchParams.get('hasFootballField') === 'true';
+        const hasJumpingPillow = searchParams.get('hasJumpingPillow') === 'true';
 
         if (lat && lng) {
             const newCenter = {
@@ -143,6 +149,17 @@ export default function HomeClient() {
                 setSelectedPlayground(playground);
             }
         }
+        
+        // Set filters from URL parameters
+        const urlFilters: PlaygroundFiltersType = {};
+        if (toddlerFriendly) urlFilters.toddlerFriendly = true;
+        if (publiclyAccessible) urlFilters.publiclyAccessible = true;
+        if (hasFootballField) urlFilters.hasFootballField = true;
+        if (hasJumpingPillow) urlFilters.hasJumpingPillow = true;
+        
+        if (Object.keys(urlFilters).length > 0) {
+            setFilters(urlFilters);
+        }
     }, [searchParams, playgrounds]);
 
     // Calculate filtered playground count for the filter component
@@ -156,6 +173,20 @@ export default function HomeClient() {
                     return false;
                 }
                 if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
+                    return false;
+                }
+                if (filters.hasFootballField && !playground.playgroundEquipment?.some(pe => {
+                    const isName = pe.equipment.name?.is?.toLowerCase() || '';
+                    const enName = pe.equipment.name?.en?.toLowerCase() || '';
+                    return isName.includes('fótbolt') || enName.includes('football') || enName.includes('soccer');
+                })) {
+                    return false;
+                }
+                if (filters.hasJumpingPillow && !playground.playgroundEquipment?.some(pe => {
+                    const isName = pe.equipment.name?.is?.toLowerCase() || '';
+                    const enName = pe.equipment.name?.en?.toLowerCase() || '';
+                    return isName.includes('ærslabelgur') || enName.includes('jumping pillow');
+                })) {
                     return false;
                 }
                 return true;
