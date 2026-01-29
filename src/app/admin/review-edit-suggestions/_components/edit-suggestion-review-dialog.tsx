@@ -654,7 +654,7 @@ export default function EditSuggestionReviewDialog({
               <div className="flex flex-col space-y-1">
                 <span className="text-muted-foreground">{t('admin.submittedOn')}:</span>
                 <span className="font-medium">
-                  {new Date(editSuggestion.createdAt).toLocaleDateString()}
+                  {new Date(editSuggestion.createdAt).toLocaleDateString('en-GB')}
                 </span>
               </div>
               <div className="flex flex-col space-y-1">

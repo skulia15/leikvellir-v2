@@ -426,7 +426,7 @@ export default function ReviewPlaygroundDialog({
                                     <div>
                                         <span className="text-muted-foreground">{t('admin.submittedOn')}:</span>
                                         <span className="ml-2 font-medium">
-                                            {new Date(playground.createdAt).toLocaleDateString()}
+                                            {new Date(playground.createdAt).toLocaleDateString('en-GB')}
                                         </span>
                                     </div>
                                 </div>

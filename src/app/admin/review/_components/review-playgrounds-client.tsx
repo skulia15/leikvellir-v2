@@ -292,7 +292,7 @@ export default function ReviewPlaygroundsClient({
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="text-sm">
-                                                        {new Date(playground.createdAt).toLocaleDateString()}
+                                                        {new Date(playground.createdAt).toLocaleDateString('en-GB')}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
@@ -393,7 +393,7 @@ export default function ReviewPlaygroundsClient({
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="text-sm">
-                                                        {new Date(suggestion.createdAt).toLocaleDateString()}
+                                                        {new Date(suggestion.createdAt).toLocaleDateString('en-GB')}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>

@@ -61,6 +61,7 @@ export default function PlaygroundDetail({
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
   const t = useT();
   const currentLanguage = useLocale().locale;
+  const dateLocale = currentLanguage === 'en' ? 'en-GB' : currentLanguage;
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -544,7 +545,7 @@ export default function PlaygroundDetail({
                     </span>
                     <span className="font-medium">
                       {playground.createdAt
-                        ? new Date(playground.createdAt).toLocaleDateString(currentLanguage, { day: 'numeric', month: 'numeric', year: 'numeric' })
+                        ? new Date(playground.createdAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'numeric', year: 'numeric' })
                         : t('playground.unknown')}
                     </span>
                   </div>
@@ -553,7 +554,7 @@ export default function PlaygroundDetail({
                     <span className="text-muted-foreground">{t('playground.lastUpdated')}:</span>
                     <span className="font-medium">
                       {playground.updatedAt
-                        ? new Date(playground.updatedAt).toLocaleDateString(currentLanguage, { day: 'numeric', month: 'numeric', year: 'numeric' })
+                        ? new Date(playground.updatedAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'numeric', year: 'numeric' })
                         : t('playground.unknown')}
                     </span>
                   </div>

@@ -230,7 +230,7 @@ export default function UserManagementClient() {
                             <TableCell>{getStatusBadge(user)}</TableCell>
                             <TableCell>
                                 <div className="text-sm">
-                                    {user.emailVerified?.toLocaleDateString() ?? "Unknown"}
+                                    {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
                                 </div>
                             </TableCell>
                             <TableCell>

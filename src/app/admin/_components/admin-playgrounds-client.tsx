@@ -56,7 +56,7 @@ export default function AdminPlaygroundsClient() {
     };
 
     const formatDate = (date: Date) => {
-        return new Date(date).toLocaleDateString();
+        return new Date(date).toLocaleDateString('en-GB');
     };
 
     const getStatusBadge = (status: Playground["status"]) => {

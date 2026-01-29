@@ -29,7 +29,7 @@ export function LocalizedDate() {
             case 'en':
             default:
                 // English date format
-                return date.toLocaleDateString('en-US', {
+                return date.toLocaleDateString('en-GB', {
                     year: "numeric",
                     month: "long",
                     day: "numeric"
