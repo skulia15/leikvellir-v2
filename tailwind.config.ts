@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-fira-sans)", "var(--font-geist-sans)", ...fontFamily.sans],
+        sans: ["var(--font-outfit)", "var(--font-fira-sans)", ...fontFamily.sans],
         "fira-sans": ["var(--font-fira-sans)", ...fontFamily.sans],
+        display: ["var(--font-vollkorn)", ...fontFamily.serif],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -55,6 +56,14 @@ export default {
           "3": "hsl(var(--chart-3))",
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
+        },
+        terrain: {
+          terracotta: "hsl(var(--terrain-terracotta))",
+          moss: "hsl(var(--terrain-moss))",
+          gold: "hsl(var(--terrain-gold))",
+          water: "hsl(var(--terrain-water))",
+          heather: "hsl(var(--terrain-heather))",
+          stone: "hsl(var(--terrain-stone))",
         },
       },
     },

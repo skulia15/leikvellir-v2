@@ -1,7 +1,8 @@
 "use client";
 
 import { MapPin, Navigation, SortAsc } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -13,12 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { type Playground } from "~/types";
-import PlaygroundCard from "./playground-card";
+import { type Playground, type EquipmentCategory, type MultilingualName } from "~/types";
+import PlaygroundGridCard from "./playground-grid-card";
+import EquipmentCategoryFilter from "./equipment-category-filter";
 import { PlaygroundsListSkeleton } from "./playgrounds-page-skeleton";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, sortPlaygroundsByDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
+import { isSchoolGroundAccessible } from "~/lib/school-hours";
 
 interface PlaygroundsListProps {
   playgrounds: Playground[];
@@ -27,9 +30,23 @@ interface PlaygroundsListProps {
 
 type SortOption = "proximity" | "popularity" | "newest" | "name";
 
+function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
+  return (
+    playground.playgroundEquipment?.some((pe) => {
+      const name = pe.equipment.name as string | MultilingualName;
+      if (typeof name === "string") return name.toLowerCase() === nameIs.toLowerCase();
+      return name.is?.toLowerCase() === nameIs.toLowerCase();
+    }) ?? false
+  );
+}
+
 export default function PlaygroundsList({ playgrounds, isLoading = false }: PlaygroundsListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
+  const [activeCategories, setActiveCategories] = useState<Set<EquipmentCategory>>(new Set());
+  const [bouncyPillowActive, setBouncyPillowActive] = useState(false);
+  const [footballFieldActive, setFootballFieldActive] = useState(false);
+  const [openNowActive, setOpenNowActive] = useState(false);
   const t = useT();
 
   const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
@@ -59,6 +76,102 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
 
     setSortedPlaygrounds(sorted);
   }, [sortBy, userLocation, playgrounds]);
+
+  // Compute category counts from the full sorted list (stable counts)
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<EquipmentCategory, number>();
+    for (const pg of sortedPlaygrounds) {
+      const categories = new Set(
+        pg.playgroundEquipment?.map((pe) => pe.equipment.category) ?? [],
+      );
+      for (const cat of categories) {
+        counts.set(cat, (counts.get(cat) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [sortedPlaygrounds]);
+
+  // Count playgrounds with bouncy pillow (stable count from full list)
+  const bouncyPillowCount = useMemo(() => {
+    return sortedPlaygrounds.filter((pg) => hasEquipmentByName(pg, "Ærslabelgur")).length;
+  }, [sortedPlaygrounds]);
+
+  // Count playgrounds with football field (stable count from full list)
+  const footballFieldCount = useMemo(() => {
+    return sortedPlaygrounds.filter((pg) => hasEquipmentByName(pg, "Fótboltavöllur")).length;
+  }, [sortedPlaygrounds]);
+
+  // Count school ground playgrounds currently closed (for "open now" filter)
+  // Uses the exact same predicate as the filter to ensure count matches
+  const closedSchoolGroundCount = useMemo(() => {
+    return sortedPlaygrounds.filter(
+      (pg) => !isSchoolGroundAccessible(pg.isSchoolGround),
+    ).length;
+  }, [sortedPlaygrounds]);
+
+  // Filter by active equipment categories (OR logic), bouncy pillow, and open now
+  const filteredPlaygrounds = useMemo(() => {
+    let result = sortedPlaygrounds;
+
+    // Equipment category filter (OR logic)
+    if (activeCategories.size > 0) {
+      result = result.filter((playground) =>
+        playground.playgroundEquipment?.some((pe) =>
+          activeCategories.has(pe.equipment.category),
+        ),
+      );
+    }
+
+    // Bouncy pillow filter
+    if (bouncyPillowActive) {
+      result = result.filter((pg) => hasEquipmentByName(pg, "Ærslabelgur"));
+    }
+
+    // Football field filter
+    if (footballFieldActive) {
+      result = result.filter((pg) => hasEquipmentByName(pg, "Fótboltavöllur"));
+    }
+
+    // Open now filter — hide school grounds that are currently closed
+    if (openNowActive) {
+      result = result.filter((pg) => isSchoolGroundAccessible(pg.isSchoolGround));
+    }
+
+    return result;
+  }, [sortedPlaygrounds, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive]);
+
+  const handleToggleCategory = useCallback((category: EquipmentCategory) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleBouncyPillow = useCallback(() => {
+    setBouncyPillowActive((prev) => !prev);
+  }, []);
+
+  const handleToggleFootballField = useCallback(() => {
+    setFootballFieldActive((prev) => !prev);
+  }, []);
+
+  const handleToggleOpenNow = useCallback(() => {
+    setOpenNowActive((prev) => !prev);
+  }, []);
+
+  const handleClearAllCategories = useCallback(() => {
+    setActiveCategories(new Set());
+    setBouncyPillowActive(false);
+    setFootballFieldActive(false);
+    setOpenNowActive(false);
+  }, []);
+
+  const hasActiveFilters = activeCategories.size > 0 || bouncyPillowActive || footballFieldActive || openNowActive;
 
   // Show skeleton while loading
   if (isLoading) {
@@ -120,10 +233,32 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
         </CardContent>
       </Card>
 
+      {/* Equipment Category Filters */}
+      <EquipmentCategoryFilter
+        activeCategories={activeCategories}
+        onToggleCategory={handleToggleCategory}
+        bouncyPillowActive={bouncyPillowActive}
+        onToggleBouncyPillow={handleToggleBouncyPillow}
+        bouncyPillowCount={bouncyPillowCount}
+        footballFieldActive={footballFieldActive}
+        onToggleFootballField={handleToggleFootballField}
+        footballFieldCount={footballFieldCount}
+        openNowActive={openNowActive}
+        onToggleOpenNow={handleToggleOpenNow}
+        closedSchoolGroundCount={closedSchoolGroundCount}
+        onClearAll={handleClearAllCategories}
+        categoryCounts={categoryCounts}
+      />
+
       {/* Playgrounds Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t('playground.showing')} {t('playground.playgroundsCount', { count: sortedPlaygrounds.length })}
+          {hasActiveFilters
+            ? t('playground.showingFiltered', {
+                filtered: filteredPlaygrounds.length,
+                total: sortedPlaygrounds.length,
+              })
+            : `${t('playground.showing')} ${t('playground.playgroundsCount', { count: sortedPlaygrounds.length })}`}
         </p>
         {sortBy === "proximity" && userLocation && (
           <p className="text-sm text-muted-foreground">
@@ -132,37 +267,63 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
         )}
       </div>
 
-      {/* Playgrounds List */}
-      <div className="space-y-4">
-        {sortedPlaygrounds.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">{t('playground.noPlaygroundsFound')}</h3>
+      {/* Playgrounds Grid */}
+      {filteredPlaygrounds.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-medium font-display">
+              {hasActiveFilters
+                ? t('playground.noPlaygroundsInCategory')
+                : t('playground.noPlaygroundsFound')}
+            </h3>
+            {!hasActiveFilters && (
               <p className="text-muted-foreground">
                 {t('playground.beFirstToAdd')}
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="divide-y divide-border">
-            {sortedPlaygrounds.map((playground) => (
-              <div key={playground.id}>
+            )}
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearAllCategories}
+                className="mt-4"
+              >
+                {t('playground.clearAllFilters')}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <motion.div
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredPlaygrounds.map((playground, index) => (
+              <motion.div
+                key={playground.id}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25, delay: index < 9 ? index * 0.04 : 0 }}
+              >
                 <Link
                   href={`/playground/${playground.id}`}
-                  className="block transition-transform hover:scale-[1.005]"
+                  className="block"
                 >
-                  <PlaygroundCard
+                  <PlaygroundGridCard
                     playground={playground}
                     distance={playground.distance || getPlaygroundDistance(playground, userLocation)}
                     showDistance={!!userLocation}
                   />
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        )}
-      </div>
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   );
 }

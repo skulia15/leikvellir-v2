@@ -1,171 +1,23 @@
-# CLAUDE.md
+# Leikvellir v2 — Icelandic Playground Discovery App
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Stack
+- Next.js 15, React 18, TypeScript, tRPC, Drizzle ORM, Tailwind CSS 3.4, shadcn/ui
+- `node_modules/.bin/tsc --noEmit` to type-check (pre-existing test file errors are expected)
+- i18n: `useT()` hook from `~/lib/i18n`, translations in `src/locales/{en,is,pl}.json`
+- Types derived from DB enums exported from `~/types` (EquipmentCategory, SchoolType, etc.)
 
-## Development Commands
+## Design System — "Soft Nordic"
+- Fonts: Vollkorn (serif, `font-display`) for headings, Outfit (sans, `font-sans`) for body. Both must support `latin-ext` for Icelandic (þ, ð, æ, ö)
+- Primary: soft violet `hsl(258, 55%, 56%)`. Background: cool near-white. Cards: pure white
+- Accent dot colors via `--terrain-*` CSS vars: moss (green), water (blue), gold (amber), heather (purple), terracotta (coral), stone (gray)
+- Cards: `rounded-xl`, buttons: `rounded-lg`, filter pills: `rounded-full`
+- Normal-case for buttons/nav. Uppercase only for tiny section labels
 
-### Core Development
-- `pnpm dev` - Start development server with Turbo (recommended)
-- `pnpm dev:fallback` - Start development server without Turbo
-- `pnpm build` - Build production application
-- `pnpm start` - Start production server
+## Component Conventions
+- Two card variants exist: `PlaygroundCard` (horizontal, for map sidebar) and `PlaygroundGridCard` (vertical, for /playgrounds grid). Don't delete one when working on the other
+- Radix UI ScrollArea hydration gotcha: never place elements as siblings outside ScrollArea — put headers inside with `sticky top-0` to avoid hydration mismatch
+- Equipment filter uses OR logic across categories (playground matches if it has equipment in ANY selected category)
 
-### Database Operations
-- `pnpm db:push` - Push schema changes to database (development)
-- `pnpm db:migrate` - Run database migrations
-- `pnpm db:generate` - Generate database migration files
-- `pnpm db:studio` - Open Drizzle Studio for database management
-
-### Testing
-- `pnpm test` - Run tests with Vitest
-- `pnpm test:ui` - Run tests with Vitest UI
-- `pnpm test:run` - Run tests once (CI mode)
-- `pnpm test:watch` - Run tests in watch mode
-- `pnpm test:coverage` - Run tests with coverage report
-
-### Code Quality
-- `pnpm lint` - Run ESLint
-- `pnpm lint:fix` - Fix ESLint issues automatically
-- `pnpm format` - Format code with Prettier
-- `pnpm format:check` - Check code formatting
-
-### Utility
-- `pnpm clean` - Clean build artifacts and cache
-- `pnpm postbuild` - Automatically runs `db:push --force` after build
-
-## Project Architecture
-
-### Tech Stack
-This is a **T3 Stack** application built with:
-- **Next.js 15** (App Router) - React framework
-- **TypeScript** - Type-safe development
-- **tRPC** - End-to-end type-safe APIs
-- **Drizzle ORM** - TypeScript-first ORM
-- **PostgreSQL** - Primary database
-- **NextAuth.js** - Authentication
-- **Tailwind CSS** - Styling
-- **Radix UI + shadcn/ui** - UI components
-
-### Core Application Structure
-
-**Leiksvæði** is a playground discovery application for Iceland that allows users to find, submit, and manage playground information with location-based features.
-
-#### Key Features
-- **Interactive Maps**: Google Maps integration with location-based search
-- **Playground Database**: Comprehensive playground details with images, equipment, and accessibility info
-- **User Authentication**: NextAuth.js with Discord OAuth and mock authentication for development
-- **Admin System**: Role-based access control (user, admin, super_admin)
-- **Multilingual Support**: Icelandic (default), English, and Polish translations
-- **Image Management**: Vercel Blob storage for playground images
-- **Equipment System**: Categorized playground equipment with multilingual names
-
-#### Database Schema Overview
-- **playgrounds**: Core playground data with location, accessibility, amenities
-- **equipment**: Playground equipment types with categories and multilingual names
-- **playgroundEquipment**: Many-to-many relationship between playgrounds and equipment
-- **playgroundEditSuggestions**: User-submitted edit suggestions for existing playgrounds
-- **users**: User accounts with role-based permissions
-- **NextAuth tables**: Standard authentication tables (accounts, sessions, etc.)
-
-#### API Structure (tRPC)
-- **playground router**: CRUD operations, submissions, reviews, location queries
-- **equipment router**: Equipment management and queries
-- **users router**: User management and role administration
-
-### Directory Structure
-
-#### Frontend (`src/app/`)
-- **_components/**: Shared React components (maps, forms, UI elements)
-- **admin/**: Admin panel pages and components
-- **api/**: Next.js API routes (auth, upload, municipalities)
-- **playground/[id]/**: Dynamic playground detail pages
-- **playgrounds/**: Playground listing pages
-
-#### Backend (`src/server/`)
-- **api/**: tRPC routers and procedures
-- **auth.ts**: NextAuth.js configuration
-- **db/**: Database schema and connection
-
-#### Shared (`src/`)
-- **components/ui/**: shadcn/ui components
-- **lib/**: Utilities, hooks, and shared logic
-- **locales/**: Translation files (is.json, en.json, pl.json)
-- **types.ts**: Shared TypeScript types
-
-### Authentication Setup
-
-#### Development Mode
-Enable mock authentication with:
-```bash
-./enable-mock-auth.sh
-# or manually add to .env:
-ENABLE_MOCK_AUTH=true
-```
-
-Mock users available:
-- Skúli Arnarsson (skuli@example.com)
-- Jane Parent (jane@example.com) 
-- John Playground Expert (john@example.com)
-
-#### Production Mode
-Requires Discord OAuth credentials in environment variables.
-
-### Environment Variables
-Key variables needed:
-- `DATABASE_URL` - PostgreSQL connection string
-- `NEXTAUTH_SECRET` - Authentication secret
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Google Maps API key
-- `NEXT_PUBLIC_BASE_URL` - Production domain (for SEO/sitemap)
-- `ENABLE_MOCK_AUTH` - Enable mock auth for development
-
-### Testing Configuration
-- **Vitest** for unit/integration tests
-- **Testing Library** for React component testing
-- **MSW** for API mocking
-- **jsdom** environment for browser simulation
-
-### Key Development Notes
-
-#### Internationalization
-- Uses custom i18n system with React Context
-- Translation keys in `src/locales/*.json`
-- Supports pluralization with `_one`, `_other` suffixes
-- Use `useTranslation()` hook and `t()` function
-
-#### Database Migrations
-- Use Drizzle Kit for schema management
-- Migration files in `drizzle/` directory
-- Always run `pnpm db:push` for development changes
-- Use `pnpm db:migrate` for production deployments
-
-#### Image Handling
-- Vercel Blob for image storage
-- Client-side image validation and resizing
-- Support for cover images and image galleries
-- Proper loading states and error handling
-
-#### Performance Considerations
-- PostHog analytics with deferred loading
-- Image optimization with proper loading strategies
-- Font loading optimization with display=swap
-- Critical resource preconnection
-
-### Common Workflows
-
-1. **Adding New Features**: Update database schema → create migrations → implement tRPC procedures → build frontend components
-2. **Fixing Bugs**: Check both client and server logs → identify root cause → implement fix → test across devices
-3. **Translation Updates**: Add keys to all language files → test in all languages → verify pluralization
-4. **Database Changes**: Update schema.ts → generate migration → test migration → deploy
-
-### Development Environment Setup
-1. Install dependencies: `pnpm install`
-2. Set up environment variables (copy `.env.example`)
-3. Start database (use provided scripts)
-4. Run migrations: `pnpm db:push`
-5. Start development server: `pnpm dev`
-
-### Deployment Notes
-- Hosted on Vercel with PostgreSQL database
-- Automatic migrations run via `postbuild` script
-- Environment variables must be set in Vercel dashboard
-- Sitemap and SEO optimization configured for production domain
+## Data
+- `getAll` tRPC endpoint returns playgrounds with full equipment data (playgroundEquipment → equipment with category, name, image). No separate query needed for equipment info
+- School ground accessibility: use `isSchoolGroundAccessible()` and `getAccessibilityStatus()` from `~/lib/school-hours`

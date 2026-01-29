@@ -26,14 +26,14 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t bg-background">
+    <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand & Description */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               {/* <Playground className="h-6 w-6 text-primary" /> */}
-              <h3 className="text-lg font-bold">{t('footer.brand')}</h3>
+              <h3 className="text-lg font-bold font-display">{t('footer.brand')}</h3>
               <Badge variant="outline" className="text-xs">
                 {t('footer.beta')}
               </Badge>
@@ -52,7 +52,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">{t('footer.quickLinks')}</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -99,7 +99,7 @@ export function Footer() {
 
           {/* Developer & Contact */}
           <div>
-            <h4 className="font-semibold mb-4">{t('footer.developer')}</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.developer')}</h4>
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-medium">Skúli Arnarsson</p>

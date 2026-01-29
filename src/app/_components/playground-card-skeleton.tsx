@@ -1,11 +1,12 @@
 import { Skeleton } from "~/components/ui/skeleton";
+import { Card } from "~/components/ui/card";
 
 export function PlaygroundCardSkeleton() {
   return (
-    <div className="px-2 py-4">
+    <div className="px-4 py-4">
       <div className="flex flex-row gap-4">
         {/* Image skeleton */}
-        <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-md flex-shrink-0" />
+        <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-lg flex-shrink-0" />
 
         <div className="flex-1 min-w-0">
           {/* Title skeleton */}
@@ -32,5 +33,21 @@ export function PlaygroundListSkeleton({ count = 5 }: { count?: number }) {
         ))}
       </div>
     </div>
+  );
+}
+
+export function PlaygroundGridCardSkeleton() {
+  return (
+    <Card className="overflow-hidden rounded-xl">
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="flex gap-3">
+          <Skeleton className="h-3.5 w-16" />
+          <Skeleton className="h-3.5 w-20" />
+        </div>
+      </div>
+    </Card>
   );
 }

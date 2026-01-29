@@ -262,19 +262,21 @@ export default function HomeClient() {
                             borderTopLeftRadius: "20px",
                             borderTopRightRadius: "20px",
                             boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
-                            backgroundColor: "var(--background)", // Ensure solid background
+                            backgroundColor: "hsl(var(--card))", // Ensure solid background
                         }}
                     >
-                        <Sheet.Header className="px-4 py-3 border-b bg-background">
-                            {/* Improved drag handle */}
-                            <div className="mx-auto h-1.5 w-12 rounded-full bg-muted-foreground/40 mb-2" />
+                        <Sheet.Header className="px-4 py-4 border-b border-border bg-card">
+                            <div className="mx-auto h-1 w-10 rounded-full bg-border mb-3" />
                             <div className="text-center">
-                                <h2 className="text-sm font-medium text-muted-foreground">
-                                    {visiblePlaygrounds.length} {t('playground.playgroundsFound')}
-                                </h2>
+                                <span className="text-3xl font-display font-bold tracking-tight text-foreground">
+                                    {visiblePlaygrounds.length}
+                                </span>
+                                <span className="block text-xs text-muted-foreground mt-1 font-medium">
+                                    {t('playground.playgroundsFound')}
+                                </span>
                             </div>
                         </Sheet.Header>
-                        <Sheet.Content className="bg-background">
+                        <Sheet.Content className="bg-card">
                             <ScrollArea className="h-full px-2">
                                 <div className="pb-safe-area-inset-bottom">
                                     {playgroundContent}
@@ -289,7 +291,7 @@ export default function HomeClient() {
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
                         <Button
                             onClick={() => setOpen(true)}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg rounded-full px-6 py-3 flex items-center gap-2"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 rounded-full px-6 py-3 flex items-center gap-2 text-sm"
                         >
                             <List className="h-4 w-4" />
                             <span className="text-sm font-medium">
@@ -306,8 +308,17 @@ export default function HomeClient() {
     return (
         <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
             {/* Left sidebar with playground list */}
-            <div className="w-96 bg-background border-r overflow-hidden flex-shrink-0">
+            <div className="w-96 border-r border-border overflow-hidden flex-shrink-0 bg-card">
                 <ScrollArea className="h-full">
+                    {/* Count header */}
+                    <div className="px-5 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
+                        <span className="text-4xl font-display font-bold tracking-tight text-foreground">
+                            {visiblePlaygrounds.length}
+                        </span>
+                        <span className="block text-xs text-muted-foreground mt-1 font-medium">
+                            {t('playground.playgroundsFound')}
+                        </span>
+                    </div>
                     <div className="p-4">
                         {playgroundContent}
                     </div>

@@ -166,40 +166,40 @@ export default function PlaygroundFilters({
             </Button>
 
             {/* Active filter badges */}
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
                 {filters.accessibleNow && (
-                    <Badge variant="secondary" className="text-xs">
-                        <Clock className="h-3 w-3 mr-1" />
+                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
+                        <Clock className="h-3 w-3 mr-1.5" />
                         {t('playground.accessibleNow')}
                         <button
                             onClick={() => handleFilterChange("accessibleNow", undefined)}
-                            className="ml-1 hover:bg-background/20 rounded-full p-0.5"
+                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
                         >
                             <X className="h-3 w-3" />
                         </button>
-                    </Badge>
+                    </span>
                 )}
                 {filters.toddlerFriendly && (
-                    <Badge variant="secondary" className="text-xs">
+                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
                         {t('playground.toddlerFriendly')}
                         <button
                             onClick={() => handleFilterChange("toddlerFriendly", undefined)}
-                            className="ml-1 hover:bg-background/20 rounded-full p-0.5"
+                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
                         >
                             <X className="h-3 w-3" />
                         </button>
-                    </Badge>
+                    </span>
                 )}
                 {filters.publiclyAccessible && (
-                    <Badge variant="secondary" className="text-xs">
+                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
                         {t('playground.publiclyAccessible')}
                         <button
                             onClick={() => handleFilterChange("publiclyAccessible", undefined)}
-                            className="ml-1 hover:bg-background/20 rounded-full p-0.5"
+                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
                         >
                             <X className="h-3 w-3" />
                         </button>
-                    </Badge>
+                    </span>
                 )}
             </div>
 

@@ -60,14 +60,14 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
     };
 
     return (
-        <nav className="fixed left-0 right-0 top-0 z-50 border-b bg-background/80 backdrop-blur-md">
+        <nav className="fixed left-0 right-0 top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border">
             <div className="container mx-auto flex h-16 items-center justify-between pr-2 md:px-4">
                 {/* Left side - Logo, Admin Badge, and Navigation Links */}
                 <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
                         <Link
                             href="/"
-                            className="flex items-center transition-colors hover:text-primary/80"
+                            className="flex items-center transition-colors hover:opacity-70"
                         >
                             <Image
                                 src="/icon.png"
@@ -76,7 +76,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                 height={62}
                                 className="mr-0.5 p-1.5"
                             />
-                            <h1 className="text-sm md:text-xl font-bold text-primary xl:text-2xl">
+                            <h1 className="text-sm md:text-xl font-bold text-foreground xl:text-2xl">
                                 Leiksvæði
                             </h1>
                         </Link>
@@ -91,12 +91,12 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                     </div>
 
                     {/* Desktop Navigation Links */}
-                    <div className="hidden items-center space-x-6 md:flex">
+                    <div className="hidden items-center space-x-1 md:flex">
                         {!shouldShowSkeleton ? (
                             <>
                                 <Link
                                     href="/"
-                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
                                 >
                                     <Map className="h-4 w-4" />
                                     <span>{t('navigation.map')}</span>
@@ -104,7 +104,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
 
                                 <Link
                                     href="/playgrounds"
-                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
                                 >
                                     <List className="h-4 w-4" />
                                     <span>{t('navigation.allPlaygrounds')}</span>
@@ -112,7 +112,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
 
                                 <Link
                                     href="/create-playground"
-                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
                                 >
                                     <Plus className="h-4 w-4" />
                                     <span>{t('navigation.addPlayground')}</span>
@@ -120,7 +120,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
 
                                 <Link
                                     href="/contact"
-                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
                                 >
                                     <MessageCircle className="h-4 w-4" />
                                     <span>{t('navigation.contact')}</span>
@@ -155,9 +155,9 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                             <DropdownMenuTrigger asChild>
                                                 <Button
                                                     variant="ghost"
-                                                    className="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground h-auto p-2"
+                                                    className="flex items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent h-auto px-3 py-2"
                                                 >
-                                                    <Settings className="h-4 w-4" />
+                                                    <Settings className="h-3.5 w-3.5" />
                                                     <span>{t('navigation.admin')}</span>
                                                     <ChevronDown className="h-3 w-3" />
                                                 </Button>
