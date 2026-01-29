@@ -42,18 +42,12 @@
     "continueWithGoogle": "Kontynuuj z Google",
     "continueWithFacebook": "Kontynuuj z Facebook",
     "continueWithDiscord": "Kontynuuj z Discord",
-    "developmentOnly": "Tylko rozwój",
-    "mockAuthentication": "Uwierzytelnianie testowe",
-    "signInWithMockUser": "Zaloguj się z użytkownikiem testowym",
     "termsAndPrivacy": "Logując się, akceptujesz nasze warunki usługi i politykę prywatności",
     "authenticationFailed": "Uwierzytelnianie nie powiodło się. Spróbuj ponownie.",
     "authenticationCallback": "Błąd wywołania zwrotnego uwierzytelniania.",
     "accountLinking": "Łączenie kont w toku. Spróbuj zalogować się ponownie.",
     "emailSignInFailed": "Logowanie przez e-mail nie powiodło się.",
     "invalidCredentials": "Nieprawidłowe dane uwierzytelniające.",
-    "pleaseEnterEmail": "Proszę wprowadzić adres e-mail",
-    "invalidMockEmail": "Nieprawidłowy e-mail testowy. Spróbuj: skuli@example.com",
-    "mockSignInError": "Nie udało się zalogować. Spróbuj ponownie.",
     "failedToSignIn": "Nie udało się zalogować z {{provider}}. Spróbuj ponownie."
   },
   "footer": {

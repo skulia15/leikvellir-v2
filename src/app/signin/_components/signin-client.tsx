@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2, Mail } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -8,13 +7,10 @@ import { toast } from "sonner";
 import { DiscordIcon, FacebookIcon, GoogleIcon } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { useT } from "~/lib/i18n";
 
 export default function SignInClient() {
     const [isLoading, setIsLoading] = useState<string | null>(null);
-    const [mockEmail, setMockEmail] = useState("");
     const searchParams = useSearchParams();
     const error = searchParams.get("error");
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -59,35 +55,6 @@ export default function SignInClient() {
             setIsLoading(null);
         }
     };
-
-    const handleMockSignIn = async () => {
-        if (!mockEmail) {
-            toast.error(t('auth.pleaseEnterEmail'));
-            return;
-        }
-
-        setIsLoading("credentials");
-        try {
-            const result = await signIn("mock", {
-                email: mockEmail,
-                callbackUrl,
-                redirect: false,
-            });
-
-            if (result?.error) {
-                toast.error(t('auth.invalidMockEmail'));
-            } else if (result?.url) {
-                window.location.href = result.url;
-            }
-        } catch (error) {
-            console.error("Mock sign-in error:", error);
-            toast.error(t('auth.mockSignInError'));
-        } finally {
-            setIsLoading(null);
-        }
-    };
-
-    const isDevelopment = process.env.NODE_ENV === "development";
 
     return (
         <div className="flex items-center justify-center bg-gradient-to-br py-16 px-4">
@@ -143,48 +110,6 @@ export default function SignInClient() {
                         )}
                         <span className="ml-2">{t('auth.continueWithDiscord')}</span>
                     </Button>
-
-                    {/* Development Mode Mock Sign In */}
-                    {isDevelopment && (
-                        <>
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-gray-300" />
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="bg-white px-2 text-gray-500">{t('auth.developmentOnly')}</span>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="mock-email">{t('auth.mockAuthentication')}</Label>
-                                <Input
-                                    id="mock-email"
-                                    type="email"
-                                    placeholder="skuli@example.com"
-                                    value={mockEmail}
-                                    onChange={(e) => setMockEmail(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            void handleMockSignIn();
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <Button
-                                onClick={handleMockSignIn}
-                                disabled={isLoading !== null || !mockEmail}
-                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-                                variant="outline"
-                            >
-                                {isLoading === "credentials" ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Mail className="mr-2 h-4 w-4" />
-                                )}
-                                {t('auth.signInWithMockUser')}
-                            </Button>
-                        </>
-                    )}
 
                     <div className="text-center text-sm text-gray-600 mt-6">
                         {t('auth.termsAndPrivacy')}

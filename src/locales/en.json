@@ -42,18 +42,12 @@
     "continueWithGoogle": "Continue with Google",
     "continueWithFacebook": "Continue with Facebook",
     "continueWithDiscord": "Continue with Discord",
-    "developmentOnly": "Development Only",
-    "mockAuthentication": "Mock Authentication",
-    "signInWithMockUser": "Sign in with Mock User",
     "termsAndPrivacy": "By signing in, you agree to our terms of service and privacy policy",
     "authenticationFailed": "Authentication failed. Please try again.",
     "authenticationCallback": "Authentication callback failed.",
     "accountLinking": "Account linking in progress. Please try signing in again.",
     "emailSignInFailed": "Email sign-in failed.",
     "invalidCredentials": "Invalid credentials provided.",
-    "pleaseEnterEmail": "Please enter an email address",
-    "invalidMockEmail": "Invalid mock user email. Try: skuli@example.com",
-    "mockSignInError": "Failed to sign in. Please try again.",
     "failedToSignIn": "Failed to sign in with {{provider}}. Please try again."
   },
   "footer": {

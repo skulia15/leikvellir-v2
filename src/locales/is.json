@@ -42,18 +42,12 @@
     "continueWithGoogle": "Skrá inn með Google",
     "continueWithFacebook": "Skrá inn með Facebook",
     "continueWithDiscord": "Skrá inn með Discord",
-    "developmentOnly": "Aðeins í þróun",
-    "mockAuthentication": "Prófunarauðkenning",
-    "signInWithMockUser": "Skrá inn með prófunarnotanda",
     "termsAndPrivacy": "Með því að skrá þig inn samþykkir þú þjónustuskilmála okkar og persónuverndarstefnu",
     "authenticationFailed": "Auðkenning mistókst. Vinsamlegast reyndu aftur.",
     "authenticationCallback": "Villa í auðkenningarferlinu.",
     "accountLinking": "Reikningar hafa verið tengdir. Vinsamlegast reyndu að skrá þig inn aftur.",
     "emailSignInFailed": "Innskráning með tölvupósti mistókst.",
     "invalidCredentials": "Ógilt auðkenni.",
-    "pleaseEnterEmail": "Vinsamlegast sláðu inn netfang",
-    "invalidMockEmail": "Ógilt prófunarnetfang. Reyndu: skuli@example.com",
-    "mockSignInError": "Innskráning mistókst. Vinsamlegast reyndu aftur.",
     "failedToSignIn": "Ekki tókst að skrá þig inn með {{provider}}. Vinsamlegast reyndu aftur."
   },
   "footer": {

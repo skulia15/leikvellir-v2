@@ -50,10 +50,11 @@ export const env = createEnv({
       process.env.NODE_ENV === "development"
         ? z.string().optional()
         : z.string(),
-    // Flag to enable mock authentication in development
-    ENABLE_MOCK_AUTH: z.string().optional().default("false"),
     // Vercel Blob storage token for leikvellir_image_store
-    leikvellir_image_store_READ_WRITE_TOKEN: z.string(),
+    leikvellir_image_store_READ_WRITE_TOKEN:
+      process.env.NODE_ENV === "development"
+        ? z.string().optional()
+        : z.string(),
   },
 
   /**
@@ -86,7 +87,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     FACEBOOK_CLIENT_ID: process.env.FACEBOOK_CLIENT_ID,
     FACEBOOK_CLIENT_SECRET: process.env.FACEBOOK_CLIENT_SECRET,
-    ENABLE_MOCK_AUTH: process.env.ENABLE_MOCK_AUTH,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     leikvellir_image_store_READ_WRITE_TOKEN:
