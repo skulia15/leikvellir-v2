@@ -22,9 +22,6 @@ const ErrorContext = createContext<{
 
 export function ErrorProvider({ children }: ErrorProviderProps) {
     useEffect(() => {
-        // Simple error tracking setup
-        console.log("Error tracking initialized");
-
         // Global error handler for unhandled promise rejections
         const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
             console.error("Unhandled promise rejection:", event.reason);

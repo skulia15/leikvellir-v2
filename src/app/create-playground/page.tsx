@@ -18,7 +18,6 @@ import { getTranslation, defaultLocale } from "~/lib/i18n";
 
 export default async function CreatePlayground() {
   const session = await getServerAuthSession();
-  console.log("Auth session:", session); // Debug auth session
 
   return (
     <div

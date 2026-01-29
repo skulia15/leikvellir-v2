@@ -102,13 +102,9 @@ export function CreatePlaygroundForm() {
   });
 
   const onSubmit = (data: CreatePlaygroundInput) => {
-    console.log("Submitting form with data:", data);
-    console.log("Images in form data:", data.images);
-
     // Check if form has any validation errors
     const errors = form.formState.errors;
     if (Object.keys(errors).length > 0) {
-      console.log("Form has validation errors:", errors);
       toast.error(t('forms.fixFormErrors'));
       return;
     }
@@ -120,9 +116,6 @@ export function CreatePlaygroundForm() {
       ...data,
       images: validImages,
     };
-
-    console.log("Processed submission data:", submissionData);
-    console.log("Valid images for submission:", validImages);
 
     createPlayground.mutate(submissionData);
   };
@@ -160,7 +153,6 @@ export function CreatePlaygroundForm() {
         if (geocodeResult.municipality) {
           // Always update municipality when map pin is moved
           form.setValue("municipality", geocodeResult.municipality);
-          console.log("Municipality auto-filled from map:", geocodeResult.municipality);
         }
       } catch (error) {
         console.error("Failed to reverse geocode coordinates:", error);
@@ -181,7 +173,6 @@ export function CreatePlaygroundForm() {
             if (geocodeResult.municipality) {
               // Always update municipality when coordinates change
               form.setValue("municipality", geocodeResult.municipality);
-              console.log("Municipality auto-filled:", geocodeResult.municipality);
             }
           } catch (error) {
             console.error("Failed to reverse geocode coordinates:", error);
@@ -736,10 +727,6 @@ export function CreatePlaygroundForm() {
                   type="submit"
                   disabled={createPlayground.isPending}
                   className="min-w-32"
-                  onClick={() => {
-                    console.log("Submit button clicked!");
-                    // This is to debug - the form's onSubmit should still handle the actual submission
-                  }}
                 >
                   {createPlayground.isPending ? (
                     <>

@@ -11,7 +11,6 @@ process.env.NEXTAUTH_URL = "http://localhost:3000";
 process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/test";
 process.env.DISCORD_CLIENT_ID = "test-discord-client-id";
 process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
-process.env.ENABLE_MOCK_AUTH = "true";
 process.env.SKIP_ENV_VALIDATION = "true";
 
 // Start server before all tests

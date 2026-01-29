@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { List } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -17,13 +18,37 @@ import { Sheet, type SheetRef } from "react-modal-sheet";
 import { useRef } from "react";
 
 import { api } from "~/trpc/react";
-import { GoogleMap } from "./map";
+import { env } from "~/env";
 import PlaygroundList from "./playground-list";
+
+const MapLoadingFallback = () => (
+    <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
+        <div className="text-muted-foreground text-sm">Loading map...</div>
+    </div>
+);
+
+// Dynamic import for Mapbox — no SSR (mapbox-gl uses WebGL which requires a browser)
+const MapboxMapDynamic = dynamic(
+    () => import("./mapbox-map").then((mod) => ({ default: mod.MapboxMap })),
+    { ssr: false, loading: MapLoadingFallback },
+);
+
+// Dynamic import for Google Maps (kept for toggling between providers)
+const GoogleMapDynamic = dynamic(
+    () => import("./map").then((mod) => ({ default: mod.GoogleMap })),
+    { ssr: false, loading: MapLoadingFallback },
+);
+
 import PlaygroundFilters, { type PlaygroundFilters as PlaygroundFiltersType } from "./playground-filters";
 import { PlaygroundListSkeleton } from "./playground-card-skeleton";
 import { type Playground } from "~/types";
 import { type UserLocation } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
+
+// Toggle between map providers via NEXT_PUBLIC_MAP_PROVIDER env var ("mapbox" | "google")
+const MapComponent = env.NEXT_PUBLIC_MAP_PROVIDER === "mapbox"
+    ? MapboxMapDynamic
+    : GoogleMapDynamic;
 
 export default function HomeClient() {
     const t = useT();
@@ -98,7 +123,6 @@ export default function HomeClient() {
     // Automatically prompt for user location on mount
     useEffect(() => {
         if (!navigator.geolocation) {
-            console.log("Geolocation is not supported by this browser.");
             return;
         }
 
@@ -112,8 +136,7 @@ export default function HomeClient() {
                 setUserLocation(location);
             },
             (error) => {
-                console.log("User denied location or error occurred:", error.message);
-                // Don't show alert for automatic request, just log it
+                // User denied location or error occurred — no action needed
             },
             {
                 enableHighAccuracy: true,
@@ -222,7 +245,7 @@ export default function HomeClient() {
                 {/* Map container - takes full available height */}
                 <div className="absolute inset-0 z-0">
                     <MapErrorBoundary fallback={MapErrorFallback}>
-                        <GoogleMap
+                        <MapComponent
                             selectedPlayground={selectedPlayground}
                             onPlaygroundSelect={handlePlaygroundSelect}
                             filters={filters}
@@ -308,18 +331,20 @@ export default function HomeClient() {
     return (
         <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
             {/* Left sidebar with playground list */}
-            <div className="w-96 border-r border-border overflow-hidden flex-shrink-0 bg-card">
+            <div className="w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
                 <ScrollArea className="h-full">
-                    {/* Count header */}
-                    <div className="px-5 pt-6 pb-4 border-b border-border sticky top-0 bg-card z-10">
-                        <span className="text-4xl font-display font-bold tracking-tight text-foreground">
-                            {visiblePlaygrounds.length}
-                        </span>
-                        <span className="block text-xs text-muted-foreground mt-1 font-medium">
-                            {t('playground.playgroundsFound')}
-                        </span>
+                    {/* Sidebar header with count badge */}
+                    <div className="px-5 pt-5 pb-3 border-b border-border sticky top-0 bg-card z-10">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-sm font-semibold text-foreground">
+                                {t('playground.playgroundsFound')}
+                            </h2>
+                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold tabular-nums">
+                                {visiblePlaygrounds.length}
+                            </span>
+                        </div>
                     </div>
-                    <div className="p-4">
+                    <div className="px-4 pb-4">
                         {playgroundContent}
                     </div>
                 </ScrollArea>
@@ -328,7 +353,7 @@ export default function HomeClient() {
             {/* Map takes the remaining space */}
             <div className="flex-1 relative">
                 <MapErrorBoundary fallback={MapErrorFallback}>
-                    <GoogleMap
+                    <MapComponent
                         selectedPlayground={selectedPlayground}
                         onPlaygroundSelect={handlePlaygroundSelect}
                         filters={filters}

@@ -117,8 +117,6 @@ export function ImageUpload({
   // Upload individual file with progress tracking
   const uploadFile = useCallback(
     async (file: FileWithPreview) => {
-      console.log(`🚀 Starting upload for file: ${file.name} (ID: ${file.id})`);
-
       const progressInfo: UploadProgress = {
         fileId: file.id,
         progress: 0,
@@ -300,7 +298,6 @@ export function ImageUpload({
             // Add resized files to processed files
             processedFiles = [...processedFiles, ...resizeResults.map(r => r.file)];
 
-            console.log(`✅ Resize complete! Processed ${resizeResults.length} files`);
           } catch (error) {
             console.error("❌ Error during resize:", error);
             setErrors(prev => [
@@ -315,13 +312,10 @@ export function ImageUpload({
         }
 
         // Validate all processed files
-        console.log("Starting validation for processed files...");
         const { valid, invalid } = await validateMultipleFiles(
           processedFiles,
           finalConfig,
         );
-        console.log("Validation results - Valid:", valid.length, "Invalid:", invalid.length);
-
         // Show validation errors
         if (invalid.length > 0) {
           setErrors(prev => [
@@ -393,11 +387,8 @@ export function ImageUpload({
       }
     },
 
-    onDropRejected: (rejectedFiles) => {
-      console.log("🔴 onDropRejected:", rejectedFiles.length);
-      rejectedFiles.forEach(rejected => {
-        console.log(`  - ${rejected.file.name}: ${rejected.errors.map(e => e.message).join(", ")}`);
-      });
+    onDropRejected: () => {
+      // Rejections are already handled in the onDrop callback above
     },
 
     accept: { "image/*": [] },

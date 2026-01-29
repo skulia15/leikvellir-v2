@@ -72,7 +72,6 @@ function checkRateLimit(): boolean {
   if (rateLimitState.isInCooldown && now >= rateLimitState.cooldownUntil) {
     rateLimitState.isInCooldown = false;
     rateLimitState.requests = [];
-    console.log("Geocoding rate limit cooldown period ended");
   }
 
   // Remove requests outside the time window
@@ -100,7 +99,6 @@ function getCachedResult(lat: number, lng: number): GeocodeResult | null {
   const cached = geocodeCache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log("Using cached geocoding result for:", cacheKey);
     return cached.result;
   }
 
@@ -152,7 +150,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     addRequest();
 
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-    console.log("Making geocoding request for:", lat, lng);
 
     const response = await fetch(url);
 
@@ -161,7 +158,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     }
 
     const data = await response.json() as GoogleGeocodingResponse;
-    console.log("Geocoding response status:", data.status);
 
     if (data.status !== "OK") {
       console.warn(`Geocoding API returned status: ${data.status}`, data.error_message || "");
@@ -202,8 +198,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       setCachedResult(lat, lng, emptyResult);
       return emptyResult;
     }
-    console.log("Processing geocoding result for:", lat, lng);
-
     let municipality: string | null = null;
     let country: string | null = null;
 
@@ -211,18 +205,15 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     // For Iceland, prioritize administrative_area_level_1 over locality
     for (const component of result.address_components) {
       const types: string[] = component.types;
-      console.log("Address component:", component.long_name, "Types:", types);
 
       // Look for country first
       if (types.includes("country")) {
         country = component.long_name;
-        console.log("Found country:", country);
       }
 
       // For Iceland, prioritize administrative_area_level_1 (municipality)
       if (types.includes("administrative_area_level_1") && !municipality) {
         municipality = component.long_name;
-        console.log("Found municipality (admin_area_1):", municipality, "from type:", types);
       }
     }
 
@@ -232,7 +223,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
         const types: string[] = component.types;
         if (types.includes("locality")) {
           municipality = component.long_name;
-          console.log("Found municipality (locality fallback):", municipality, "from type:", types);
           break;
         }
       }
@@ -243,8 +233,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       country,
       formattedAddress: result.formatted_address,
     };
-
-    console.log("Final geocoding result:", geocodeResult);
 
     // Cache the successful result
     setCachedResult(lat, lng, geocodeResult);
@@ -281,12 +269,10 @@ async function normalizeMunicipalityName(municipalityName: string | null): Promi
     // Try to find exact match in official Icelandic municipalities
     const officialMunicipality = await findMunicipalityByName(municipalityName);
     if (officialMunicipality) {
-      console.log(`Normalized municipality: "${municipalityName}" -> "${officialMunicipality.nafn}"`);
       return officialMunicipality.nafn;
     }
 
     // If no exact match found, return the original name
-    console.log(`Municipality "${municipalityName}" not found in official registry, using as-is`);
     return municipalityName;
   } catch (error) {
     console.warn("Failed to normalize municipality name:", error);

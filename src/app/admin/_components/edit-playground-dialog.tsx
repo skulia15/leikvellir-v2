@@ -203,7 +203,6 @@ export default function EditPlaygroundDialog({
                 if (geocodeResult.municipality) {
                     // Always update municipality when map pin is moved
                     form.setValue("municipality", geocodeResult.municipality);
-                    console.log("Municipality auto-filled from map:", geocodeResult.municipality);
                 }
             } catch (error) {
                 console.error("Failed to reverse geocode coordinates:", error);
@@ -243,7 +242,6 @@ export default function EditPlaygroundDialog({
                         if (geocodeResult.municipality) {
                             // Always update municipality when coordinates change
                             form.setValue("municipality", geocodeResult.municipality);
-                            console.log("Municipality auto-filled:", geocodeResult.municipality);
                         }
                     } catch (error) {
                         console.error("Failed to reverse geocode coordinates:", error);

@@ -213,61 +213,24 @@ This project uses the **T3 Stack** - a modern, type-safe full-stack TypeScript f
    # DISCORD_CLIENT_SECRET="your-discord-client-secret"
    ```
 
-4. **Enable Mock Authentication (Development)**
-
-   ```bash
-   ./enable-mock-auth.sh
-   ```
-
-   Or manually add to your `.env`:
-
-   ```env
-   ENABLE_MOCK_AUTH=true
-   ```
-
-5. **Start the database**
+4. **Start the database**
 
    ```bash
    ./start-database.sh  # From WSL
    ```
 
-6. **Run database migrations**
+5. **Run database migrations**
 
    ```bash
    pnpm db:push
    ```
 
-7. **Start development server**
+6. **Start development server**
    ```bash
    pnpm dev
    ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see the application.
-
-## 🔐 Authentication
-
-### Development Mode (Mock Authentication)
-
-For easy development and testing, the app includes mock authentication that doesn't require OAuth setup:
-
-**Mock Users Available:**
-
-- **Skúli Arnarsson** - `skuli@example.com`
-- **Jane Parent** - `jane@example.com`
-- **John Playground Expert** - `john@example.com`
-
-**To use mock authentication:**
-
-1. Ensure `ENABLE_MOCK_AUTH=true` in your `.env` file
-2. Visit `/api/auth/signin`
-3. Select "Mock Authentication"
-4. Choose any of the test users
-
-**To switch back to real authentication:**
-
-1. Set `ENABLE_MOCK_AUTH=false` in your `.env` file
-2. Add your Discord OAuth credentials
-3. Restart the development server
 
 ## 📁 Project Structure
 

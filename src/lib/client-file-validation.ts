@@ -161,7 +161,6 @@ export async function validateMultipleFiles(
   files: File[],
   config: ImageUploadConfig = DEFAULT_UPLOAD_CONFIG,
 ): Promise<{ valid: File[]; invalid: { file: File; error: string }[] }> {
-  console.log(`🔍 validateMultipleFiles called with ${files.length} files`);
   const valid: File[] = [];
   const invalid: { file: File; error: string }[] = [];
 
@@ -201,7 +200,6 @@ export async function validateMultipleFiles(
       }
 
       // If all checks pass, add to valid files
-      console.log(`✅ File passed all validations: ${file.name}`);
       valid.push(file);
     } catch (error) {
       console.error(`❌ Error validating file ${file.name}:`, error);

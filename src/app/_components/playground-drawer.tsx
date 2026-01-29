@@ -75,9 +75,7 @@ export default function PlaygroundDrawer({
           onClose={() => setOpen(true)} // Keep it always open
           snapPoints={[0.9, 0.5, 0.2]}
           initialSnap={2}
-          onSnap={(snapIndex) =>
-            console.log("> Current snap point index:", snapIndex)
-          }
+          onSnap={() => {}}
           disableScrollLocking
         >
           <Sheet.Container>

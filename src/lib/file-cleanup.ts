@@ -22,7 +22,6 @@ export async function deleteOrphanedFiles(oldImages: string[], newImages: string
         try {
             const filePath = join(process.cwd(), "public", "uploads", "playgrounds", filename);
             await unlink(filePath);
-            console.log(`✅ Deleted orphaned file: ${filename}`);
         } catch (error) {
             // File might not exist or permission issues - log but don't fail the operation
             console.warn(`⚠️ Failed to delete file ${filename}:`, error);
@@ -43,7 +42,6 @@ export async function deleteFileByUrl(url: string): Promise<boolean> {
     try {
         const filePath = join(process.cwd(), "public", "uploads", "playgrounds", filename);
         await unlink(filePath);
-        console.log(`✅ Deleted file: ${filename}`);
         return true;
     } catch (error) {
         console.warn(`⚠️ Failed to delete file ${filename}:`, error);

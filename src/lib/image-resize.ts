@@ -166,8 +166,6 @@ export async function resizeImage(
     };
   }
   
-  console.log(`🔄 Resizing image: ${file.name} (${(originalSize / 1024 / 1024).toFixed(2)}MB)`);
-  
   try {
     // Load the image
     const img = await loadImageFromFile(file);
@@ -201,8 +199,6 @@ export async function resizeImage(
       // Convert to blob
       const blob = await canvasToBlob(canvas, outputFormat, quality);
       
-      console.log(`📏 Attempt ${attempts}: ${width}x${height}, quality=${quality.toFixed(2)}, size=${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-      
       // Check if we've met the size requirement
       if (blob.size <= config.maxSizeBytes || quality <= 0.1) {
         // Create new file from blob
@@ -216,8 +212,6 @@ export async function resizeImage(
         );
         
         const compressionRatio = originalSize / blob.size;
-        
-        console.log(`✅ Resize complete: ${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio.toFixed(1)}x compression)`);
         
         return {
           file: resizedFile,

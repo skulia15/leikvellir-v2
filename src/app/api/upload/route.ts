@@ -48,7 +48,6 @@ export async function POST(
     const session = await getServerAuthSession();
 
     if (!session?.user?.id) {
-      console.log("❌ Authentication failed");
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 },
@@ -57,7 +56,6 @@ export async function POST(
 
     // Rate limiting
     if (!checkRateLimit(session.user.id)) {
-      console.log("❌ Rate limit exceeded for user:", session.user.id);
       return NextResponse.json(
         {
           success: false,
@@ -82,7 +80,6 @@ export async function POST(
     try {
       const validation = await validateImageFile(file);
       if (!validation.isValid) {
-        console.log("❌ Server validation failed:", validation.error);
         reportUploadError(file.name, file.size, new Error(validation.error || "Validation failed"), "validation");
         return NextResponse.json(
           { success: false, error: validation.error },
@@ -94,7 +91,6 @@ export async function POST(
       console.error("❌ Validation error:", validationError);
       reportUploadError(file.name, file.size, error, "validation");
       // Continue with upload if validation throws (but log the error)
-      console.log("⚠️ Continuing with upload despite validation error");
     }
 
     // Sanitize the filename first, then generate a unique name
@@ -120,8 +116,6 @@ export async function POST(
         multipart: true, // Enable multipart upload for larger files
         token: process.env.leikvellir_image_store_READ_WRITE_TOKEN, // Use the specific store token
       });
-
-      console.log(`✅ File uploaded to Vercel Blob: ${blob.url}`);
 
       return NextResponse.json({
         success: true,
@@ -211,7 +205,6 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       await del(blobUrl, {
         token: process.env.leikvellir_image_store_READ_WRITE_TOKEN, // Use the specific store token
       });
-      console.log(`🗑️ File deleted from Vercel Blob: ${blobUrl}`);
       return NextResponse.json({ success: true });
     } catch (error) {
       console.warn("Failed to delete from blob storage:", error);

@@ -25,10 +25,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         secure_cookie: true, // Secure cookies in production
         
         loaded: () => {
-          // Additional configuration after PostHog loads
-          if (process.env.NODE_ENV === "development") {
-            console.log("PostHog initialized");
-          }
+          // PostHog loaded
         },
       });
     };

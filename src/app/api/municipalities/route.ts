@@ -25,11 +25,8 @@ export async function GET() {
     // Check if we have valid cached data
     if (municipalitiesCache &&
       Date.now() - municipalitiesCache.timestamp < CACHE_DURATION) {
-      console.log('Returning cached municipalities data');
       return NextResponse.json(municipalitiesCache.data);
     }
-
-    console.log('Fetching fresh municipalities data from Icelandic registry');
 
     // Fetch fresh data from the Icelandic registry
     const response = await fetch('https://svc.skra.is/talnaefni/api/Sveitarfelog', {
@@ -56,8 +53,6 @@ export async function GET() {
       timestamp: Date.now(),
     };
 
-    console.log(`Successfully fetched ${data.Result.length} regions with municipalities`);
-
     return NextResponse.json(data);
 
   } catch (error) {
@@ -65,7 +60,6 @@ export async function GET() {
 
     // If we have cached data, return it even if stale
     if (municipalitiesCache) {
-      console.log('Returning stale cached data due to error');
       return NextResponse.json(municipalitiesCache.data);
     }
 

@@ -91,7 +91,6 @@ export const authOptions: NextAuthOptions = {
               session_state: account.session_state,
             });
 
-            console.log(`Linked ${account.provider} account to existing user: ${user.email}`);
           }
         }
 
