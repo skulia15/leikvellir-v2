@@ -236,13 +236,12 @@ export const CreatePlaygroundSchema = z.object({
           return true;
         }
 
-        // Accept valid absolute URLs
-        try {
-          new URL(str);
+        // Accept only Vercel Blob Storage URLs
+        if (str.includes(".public.blob.vercel-storage.com/")) {
           return true;
-        } catch {
-          return false;
         }
+
+        return false;
       }, "Must be a valid URL or upload path"),
     ),
 });

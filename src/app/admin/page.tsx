@@ -12,8 +12,11 @@ export default async function AdminPage() {
         redirect("/signin");
     }
 
-    // In development, allow any authenticated user
-    // In production, you might want to check for admin role here
+    // Only admins and super admins can access the admin dashboard
+    const currentUser = await api.users.getCurrentUser();
+    if (currentUser.role !== "admin" && currentUser.role !== "super_admin") {
+        redirect("/");
+    }
 
     // Prefetch playgrounds data
     void api.playground.getAll.prefetch();

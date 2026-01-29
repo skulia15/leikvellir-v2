@@ -12,6 +12,12 @@ export default async function ReviewPage() {
         redirect("/signin");
     }
 
+    // Only admins and super admins can access review page
+    const currentUser = await api.users.getCurrentUser();
+    if (currentUser.role !== "admin" && currentUser.role !== "super_admin") {
+        redirect("/");
+    }
+
     // Get pending submissions and edit suggestions
     const [pendingSubmissions, pendingEditSuggestions] = await Promise.all([
         api.playground.getPendingSubmissions(),

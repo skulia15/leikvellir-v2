@@ -201,7 +201,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        blobUrl = `https://${process.env.BLOB_STORE_ID ?? "vjivtetjvhz2zp6d"}.public.blob.vercel-storage.com/playgrounds/${filename}`;
+        if (!process.env.BLOB_STORE_ID) {
+          return NextResponse.json(
+            { success: false, error: "Server configuration error" },
+            { status: 500 },
+          );
+        }
+        blobUrl = `https://${process.env.BLOB_STORE_ID}.public.blob.vercel-storage.com/playgrounds/${filename}`;
       } else {
         return NextResponse.json(
           { success: false, error: "Invalid parameters" },

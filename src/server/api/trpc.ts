@@ -10,9 +10,11 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { eq } from "drizzle-orm";
 
 import { getServerAuthSession } from "~/server/auth";
 import { db } from "~/server/db";
+import { users } from "~/server/db/schema";
 
 /**
  * 1. CONTEXT
@@ -113,10 +115,24 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
-  .use(({ ctx, next }) => {
+  .use(async ({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
+
+    // Check if user is banned
+    const user = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.session.user.id),
+      columns: { isBanned: true },
+    });
+
+    if (user?.isBanned) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Your account has been suspended",
+      });
+    }
+
     return next({
       ctx: {
         // infers the `session` as non-nullable
