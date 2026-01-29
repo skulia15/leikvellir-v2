@@ -54,7 +54,7 @@ function MapboxDetailMap({ playground, className }: PlaygroundDetailMapProps) {
                     zoom: 15,
                 }}
                 style={{ width: "100%", height: "100%" }}
-                mapStyle="mapbox://styles/mapbox/light-v11"
+                mapStyle="mapbox://styles/skulipardus/cmkzwe4f2005s01skane25k5g"
                 dragRotate={false}
                 touchPitch={false}
                 attributionControl={true}
