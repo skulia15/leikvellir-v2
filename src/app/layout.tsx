@@ -1,8 +1,8 @@
 import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
-import { Fira_Sans } from "next/font/google";
-import { type Metadata } from "next";
+import { Fira_Sans, Outfit, Vollkorn } from "next/font/google";
+import { type Metadata, type Viewport } from "next";
 import { Toaster } from "sonner";
 
 import NavigationBar from "./_components/navigation-bar";
@@ -25,7 +25,24 @@ const firaSans = Fira_Sans({
   preload: true,
 });
 
+const outfit = Outfit({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
+const vollkorn = Vollkorn({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-vollkorn",
+  display: "swap",
+});
+
 export const metadata: Metadata = generateSEOMetadata();
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default async function RootLayout({
   children,
@@ -33,10 +50,9 @@ export default async function RootLayout({
   const session = await getServerAuthSession();
 
   return (
-    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable}`}>
+    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable} ${vollkorn.variable}`}>
       <head>
         <meta name="google-site-verification" content="T6ALXq-rzn0arBTQuAPGDqNpTKMf49319JZIAsW3Mfo" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
         {/* Preconnect to Google APIs to improve performance */}
