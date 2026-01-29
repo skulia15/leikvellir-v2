@@ -1,7 +1,23 @@
-import Script from 'next/script';
 import { getBaseUrl } from './base-url';
 
 const BASE_URL = getBaseUrl();
+
+/**
+ * Renders a JSON-LD structured data script tag.
+ * Uses a plain <script> tag (not next/script) to ensure the structured data
+ * is present in the initial server-rendered HTML for reliable crawler parsing.
+ */
+function JsonLd({ id, data }: { id: string; data: Record<string, unknown> }) {
+  return (
+    <script
+      id={id}
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(data),
+      }}
+    />
+  );
+}
 
 interface OrganizationSchemaProps {
   name?: string;
@@ -12,7 +28,7 @@ interface OrganizationSchemaProps {
 
 export function OrganizationSchema({
   name = 'Leiksvæði',
-  description = 'Finndu og kortleggðu leiksvæði víðsvegar um landið',
+  description = 'Finndu og kortleggðu leiksvæði og róluvellir víðsvegar um landið',
   url = BASE_URL,
   logo = `${BASE_URL}/android-chrome-512x512.png`
 }: OrganizationSchemaProps = {}) {
@@ -28,12 +44,6 @@ export function OrganizationSchema({
       width: 512,
       height: 512
     },
-    sameAs: [
-      // Add social media links when available
-      // 'https://www.facebook.com/leiskvæði ',
-      // 'https://twitter.com/leiskvæði',
-      // 'https://www.instagram.com/leiskvæði'
-    ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -41,15 +51,7 @@ export function OrganizationSchema({
     }
   };
 
-  return (
-    <Script
-      id="organization-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(organizationData),
-      }}
-    />
-  );
+  return <JsonLd id="organization-schema" data={organizationData} />;
 }
 
 interface WebsiteSchemaProps {
@@ -85,15 +87,7 @@ export function WebsiteSchema({
     }
   };
 
-  return (
-    <Script
-      id="website-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(websiteData),
-      }}
-    />
-  );
+  return <JsonLd id="website-schema" data={websiteData} />;
 }
 
 interface PlaygroundSchemaProps {
@@ -112,10 +106,10 @@ interface PlaygroundSchemaProps {
 export function PlaygroundSchema({ playground }: PlaygroundSchemaProps) {
   const playgroundData = {
     '@context': 'https://schema.org',
-    '@type': 'Place',
+    '@type': 'Playground',
     '@id': `${BASE_URL}/playground/${playground.id}`,
     name: playground.name,
-    description: `Leikvöllur í ${playground.municipality || 'á Íslandi'}`,
+    description: `${playground.name} - leiksvæði í ${playground.municipality || 'á Íslandi'}`,
     url: `${BASE_URL}/playground/${playground.id}`,
     geo: {
       '@type': 'GeoCoordinates',
@@ -159,15 +153,7 @@ export function PlaygroundSchema({ playground }: PlaygroundSchemaProps) {
     }
   };
 
-  return (
-    <Script
-      id={`playground-schema-${playground.id}`}
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(playgroundData),
-      }}
-    />
-  );
+  return <JsonLd id={`playground-schema-${playground.id}`} data={playgroundData} />;
 }
 
 interface BreadcrumbSchemaProps {
@@ -189,13 +175,67 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
     }))
   };
 
-  return (
-    <Script
-      id="breadcrumb-schema"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(breadcrumbData),
-      }}
-    />
-  );
+  return <JsonLd id="breadcrumb-schema" data={breadcrumbData} />;
+}
+
+interface PlaygroundListSchemaProps {
+  playgrounds: Array<{
+    id: number;
+    name: string;
+    municipality?: string | null;
+  }>;
+}
+
+export function PlaygroundListSchema({ playgrounds }: PlaygroundListSchemaProps) {
+  const listData = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Leiksvæði á Íslandi',
+    description: 'Listi yfir leiksvæði á Íslandi',
+    numberOfItems: playgrounds.length,
+    itemListElement: playgrounds.slice(0, 100).map((playground, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: playground.name,
+      url: `${BASE_URL}/playground/${playground.id}`,
+      item: {
+        '@type': 'Playground',
+        name: playground.name,
+        url: `${BASE_URL}/playground/${playground.id}`,
+        ...(playground.municipality && {
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: playground.municipality,
+            addressCountry: 'IS'
+          }
+        })
+      }
+    }))
+  };
+
+  return <JsonLd id="playground-list-schema" data={listData} />;
+}
+
+interface FAQSchemaProps {
+  questions: Array<{
+    question: string;
+    answer: string;
+  }>;
+}
+
+export function FAQSchema({ questions }: FAQSchemaProps) {
+  const faqData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: questions.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: answer
+      }
+    }))
+  };
+
+  return <JsonLd id="faq-schema" data={faqData} />;
 }

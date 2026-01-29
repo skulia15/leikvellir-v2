@@ -18,6 +18,6 @@ export default async function SignInPage() {
 }
 
 export const metadata = {
-    title: "Sign In - Leiksvæði",
-    description: "Sign in to your Leiksvæði account to make submissions, check into playgrounds and more.",
-}; 
+    title: "Skrá inn | Leiksvæði",
+    description: "Skráðu þig inn á Leiksvæði til að bæta við leiksvæðum, deila myndum og hjálpa til við að kortleggja leiksvæði á Íslandi.",
+};

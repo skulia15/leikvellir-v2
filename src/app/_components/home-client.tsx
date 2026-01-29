@@ -254,12 +254,18 @@ export default function HomeClient() {
         </DataErrorBoundary>
     );
 
+    // Visually-hidden H1 for SEO — the home page is map-first with no visible heading
+    const seoHeading = (
+        <h1 className="sr-only">{t('playground.seoHomeHeading')}</h1>
+    );
+
     // Mobile layout — toggle between map view (with bottom sheet) and list view
     if (isMobile) {
         // Full-screen list view
         if (mobileView === "list") {
             return (
                 <div className="fixed inset-0 flex flex-col pt-16 bg-card z-20">
+                    {seoHeading}
                     {/* List header with count and filters */}
                     <div className="px-4 pt-6 pb-4 border-b border-border bg-card">
                         <div className="flex items-center gap-2.5 mb-3">
@@ -291,6 +297,7 @@ export default function HomeClient() {
         // Map view with bottom sheet
         return (
             <div className="flex flex-col h-screen relative">
+                {seoHeading}
                 {/* Map container - takes full available height */}
                 <div className="absolute inset-0 z-0">
                     <MapErrorBoundary fallback={MapErrorFallback}>
@@ -399,6 +406,7 @@ export default function HomeClient() {
     // Desktop layout with left sidebar
     return (
         <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
+            {seoHeading}
             {/* Left sidebar with playground list */}
             <div className="w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
                 <ScrollArea className="h-full">

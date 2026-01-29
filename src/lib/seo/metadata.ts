@@ -2,8 +2,8 @@ import { type Metadata } from 'next';
 import { getBaseUrl } from './base-url';
 
 const BASE_URL = getBaseUrl();
-const DEFAULT_TITLE = 'Leiksvæði - Leiksvæði á Íslandi';
-const DEFAULT_DESCRIPTION = 'Finndu og kortleggðu leiksvæði víðsvegar um landið. Finndu skemmtileg leiksvæði fyrir fjölskylduna.';
+const DEFAULT_TITLE = 'Leiksvæði | Leikvellir á Íslandi';
+const DEFAULT_DESCRIPTION = 'Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna.';
 
 interface SEOProps {
   title?: string;
@@ -30,6 +30,8 @@ export function generateMetadata({
     'leiksvæði',
     'leikvöllur',
     'leikvellir',
+    'róló',
+    'róluvellir',
     'fjölskylda',
     'íslenska',
     'reykjavík',
@@ -99,13 +101,9 @@ export function generateMetadata({
     },
 
     // Alternate languages
+    // Language is client-side (localStorage), not URL-based — all languages share the same URL
     alternates: {
       canonical: url,
-      languages: {
-        'is': url,
-        // TODO: there is no /en suffix in the url on english version
-        'en': url.replace('leiksvæði.is', 'leiksvæði.is/en'),
-      },
     },
 
     // App-specific
@@ -152,7 +150,8 @@ export function generatePlaygroundMetadata(playground: {
   images?: string[] | null;
 }) {
   const title = playground.name;
-  const description = `Leikvöllur í ${playground.municipality || 'á Íslandi'}. Finndu upplýsingar um þennan leikvöll og fleiri.`;
+  const locationText = playground.municipality || 'á Íslandi';
+  const description = `${playground.name} - leiksvæði í ${locationText}. Skoðaðu leiktæki, myndir, aðgengi og staðsetningu. Finndu fleiri leiksvæði á Íslandi.`;
   const image = playground.images?.[0] || `${BASE_URL}/og-image.png`;
   const url = `${BASE_URL}/playground/${playground.id}`;
 
@@ -166,6 +165,8 @@ export function generatePlaygroundMetadata(playground: {
       'leiksvæði',
       'leikvöllur',
       'leikvellir',
+      'róló',
+      'róluvellir',
       playground.name.toLowerCase(),
       playground.municipality?.toLowerCase(),
       'íslenska',

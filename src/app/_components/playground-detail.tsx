@@ -25,6 +25,7 @@ import {
   Star,
   Puzzle
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
@@ -543,7 +544,7 @@ export default function PlaygroundDetail({
                     </span>
                     <span className="font-medium">
                       {playground.createdAt
-                        ? new Date(playground.createdAt).toLocaleDateString()
+                        ? new Date(playground.createdAt).toLocaleDateString(currentLanguage, { day: 'numeric', month: 'numeric', year: 'numeric' })
                         : t('playground.unknown')}
                     </span>
                   </div>
@@ -552,7 +553,7 @@ export default function PlaygroundDetail({
                     <span className="text-muted-foreground">{t('playground.lastUpdated')}:</span>
                     <span className="font-medium">
                       {playground.updatedAt
-                        ? new Date(playground.updatedAt).toLocaleDateString()
+                        ? new Date(playground.updatedAt).toLocaleDateString(currentLanguage, { day: 'numeric', month: 'numeric', year: 'numeric' })
                         : t('playground.unknown')}
                     </span>
                   </div>
@@ -576,6 +577,35 @@ export default function PlaygroundDetail({
           </div>
         )}
       </div>
+
+      {/* Internal links for SEO and navigation */}
+      <Separator className="my-4" />
+      <nav className="flex flex-wrap gap-3" aria-label={t('playground.exploreMore')}>
+        <Link
+          href="/playgrounds"
+          className="text-sm text-primary hover:underline"
+        >
+          {t('playground.browseAllPlaygrounds')}
+        </Link>
+        <span className="text-muted-foreground">·</span>
+        <Link
+          href={`/?lat=${playground.latitude}&lng=${playground.longitude}&playground=${playground.id}`}
+          className="text-sm text-primary hover:underline"
+        >
+          {t('playground.viewOnMap')}
+        </Link>
+        {playground.municipality && (
+          <>
+            <span className="text-muted-foreground">·</span>
+            <Link
+              href={`/playgrounds?search=${encodeURIComponent(playground.municipality)}`}
+              className="text-sm text-primary hover:underline"
+            >
+              {t('playground.moreInMunicipality', { municipality: playground.municipality })}
+            </Link>
+          </>
+        )}
+      </nav>
 
       {/* Edit Dialog */}
       {isAdminMode && isEditDialogOpen && (
