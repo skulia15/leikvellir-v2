@@ -118,7 +118,7 @@ export default function PlaygroundList({
   return (
     <div className="">
       {userLocation && (
-        <div className="px-4 py-3 text-xs text-muted-foreground border-b bg-muted/30">
+        <div className="px-4 py-2.5 text-[11px] tracking-[0.08em] uppercase font-medium text-muted-foreground border-b border-border">
           {t('playground.sortedByDistance')}
         </div>
       )}
@@ -132,9 +132,9 @@ export default function PlaygroundList({
             <div
               key={playground.id}
               className={`
-                cursor-pointer hover:bg-muted/50
+                cursor-pointer hover:bg-accent/50 transition-all
                 ${selectedPlayground?.id === playground.id
-                  ? "bg-muted/50"
+                  ? "bg-accent/60"
                   : ""
                 }
                 ${isExiting
@@ -148,7 +148,7 @@ export default function PlaygroundList({
                 // Staggered animation delay for smoother appearance
                 animationDelay: isNewItem ? `${index * 50}ms` : undefined,
                 // Smooth transitions for hover and selection states
-                transition: "background-color 150ms ease-in-out",
+                transition: "all 200ms ease-in-out",
               }}
               onClick={() => !isExiting && onPlaygroundSelect(playground)}
             >
