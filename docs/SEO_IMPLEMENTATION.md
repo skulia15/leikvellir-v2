@@ -1,6 +1,6 @@
-# SEO Implementation Guide - Leikvellir
+# SEO Implementation Guide - Leiksvæði
 
-This document outlines the comprehensive SEO implementation for your Leikvellir playground mapping application.
+This document outlines the comprehensive SEO implementation for your Leiksvæði playground mapping application.
 
 ## ✅ What's Been Implemented
 
@@ -120,7 +120,7 @@ public/
 #### Homepage Result
 
 ```
-Leikvellir - Leikvöllur á Íslandi
+Leiksvæði á Íslandi
 https://leiksvæði.is
 Finndu og kortleggðu leikvelli víðsvegar um Ísland. Upplifðu ókeypis
 upplýsingar um leikvelli fyrir börn og fjölskyldur.
@@ -130,7 +130,7 @@ upplýsingar um leikvelli fyrir börn og fjölskyldur.
 #### Playground Page Result
 
 ```
-Leikvöllur í Reykjavík | Leikvellir
+Leikvöllur í Reykjavík | Leiksvæði
 https://leiksvæði.is/playground/123
 Leikvöllur í Reykjavík. Finndu upplýsingar um þennan leikvöll og
 manga aðra. ⭐ Barnvænn ⭐ Almenningur

@@ -91,7 +91,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
       <BreadcrumbSchema
         items={[
           { name: 'Heim', url: BASE_URL },
-          { name: 'Leikvellir', url: `${BASE_URL}/playgrounds` },
+          { name: 'Leiksvæði', url: `${BASE_URL}/playgrounds` },
           { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` }
         ]}
       />

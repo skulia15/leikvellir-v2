@@ -15,6 +15,8 @@ interface PlaygroundListProps {
   selectedPlayground: Playground | null;
   onPlaygroundSelect: (playground: Playground | null) => void;
   visiblePlaygrounds?: (Playground & { distance?: number | null })[];
+  totalVisibleCount?: number;
+  onClearFilters?: () => void;
 }
 
 export default function PlaygroundList({
@@ -23,6 +25,8 @@ export default function PlaygroundList({
   selectedPlayground,
   onPlaygroundSelect,
   visiblePlaygrounds,
+  totalVisibleCount,
+  onClearFilters,
 }: PlaygroundListProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const t = useT();
@@ -104,12 +108,25 @@ export default function PlaygroundList({
   }
 
   if (displayedPlaygrounds.length === 0 && !exitingPlaygrounds.size) {
+    const hasActiveFilters = Object.values(filters).some((v) => v !== undefined);
+    const isFilteredOut = hasActiveFilters && (totalVisibleCount ?? 0) > 0;
+
     return (
       <div className="flex h-32 items-center justify-center">
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
-            {t('playground.noPlaygroundsMatchingFilters')}
+            {isFilteredOut
+              ? t('playground.noPlaygroundsMatchingFilters')
+              : t('playground.noPlaygroundsInArea')}
           </p>
+          {isFilteredOut && onClearFilters && (
+            <button
+              onClick={onClearFilters}
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              {t('forms.clearFilters')}
+            </button>
+          )}
         </div>
       </div>
     );

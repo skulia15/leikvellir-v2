@@ -1,4 +1,4 @@
-# Code Review: Leikvellir v2
+# Code Review: Leiksvæði v2
 
 ## 🎯 Overall Assessment
 

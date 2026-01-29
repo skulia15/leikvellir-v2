@@ -1,4 +1,4 @@
-# Leikvellir v2 — Icelandic Playground Discovery App
+# Leiksvæði v2 — Icelandic Playground Discovery App
 
 ## Stack
 - Next.js 15, React 18, TypeScript, tRPC, Drizzle ORM, Tailwind CSS 3.4, shadcn/ui

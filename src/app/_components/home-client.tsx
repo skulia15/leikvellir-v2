@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { List } from "lucide-react";
+import { List, SlidersHorizontal } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { MobileMapListToggle } from "./mobile-map-list-toggle";
 import {
     MapErrorBoundary,
     DataErrorBoundary,
@@ -57,9 +58,12 @@ export default function HomeClient() {
     const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
     const [mapCenter, setMapCenter] = useState<UserLocation | null>(null);
     const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
+    const [totalVisibleCount, setTotalVisibleCount] = useState(0);
     const [isOpen, setOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
+    const [mobileView, setMobileView] = useState<"map" | "list">("map");
     const [actualDrawerHeight, setActualDrawerHeight] = useState(0);
+    const [currentSnapIndex, setCurrentSnapIndex] = useState(1); // Track snap position for conditional UI
     const ref = useRef<SheetRef>();
 
     const searchParams = useSearchParams();
@@ -87,12 +91,8 @@ export default function HomeClient() {
             observer.observe(drawerElement);
         }
 
-        // Also update on interval as fallback
-        const interval = setInterval(updateDrawerHeight, 100);
-
         return () => {
             observer.disconnect();
-            clearInterval(interval);
         };
     }, [isMobile]);
 
@@ -185,6 +185,11 @@ export default function HomeClient() {
             }).length;
     }, [playgrounds, isInitialLoading, visiblePlaygrounds, filters]);
 
+    // Count active filters for badge display when sheet is minimized
+    const activeFilterCount = useMemo(() => {
+        return Object.values(filters).filter(v => v !== undefined).length;
+    }, [filters]);
+
     // Stable callback to prevent infinite loops
     const handleVisiblePlaygroundsChange = useCallback((newVisiblePlaygrounds: (Playground & { distance?: number | null })[]) => {
         setVisiblePlaygrounds(newVisiblePlaygrounds);
@@ -213,17 +218,18 @@ export default function HomeClient() {
         return actualDrawerHeight;
     }, [isMobile, isOpen, actualDrawerHeight]);
 
-    // Playground list content
-    const playgroundContent = (
-        <DataErrorBoundary fallback={DataErrorFallback}>
-            {/* Filters */}
-            <PlaygroundFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                playgroundCount={filteredPlaygroundCount}
-            />
+    // Filter pills (shared between desktop sidebar and mobile sheet header)
+    const filterContent = (
+        <PlaygroundFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            playgroundCount={filteredPlaygroundCount}
+        />
+    );
 
-            {/* Playground list */}
+    // Playground list content (without filters — filters are placed separately)
+    const playgroundListContent = (
+        <DataErrorBoundary fallback={DataErrorFallback}>
             {isInitialLoading ? (
                 <PlaygroundListSkeleton count={6} />
             ) : (
@@ -233,13 +239,68 @@ export default function HomeClient() {
                     selectedPlayground={selectedPlayground}
                     onPlaygroundSelect={handlePlaygroundSelect}
                     visiblePlaygrounds={visiblePlaygrounds}
+                    totalVisibleCount={totalVisibleCount}
+                    onClearFilters={() => setFilters({})}
                 />
             )}
         </DataErrorBoundary>
     );
 
-    // Mobile layout with bottom sheet
+    // Combined content for desktop sidebar (filters + list together)
+    const desktopSidebarContent = (
+        <DataErrorBoundary fallback={DataErrorFallback}>
+            {filterContent}
+            {isInitialLoading ? (
+                <PlaygroundListSkeleton count={6} />
+            ) : (
+                <PlaygroundList
+                    filters={filters}
+                    userLocation={userLocation}
+                    selectedPlayground={selectedPlayground}
+                    onPlaygroundSelect={handlePlaygroundSelect}
+                    visiblePlaygrounds={visiblePlaygrounds}
+                    totalVisibleCount={totalVisibleCount}
+                    onClearFilters={() => setFilters({})}
+                />
+            )}
+        </DataErrorBoundary>
+    );
+
+    // Mobile layout — toggle between map view (with bottom sheet) and list view
     if (isMobile) {
+        // Full-screen list view
+        if (mobileView === "list") {
+            return (
+                <div className="fixed inset-0 flex flex-col pt-16 bg-card z-20">
+                    {/* List header with count and filters */}
+                    <div className="px-4 pt-6 pb-4 border-b border-border bg-card">
+                        <div className="flex items-center gap-2.5 mb-3">
+                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+                                {visiblePlaygrounds.length}
+                            </span>
+                            <span className="text-sm font-semibold text-foreground">
+                                {t('playground.playgroundsFound')}
+                            </span>
+                        </div>
+                        {filterContent}
+                    </div>
+
+                    {/* Scrollable list */}
+                    <ScrollArea className="flex-1">
+                        <div className="px-2 pb-20">
+                            {playgroundListContent}
+                        </div>
+                    </ScrollArea>
+
+                    {/* Floating toggle to switch back to map */}
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30">
+                        <MobileMapListToggle view={mobileView} onViewChange={setMobileView} />
+                    </div>
+                </div>
+            );
+        }
+
+        // Map view with bottom sheet
         return (
             <div className="flex flex-col h-screen relative">
                 {/* Map container - takes full available height */}
@@ -253,6 +314,7 @@ export default function HomeClient() {
                             onUserLocationChange={setUserLocation}
                             mapCenter={mapCenter}
                             onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                            onTotalVisibleCountChange={setTotalVisibleCount}
                             isMobile={isMobile}
                             drawerHeight={getDrawerHeight()}
                             shouldCenterOnUserLocation={true}
@@ -261,23 +323,22 @@ export default function HomeClient() {
                     </MapErrorBoundary>
                 </div>
 
-                {/* Mobile bottom sheet with improved settings */}
+                {/* Mobile bottom sheet */}
                 <Sheet
                     ref={ref}
                     isOpen={isOpen}
-                    onClose={() => setOpen(false)} // Allow closing
-                    snapPoints={[0.85, 0.6, 0.15]} // More intuitive heights
-                    initialSnap={2} // Start minimized
+                    onClose={() => setOpen(false)}
+                    snapPoints={[0.85, 0.6, 0.15]}
+                    initialSnap={1} // Start at 60% — show content immediately
                     onSnap={(snapIndex) => {
-                        // Keep track of open state based on snap point
+                        setCurrentSnapIndex(snapIndex);
                         if (snapIndex === 2) {
-                            // At the smallest snap point, consider it "minimized" but still open
                             setOpen(true);
                         }
                     }}
                     disableScrollLocking
                     style={{
-                        zIndex: 30, // Lower z-index to avoid conflicts
+                        zIndex: 30,
                     }}
                 >
                     <Sheet.Container
@@ -285,33 +346,53 @@ export default function HomeClient() {
                             borderTopLeftRadius: "20px",
                             borderTopRightRadius: "20px",
                             boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
-                            backgroundColor: "hsl(var(--card))", // Ensure solid background
+                            backgroundColor: "hsl(var(--card))",
                         }}
                     >
-                        <Sheet.Header className="px-4 py-4 border-b border-border bg-card">
-                            <div className="mx-auto h-1 w-10 rounded-full bg-border mb-3" />
-                            <div className="text-center">
-                                <span className="text-3xl font-display font-bold tracking-tight text-foreground">
-                                    {visiblePlaygrounds.length}
-                                </span>
-                                <span className="block text-xs text-muted-foreground mt-1 font-medium">
-                                    {t('playground.playgroundsFound')}
-                                </span>
+                        <Sheet.Header className="px-4 pt-3 pb-2 border-b border-border bg-card">
+                            <div className="mx-auto h-1 w-10 rounded-full bg-border mb-2" />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+                                        {visiblePlaygrounds.length}
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {t('playground.playgroundsFound')}
+                                    </span>
+                                    {/* Show filter count badge when minimized and filters are active */}
+                                    {currentSnapIndex === 2 && activeFilterCount > 0 && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-xs font-medium">
+                                            <SlidersHorizontal className="h-3 w-3" />
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+                            {/* Show filter pills when sheet is expanded (not minimized) */}
+                            {currentSnapIndex !== 2 && (
+                                <div className="mt-2">
+                                    {filterContent}
+                                </div>
+                            )}
                         </Sheet.Header>
                         <Sheet.Content className="bg-card">
                             <ScrollArea className="h-full px-2">
                                 <div className="pb-safe-area-inset-bottom">
-                                    {playgroundContent}
+                                    {playgroundListContent}
                                 </div>
                             </ScrollArea>
                         </Sheet.Content>
                     </Sheet.Container>
                 </Sheet>
 
+                {/* Floating toggle to switch to list view */}
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+                    <MobileMapListToggle view={mobileView} onViewChange={setMobileView} />
+                </div>
+
                 {/* Floating button to reopen drawer when closed */}
                 {!isOpen && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
                         <Button
                             onClick={() => setOpen(true)}
                             className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 rounded-full px-6 py-3 flex items-center gap-2 text-sm"
@@ -334,18 +415,18 @@ export default function HomeClient() {
             <div className="w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
                 <ScrollArea className="h-full">
                     {/* Sidebar header with count badge */}
-                    <div className="px-5 pt-5 pb-3 border-b border-border sticky top-0 bg-card z-10">
-                        <div className="flex items-center gap-2">
+                    <div className="px-5 pt-10 pb-4 border-b border-border sticky top-0 bg-card z-10">
+                        <div className="flex items-center gap-2.5">
+                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+                                {visiblePlaygrounds.length}
+                            </span>
                             <h2 className="text-sm font-semibold text-foreground">
                                 {t('playground.playgroundsFound')}
                             </h2>
-                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold tabular-nums">
-                                {visiblePlaygrounds.length}
-                            </span>
                         </div>
                     </div>
                     <div className="px-4 pb-4">
-                        {playgroundContent}
+                        {desktopSidebarContent}
                     </div>
                 </ScrollArea>
             </div>
@@ -361,6 +442,7 @@ export default function HomeClient() {
                         onUserLocationChange={setUserLocation}
                         mapCenter={mapCenter}
                         onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+                        onTotalVisibleCountChange={setTotalVisibleCount}
                         isMobile={false}
                         drawerHeight={getDrawerHeight()}
                         shouldCenterOnUserLocation={true}

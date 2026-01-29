@@ -152,6 +152,7 @@
     "noPlaygroundsFound": "No Playgrounds Found",
     "beFirstToAdd": "Be the first to add a playground to the database!",
     "loadingPlaygrounds": "Loading playgrounds...",
+    "noPlaygroundsInArea": "No playgrounds in this area. Try zooming out or panning the map.",
     "noPlaygroundsMatchingFilters": "No playgrounds found matching your filters.",
     "filterByEquipment": "Filter by equipment",
     "clearAllFilters": "Clear all",
@@ -186,7 +187,10 @@
     "submitEditSuggestion": "Submit Edit Suggestion",
     "editFieldsToSuggestChanges": "Edit the fields above to suggest changes",
     "onlyModifiedFieldsIncluded": "Only the fields you modify will be included in your suggestion",
-    "adminWillReviewChanges": "An administrator will review your changes before they are applied"
+    "adminWillReviewChanges": "An administrator will review your changes before they are applied",
+    "listView": "List",
+    "mapView": "Map",
+    "searchPlaceholder": "Search playgrounds..."
   },
   "equipment": {
     "categories": {

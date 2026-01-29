@@ -151,6 +151,7 @@
     "noPlaygroundsFound": "Engir leikvellir fundust",
     "beFirstToAdd": "Vertu fyrstur til að bæta leikvelli í gagnagrunninn!",
     "loadingPlaygrounds": "Hleður leikvelli...",
+    "noPlaygroundsInArea": "Engir leikvellir á þessu svæði. Prófaðu að þysja út eða færa kortið.",
     "noPlaygroundsMatchingFilters": "Engir leikvellir fundust sem uppfylla virkar síur.",
     "filterByEquipment": "Sía eftir leiktækjum",
     "clearAllFilters": "Hreinsa allt",
@@ -187,7 +188,10 @@
     "submitEditSuggestion": "Senda breytingabeiðni",
     "editFieldsToSuggestChanges": "Breyttu reitunum hér að ofan til að leggja til breytingar",
     "onlyModifiedFieldsIncluded": "Aðeins reitirnir sem þú breytir verða teknir með í tillögunni",
-    "adminWillReviewChanges": "Stjórnandi mun fara yfir breytingarnar þínar áður en þær eru samþykktar"
+    "adminWillReviewChanges": "Stjórnandi mun fara yfir breytingarnar þínar áður en þær eru samþykktar",
+    "listView": "Listi",
+    "mapView": "Kort",
+    "searchPlaceholder": "Leita að leikvöllum..."
   },
   "equipment": {
     "categories": {

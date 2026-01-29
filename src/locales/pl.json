@@ -153,6 +153,7 @@
     "noPlaygroundsFound": "Nie znaleziono placów zabaw",
     "beFirstToAdd": "Bądź pierwszy, który doda plac zabaw do bazy danych!",
     "loadingPlaygrounds": "Ładowanie placów zabaw...",
+    "noPlaygroundsInArea": "Brak placów zabaw w tym obszarze. Spróbuj oddálić lub przesunąć mapę.",
     "noPlaygroundsMatchingFilters": "Nie znaleziono placów zabaw pasujących do Twoich filtrów.",
     "filterByEquipment": "Filtruj po wyposażeniu",
     "clearAllFilters": "Wyczyść wszystko",
@@ -189,7 +190,10 @@
     "submitEditSuggestion": "Prześlij propozycję zmian",
     "editFieldsToSuggestChanges": "Edytuj powyższe pola, aby zaproponować zmiany",
     "onlyModifiedFieldsIncluded": "Tylko pola, które zmodyfikujesz, zostaną uwzględnione w Twojej propozycji",
-    "adminWillReviewChanges": "Administrator przejrzy Twoje zmiany przed ich zastosowaniem"
+    "adminWillReviewChanges": "Administrator przejrzy Twoje zmiany przed ich zastosowaniem",
+    "listView": "Lista",
+    "mapView": "Mapa",
+    "searchPlaceholder": "Szukaj placów zabaw..."
   },
   "equipment": {
     "categories": {

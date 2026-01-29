@@ -30,6 +30,7 @@ interface MapProps {
   drawerHeight?: number;
   shouldCenterOnUserLocation?: boolean; // New prop to control auto-centering
   onMinimizeDrawer?: () => void; // New prop to minimize drawer
+  onTotalVisibleCountChange?: (count: number) => void; // Count of ALL playgrounds in viewport (ignoring filters)
 }
 
 const defaultCenter = {
@@ -190,6 +191,7 @@ export function GoogleMap({
   isMobile = false,
   drawerHeight = 0,
   onMinimizeDrawer,
+  onTotalVisibleCountChange,
 }: MapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
@@ -247,6 +249,21 @@ export function GoogleMap({
     });
   }, [filteredPlaygrounds, mapBounds]);
 
+  // Count ALL playgrounds in the current viewport (ignoring filters)
+  // Used to distinguish "no playgrounds in area" vs "filtered out"
+  const totalPlaygroundsInBounds = useMemo(() => {
+    if (!playgrounds) return 0;
+    if (!mapBounds) return playgrounds.length;
+    return playgrounds.filter((playground) =>
+      mapBounds.contains(new google.maps.LatLng(playground.latitude, playground.longitude))
+    ).length;
+  }, [playgrounds, mapBounds]);
+
+  // Notify parent of total (unfiltered) visible count
+  useEffect(() => {
+    onTotalVisibleCountChange?.(totalPlaygroundsInBounds);
+  }, [totalPlaygroundsInBounds, onTotalVisibleCountChange]);
+
   // Add distance to visible playgrounds if user location is available
   const playgroundsWithDistance = useMemo(() => {
     return visiblePlaygrounds.map((playground) => {
@@ -290,7 +307,7 @@ export function GoogleMap({
   }, [playgroundsWithDistance, onVisiblePlaygroundsChange]);
 
   return (
-    <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
+    <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
       <div className="relative" style={mapContainerStyle}>
         <Map
           defaultZoom={15}
