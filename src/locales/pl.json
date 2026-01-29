@@ -223,6 +223,7 @@
     "description": "Opis",
     "enterDescription": "Wprowadź opis",
     "createEquipment": "Utwórz sprzęt",
+    "updateEquipment": "Zaktualizuj sprzęt",
     "delete": {
       "success": "Sprzęt usunięty pomyślnie",
       "error": "Nie udało się usunąć sprzętu",

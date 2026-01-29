@@ -222,6 +222,7 @@
     "description": "Description",
     "enterDescription": "Enter description",
     "createEquipment": "Create Equipment",
+    "updateEquipment": "Update Equipment",
     "delete": {
       "success": "Equipment deleted successfully",
       "error": "Failed to delete equipment",

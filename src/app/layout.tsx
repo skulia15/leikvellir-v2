@@ -51,7 +51,6 @@ export default async function RootLayout({
   return (
     <html lang="is" className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable} ${vollkorn.variable}`}>
       <head>
-        <meta name="google-site-verification" content="T6ALXq-rzn0arBTQuAPGDqNpTKMf49319JZIAsW3Mfo" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
         {/* Preconnect to Google APIs to improve performance */}

@@ -95,7 +95,7 @@ export function generateMetadata({
 
     // Verification
     verification: {
-      google: '51PPDlaCttszidyW9wyKGGgd729BuUb0wWLY2M9lQAc',
+      google: 'T6ALXq-rzn0arBTQuAPGDqNpTKMf49319JZIAsW3Mfo',
     },
 
     // Alternate languages

@@ -141,7 +141,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: `Blob storage error: ${error.message}`
+          error: "File upload failed. Please try again.",
         },
         { status: 500 },
       );
@@ -183,7 +183,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       let blobUrl: string;
 
       if (url) {
-        // If full URL is provided, use it directly
+        // Only allow deletion of URLs from our own Vercel Blob store
+        if (!url.includes(".public.blob.vercel-storage.com/")) {
+          return NextResponse.json(
+            { success: false, error: "Invalid URL" },
+            { status: 400 },
+          );
+        }
         blobUrl = url;
       } else if (filename) {
         // Security: only allow deletion of files with safe filenames
@@ -195,8 +201,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        // For backward compatibility, construct the blob URL from filename
-        blobUrl = `https://vjivtetjvhz2zp6d.public.blob.vercel-storage.com/playgrounds/${filename}`;
+        blobUrl = `https://${process.env.BLOB_STORE_ID ?? "vjivtetjvhz2zp6d"}.public.blob.vercel-storage.com/playgrounds/${filename}`;
       } else {
         return NextResponse.json(
           { success: false, error: "Invalid parameters" },
