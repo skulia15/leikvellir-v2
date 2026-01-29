@@ -415,7 +415,7 @@ export default function HomeClient() {
             <div className="w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
                 <ScrollArea className="h-full">
                     {/* Sidebar header with count badge */}
-                    <div className="px-5 pt-10 pb-4 border-b border-border sticky top-0 bg-card z-10">
+                    <div className="px-5 py-4 border-b border-border sticky top-0 bg-card z-10">
                         <div className="flex items-center gap-2.5">
                             <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
                                 {visiblePlaygrounds.length}

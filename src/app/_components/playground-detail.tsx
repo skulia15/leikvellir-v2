@@ -38,6 +38,8 @@ import SuggestEditDialog from "./suggest-edit-dialog";
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
+import { estimateWalkingTime } from "~/lib/map-utils";
+import { getDirectionsUrl } from "~/lib/directions";
 import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT, useLocale } from "~/lib/i18n";
@@ -76,8 +78,8 @@ export default function PlaygroundDetail({
 
 
   const handleGetDirections = () => {
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${playground.latitude},${playground.longitude}`;
-    window.open(googleMapsUrl, "_blank");
+    const url = getDirectionsUrl(playground.latitude, playground.longitude);
+    window.open(url, "_blank");
   };
 
   const handleViewOnMap = () => {
@@ -214,7 +216,7 @@ export default function PlaygroundDetail({
                     <div>
                       <p className="font-medium">{t('playground.distanceFromYou')}</p>
                       <p className="text-sm font-medium text-green-600">
-                        {formatDistance(distance)}
+                        {estimateWalkingTime(distance).text} · {formatDistance(distance)}
                       </p>
                     </div>
                   </div>

@@ -315,24 +315,8 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                             <div className="md:hidden">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="p-0 relative">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage
-                                                    src={
-                                                        session.user?.image &&
-                                                            session.user.image.trim() !== ""
-                                                            ? session.user.image
-                                                            : undefined
-                                                    }
-                                                    alt={session.user?.name ?? ""}
-                                                />
-                                                <AvatarFallback className="text-xs">
-                                                    {session.user?.name
-                                                        ? getInitials(session.user.name)
-                                                        : "U"}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <ChevronDown className="h-3 w-3 absolute -bottom-0.5 -right-0.5 bg-background rounded-full border" />
+                                        <Button variant="outline" size="sm">
+                                            <Menu className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end">

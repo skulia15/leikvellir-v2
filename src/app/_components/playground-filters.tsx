@@ -1,19 +1,10 @@
 "use client";
 
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-} from "~/components/ui/dropdown-menu";
-import { Filter, X, List, Clock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { X, Clock, Baby, Users } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { useT } from "~/lib/i18n";
 import { isSchoolHours } from "~/lib/school-hours";
+import { cn } from "~/lib/utils";
 
 export interface PlaygroundFilters {
     toddlerFriendly?: boolean;
@@ -27,20 +18,24 @@ interface PlaygroundFiltersProps {
     playgroundCount: number;
 }
 
+type FilterKey = keyof PlaygroundFilters;
+
+const FILTER_OPTIONS: { key: FilterKey; icon: typeof Clock; translationKey: string }[] = [
+    { key: "accessibleNow", icon: Clock, translationKey: "playground.accessibleNow" },
+    { key: "toddlerFriendly", icon: Baby, translationKey: "playground.toddlerFriendly" },
+    { key: "publiclyAccessible", icon: Users, translationKey: "playground.publiclyAccessible" },
+];
+
 export default function PlaygroundFilters({
     filters,
     onFiltersChange,
 }: PlaygroundFiltersProps) {
-    const router = useRouter();
     const t = useT();
-    const activeFilterCount = Object.values(filters).filter(
-        (value) => value !== undefined,
-    ).length;
 
-    const handleFilterChange = (key: keyof PlaygroundFilters, value: boolean | undefined) => {
+    const toggleFilter = (key: FilterKey) => {
         onFiltersChange({
             ...filters,
-            [key]: value,
+            [key]: filters[key] ? undefined : true,
         });
     };
 
@@ -48,165 +43,69 @@ export default function PlaygroundFilters({
         onFiltersChange({});
     };
 
-    const handleViewAllPlaygrounds = () => {
-        router.push('/playgrounds');
-    };
+    const hasActiveFilters = Object.values(filters).some(
+        (value) => value !== undefined,
+    );
 
     return (
-        <div className="flex items-center gap-2 p-4 border-b">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="relative">
-                        <Filter className="mr-2 h-4 w-4" />
-                        {t('forms.filters')}
-                        {activeFilterCount > 0 && (
-                            <Badge
-                                variant="secondary"
-                                className="ml-2 h-5 w-5 p-0 text-xs"
+        <div className="px-1 py-3">
+            <div className="flex flex-wrap gap-2">
+                <AnimatePresence mode="popLayout">
+                    {FILTER_OPTIONS.map(({ key, icon: Icon, translationKey }) => {
+                        const isActive = filters[key] === true;
+
+                        return (
+                            <motion.button
+                                key={key}
+                                layout
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.2 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => toggleFilter(key)}
+                                className={cn(
+                                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                                    isActive
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                                )}
                             >
-                                {activeFilterCount}
-                            </Badge>
-                        )}
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                    <DropdownMenuLabel>{t('forms.filterPlaygrounds')}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+                                <Icon className="h-3.5 w-3.5" />
+                                {t(translationKey)}
+                                {key === "accessibleNow" && isSchoolHours() && (
+                                    <span className={cn(
+                                        "text-xs",
+                                        isActive ? "text-primary-foreground/70" : "text-muted-foreground",
+                                    )}>
+                                        ({t("playground.excludesSchoolHours")})
+                                    </span>
+                                )}
+                                {isActive && (
+                                    <X className="h-3 w-3 ml-0.5" />
+                                )}
+                            </motion.button>
+                        );
+                    })}
 
-                    <div className="p-2 space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">{t('forms.accessibility')}</label>
-                            <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="accessible-now"
-                                        checked={filters.accessibleNow === true}
-                                        onCheckedChange={(checked) => {
-                                            handleFilterChange(
-                                                "accessibleNow",
-                                                checked ? true : undefined,
-                                            );
-                                        }}
-                                    />
-                                    <label
-                                        htmlFor="accessible-now"
-                                        className="text-sm cursor-pointer flex items-center gap-1"
-                                    >
-                                        <Clock className="h-3 w-3" />
-                                        {t('playground.accessibleNow')}
-                                        {isSchoolHours() && (
-                                            <span className="text-xs text-muted-foreground">({t('playground.excludesSchoolHours')})</span>
-                                        )}
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="toddler-friendly"
-                                        checked={filters.toddlerFriendly === true}
-                                        onCheckedChange={(checked) => {
-                                            handleFilterChange(
-                                                "toddlerFriendly",
-                                                checked ? true : undefined,
-                                            );
-                                        }}
-                                    />
-                                    <label
-                                        htmlFor="toddler-friendly"
-                                        className="text-sm cursor-pointer"
-                                    >
-                                        {t('playground.toddlerFriendly')}
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="publicly-accessible"
-                                        checked={filters.publiclyAccessible === true}
-                                        onCheckedChange={(checked) => {
-                                            handleFilterChange(
-                                                "publiclyAccessible",
-                                                checked ? true : undefined,
-                                            );
-                                        }}
-                                    />
-                                    <label
-                                        htmlFor="publicly-accessible"
-                                        className="text-sm cursor-pointer"
-                                    >
-                                        {t('playground.publiclyAccessible')}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {activeFilterCount > 0 && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearFilters}
-                                className="w-full"
-                            >
-                                <X className="mr-2 h-4 w-4" />
-                                {t('forms.clearFilters')}
-                            </Button>
-                        )}
-                    </div>
-                </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={handleViewAllPlaygrounds}
-                className="flex items-center gap-2"
-            >
-                <List className="h-4 w-4" />
-                {t('forms.allPlaygrounds')}
-            </Button>
-
-            {/* Active filter badges */}
-            <div className="flex flex-wrap gap-1.5">
-                {filters.accessibleNow && (
-                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                        <Clock className="h-3 w-3 mr-1.5" />
-                        {t('playground.accessibleNow')}
-                        <button
-                            onClick={() => handleFilterChange("accessibleNow", undefined)}
-                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
+                    {/* Clear all button */}
+                    {hasActiveFilters && (
+                        <motion.button
+                            key="clear-all"
+                            layout
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={clearFilters}
+                            className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors border border-border hover:bg-accent"
                         >
-                            <X className="h-3 w-3" />
-                        </button>
-                    </span>
-                )}
-                {filters.toddlerFriendly && (
-                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                        {t('playground.toddlerFriendly')}
-                        <button
-                            onClick={() => handleFilterChange("toddlerFriendly", undefined)}
-                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                    </span>
-                )}
-                {filters.publiclyAccessible && (
-                    <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                        {t('playground.publiclyAccessible')}
-                        <button
-                            onClick={() => handleFilterChange("publiclyAccessible", undefined)}
-                            className="ml-1.5 hover:text-foreground rounded-full p-0.5"
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                    </span>
-                )}
+                            <X className="h-3.5 w-3.5" />
+                            {t("forms.clearFilters")}
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
-
-            {/* Results count */}
-            {/* <div className="ml-auto text-sm text-muted-foreground">
-                {playgroundCount} playground{playgroundCount !== 1 ? "s" : ""}
-            </div> */}
         </div>
     );
-} 
+}

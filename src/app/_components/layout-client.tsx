@@ -51,7 +51,7 @@ export function LayoutClient({ children }: LayoutClientProps) {
     // On front page desktop: use min-h-screen to allow map to take full height
     // On other pages: use min-h-screen for normal scrollable layout
     const containerClasses = isFrontPage && isMobile
-        ? "flex flex-col h-screen overflow-hidden"
+        ? "flex flex-col h-screen"
         : "flex flex-col min-h-screen";
 
     return (

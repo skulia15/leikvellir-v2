@@ -1,9 +1,10 @@
 import Image from "next/image";
-import { MapPin, GraduationCap, Zap } from "lucide-react";
+import { MapPin, GraduationCap, Zap, Footprints } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { type Playground } from "~/types";
 import { type MultilingualName } from "~/types";
 import { formatDistance } from "~/lib/geo-utils";
+import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
 
 function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
@@ -109,11 +110,12 @@ export default function PlaygroundGridCard({
           )}
         </div>
 
-        {/* Distance */}
+        {/* Walking time & distance */}
         {showDistance && distance !== undefined && (
           <div className="pt-2 border-t border-border">
-            <span className="text-xs tabular-nums font-medium text-muted-foreground">
-              {formatDistance(distance)}
+            <span className="flex items-center gap-1.5 text-xs tabular-nums font-medium text-muted-foreground">
+              <Footprints className="h-3 w-3" />
+              {estimateWalkingTime(distance).text} · {formatDistance(distance)}
             </span>
           </div>
         )}

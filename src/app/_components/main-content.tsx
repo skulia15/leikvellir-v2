@@ -27,7 +27,7 @@ export function MainContent({ children }: MainContentProps) {
     const getMainClasses = () => {
         if (isFrontPage) {
             return isMobile
-                ? "flex-1 pt-16 overflow-hidden"
+                ? "flex-1 pt-16"
                 : "flex-1 pt-16";
         }
         return "flex-1 pt-16 p-4 md:p-16";

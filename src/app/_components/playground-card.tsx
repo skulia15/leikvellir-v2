@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { type Playground, type MultilingualName } from "~/types";
-import { Zap } from "lucide-react";
-// Baby, MapPin, Users icons removed — no longer used in dot-indicator design
+import { Zap, Footprints } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
+import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
 
 function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
@@ -32,9 +32,9 @@ export default function PlaygroundCard({
   const hasBouncyPillow = hasEquipmentByName(playground, "Ærslabelgur");
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 py-4 group">
       <div className="flex flex-row gap-4">
-        <div className="relative flex-shrink-0">
+        <div className="relative flex-shrink-0 overflow-hidden rounded-xl">
           <Image
             src={
               playground.coverImage && playground.coverImage.trim() !== ""
@@ -44,7 +44,7 @@ export default function PlaygroundCard({
             alt="Playground"
             width={150}
             height={150}
-            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-lg object-cover"
+            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>
 
@@ -53,7 +53,14 @@ export default function PlaygroundCard({
             {playground.title}
           </h3>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+          {/* Municipality */}
+          {playground.municipality && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {playground.municipality}
+            </p>
+          )}
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
             {playground.toddlerFriendly && (
               <span className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-terrain-moss" />
@@ -73,8 +80,9 @@ export default function PlaygroundCard({
               </span>
             )}
             {showDistance && distance !== undefined && (
-              <span className="tabular-nums font-medium text-foreground/60">
-                {formatDistance(distance)}
+              <span className="flex items-center gap-1.5 tabular-nums font-medium text-foreground/60">
+                <Footprints className="h-3 w-3" />
+                {estimateWalkingTime(distance).text} · {formatDistance(distance)}
               </span>
             )}
           </div>
