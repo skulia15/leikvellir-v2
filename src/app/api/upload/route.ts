@@ -88,9 +88,12 @@ export async function POST(
       }
     } catch (validationError) {
       const error = validationError instanceof Error ? validationError : new Error(String(validationError));
-      console.error("❌ Validation error:", validationError);
+      console.error("Validation error:", validationError);
       reportUploadError(file.name, file.size, error, "validation");
-      // Continue with upload if validation throws (but log the error)
+      return NextResponse.json(
+        { success: false, error: "File validation failed" },
+        { status: 400 },
+      );
     }
 
     // Sanitize the filename first, then generate a unique name

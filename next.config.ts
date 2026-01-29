@@ -15,31 +15,34 @@ const config: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      // Vercel Blob Storage (playground images)
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+      // OAuth provider avatars
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.discordapp.com",
+      },
+      {
+        protocol: "https",
+        hostname: "platform-lookaside.fbsbx.com",
       },
       // Allow localhost for development
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-      // Also add for any development ports
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3000",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "3001",
-      },
-      // Add your local network IP if needed
-      {
-        protocol: "http",
-        hostname: "172.21.54.94", // From your dev server output
-      },
+      ...(process.env.NODE_ENV === "development"
+        ? [
+            { protocol: "http" as const, hostname: "localhost" },
+          ]
+        : []),
     ],
   },
   // Enable TypeScript support for React 18 with Pages Router
@@ -61,9 +64,19 @@ const config: NextConfig = {
   // Enables externals bundling for Pages Router like in App Router
   bundlePagesRouterDependencies: true,
 
-  // Optimize cache headers for better performance
+  // Security and cache headers
   async headers() {
     return [
+      // Security headers for all routes
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+        ],
+      },
       // Cache static assets (JS, CSS, images) for 1 year
       {
         source: "/_next/static/:path*",
