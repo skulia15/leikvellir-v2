@@ -1,6 +1,7 @@
 // server/api/routers/playground.ts
 import { z } from "zod";
 import { eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
@@ -12,6 +13,7 @@ import {
   playgroundEquipment,
   playgroundEditSuggestions,
   playgroundEditSuggestionEquipment,
+  users,
 } from "~/server/db/schema";
 import {
   CreatePlaygroundSchema,
@@ -23,6 +25,20 @@ import {
 } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { logDbError, logger } from "~/lib/logging/logger";
+import type { db as dbType } from "~/server/db";
+
+/** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
+async function requireAdmin(db: typeof dbType, userId: string) {
+  const currentUser = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only admins can perform this action",
+    });
+  }
+}
 
 
 export const playgroundRouter = createTRPCRouter({
@@ -122,6 +138,7 @@ export const playgroundRouter = createTRPCRouter({
   update: protectedProcedure
     .input(UpdatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
+      await requireAdmin(ctx.db, ctx.session.user.id);
       const { id, equipmentIds, ...updateData } = input;
 
       // Get the current playground to compare image changes
@@ -187,6 +204,7 @@ export const playgroundRouter = createTRPCRouter({
   review: protectedProcedure
     .input(ReviewPlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
+      await requireAdmin(ctx.db, ctx.session.user.id);
       const { id, action, rejectionReason, equipmentIds, ...playgroundUpdates } = input;
 
       // Get the current playground to compare image changes
@@ -287,6 +305,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
+    await requireAdmin(ctx.db, ctx.session.user.id);
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
       with: {
@@ -316,6 +335,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getPendingSubmissions: protectedProcedure.query(async ({ ctx }) => {
+    await requireAdmin(ctx.db, ctx.session.user.id);
     const pendingPlaygrounds = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "pending"),
       orderBy: (playgrounds, { asc }) => [asc(playgrounds.createdAt)],
@@ -411,6 +431,7 @@ export const playgroundRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      await requireAdmin(ctx.db, ctx.session.user.id);
       // Get the playground first to access its images for cleanup
       const playground = await ctx.db.query.playgrounds.findFirst({
         where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
@@ -557,6 +578,7 @@ export const playgroundRouter = createTRPCRouter({
   reviewEditSuggestion: protectedProcedure
     .input(ReviewEditSuggestionSchema)
     .mutation(async ({ ctx, input }) => {
+      await requireAdmin(ctx.db, ctx.session.user.id);
       const userId = ctx.session.user.id;
       const { id, action, rejectionReason } = input;
 
@@ -690,6 +712,7 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   getPendingEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
+    await requireAdmin(ctx.db, ctx.session.user.id);
     const pendingSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
       where: (suggestions, { eq }) => eq(suggestions.status, "pending"),
       orderBy: (suggestions, { asc }) => [asc(suggestions.createdAt)],
@@ -722,6 +745,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getAllEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
+    await requireAdmin(ctx.db, ctx.session.user.id);
     const allSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
       orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
       with: {
