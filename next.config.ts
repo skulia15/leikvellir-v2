@@ -45,11 +45,11 @@ const config: NextConfig = {
   // Enable TypeScript support for React 18 with Pages Router
   // While using React 19 with App Router
   experimental: {
-    // New in Next.js 15: Configure static page stale times
-    staleTimes: {
-      dynamic: 30, // 30 seconds for dynamic pages
-      static: 180, // 3 minutes for static pages
-    },
+    // Disable client-side router cache in dev for fresh data on every navigation
+    staleTimes:
+      process.env.NODE_ENV === "development"
+        ? { dynamic: 0, static: 0 }
+        : { dynamic: 30, static: 180 },
   },
   
   // Modern browser targeting to reduce polyfills
