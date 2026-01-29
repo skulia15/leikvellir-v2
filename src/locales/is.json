@@ -59,7 +59,7 @@
   "footer": {
     "brand": "Leiksvæði",
     "beta": "Beta",
-    "description": "Uppgötvaðu og kortlegðu leikvelli um allt land. Þetta er samfélagsvettvangur til að hjálpa fjölskyldum að finna skemmtileg leiksvæðin fyrir börnin sín.",
+    "description": "Uppgötvaðu og kortlegðu leikvelli um allt land. Vefurinn er ætlaður sem samfélagsvettvangur til að hjálpa fjölskyldum að finna skemmtileg leiksvæði fyrir börnin sín.",
     "location": "Hafnarfjörður, Ísland",
     "quickLinks": "Flýtileiðir",
     "exploreMap": "Skoða kort",
@@ -205,11 +205,11 @@
     "equipmentCreatedSuccessfully": "Leiktæki búið til",
     "failedToCreateEquipment": "Ekki tókst að búa til leiktæki",
     "createNewEquipment": "Búa til nýtt leiktæki",
-    "addNewEquipmentToCatalog": "Bættu nýju við nýju leiktæki",
+    "addNewEquipmentToCatalog": "Bættu við nýju leiktæki",
     "equipmentName": "Nafn leiktækis",
     "enterEquipmentName": "Sláðu inn nafn leiktækis",
     "category": "Flokkur",
-    "selectCategory": "Veldu Ástæðu",
+    "selectCategory": "Veldu flokk",
     "imageUrl": "Myndaslóð",
     "enterImageUrl": "Sláðu inn myndaslóð (valfrjálst)",
     "description": "Lýsing",
@@ -535,7 +535,7 @@
     "manageCookiePreferences": "Stjórnaðu vafrakökustillingum þínum og gagnasöfnun.",
     "essentialCookies": "Nauðsynlegar vafrakökur",
     "essentialCookiesDescription": "Þessar vafrakökur eru nauðsynlegar fyrir vefinn til að virka og er ekki hægt að slökkva á þeim.",
-    "analyticsCookies": "Greinandlegar vafrakökur",
+    "analyticsCookies": "Greiningarvafrakökur",
     "analyticsCookiesDescription": "Þessar vafrakökur hjálpa okkur að skilja hvernig gestir nota vefsíðuna okkar.",
     "marketingCookies": "Markaðsvafrakökur",
     "marketingCookiesDescription": "Þessar vafrakökur eru notaðar til að fylgjast með gestum og sýna viðeigandi auglýsingar.",
@@ -556,7 +556,7 @@
     "functionalCookiesShortDescription": "Muna kjörstillingar þínar og stillingar",
     "acceptAll": "Samþykkja allt",
     "essentialOnly": "Aðeins nauðsynlegar",
-    "functionalCookies": "Virkni vafrakökur"
+    "functionalCookies": "Virknivafrakökur"
   },
   "privacy": {
     "privacyPolicy": "Persónuverndarstefna",
@@ -584,7 +584,7 @@
     "locationDataItems": [
       "Áætluð staðsetning (þegar sjálfviljugt deilt fyrir fjarlægðarútreikninga)",
       "Hnit leikvalla (í kortlagningu)",
-      "Staðsetningargögn eru geymd á þínum tölvu og ekki send á þjóna okkar"
+      "Staðsetningargögn eru geymd á þinni tölvu og ekki send á þjóna okkar"
     ],
     "technicalInformation": "Tæknilegar upplýsingar",
     "technicalInfoItems": [
@@ -598,12 +598,12 @@
     "essentialCookiesTitle": "Nauðsynlegar vafrakökur",
     "essentialCookiesText": "Nauðsynlegar fyrir grunnvirkni. Ekki hægt að slökkva á.",
     "essentialCookiesList": [
-      "Auðkenningarlotu vafrakökur",
+      "Auðkenningarlotuvafrakökur",
       "Öryggistákn",
       "Vörn gegn eyðublaðasendingu",
       "Geymsla notendastillinga"
     ],
-    "analyticsCookiesTitle": "Greiningarvafraskökur",
+    "analyticsCookiesTitle": "Greiningarvafrakökur",
     "analyticsCookiesText": "Hjálpa okkur að skilja notkunarmynstur (í gegnum PostHog).",
     "analyticsCookiesList": [
       "Síðuhorfa og notendaferðir",
@@ -611,20 +611,20 @@
       "Afkastavísitölur",
       "Nafnlaus hegðunarrakningarnotenda"
     ],
-    "functionalCookiesTitle": "Virknivafraskökur",
+    "functionalCookiesTitle": "Virknivafrakökur",
     "functionalCookiesText": "Bæta upplifun þína með vettvangi.",
     "functionalCookiesList": [
       "Staðsetningarskyndiminni (vafrageymsla)",
       "Kortastillingar",
       "Síustillingar",
-      "Viðmótsástandsviðvarandi"
+      "Viðvarandi viðmótsástand"
     ],
     "thirdPartyCookiesTitle": "Þriðja aðila vafrakökur",
     "thirdPartyCookiesText": "Frá ytri þjónustum sem við samþættum við.",
     "thirdPartyCookiesList": [
       "Google Maps API vafrakökur",
       "Discord OAuth vafrakökur",
-      "PostHog greiningarvafraskökur",
+      "PostHog greiningarvafrakökur",
       "CDN og afkastavafrakökur"
     ],
     "managingCookies": "Stjórnun vafrakaka",
@@ -651,7 +651,7 @@
       "Tilkynna um stefnubreytingar"
     ],
     "dataSharingTitle": "Gagnadeiling og þriðju aðilar",
-    "dataSharingText": "Við seljum, verslunum eða útleigum ekki persónuupplýsingar þínar til þriðju aðila. Við getum deilt upplýsingum aðeins við þessar sérstakar aðstæður:",
+    "dataSharingText": "Við seljum, deilum eða leigjum ekki persónuupplýsingar þínar til þriðju aðila. Við getum deilt upplýsingum aðeins við þessar sérstakar aðstæður:",
     "serviceProviders": "Þjónustuaðilar",
     "serviceProvidersText": "PostHog (greiningar), Vercel (hýsing), Google Maps (kortaþjónustur)",
     "legalRequirements": "Lagalegar kröfur",
