@@ -22,36 +22,7 @@ export function CoordinatePickerMap({
   onCoordinateChange,
   className = "",
 }: CoordinatePickerMapProps) {
-  if (env.NEXT_PUBLIC_MAP_PROVIDER === "mapbox") {
-    return (
-      <MapboxCoordinatePicker
-        latitude={latitude}
-        longitude={longitude}
-        onCoordinateChange={onCoordinateChange}
-        className={className}
-      />
-    );
-  }
-
-  return (
-    <GoogleCoordinatePicker
-      latitude={latitude}
-      longitude={longitude}
-      onCoordinateChange={onCoordinateChange}
-      className={className}
-    />
-  );
-}
-
-// ─── Mapbox implementation ───────────────────────────────────────────────────
-
-function MapboxCoordinatePicker({
-  latitude,
-  longitude,
-  onCoordinateChange,
-  className = "",
-}: CoordinatePickerMapProps) {
-  // Lazy import to avoid loading mapbox-gl when using Google
+  // Lazy import to avoid loading mapbox-gl at SSR time
   const [MapModule, setMapModule] = useState<typeof import("react-map-gl/mapbox") | null>(null);
 
   useEffect(() => {
@@ -122,98 +93,5 @@ function MapboxCoordinatePicker({
         </p>
       </div>
     </div>
-  );
-}
-
-// ─── Google Maps implementation ──────────────────────────────────────────────
-
-function GoogleCoordinatePicker({
-  latitude,
-  longitude,
-  onCoordinateChange,
-  className = "",
-}: CoordinatePickerMapProps) {
-  const [GoogleModule, setGoogleModule] = useState<typeof import("@vis.gl/react-google-maps") | null>(null);
-
-  useEffect(() => {
-    void import("@vis.gl/react-google-maps").then(setGoogleModule);
-  }, []);
-
-  const [markerPosition, setMarkerPosition] = useState({
-    lat: latitude || defaultCenter.lat,
-    lng: longitude || defaultCenter.lng,
-  });
-
-  const [mapCenter, setMapCenter] = useState({
-    lat: latitude || defaultCenter.lat,
-    lng: longitude || defaultCenter.lng,
-  });
-
-  const t = useT();
-
-  useEffect(() => {
-    if (latitude && longitude) {
-      const newPosition = { lat: latitude, lng: longitude };
-      setMarkerPosition(newPosition);
-      setMapCenter(newPosition);
-    }
-  }, [latitude, longitude]);
-
-  if (!GoogleModule) {
-    return (
-      <div className={`relative ${className}`}>
-        <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
-          <div className="text-muted-foreground text-sm">Loading map...</div>
-        </div>
-      </div>
-    );
-  }
-
-  const { APIProvider, Map, AdvancedMarker } = GoogleModule;
-
-  return (
-    <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-      <div className={`relative ${className}`}>
-        <Map
-          defaultZoom={14}
-          center={mapCenter}
-          onClick={(event) => {
-            if (event.detail.latLng) {
-              const lat = event.detail.latLng.lat;
-              const lng = event.detail.latLng.lng;
-              setMarkerPosition({ lat, lng });
-              setMapCenter({ lat, lng });
-              onCoordinateChange(lat, lng);
-            }
-          }}
-          onCameraChanged={(event) => {
-            setMapCenter(event.detail.center);
-          }}
-          mapId="coordinate-picker-map"
-          className="h-full w-full rounded-md"
-          gestureHandling="greedy"
-          mapTypeControl={false}
-          fullscreenControl={false}
-          streetViewControl={false}
-          zoomControl={true}
-          scaleControl={false}
-          cameraControl={false}
-          clickableIcons={false}
-          draggableCursor="default"
-          draggingCursor="grabbing"
-        >
-          <AdvancedMarker
-            position={markerPosition}
-            title={t("map.selectedPlaygroundLocation")}
-          />
-        </Map>
-
-        <div className="absolute left-2 top-2 rounded-md border bg-background/90 px-3 py-2 text-sm shadow-md backdrop-blur-sm">
-          <p className="font-medium text-foreground">
-            {t("map.clickToSetLocation")}
-          </p>
-        </div>
-      </div>
-    </APIProvider>
   );
 }

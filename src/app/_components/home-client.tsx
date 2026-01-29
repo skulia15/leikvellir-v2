@@ -19,7 +19,6 @@ import { Sheet, type SheetRef } from "react-modal-sheet";
 import { useRef } from "react";
 
 import { api } from "~/trpc/react";
-import { env } from "~/env";
 import PlaygroundList from "./playground-list";
 
 const MapLoadingFallback = () => (
@@ -29,14 +28,8 @@ const MapLoadingFallback = () => (
 );
 
 // Dynamic import for Mapbox — no SSR (mapbox-gl uses WebGL which requires a browser)
-const MapboxMapDynamic = dynamic(
+const MapComponent = dynamic(
     () => import("./mapbox-map").then((mod) => ({ default: mod.MapboxMap })),
-    { ssr: false, loading: MapLoadingFallback },
-);
-
-// Dynamic import for Google Maps (kept for toggling between providers)
-const GoogleMapDynamic = dynamic(
-    () => import("./map").then((mod) => ({ default: mod.GoogleMap })),
     { ssr: false, loading: MapLoadingFallback },
 );
 
@@ -45,11 +38,6 @@ import { PlaygroundListSkeleton } from "./playground-card-skeleton";
 import { type Playground } from "~/types";
 import { type UserLocation } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
-
-// Toggle between map providers via NEXT_PUBLIC_MAP_PROVIDER env var ("mapbox" | "google")
-const MapComponent = env.NEXT_PUBLIC_MAP_PROVIDER === "mapbox"
-    ? MapboxMapDynamic
-    : GoogleMapDynamic;
 
 export default function HomeClient() {
     const t = useT();

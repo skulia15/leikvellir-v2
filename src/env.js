@@ -65,9 +65,7 @@ export const env = createEnv({
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
-    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().optional(),
-    // Toggle between "mapbox" and "google" map providers
-    NEXT_PUBLIC_MAP_PROVIDER: z.enum(["mapbox", "google"]).default("google"),
+    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string(),
     // PostHog Analytics
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
@@ -94,8 +92,6 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:
       process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
-    NEXT_PUBLIC_MAP_PROVIDER:
-      process.env.NEXT_PUBLIC_MAP_PROVIDER,
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.leikvellir_image_store_READ_WRITE_TOKEN,
     // PostHog Analytics
