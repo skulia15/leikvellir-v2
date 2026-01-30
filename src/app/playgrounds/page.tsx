@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import PlaygroundsList from "~/app/_components/playgrounds-list";
 import { PlaygroundsPageSkeleton } from "~/app/_components/playgrounds-page-skeleton";
@@ -12,6 +13,8 @@ import { useT } from "~/lib/i18n";
 export default function PlaygroundsPage() {
   const { data: playgrounds, isLoading } = api.playground.getAll.useQuery();
   const [showSkeleton, setShowSkeleton] = useState(true);
+  const searchParams = useSearchParams();
+  const initialMunicipality = searchParams.get("municipality") ?? undefined;
   const t = useT();
 
   // Show skeleton for at least 200ms for better UX
@@ -48,7 +51,7 @@ export default function PlaygroundsPage() {
           </div>
         </div>
 
-        <PlaygroundsList playgrounds={playgrounds || []} />
+        <PlaygroundsList playgrounds={playgrounds || []} initialMunicipality={initialMunicipality} />
       </div>
     </div>
   );

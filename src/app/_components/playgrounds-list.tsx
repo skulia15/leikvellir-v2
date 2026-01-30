@@ -26,6 +26,7 @@ import { isSchoolGroundAccessible } from "~/lib/school-hours";
 interface PlaygroundsListProps {
   playgrounds: Playground[];
   isLoading?: boolean;
+  initialMunicipality?: string;
 }
 
 type SortOption = "proximity" | "popularity" | "newest" | "name";
@@ -40,13 +41,14 @@ function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
   );
 }
 
-export default function PlaygroundsList({ playgrounds, isLoading = false }: PlaygroundsListProps) {
+export default function PlaygroundsList({ playgrounds, isLoading = false, initialMunicipality }: PlaygroundsListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<EquipmentCategory>>(new Set());
   const [bouncyPillowActive, setBouncyPillowActive] = useState(false);
   const [footballFieldActive, setFootballFieldActive] = useState(false);
   const [openNowActive, setOpenNowActive] = useState(false);
+  const [selectedMunicipality, setSelectedMunicipality] = useState<string>(initialMunicipality ?? "__all__");
   const t = useT();
 
   const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
@@ -109,9 +111,23 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
     ).length;
   }, [sortedPlaygrounds]);
 
-  // Filter by active equipment categories (OR logic), bouncy pillow, and open now
+  // Unique sorted municipalities for the dropdown filter
+  const municipalities = useMemo(() => {
+    const set = new Set<string>();
+    for (const pg of playgrounds) {
+      if (pg.municipality) set.add(pg.municipality);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "is"));
+  }, [playgrounds]);
+
+  // Filter by municipality, equipment categories (OR logic), bouncy pillow, and open now
   const filteredPlaygrounds = useMemo(() => {
     let result = sortedPlaygrounds;
+
+    // Municipality filter
+    if (selectedMunicipality !== "__all__") {
+      result = result.filter((pg) => pg.municipality === selectedMunicipality);
+    }
 
     // Equipment category filter (OR logic)
     if (activeCategories.size > 0) {
@@ -138,7 +154,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
     }
 
     return result;
-  }, [sortedPlaygrounds, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive]);
+  }, [sortedPlaygrounds, selectedMunicipality, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive]);
 
   const handleToggleCategory = useCallback((category: EquipmentCategory) => {
     setActiveCategories((prev) => {
@@ -164,14 +180,29 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
     setOpenNowActive((prev) => !prev);
   }, []);
 
+  const handleMunicipalityChange = useCallback((value: string) => {
+    setSelectedMunicipality(value);
+    const url = new URL(window.location.href);
+    if (value === "__all__") {
+      url.searchParams.delete("municipality");
+    } else {
+      url.searchParams.set("municipality", value);
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
   const handleClearAllCategories = useCallback(() => {
     setActiveCategories(new Set());
     setBouncyPillowActive(false);
     setFootballFieldActive(false);
     setOpenNowActive(false);
+    setSelectedMunicipality("__all__");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("municipality");
+    window.history.replaceState({}, "", url.toString());
   }, []);
 
-  const hasActiveFilters = activeCategories.size > 0 || bouncyPillowActive || footballFieldActive || openNowActive;
+  const hasActiveFilters = selectedMunicipality !== "__all__" || activeCategories.size > 0 || bouncyPillowActive || footballFieldActive || openNowActive;
 
   // Show skeleton while loading
   if (isLoading) {
@@ -184,7 +215,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <SortAsc className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{t('playground.sortBy')}</span>
@@ -207,6 +238,34 @@ export default function PlaygroundsList({ playgrounds, isLoading = false }: Play
                   </SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Municipality Filter */}
+              {municipalities.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">{t('playground.municipality')}</span>
+                  </div>
+                  <Select
+                    value={selectedMunicipality}
+                    onValueChange={handleMunicipalityChange}
+                  >
+                    <SelectTrigger className="w-52">
+                      <SelectValue placeholder={t('playground.selectMunicipality')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">
+                        {t('playground.allMunicipalities')}
+                      </SelectItem>
+                      {municipalities.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
             </div>
 
             {/* Location Permission */}
