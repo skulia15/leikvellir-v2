@@ -1,6 +1,7 @@
 "use client";
 
-import { Mail, Github, Bug, Lightbulb, HelpCircle } from "lucide-react";
+import { Mail, Github, Bug, Lightbulb, HelpCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 import {
   Card,
@@ -18,6 +19,14 @@ export function ContactPageClient() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
+      {/* Back Button */}
+      <Button asChild variant="ghost" size="sm" className="mb-4 w-fit">
+        <Link href="/" className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          {t('common.back')}
+        </Link>
+      </Button>
+
       <div className="mb-8 text-center">
         <h1 className="mb-4 text-3xl font-bold">{t('contact.contactAndFeedback')}</h1>
         <p className="text-muted-foreground">
