@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapPin, Maximize2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MapPin, Maximize2, LocateFixed } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { env } from "~/env";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
+import { useT } from "~/lib/i18n";
 import { type Playground } from "~/types";
 
 interface PlaygroundDetailMapProps {
@@ -15,6 +17,8 @@ interface PlaygroundDetailMapProps {
 export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailMapProps) {
     const [MapModule, setMapModule] = useState<typeof import("react-map-gl/mapbox") | null>(null);
     const { userLocation } = useUserLocation();
+    const mapRef = useRef<import("react-map-gl/mapbox").MapRef | null>(null);
+    const t = useT();
 
     useEffect(() => {
         void import("react-map-gl/mapbox").then(setMapModule);
@@ -23,6 +27,14 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
     const handleViewLargerMap = () => {
         const url = `https://www.google.com/maps?q=${playground.latitude},${playground.longitude}&z=15`;
         window.open(url, "_blank");
+    };
+
+    const handleResetPosition = () => {
+        mapRef.current?.flyTo({
+            center: [playground.longitude, playground.latitude],
+            zoom: 15,
+            duration: 800,
+        });
     };
 
     if (!MapModule) {
@@ -38,6 +50,7 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
     return (
         <div className={`relative ${className || ""}`}>
             <Map
+                ref={mapRef}
                 mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
                 initialViewState={{
                     longitude: playground.longitude,
@@ -63,9 +76,40 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
             </Map>
 
             <div className="absolute top-2 right-2 z-10 space-y-2">
-                <Button size="sm" variant="secondary" onClick={handleViewLargerMap} className="shadow-md">
-                    <Maximize2 className="h-4 w-4" />
-                </Button>
+                <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={handleResetPosition}
+                                className="shadow-md"
+                                aria-label={t('map.resetPosition')}
+                            >
+                                <LocateFixed className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                            {t('map.resetPosition')}
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={handleViewLargerMap}
+                                className="shadow-md"
+                                aria-label={t('map.viewLargerMap')}
+                            >
+                                <Maximize2 className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                            {t('map.viewLargerMap')}
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
         </div>
     );

@@ -759,7 +759,9 @@
     "locationAccessDenied": "Nie można uzyskać Twojej lokalizacji. Proszę włączyć usługi lokalizacyjne.",
     "errorGettingLocation": "Błąd podczas uzyskiwania Twojej lokalizacji. Spróbuj ponownie.",
     "selectedPlaygroundLocation": "Wybrana lokalizacja placu zabaw",
-    "clickToSetLocation": "Kliknij na mapę, aby ustawić lokalizację"
+    "clickToSetLocation": "Kliknij na mapę, aby ustawić lokalizację",
+    "resetPosition": "Resetuj pozycję",
+    "viewLargerMap": "Otwórz większą mapę"
   },
   "notFound": {
     "pageNotFound": "Strona nie została znaleziona",

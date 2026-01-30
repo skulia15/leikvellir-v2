@@ -828,7 +828,9 @@
     "locationAccessDenied": "Unable to get your location. Please enable location services.",
     "errorGettingLocation": "Error getting your location. Please try again.",
     "selectedPlaygroundLocation": "Selected playground location",
-    "clickToSetLocation": "Click on the map to set location"
+    "clickToSetLocation": "Click on the map to set location",
+    "resetPosition": "Reset position",
+    "viewLargerMap": "View larger map"
   },
   "notFound": {
     "pageNotFound": "Page Not Found",

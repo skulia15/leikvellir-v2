@@ -752,7 +752,9 @@
     "locationAccessDenied": "Ekki hægt að fá staðsetningu þína. Vinsamlegast virkjaðu staðsetningarþjónustu.",
     "errorGettingLocation": "Villa við að fá staðsetningu þína. Vinsamlegast reyndu aftur.",
     "selectedPlaygroundLocation": "Valin staðsetning leiksvæðis",
-    "clickToSetLocation": "Smelltu á kortið til að velja staðsetningu"
+    "clickToSetLocation": "Smelltu á kortið til að velja staðsetningu",
+    "resetPosition": "Endurstilla staðsetningu",
+    "viewLargerMap": "Opna stærra kort"
   },
   "notFound": {
     "pageNotFound": "Síða fannst ekki",
