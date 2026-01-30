@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { type Playground, type MultilingualName } from "~/types";
-import { Zap, Footprints } from "lucide-react";
+import { Zap, Footprints, GraduationCap } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
+import { isSchoolGroundAccessible } from "~/lib/school-hours";
 
 function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
   return (
@@ -14,8 +15,6 @@ function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
     }) ?? false
   );
 }
-
-// TODO: Remove this type use trpc for types instead, like posts is doing
 
 interface PlaygroundCardProps {
   playground: Playground;
@@ -30,6 +29,7 @@ export default function PlaygroundCard({
 }: PlaygroundCardProps) {
   const t = useT();
   const hasBouncyPillow = hasEquipmentByName(playground, "Ærslabelgur");
+  const isAccessible = isSchoolGroundAccessible(playground.isSchoolGround ?? false);
 
   return (
     <div className="px-4 py-4 group">
@@ -46,6 +46,20 @@ export default function PlaygroundCard({
             height={150}
             className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
+          {/* School ground badge overlay */}
+          {playground.isSchoolGround && (
+            <div className="absolute top-1.5 right-1.5">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-sm ${
+                  isAccessible
+                    ? "bg-amber-500/90 text-white"
+                    : "bg-red-500/90 text-white"
+                }`}
+              >
+                <GraduationCap className="h-2.5 w-2.5" />
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -61,6 +75,17 @@ export default function PlaygroundCard({
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+            {/* School ground status - show first if applicable */}
+            {playground.isSchoolGround && (
+              <span className={`flex items-center gap-1.5 font-medium ${isAccessible ? "text-amber-600" : "text-red-500"}`}>
+                <GraduationCap className="h-3 w-3" />
+                {playground.schoolType === "preschool"
+                  ? t("forms.preschoolType")
+                  : playground.schoolType === "elementary"
+                    ? t("forms.elementaryType")
+                    : t("forms.isSchoolGround")}
+              </span>
+            )}
             {playground.toddlerFriendly && (
               <span className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-terrain-moss" />
