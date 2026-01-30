@@ -58,8 +58,8 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
 
   if (images.length === 0) {
     return (
-      <div className={`overflow-hidden rounded-xl bg-gray-100 ${className ?? ''}`}>
-        <div className="relative h-[265px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center">
+      <div className={`overflow-hidden rounded-2xl bg-gray-100 ${className ?? ''}`}>
+        <div className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center">
           <p className="text-muted-foreground">No images available</p>
         </div>
       </div>
@@ -67,10 +67,10 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
   }
 
   return (
-    <div className={`overflow-hidden rounded-xl ${className ?? ''}`}>
+    <div className={`overflow-hidden rounded-2xl ${className ?? ''}`}>
       {/* Main Carousel */}
       <div
-        className="relative h-[265px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden rounded-xl bg-gray-50 group touch-pan-y select-none"
+        className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden rounded-2xl bg-gray-50 group touch-pan-y select-none"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}

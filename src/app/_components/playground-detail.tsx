@@ -129,7 +129,7 @@ export default function PlaygroundDetail({
   return (
     <div className="min-h-screen bg-background">
       {/* Header with back button and admin actions */}
-      <div className="container mx-auto px-4 py-2">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 ">
             <Button
@@ -174,14 +174,15 @@ export default function PlaygroundDetail({
         <h1 className="pt-6 text-2xl font-bold">{playground.title}</h1>
       </div>
 
-      <div className="container mx-auto px-4 py-2">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 py-2">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
           {/* Main Content */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Image Carousel */}
+          <div className="space-y-6">
+            {/* Image Carousel — full-bleed on mobile, contained on desktop */}
             <ImageCarousel
               images={displayImages}
               alt={playground.title}
+              className=""
             />
 
             {/* Playground Information - Combined Card */}
