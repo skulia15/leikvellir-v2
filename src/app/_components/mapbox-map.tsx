@@ -270,9 +270,8 @@ export function MapboxMap({
     }
   }, [mapCenter]);
 
-  // Handle map move end — update bounds and zoom
-  const handleMoveEnd = useCallback((evt: ViewStateChangeEvent) => {
-    const map = evt.target;
+  // Extract bounds from a map instance
+  const updateBoundsFromMap = useCallback((map: mapboxgl.Map) => {
     const bounds = map.getBounds();
     if (bounds) {
       setMapBounds([
@@ -284,6 +283,42 @@ export function MapboxMap({
     }
     setZoom(map.getZoom());
   }, []);
+
+  // Handle map load — capture initial bounds so markers render immediately
+  const handleLoad = useCallback(
+    (evt: { target: mapboxgl.Map }) => {
+      updateBoundsFromMap(evt.target);
+    },
+    [updateBoundsFromMap],
+  );
+
+  // Handle map move end — update bounds and zoom
+  const handleMoveEnd = useCallback(
+    (evt: ViewStateChangeEvent) => {
+      updateBoundsFromMap(evt.target);
+    },
+    [updateBoundsFromMap],
+  );
+
+  // Handle marker click — select playground and pan map so the popup is fully visible
+  const handleMarkerClick = useCallback(
+    (playground: Playground) => {
+      onPlaygroundSelect(playground);
+
+      if (!mapRef.current) return;
+
+      const container = mapRef.current.getContainer();
+      const h = container.clientHeight;
+      const offsetY = h * 0.15;
+
+      mapRef.current.flyTo({
+        center: [playground.longitude, playground.latitude],
+        offset: [0, offsetY] as [number, number],
+        duration: 400,
+      });
+    },
+    [onPlaygroundSelect],
+  );
 
   // Handle cluster click — zoom into the cluster
   const handleClusterClick = useCallback(
@@ -325,6 +360,7 @@ export function MapboxMap({
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle="mapbox://styles/skulipardus/cmkzwe4f2005s01skane25k5g"
+        onLoad={handleLoad}
         onMoveEnd={handleMoveEnd}
         onClick={() => onPlaygroundSelect(null)}
         dragRotate={false}
@@ -365,7 +401,7 @@ export function MapboxMap({
               key={`marker-${playground.id}`}
               playground={playground}
               isSelected={selectedPlayground?.id === playground.id}
-              onClick={onPlaygroundSelect}
+              onClick={handleMarkerClick}
             />
           );
         })}
