@@ -322,14 +322,17 @@ export default function HomeClient() {
                 <Sheet
                     ref={ref}
                     isOpen={isOpen}
-                    onClose={() => setOpen(false)}
+                    onClose={() => {
+                        // Snap to minimized (15%) instead of fully closing,
+                        // so a fast swipe down collapses rather than hides the sheet
+                        if (ref.current) {
+                            ref.current.snapTo(2);
+                        }
+                    }}
                     snapPoints={[0.85, 0.6, 0.15]}
                     initialSnap={1} // Start at 60% — show content immediately
                     onSnap={(snapIndex) => {
                         setCurrentSnapIndex(snapIndex);
-                        if (snapIndex === 2) {
-                            setOpen(true);
-                        }
                     }}
                     disableScrollLocking
                     style={{

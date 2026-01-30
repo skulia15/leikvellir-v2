@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  react-modal-sheet:
+    hash: wtfelg3pjdkaxbyjxa3dvnhjuu
+    path: patches/react-modal-sheet.patch
+
 importers:
 
   .:
@@ -145,7 +150,7 @@ importers:
         version: 8.1.0(mapbox-gl@3.18.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-modal-sheet:
         specifier: ^3.1.0
-        version: 3.1.0(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        version: 3.1.0(patch_hash=wtfelg3pjdkaxbyjxa3dvnhjuu)(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -9287,7 +9292,7 @@ snapshots:
     optionalDependencies:
       mapbox-gl: 3.18.1
 
-  react-modal-sheet@3.1.0(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+  react-modal-sheet@3.1.0(patch_hash=wtfelg3pjdkaxbyjxa3dvnhjuu)(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
     dependencies:
       '@react-aria/utils': 3.24.0(react@18.3.1)
       framer-motion: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

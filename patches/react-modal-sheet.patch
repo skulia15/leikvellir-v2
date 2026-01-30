@@ -1,0 +1,102 @@
+diff --git a/dist/index.js b/dist/index.js
+index cacf01f20c04fd9042fd5a2013e3aca347beecbb..f4e15a8c31caf65915c6aa1aeb0976eb9c2a24f1 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -556,11 +556,12 @@ var Sheet = React2.forwardRef(
+       }
+     });
+     const onDragEnd = useEffectEvent((_, { velocity }) => {
+-      if (velocity.y > DRAG_VELOCITY_THRESHOLD) {
++      if (!snapPoints && velocity.y > DRAG_VELOCITY_THRESHOLD) {
++        // Only use fast-close for sheets without snap points
+         onClose();
+       } else {
+         const sheetHeight = sheetRef.current.getBoundingClientRect().height;
+-        const currentY = y.get();
++        let currentY = y.get();
+         let snapTo = 0;
+         if (snapPoints) {
+           const snapToValues = snapPoints.map(
+@@ -569,6 +570,13 @@ var Sheet = React2.forwardRef(
+           if (detent === "content-height" && !snapToValues.includes(0)) {
+             snapToValues.unshift(0);
+           }
++          // Apply velocity bias: project the current position forward based on
++          // swipe velocity so that a quick flick moves to the next snap point
++          // even without dragging far
++          if (Math.abs(velocity.y) > 100) {
++            const velocityOffset = velocity.y * 0.4;
++            currentY = Math.max(0, Math.min(currentY + velocityOffset, sheetHeight));
++          }
+           snapTo = getClosest(snapToValues, currentY);
+         } else if (currentY / sheetHeight > DRAG_CLOSE_THRESHOLD) {
+           snapTo = sheetHeight;
+diff --git a/dist/index.mjs b/dist/index.mjs
+index fb934904f3a3b2678783d68e5c5579363692f30a..41e2ad462e7d6175bff2c7d481393c5d5f23ae24 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -550,11 +550,12 @@ var Sheet = forwardRef(
+       }
+     });
+     const onDragEnd = useEffectEvent((_, { velocity }) => {
+-      if (velocity.y > DRAG_VELOCITY_THRESHOLD) {
++      if (!snapPoints && velocity.y > DRAG_VELOCITY_THRESHOLD) {
++        // Only use fast-close for sheets without snap points
+         onClose();
+       } else {
+         const sheetHeight = sheetRef.current.getBoundingClientRect().height;
+-        const currentY = y.get();
++        let currentY = y.get();
+         let snapTo = 0;
+         if (snapPoints) {
+           const snapToValues = snapPoints.map(
+@@ -563,6 +564,13 @@ var Sheet = forwardRef(
+           if (detent === "content-height" && !snapToValues.includes(0)) {
+             snapToValues.unshift(0);
+           }
++          // Apply velocity bias: project the current position forward based on
++          // swipe velocity so that a quick flick moves to the next snap point
++          // even without dragging far
++          if (Math.abs(velocity.y) > 100) {
++            const velocityOffset = velocity.y * 0.4;
++            currentY = Math.max(0, Math.min(currentY + velocityOffset, sheetHeight));
++          }
+           snapTo = getClosest(snapToValues, currentY);
+         } else if (currentY / sheetHeight > DRAG_CLOSE_THRESHOLD) {
+           snapTo = sheetHeight;
+diff --git a/src/sheet.tsx b/src/sheet.tsx
+index c1f42a6a138904d0981aa1a9ee6e0cc533be32aa..44b1e0a8afde3b880072a676b2d2e34ca5a105ab 100644
+--- a/src/sheet.tsx
++++ b/src/sheet.tsx
+@@ -152,13 +152,13 @@ const Sheet = forwardRef<any, SheetProps>(
+     });
+ 
+     const onDragEnd = useEffectEvent((_, { velocity }: PanInfo) => {
+-      if (velocity.y > DRAG_VELOCITY_THRESHOLD) {
+-        // User flicked the sheet down
++      if (!snapPoints && velocity.y > DRAG_VELOCITY_THRESHOLD) {
++        // Only use fast-close for sheets without snap points
+         onClose();
+       } else {
+         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         const sheetHeight = sheetRef.current!.getBoundingClientRect().height;
+-        const currentY = y.get();
++        let currentY = y.get();
+ 
+         let snapTo = 0;
+ 
+@@ -172,6 +172,14 @@ const Sheet = forwardRef<any, SheetProps>(
+             snapToValues.unshift(0);
+           }
+ 
++          // Apply velocity bias: project the current position forward based on
++          // swipe velocity so that a quick flick moves to the next snap point
++          // even without dragging far
++          if (Math.abs(velocity.y) > 100) {
++            const velocityOffset = velocity.y * 0.4;
++            currentY = Math.max(0, Math.min(currentY + velocityOffset, sheetHeight));
++          }
++
+           // Get the closest snap point
+           snapTo = getClosest(snapToValues, currentY);
+         } else if (currentY / sheetHeight > DRAG_CLOSE_THRESHOLD) {

@@ -132,5 +132,10 @@
     "not dead",
     "not ie 11",
     "not op_mini all"
-  ]
+  ],
+  "pnpm": {
+    "patchedDependencies": {
+      "react-modal-sheet": "patches/react-modal-sheet.patch"
+    }
+  }
 }
