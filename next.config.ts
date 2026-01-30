@@ -40,6 +40,11 @@ const config: NextConfig = {
         protocol: "https",
         hostname: "platform-lookaside.fbsbx.com",
       },
+      // External playground images
+      {
+        protocol: "https",
+        hostname: "www.oskarsson.is",
+      },
       // Allow localhost for development
       ...(process.env.NODE_ENV === "development"
         ? [
