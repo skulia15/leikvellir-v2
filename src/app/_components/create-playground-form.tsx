@@ -59,6 +59,7 @@ export function CreatePlaygroundForm() {
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">(
     "map",
   );
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<CreatePlaygroundInput>({
     resolver: zodResolver(CreatePlaygroundSchema),
@@ -242,6 +243,7 @@ export function CreatePlaygroundForm() {
                           maxSize: 4 * 1024 * 1024, // 4MB
                         }}
                         disabled={createPlayground.isPending}
+                        onUploadingChange={setIsUploading}
                       />
                     </FormControl>
                     <FormDescription>
@@ -717,7 +719,7 @@ export function CreatePlaygroundForm() {
                   type="button"
                   variant="outline"
                   onClick={handleReset}
-                  disabled={createPlayground.isPending}
+                  disabled={createPlayground.isPending || isUploading}
                   className="flex items-center gap-2"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -725,13 +727,18 @@ export function CreatePlaygroundForm() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createPlayground.isPending}
+                  disabled={createPlayground.isPending || isUploading}
                   className="min-w-32"
                 >
                   {createPlayground.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {t('playground.creating')}
+                    </>
+                  ) : isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('forms.uploadingImages')}
                     </>
                   ) : (
                     <>

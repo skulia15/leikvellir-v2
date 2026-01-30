@@ -39,6 +39,8 @@ interface ImageUploadProps {
   // Track which images are marked for removal (without actually removing them)
   markedForRemoval?: string[];
   onMarkForRemoval?: (url: string, marked: boolean) => void;
+  // Callback when upload state changes (for disabling form submit)
+  onUploadingChange?: (isUploading: boolean) => void;
 }
 
 export function ImageUpload({
@@ -53,6 +55,7 @@ export function ImageUpload({
   _allowRemoval = false,
   markedForRemoval = [],
   onMarkForRemoval,
+  onUploadingChange,
 }: ImageUploadProps) {
   const finalConfig = useMemo(
     () => ({ ...DEFAULT_UPLOAD_CONFIG, ...config }),
@@ -69,6 +72,16 @@ export function ImageUpload({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeProgress, setResizeProgress] = useState({ current: 0, total: 0, filename: '' });
   const [resizeResults, setResizeResults] = useState<Map<string, ResizeResult>>(new Map());
+
+  // Track if any uploads are in progress and notify parent
+  const isUploading = useMemo(() => {
+    const hasActiveUploads = files.some(f => uploadProgress.get(f.id)?.state === "uploading");
+    return hasActiveUploads || isResizing;
+  }, [files, uploadProgress, isResizing]);
+
+  useEffect(() => {
+    onUploadingChange?.(isUploading);
+  }, [isUploading, onUploadingChange]);
 
   // Use ref to track current URLs for concurrent uploads
   const currentUrlsRef = useRef<string[]>(value);

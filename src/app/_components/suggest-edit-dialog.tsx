@@ -59,6 +59,7 @@ export default function SuggestEditDialog({
   const { t } = useTranslation();
   const { canAccessAdmin, isAdminMode } = useAdmin();
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">("map");
+  const [isUploading, setIsUploading] = useState(false);
 
   // Track which images are marked for removal
   const [imagesMarkedForRemoval, setImagesMarkedForRemoval] = useState<string[]>([]);
@@ -575,6 +576,7 @@ export default function SuggestEditDialog({
                               : prev.filter(item => item !== url)
                           );
                         }}
+                        onUploadingChange={setIsUploading}
                       />
                     </FormControl>
                     <FormDescription>
@@ -601,16 +603,19 @@ export default function SuggestEditDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isUploading}
               >
                 {t('common.cancel')}
               </Button>
 
               <Button
                 type="submit"
-                disabled={createEditSuggestionMutation.isPending}
+                disabled={createEditSuggestionMutation.isPending || isUploading}
               >
                 {createEditSuggestionMutation.isPending ? (
                   "Submitting..."
+                ) : isUploading ? (
+                  t('forms.uploadingImages')
                 ) : (
                   t('playground.submitEditSuggestion')
                 )}
