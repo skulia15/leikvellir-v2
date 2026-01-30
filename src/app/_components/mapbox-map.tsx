@@ -57,7 +57,7 @@ function UserLocationButton({
   onLocationFound: (location: UserLocation) => void;
   onMinimizeDrawer?: () => void;
 }) {
-  const { current: map } = useMap();
+  const mapRef = useMap();
   const [isLoading, setIsLoading] = useState(false);
   const t = useT();
 
@@ -79,6 +79,8 @@ function UserLocationButton({
           lng: position.coords.longitude,
         };
         onLocationFound(location);
+        // Read .current at call time to avoid stale closure
+        const map = mapRef.current;
         if (map) {
           map.flyTo({ center: [location.lng, location.lat], zoom: 15, duration: 1500 });
         }
@@ -95,7 +97,7 @@ function UserLocationButton({
         maximumAge: 60000,
       },
     );
-  }, [map, onLocationFound, onMinimizeDrawer, t]);
+  }, [mapRef, onLocationFound, onMinimizeDrawer, t]);
 
   return (
     <Button
@@ -414,13 +416,13 @@ export function MapboxMap({
             onClose={() => onPlaygroundSelect(null)}
           />
         )}
-      </Map>
 
-      {/* User location button */}
-      <UserLocationButton
-        onLocationFound={onUserLocationChange}
-        onMinimizeDrawer={onMinimizeDrawer}
-      />
+        {/* User location button — must be inside <Map> to access useMap() context */}
+        <UserLocationButton
+          onLocationFound={onUserLocationChange}
+          onMinimizeDrawer={onMinimizeDrawer}
+        />
+      </Map>
     </div>
   );
 }
