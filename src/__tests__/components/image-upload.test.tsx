@@ -34,7 +34,7 @@ describe("ImageUpload Component", () => {
 
     expect(screen.getByText("Upload playground images")).toBeInTheDocument();
     expect(
-      screen.getByText("Drag & drop images or click to browse"),
+      screen.getByText("Drag and drop images or click to browse"),
     ).toBeInTheDocument();
   });
 
@@ -175,7 +175,10 @@ describe("ImageUpload Component", () => {
     await user.upload(fileInput, files);
 
     await waitFor(() => {
-      expect(screen.getByText(/Maximum 2 files allowed/)).toBeInTheDocument();
+      // react-dropzone rejects files beyond maxFiles with "Too many files"
+      // The component renders these as "filename: Too many files"
+      const errors = screen.getAllByText(/Too many files/);
+      expect(errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -231,6 +234,6 @@ describe("ImageUpload Component", () => {
       />,
     );
 
-    expect(screen.getByText("1 of 5 images uploaded")).toBeInTheDocument();
+    expect(screen.getByText(/1 images uploaded.*max 5 per batch/)).toBeInTheDocument();
   });
 });

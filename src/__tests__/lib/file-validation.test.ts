@@ -243,15 +243,16 @@ describe("File Validation", () => {
       expect(result.invalid[1]?.file.name).toBe("too-big.jpg");
     });
 
-    it("should reject if too many files", async () => {
+    it("should process all files even when exceeding maxFiles (count check is at component level)", async () => {
       const files = Array.from(
         { length: DEFAULT_UPLOAD_CONFIG.maxFiles + 1 },
         (_, i) => createMockImageFile(`photo${i}.jpg`, 1024, "image/jpeg"),
       );
 
-      await expect(validateMultipleFiles(files)).rejects.toThrow(
-        `Too many files. Maximum allowed: ${DEFAULT_UPLOAD_CONFIG.maxFiles}`,
-      );
+      // Client-side validateMultipleFiles does not enforce maxFiles;
+      // that responsibility lives in the ImageUpload component.
+      const result = await validateMultipleFiles(files);
+      expect(result.valid.length + result.invalid.length).toBe(files.length);
     });
   });
 

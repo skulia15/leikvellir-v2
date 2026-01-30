@@ -441,6 +441,11 @@ export const playgroundRouter = createTRPCRouter({
         throw new PlaygroundNotFoundError(input.id);
       }
 
+      // Delete edit suggestions first (FK has no cascade in existing DB)
+      await ctx.db
+        .delete(playgroundEditSuggestions)
+        .where(eq(playgroundEditSuggestions.playgroundId, input.id));
+
       // Delete the playground from database
       const [deletedPlayground] = await ctx.db
         .delete(playgrounds)

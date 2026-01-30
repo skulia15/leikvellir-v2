@@ -98,6 +98,9 @@ importers:
       drizzle-orm:
         specifier: ^0.33.0
         version: 0.33.0(@types/react@18.3.5)(postgres@3.4.4)(react@18.3.1)
+      fridagar:
+        specifier: ^4.2.2
+        version: 4.2.2
       geist:
         specifier: ^1.3.0
         version: 1.3.1(next@16.1.6(@babel/core@7.27.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
@@ -3391,6 +3394,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  fridagar@4.2.2:
+    resolution: {integrity: sha512-LhFkXwQjOn5bYhRJ0e+wkDfGzMSUpGplGMlsqgZRQXuRN+PO/s8aBp1guVvM2CGAN/rt37g64nLztclI15wueQ==}
 
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
@@ -8340,6 +8346,8 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  fridagar@4.2.2: {}
 
   fs.realpath@1.0.0: {}
 

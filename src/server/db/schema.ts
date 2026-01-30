@@ -160,7 +160,7 @@ export const playgroundEditSuggestions = createTable(
     id: serial("id").primaryKey(),
     playgroundId: integer("playground_id")
       .notNull()
-      .references(() => playgrounds.id), // The playground being edited
+      .references(() => playgrounds.id, { onDelete: "cascade" }),
     status: editSuggestionStatusEnum("status").notNull().default("pending"),
     
     // Only include fields that can be changed (nullable - only populated if being changed)

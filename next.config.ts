@@ -7,6 +7,9 @@ import { env } from "./src/env.js";
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  // Transpile packages that need special handling with Turbopack/pnpm
+  transpilePackages: ["fridagar"],
+  
   images: {
     // Enable modern image formats for better compression
     formats: ['image/avif', 'image/webp'],

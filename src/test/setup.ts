@@ -1,8 +1,21 @@
 // test/setup.ts
-import "@testing-library/jest-dom";
 import { beforeAll, afterAll, afterEach, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
-import { server } from "./mocks/server";
+
+// Guard browser-only imports for @vitest-environment node tests
+const hasWindow = typeof window !== "undefined";
+
+let server: { listen: (opts?: any) => void; close: () => void; resetHandlers: () => void } | null = null;
+let cleanup: (() => void) | null = null;
+
+if (hasWindow) {
+  // Dynamic imports aren't supported in setup, so we import conditionally
+  // These are safe because jsdom provides the required globals
+  await import("@testing-library/jest-dom");
+  const rtl = await import("@testing-library/react");
+  cleanup = rtl.cleanup;
+  const mocks = await import("./mocks/server");
+  server = mocks.server;
+}
 
 // Set up environment variables for tests
 process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "test-google-maps-api-key";
@@ -14,19 +27,19 @@ process.env.DISCORD_CLIENT_SECRET = "test-discord-client-secret";
 process.env.SKIP_ENV_VALIDATION = "true";
 
 // Start server before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => server?.listen({ onUnhandledRequest: "error" }));
 
 // Close server after all tests
-afterAll(() => server.close());
+afterAll(() => server?.close());
 
 // Reset handlers after each test
 afterEach(() => {
-  server.resetHandlers();
-  cleanup();
+  server?.resetHandlers();
+  cleanup?.();
 });
 
 // Mock window.URL completely for Next.js Image component
-Object.defineProperty(window, "URL", {
+if (hasWindow) Object.defineProperty(window, "URL", {
   value: class MockURL {
     href: string;
 
@@ -42,7 +55,7 @@ Object.defineProperty(window, "URL", {
 });
 
 // Also mock global URL for server-side code
-Object.defineProperty(global, "URL", {
+if (hasWindow) Object.defineProperty(global, "URL", {
   value: class MockURL {
     href: string;
 
@@ -62,7 +75,7 @@ interface MockFileReaderEvent {
   target: { result: ArrayBuffer | null };
 }
 
-Object.defineProperty(window, "FileReader", {
+if (hasWindow) Object.defineProperty(window, "FileReader", {
   value: class MockFileReader {
     onload: ((event: MockFileReaderEvent) => void) | null = null;
     onerror: ((event: Event) => void) | null = null;
@@ -140,7 +153,7 @@ class MockDataTransfer {
   }
 }
 
-Object.defineProperty(window, "DataTransfer", {
+if (hasWindow) Object.defineProperty(window, "DataTransfer", {
   value: MockDataTransfer,
 });
 
@@ -154,7 +167,7 @@ class MockDragEvent extends Event {
   }
 }
 
-Object.defineProperty(window, "DragEvent", {
+if (hasWindow) Object.defineProperty(window, "DragEvent", {
   value: MockDragEvent,
 });
 
@@ -171,12 +184,12 @@ class MockResizeObserver {
   }
 }
 
-Object.defineProperty(window, "ResizeObserver", {
+if (hasWindow) Object.defineProperty(window, "ResizeObserver", {
   value: MockResizeObserver,
 });
 
 // Mock window.alert for jsdom
-Object.defineProperty(window, "alert", {
+if (hasWindow) Object.defineProperty(window, "alert", {
   value: vi.fn(),
 });
 

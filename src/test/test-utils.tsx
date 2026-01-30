@@ -4,6 +4,7 @@ import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCReact } from "@trpc/react-query";
 import type { AppRouter } from "~/server/api/root";
+import { LanguageProvider } from "~/lib/i18n";
 
 // Create tRPC client for testing
 export const trpc = createTRPCReact<AppRouter>();
@@ -33,7 +34,9 @@ function createWrapper() {
     return (
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <LanguageProvider initialLocale="en">
+            {children}
+          </LanguageProvider>
         </QueryClientProvider>
       </trpc.Provider>
     );
