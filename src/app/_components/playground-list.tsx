@@ -56,11 +56,12 @@ export default function PlaygroundList({
         return false;
       }
 
-      // Accessible now filter (publicly accessible OR school grounds that are currently accessible)
+      // Accessible now filter: school grounds must pass school hours check,
+      // non-school grounds use the publiclyAccessible flag
       if (filters.accessibleNow !== undefined && filters.accessibleNow) {
-        const isCurrentlyAccessible =
-          playground.publiclyAccessible ||
-          (playground.isSchoolGround && isSchoolGroundAccessible(playground.isSchoolGround));
+        const isCurrentlyAccessible = playground.isSchoolGround
+          ? isSchoolGroundAccessible(playground.isSchoolGround)
+          : playground.publiclyAccessible;
 
         if (!isCurrentlyAccessible) {
           return false;

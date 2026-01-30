@@ -155,10 +155,11 @@ export function MapboxMap({
           return false;
         }
         if (filters.accessibleNow !== undefined && filters.accessibleNow) {
-          const isAccessible =
-            playground.publiclyAccessible ||
-            (playground.isSchoolGround &&
-              isSchoolGroundAccessible(playground.isSchoolGround));
+          // School grounds: check school hours (regardless of publiclyAccessible flag)
+          // Non-school grounds: check publiclyAccessible flag
+          const isAccessible = playground.isSchoolGround
+            ? isSchoolGroundAccessible(playground.isSchoolGround)
+            : playground.publiclyAccessible;
           if (!isAccessible) {
             return false;
           }
