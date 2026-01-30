@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { env } from "~/env";
 import { useT } from "~/lib/i18n";
+import type { MapRef } from "react-map-gl/mapbox";
 
 interface CoordinatePickerMapProps {
   latitude: number;
@@ -24,6 +25,7 @@ export function CoordinatePickerMap({
 }: CoordinatePickerMapProps) {
   // Lazy import to avoid loading mapbox-gl at SSR time
   const [MapModule, setMapModule] = useState<typeof import("react-map-gl/mapbox") | null>(null);
+  const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
     void import("react-map-gl/mapbox").then(setMapModule);
@@ -36,9 +38,16 @@ export function CoordinatePickerMap({
 
   const t = useT();
 
+  // Update marker position AND fly map to new location when props change
   useEffect(() => {
     if (latitude && longitude) {
       setMarkerPosition({ lat: latitude, lng: longitude });
+      // Fly the map to the new location
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        zoom: 14,
+        duration: 1000,
+      });
     }
   }, [latitude, longitude]);
 
@@ -66,6 +75,7 @@ export function CoordinatePickerMap({
   return (
     <div className={`relative ${className}`}>
       <Map
+        ref={mapRef}
         mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
         initialViewState={{
           longitude: markerPosition.lng,
