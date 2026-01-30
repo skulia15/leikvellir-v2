@@ -2,6 +2,7 @@
  * Utility functions for handling school hours and accessibility
  */
 
+import { isHoliday } from "fridagar";
 import { type SchoolType } from "~/types";
 
 // School hours configuration
@@ -18,6 +19,11 @@ export const WORKING_DAYS = [1, 2, 3, 4, 5] as const; // Monday to Friday
  * School hours are Monday-Friday 08:00-17:00
  */
 export function isSchoolHours(date: Date = new Date()): boolean {
+  // Icelandic public holidays — schools are closed
+  if (isHoliday(date)) {
+    return false;
+  }
+
   const dayOfWeek = date.getDay();
   const hour = date.getHours();
 
