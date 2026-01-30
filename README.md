@@ -6,12 +6,17 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 
 ### ✅ Implemented
 
-- **Interactive Map**: Google Maps integration showing playground locations
+- **Interactive Map**: Google Maps/Mapbox integration showing playground locations
+  - Color-coded markers (green for regular, amber/red for school grounds based on accessibility)
+  - User location with animated indicator
+  - Marker clustering for zoomed-out views
 - **Playground Database**: Comprehensive playground information including:
   - Location coordinates (latitude/longitude)
   - Accessibility status
   - Toddler-friendly indicators
   - Image support (cover image + gallery)
+  - Equipment tracking with categories
+  - Amenities (seating, picnic tables, fencing, shade, etc.)
 - **User Authentication**: Secure login system using NextAuth.js
 - **Mock Authentication**: Development mode with test users (no OAuth setup required)
 - **User Management System**: Complete role-based access control
@@ -23,123 +28,127 @@ A modern web application for discovering and mapping playgrounds in Iceland. Bui
 - **Admin Panel**: Comprehensive administration interface
   - User management dashboard (super admin only)
   - Playground review and approval system
+  - Edit suggestion review system
   - Role-based navigation and features
   - Admin mode toggle with persistent state
 - **Image Upload System**: File upload functionality for playgrounds
   - Multiple image support per playground
   - Admin cover image selection during review
   - Drag-and-drop interface with validation
+  - Client-side image compression for large files
+  - Image removal during upload
 - **Playground Submission System**: Public submission with admin approval
   - Form validation with React Hook Form + Zod
   - Status tracking (pending, approved, rejected)
   - Admin review with edit capabilities
   - Rejection reasons and feedback
+- **Edit Suggestion System**: Users can suggest changes to existing playgrounds
+  - Full edit form for all playground properties
+  - Equipment and image change suggestions
+  - Admin review with side-by-side comparison
+  - Reviewer can modify suggestions before approval
 - **Type-Safe API**: End-to-end type safety with tRPC
 - **Form Validation**: React Hook Form with Zod validation
-- **Responsive Design Foundation**: Mobile-first approach with Tailwind CSS
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
 - **Database Migrations**: Automated schema management with Drizzle
-- animation for users current location
-- List nearby playgrounds by distance from user location - DONE
-- Location-based Search: Allow users to input their location or use GPS to find nearby playgrounds - DONE
-- Filter by Distance: Option to filter results based on distance from the user's location - DONE
-- Filter by Age Group: Filters to show playgrounds suitable for different age groups (e.g., toddlers, older children) - DONE
-- Directions/Navigation: Integration with Google Maps or another mapping service to provide directions - DONE
-- Multi-language support (Icelandic/English/Polish)
-- Cloud storage migration for images - DONE
-- Google Maps directions integration - DONE
-- Traffic tracking (PostHog integration) - DONE
-- hover effects for list next to map - DONE
-- List of available playground equipment - DONE
-- Credits system for user submissions - done
-- when location is allowed - make the map jump to the users location. - DONE
-- Playground detail pages with comprehensive information - DONE
-- get municipalities from api: https://svc.skra.is/talnaefni/api/Sveitarfelog - DONE
-- add icons to "hentar ungabörnum", "opið almenningi" badges. - DONE
-- add municipality to each playground - it be infered from map pin - DONE
-- add animations when items appear or disappear from the list in map view - DONE
-- Review playground submission - location is missing - DONE
-- SEO optimization
-- add a change request submission available for all users
-- create playground form - simplify type of school so no dropdown is used - a value has to be selected, only 2 options
+- **Location Features**:
+  - List nearby playgrounds by distance from user location
+  - GPS-based location search
+  - Filter by distance from user
+  - Map auto-centers on user location when permitted
+- **Filtering & Search**:
+  - Filter by age group (toddler-friendly)
+  - Filter by equipment categories
+  - Filter by accessibility
+- **Navigation**: Google Maps directions integration
+- **Multi-language Support**: Icelandic, English, and Polish
+- **Cloud Storage**: Images stored in cloud storage
+- **Analytics**: PostHog integration for traffic tracking
+- **SEO**: Metadata, structured data, sitemap, and OG image generation
+- **Playground Details**:
+  - Comprehensive detail pages
+  - Equipment lists with categories
+  - Municipality information (from Þjóðskrá API)
+  - Badge icons for toddler-friendly and public access
+  - Animated list transitions
 
 ### 🚧 In Progress
 
-- Use tRPC effectivly in backend, use shared type definitions instead of defining schema
-  - Use Drizzle type inference for base types
-- Setup separate Dev and production db's
-- Performance optimizations, lighthouse
-- WEBSOCKET fyrir location tracking over time
-- test and fix obvious errors in the edit playground review dialog
-- when adding playground - the users should be able to remove images they are uplaoding
-- Test if changing location in edit review changes when admin sets it - NO the users suggested location is used instead!
-- Move suggest edit button on detail page so that it is side by side with add images button under the additional information section
-- Location cache issue á playground review korti - ef leikvöllur er reviewaður og svo næsti opnaður eru gömul hnit / pin sýnd
-- vantar back button á contact page og playground page, og fleiri. passa að texti sé eins og athuga hvort til baka takki vísi á '/' eða bara á síðuna sem þú varst
-- Senda mér tölvupóst þegar að nýr leikvöllur er sendur inn
-- playground review should display all every playground property
-- submissions should display the name of a user instead of their ID
-- Fara yfir mobile utlit
-- laga filter view utlit
-- laga file too large error i image upload - ætti að vera hægt að setja inn stórar myndir ef þeim er þjappað
-- disable submit playground button while images are being uploaded
-- Playground list elements need more info (skólalóð, fleira) to use the empty space
+**Bugs & Fixes**
+- Location cache issue in playground review - old coordinates shown when opening next playground after review
+- Test and fix edit suggestion review dialog edge cases
+- Verify location changes in edit review work correctly (user suggested location vs admin-set location)
+- Fix playground equipment list display on detail pages
 
-- Interactive Map View improvements
-  - Enhanced markers showing different playground types (ball courts (football, basketball, tennis, etc), preschool, elementary school, regular playground)
-- Error handling and loading states optimization - some pages may still need a loading skeleton
-- Responsive layout optimization
-- stjorna sidebar stærð á non-mobile
+**UI/UX Improvements**
+- Add back buttons to contact page, playground page, and others with consistent navigation
+- Mobile layout review and fixes
+- Filter view layout improvements
+- Sidebar sizing on non-mobile devices
+- Playground list cards need more info (school ground status, etc.)
+- Standardized sizing of playgrounds in list view
+- Reduce carousel size in mobile detail page
+- Loading skeletons for remaining pages
+- Disable submit button while images are uploading
 
-- fix playground equipment list display on detail pages
-- Update tests
-- Specific map pins in different color for ball courts - specific icons for each type
-- RESTRICT API ACCESS for Maps api key
-- Restrict google maps api usage so that I dont get billed anything
-- loading skeletons on load
-- standardized sizing of playgrounds in list - missing in playground list page
-- Notify users if their submission is approved
-- add sitemap - done?
-- reduce carousel size in mobile detail page.
+**Map Enhancements**
+- Enhanced markers for different playground types (ball courts, preschool, elementary school)
+- Specific icons and colors for ball courts (football, basketball, tennis)
+
+**Admin Features**
+- Playground review should display all playground properties
+- Submissions should display user names instead of IDs
+
+**Infrastructure**
+- Setup separate dev and production databases
+- Performance optimizations (Lighthouse)
+
+**Notifications**
+- Email notification when new playground is submitted
+- Notify users when their submission is approved/rejected
 
 ### 📋 Planned Features
 
-- Better image image optimization using tools like cloudinary
-- add audit trail for suggested playground changes vs reviewer approved changes along with changes from the reviewer
-- progressive image loading - next handles this but would like to add blur-up image load
-- bæta við aðgengi checkbox og detail page icon og texta - hjólastóla og svoleiðis
-- School hours - uppfæra virkni með frídögum o.þ.h
-- getur skólalóð verið bæði skólalóð og public access á sama tíma?
+**Technical Debt**
+- Use tRPC effectively in backend with shared type definitions
+- Use Drizzle type inference for base types
+- Websocket for real-time location tracking
 
-- **Playground Search Functionality**
-  - Filter by publicly accessible or accessible now (could be inaccessible if school grounds playground is in session)
-- **Enhanced Playground Details**
-  - Facilities Information: Details on available amenities (e.g., bathrooms, benches, shade, parking)
-  - Safety Features: Information about fencing, soft ground, and other safety considerations
-  - AI-Vision to determine playground equipment types from uploaded photos (admin feature)
-- **Community Features**
-  - User-contributed playground reviews and ratings
-  - Check-in system for playgrounds
-  - Star rating system for playgrounds
-- **Reporting System**
-  - Playground issue reporting (broken equipment, safety hazards)
-  - Direct broken equipment, information or safety hazard submission to municipality of playground ( begin with Hafnarfjörður)
-  - Image attachment for reports
-- **Advanced Features**
-  - Sort by rating or other criteria
-  - Include football, basketball, tennis courts and other facilities
-  - Event listings and calendar integration
-- **Technical Improvements**
+**Image Improvements**
+- Better image optimization using Cloudinary
+- Progressive image loading with blur-up effect
 
-  - Accessibility enhancements
-  - Dark theme support
-  - Production monitoring and logging - Connect with Sentry
-  - Automated image optimization and thumbnails
+**Accessibility**
+- Wheelchair accessibility checkbox and detail page display
+- School hours enhancement with holidays
+- Filter by "accessible now" (school ground time-based accessibility)
 
-  - remove localhost api key fron cloud console
-  - svg boundary overlay á map
-  - Create a mock instance of the application where everyone has admin privileges in order to test the app
-  - remove localhost from oauth consent screens
-  - Test feedback form - issues with github links and emain sending should be done using a maining service so that users dont need to send from their personal email
+**Enhanced Playground Details**
+- AI-Vision to determine equipment types from uploaded photos
+
+**Community Features**
+- User-contributed playground reviews and ratings
+- Check-in system for playgrounds
+- Star rating system
+
+**Reporting System**
+- Playground issue reporting (broken equipment, safety hazards)
+- Direct submission to municipality (starting with Hafnarfjörður)
+- Image attachments for reports
+
+**Advanced Features**
+- Sort by rating or other criteria
+- Include football, basketball, tennis courts as separate category
+- Event listings and calendar integration
+- Audit trail for edit suggestions vs approved changes
+
+**Technical Improvements**
+- Dark theme support
+- Production monitoring with Sentry
+- Automated image optimization and thumbnails
+- SVG boundary overlay on map
+- Test/demo instance with admin privileges for all users
+- Improve feedback form (use mailing service instead of mailto links)
 
 ## 🛠️ Tech Stack
 
@@ -147,7 +156,7 @@ This project uses the **T3 Stack** - a modern, type-safe full-stack TypeScript f
 
 ### Core Technologies
 
-- **[Next.js 14](https://nextjs.org)** - React framework with App Router
+- **[Next.js 15](https://nextjs.org)** - React framework with App Router
 - **[TypeScript](https://typescriptlang.org)** - Type-safe JavaScript
 - **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
 - **[tRPC](https://trpc.io)** - End-to-end type-safe APIs
