@@ -11,6 +11,7 @@ import {
   Navigation,
   Edit,
   Route,
+  Footprints,
   Armchair,
   Utensils,
   Trash2,
@@ -45,6 +46,7 @@ import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
+import { getMunicipalityDative } from "~/lib/icelandic-declension";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -214,7 +216,7 @@ export default function PlaygroundDetail({
                 {/* Basic Info Grid */}
                 {distance && (
                   <div className="flex items-start gap-3">
-                    <Route className="mt-0.5 h-5 w-5 text-green-600" />
+                    <Footprints className="mt-0.5 h-5 w-5 text-green-600" />
                     <div>
                       <p className="font-medium">{t('playground.distanceFromYou')}</p>
                       <p className="text-sm font-medium text-green-600">
@@ -286,7 +288,7 @@ export default function PlaygroundDetail({
                 </div>
 
                 {/* Amenities Subsection */}
-                {(playground.hasSeating || playground.hasPicnicTable || playground.hasGarbageCan || playground.hasBathroomNearby || playground.hasFencing || playground.hasSoftPlayArea) && (
+                {(playground.hasSeating || playground.hasPicnicTable || playground.hasGarbageCan || playground.hasBathroomNearby) && (
                   <>
                     <Separator className="my-6" />
                     <div>
@@ -344,44 +346,44 @@ export default function PlaygroundDetail({
                         )}
                       </div>
                     </div>
+                  </>
+                )}
 
-                    {/* Safety & Structure Subsection */}
-                    {(playground.hasFencing || playground.hasSoftPlayArea) && (
-                      <>
-                        <Separator className="my-6" />
-                        <div>
-                          <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
-                            <Shield className="h-5 w-5" />
-                            {t('forms.safetyAndStructure')}
-                          </h3>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {playground.hasFencing && (
-                              <div className="flex items-center gap-3">
-                                <Fence className="h-5 w-5 text-blue-600" />
-                                <div>
-                                  <p className="font-medium">{t('forms.hasFencing')}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {t('forms.hasFencingDescription')}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {playground.hasSoftPlayArea && (
-                              <div className="flex items-center gap-3">
-                                <Heart className="h-5 w-5 text-blue-600" />
-                                <div>
-                                  <p className="font-medium">{t('forms.hasSoftPlayArea')}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {t('forms.hasSoftPlayAreaDescription')}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
+                {/* Safety & Structure Subsection */}
+                {(playground.hasFencing || playground.hasSoftPlayArea) && (
+                  <>
+                    <Separator className="my-6" />
+                    <div>
+                      <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        {t('forms.safetyAndStructure')}
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {playground.hasFencing && (
+                          <div className="flex items-center gap-3">
+                            <Fence className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <p className="font-medium">{t('forms.hasFencing')}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {t('forms.hasFencingDescription')}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        )}
+
+                        {playground.hasSoftPlayArea && (
+                          <div className="flex items-center gap-3">
+                            <Heart className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <p className="font-medium">{t('forms.hasSoftPlayArea')}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {t('forms.hasSoftPlayAreaDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </>
                 )}
               </CardContent>
@@ -577,36 +579,36 @@ export default function PlaygroundDetail({
             </Button>
           </div>
         )}
-      </div>
 
-      {/* Internal links for SEO and navigation */}
-      <Separator className="my-4" />
-      <nav className="flex flex-wrap gap-3" aria-label={t('playground.exploreMore')}>
-        <Link
-          href="/playgrounds"
-          className="text-sm text-primary hover:underline"
-        >
-          {t('playground.browseAllPlaygrounds')}
-        </Link>
-        <span className="text-muted-foreground">·</span>
-        <Link
-          href={`/?lat=${playground.latitude}&lng=${playground.longitude}&playground=${playground.id}`}
-          className="text-sm text-primary hover:underline"
-        >
-          {t('playground.viewOnMap')}
-        </Link>
-        {playground.municipality && (
-          <>
-            <span className="text-muted-foreground">·</span>
-            <Link
-              href={`/playgrounds?search=${encodeURIComponent(playground.municipality)}`}
-              className="text-sm text-primary hover:underline"
-            >
-              {t('playground.moreInMunicipality', { municipality: playground.municipality })}
-            </Link>
-          </>
-        )}
-      </nav>
+        {/* Internal links for SEO and navigation */}
+        <Separator className="mt-8 mb-4" />
+        <nav className="flex flex-wrap gap-3" aria-label={t('playground.exploreMore')}>
+          <Link
+            href="/playgrounds"
+            className="text-sm text-primary hover:underline"
+          >
+            {t('playground.browseAllPlaygrounds')}
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link
+            href={`/?lat=${playground.latitude}&lng=${playground.longitude}&playground=${playground.id}`}
+            className="text-sm text-primary hover:underline"
+          >
+            {t('playground.viewOnMap')}
+          </Link>
+          {playground.municipality && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <Link
+                href={`/playgrounds?municipality=${encodeURIComponent(playground.municipality)}`}
+                className="text-sm text-primary hover:underline"
+              >
+                {t('playground.moreInMunicipality', { municipality: currentLanguage === 'is' ? getMunicipalityDative(playground.municipality) : playground.municipality })}
+              </Link>
+            </>
+          )}
+        </nav>
+      </div>
 
       {/* Edit Dialog */}
       {isAdminMode && isEditDialogOpen && (
