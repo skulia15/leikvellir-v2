@@ -170,13 +170,8 @@ export default function ReviewPlaygroundsClient({
     const totalPending = (pendingSubmissions?.length || 0) + (pendingEditSuggestions?.length || 0);
 
     if (isLoading) {
-        return (
-            <Card>
-                <CardContent className="py-12 text-center">
-                    <div className="text-muted-foreground">{t('admin.loadingPendingSubmissions')}</div>
-                </CardContent>
-            </Card>
-        );
+        // Return null here - the loading.tsx file handles the skeleton
+        return null;
     }
 
     if (totalPending === 0) {

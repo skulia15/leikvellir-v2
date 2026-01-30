@@ -158,7 +158,8 @@ export default function UserManagementClient() {
     };
 
     if (isLoading) {
-        return <div>{t('admin.loadingUsers')}</div>;
+        // Return null here - the loading.tsx file handles the skeleton
+        return null;
     }
 
     return (
