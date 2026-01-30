@@ -108,32 +108,6 @@ export default function HomeClient() {
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-    // Automatically prompt for user location on mount
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            return;
-        }
-
-        // Always prompt for location on page load
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const location = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                };
-                setUserLocation(location);
-            },
-            (error) => {
-                // User denied location or error occurred — no action needed
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000, // 5 minutes cache
-            },
-        );
-    }, []);
-
     // Handle URL parameters for deep linking from playground detail page
     useEffect(() => {
         const lat = searchParams.get('lat');
