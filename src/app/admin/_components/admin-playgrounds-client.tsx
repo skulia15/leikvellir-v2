@@ -97,7 +97,7 @@ export default function AdminPlaygroundsClient() {
 
     return (
         <>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 mb-6">
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-2xl font-bold">{playgrounds.length}</div>
@@ -126,20 +126,21 @@ export default function AdminPlaygroundsClient() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
+                    <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <span>{t('admin.allPlaygrounds')} ({playgrounds.length})</span>
                         <div className="flex items-center gap-2">
-                            <Button asChild variant="outline">
+                            <Button asChild variant="outline" size="sm">
                                 <Link href="/admin/review">{t('admin.reviewSubmissions')}</Link>
                             </Button>
-                            <Button asChild>
+                            <Button asChild size="sm">
                                 <Link href="/create-playground">{t('playground.addNewPlayground')}</Link>
                             </Button>
                         </div>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
+                    {/* Desktop table */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -242,6 +243,70 @@ export default function AdminPlaygroundsClient() {
                                 ))}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile card list */}
+                    <div className="md:hidden space-y-3">
+                        {playgrounds.map((playground) => (
+                            <div key={playground.id} className="rounded-xl border bg-card p-4 space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <div className="font-medium truncate">{playground.title}</div>
+                                        <div className="text-xs text-muted-foreground">ID #{playground.id}</div>
+                                    </div>
+                                    {getStatusBadge(playground.status)}
+                                </div>
+                                <div className="text-sm">
+                                    {playground.municipality ? (
+                                        <span>{playground.municipality}</span>
+                                    ) : (
+                                        <span className="text-muted-foreground italic">{t('admin.noMunicipality')}</span>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        <span className="truncate">{playground.createdBy?.name || playground.createdBy?.email || playground.createdById}</span>
+                                    </div>
+                                    <span className="flex-shrink-0">{formatDate(playground.createdAt)}</span>
+                                </div>
+                                <div className="flex items-center gap-2 border-t pt-3">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/playground/${playground.id}`}>
+                                            <Eye className="h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => setEditingPlayground(playground)}>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive ml-auto">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>{t('playground.deletePlayground')}</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    {t('admin.deletePlaygroundConfirmation', { title: playground.title })}
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={() => handleDelete(playground)}
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    disabled={deletePlayground.isPending}
+                                                >
+                                                    {deletePlayground.isPending ? t('actions.deleting') : t('common.delete')}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </CardContent>
             </Card>

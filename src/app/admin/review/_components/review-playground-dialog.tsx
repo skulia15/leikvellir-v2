@@ -253,12 +253,12 @@ export default function ReviewPlaygroundDialog({
 
                 <Form {...form}>
                     <Tabs defaultValue="details" className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-5">
-                            <TabsTrigger value="details">{t('admin.details')}</TabsTrigger>
-                            <TabsTrigger value="equipment">{t('admin.equipment')}</TabsTrigger>
-                            <TabsTrigger value="amenities">{t('admin.amenities')}</TabsTrigger>
-                            <TabsTrigger value="images">{t('admin.images')}</TabsTrigger>
-                            <TabsTrigger value="location">{t('admin.location')}</TabsTrigger>
+                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
+                            <TabsTrigger value="details" className="flex-shrink-0">{t('admin.details')}</TabsTrigger>
+                            <TabsTrigger value="equipment" className="flex-shrink-0">{t('admin.equipment')}</TabsTrigger>
+                            <TabsTrigger value="amenities" className="flex-shrink-0">{t('admin.amenities')}</TabsTrigger>
+                            <TabsTrigger value="images" className="flex-shrink-0">{t('admin.images')}</TabsTrigger>
+                            <TabsTrigger value="location" className="flex-shrink-0">{t('admin.location')}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="details" className="space-y-4">
@@ -418,7 +418,7 @@ export default function ReviewPlaygroundDialog({
 
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold">{t('admin.submissionDetails')}</h3>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
                                     <div>
                                         <span className="text-muted-foreground">{t('admin.submittedBy')}:</span>
                                         <span className="ml-2 font-medium">{playground.createdBy?.name || playground.createdBy?.email || playground.createdById}</span>
@@ -716,7 +716,7 @@ export default function ReviewPlaygroundDialog({
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between gap-4 border-t pt-4">
+                    <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                         <Button
                             type="button"
                             variant="outline"

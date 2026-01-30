@@ -110,7 +110,7 @@ export default function EquipmentManagementClient({
     return (
         <div className="space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <Card>
                     <CardContent className="p-6">
                         <div className="flex items-center gap-2">
@@ -151,11 +151,11 @@ export default function EquipmentManagementClient({
                 {Object.entries(equipmentByCategory).map(([category, categoryEquipment]) => (
                     <Card key={category}>
                         <CardHeader>
-                            <CardTitle className="flex items-center justify-between">
+                            <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-2">
                                     <PlaygroundEquipmentIcon className="h-5 w-5" />
-                                    {categoryLabels[category] || category}
-                                    <Badge variant="outline" className="text-xs">
+                                    <span className="truncate">{categoryLabels[category] || category}</span>
+                                    <Badge variant="outline" className="text-xs flex-shrink-0">
                                         {categoryEquipment.length} {t("equipment.itemsText")}
                                     </Badge>
                                 </div>
@@ -166,83 +166,129 @@ export default function EquipmentManagementClient({
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>{t('admin.equipmentTable')}</TableHead>
-                                        <TableHead>{t('admin.image')}</TableHead>
-                                        <TableHead>{t('admin.description')}</TableHead>
-                                        <TableHead>{t('admin.status')}</TableHead>
-                                        <TableHead className="text-right">{t('admin.actions')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {categoryEquipment.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell>
-                                                <div>
-                                                    <div className="font-medium">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.image ? (
-                                                    <Image
-                                                        src={item.image}
-                                                        alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
-                                                        width={48}
-                                                        height={48}
-                                                        className="w-12 h-12 rounded object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                                                        <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="max-w-xs truncate">
-                                                    {item.description ? t(item.description) : t('admin.noDescription')}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={item.isActive ? "default" : "secondary"}>
-                                                    {item.isActive ? t('admin.active') : t('admin.inactive')}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleEdit(item)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    {item.isActive ? (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(item)}
-                                                            disabled={deleteMutation.isPending}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleRestore(item)}
-                                                            disabled={restoreMutation.isPending}
-                                                        >
-                                                            <RotateCcw className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
+                            {/* Desktop table */}
+                            <div className="hidden md:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>{t('admin.equipmentTable')}</TableHead>
+                                            <TableHead>{t('admin.image')}</TableHead>
+                                            <TableHead>{t('admin.description')}</TableHead>
+                                            <TableHead>{t('admin.status')}</TableHead>
+                                            <TableHead className="text-right">{t('admin.actions')}</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {categoryEquipment.map((item) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell>
+                                                    <div>
+                                                        <div className="font-medium">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {item.image ? (
+                                                        <Image
+                                                            src={item.image}
+                                                            alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
+                                                            width={48}
+                                                            height={48}
+                                                            className="w-12 h-12 rounded object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                                                            <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="max-w-xs truncate">
+                                                        {item.description ? t(item.description) : t('admin.noDescription')}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={item.isActive ? "default" : "secondary"}>
+                                                        {item.isActive ? t('admin.active') : t('admin.inactive')}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleEdit(item)}
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                        {item.isActive ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleDelete(item)}
+                                                                disabled={deleteMutation.isPending}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleRestore(item)}
+                                                                disabled={restoreMutation.isPending}
+                                                            >
+                                                                <RotateCcw className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* Mobile card list */}
+                            <div className="md:hidden space-y-2">
+                                {categoryEquipment.map((item) => (
+                                    <div key={item.id} className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                                        <div className="flex-shrink-0">
+                                            {item.image ? (
+                                                <Image
+                                                    src={item.image}
+                                                    alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
+                                                    width={48}
+                                                    height={48}
+                                                    className="w-12 h-12 rounded object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                                                    <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium truncate">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
+                                            <Badge variant={item.isActive ? "default" : "secondary"} className="mt-1 text-xs">
+                                                {item.isActive ? t('admin.active') : t('admin.inactive')}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            {item.isActive ? (
+                                                <Button variant="outline" size="sm" onClick={() => handleDelete(item)} disabled={deleteMutation.isPending}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            ) : (
+                                                <Button variant="outline" size="sm" onClick={() => handleRestore(item)} disabled={restoreMutation.isPending}>
+                                                    <RotateCcw className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}

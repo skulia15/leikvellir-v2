@@ -248,84 +248,133 @@ export default function ReviewPlaygroundsClient({
                                 <CardTitle>New Playground Submissions</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('playground.title')}</TableHead>
-                                            <TableHead>{t('playground.municipality')}</TableHead>
-                                            <TableHead>{t('admin.submittedBy')}</TableHead>
-                                            <TableHead>{t('admin.submittedOn')}</TableHead>
-                                            <TableHead>{t('admin.status')}</TableHead>
-                                            <TableHead className="text-right">{t('admin.actions')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {pendingSubmissions.map((playground) => (
-                                            <TableRow key={playground.id}>
-                                                <TableCell>
-                                                    <div>
-                                                        <div className="font-medium">{playground.title}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            ID #{playground.id}
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="text-sm font-medium">
-                                                        {playground.municipality ? (
-                                                            <span className="text-foreground">{playground.municipality}</span>
-                                                        ) : (
-                                                            <span className="text-muted-foreground italic">{t('admin.noMunicipality')}</span>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-sm">
-                                                            {playground.submitAnonymously
-                                                                ? t('playground.anonymousSubmission')
-                                                                : playground.createdBy?.name || playground.createdBy?.email || `${t('admin.userTable')} #${playground.createdById}`
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="text-sm">
-                                                        {new Date(playground.createdAt).toLocaleDateString('en-GB')}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
-                                                        {t('admin.pending')}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleReview(playground)}
-                                                            disabled={reviewMutation.isPending}
-                                                        >
-                                                            <Edit className="mr-1 h-3 w-3" />
-                                                            {t('admin.reviewButton')}
-                                                        </Button>
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            onClick={() => handleQuickApprove(playground)}
-                                                            disabled={reviewMutation.isPending}
-                                                        >
-                                                            <Check className="mr-1 h-3 w-3" />
-                                                            {t('admin.quickApprove')}
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
+                                {/* Desktop table */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t('playground.title')}</TableHead>
+                                                <TableHead>{t('playground.municipality')}</TableHead>
+                                                <TableHead>{t('admin.submittedBy')}</TableHead>
+                                                <TableHead>{t('admin.submittedOn')}</TableHead>
+                                                <TableHead>{t('admin.status')}</TableHead>
+                                                <TableHead className="text-right">{t('admin.actions')}</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pendingSubmissions.map((playground) => (
+                                                <TableRow key={playground.id}>
+                                                    <TableCell>
+                                                        <div>
+                                                            <div className="font-medium">{playground.title}</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                ID #{playground.id}
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm font-medium">
+                                                            {playground.municipality ? (
+                                                                <span className="text-foreground">{playground.municipality}</span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground italic">{t('admin.noMunicipality')}</span>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-sm">
+                                                                {playground.submitAnonymously
+                                                                    ? t('playground.anonymousSubmission')
+                                                                    : playground.createdBy?.name || playground.createdBy?.email || `${t('admin.userTable')} #${playground.createdById}`
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm">
+                                                            {new Date(playground.createdAt).toLocaleDateString('en-GB')}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+                                                            {t('admin.pending')}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleReview(playground)}
+                                                                disabled={reviewMutation.isPending}
+                                                            >
+                                                                <Edit className="mr-1 h-3 w-3" />
+                                                                {t('admin.reviewButton')}
+                                                            </Button>
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() => handleQuickApprove(playground)}
+                                                                disabled={reviewMutation.isPending}
+                                                            >
+                                                                <Check className="mr-1 h-3 w-3" />
+                                                                {t('admin.quickApprove')}
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Mobile card list */}
+                                <div className="md:hidden space-y-3">
+                                    {pendingSubmissions.map((playground) => (
+                                        <div key={playground.id} className="rounded-xl border bg-card p-4 space-y-3">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="font-medium truncate">{playground.title}</div>
+                                                    <div className="text-xs text-muted-foreground">ID #{playground.id}</div>
+                                                </div>
+                                                <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 flex-shrink-0">
+                                                    {t('admin.pending')}
+                                                </Badge>
+                                            </div>
+                                            <div className="text-sm">
+                                                {playground.municipality ? (
+                                                    <span>{playground.municipality}</span>
+                                                ) : (
+                                                    <span className="text-muted-foreground italic">{t('admin.noMunicipality')}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <User className="h-3 w-3" />
+                                                    <span className="truncate">
+                                                        {playground.submitAnonymously
+                                                            ? t('playground.anonymousSubmission')
+                                                            : playground.createdBy?.name || playground.createdBy?.email || `${t('admin.userTable')} #${playground.createdById}`
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <span className="flex-shrink-0">{new Date(playground.createdAt).toLocaleDateString('en-GB')}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 border-t pt-3">
+                                                <Button variant="outline" size="sm" onClick={() => handleReview(playground)} disabled={reviewMutation.isPending}>
+                                                    <Edit className="mr-1 h-3 w-3" />
+                                                    {t('admin.reviewButton')}
+                                                </Button>
+                                                <Button variant="default" size="sm" onClick={() => handleQuickApprove(playground)} disabled={reviewMutation.isPending}>
+                                                    <Check className="mr-1 h-3 w-3" />
+                                                    {t('admin.quickApprove')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     )}
@@ -351,70 +400,113 @@ export default function ReviewPlaygroundsClient({
                                 <CardTitle>Edit Suggestions</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Playground</TableHead>
-                                            <TableHead>Proposed Changes</TableHead>
-                                            <TableHead>{t('admin.submittedBy')}</TableHead>
-                                            <TableHead>{t('admin.submittedOn')}</TableHead>
-                                            <TableHead>{t('admin.status')}</TableHead>
-                                            <TableHead className="text-right">{t('admin.actions')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {pendingEditSuggestions.map((suggestion) => (
-                                            <TableRow key={suggestion.id}>
-                                                <TableCell>
-                                                    <div>
-                                                        <div className="font-medium">{suggestion.playground?.title}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            #{suggestion.playground?.id} • Suggestion #{suggestion.id}
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="text-sm">
-                                                        <Badge variant="secondary" className="text-xs">
-                                                            {countChanges(suggestion)} changes proposed
-                                                        </Badge>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-sm">
-                                                            {suggestion.submitAnonymously
-                                                                ? t('playground.anonymousSubmission')
-                                                                : suggestion.createdBy?.name || suggestion.createdBy?.email || `User #${suggestion.createdById}`
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="text-sm">
-                                                        {new Date(suggestion.createdAt).toLocaleDateString('en-GB')}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
-                                                        {t('admin.pending')}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleEditSuggestionReview(suggestion)}
-                                                    >
-                                                        <Edit className="mr-1 h-3 w-3" />
-                                                        {t('admin.reviewButton')}
-                                                    </Button>
-                                                </TableCell>
+                                {/* Desktop table */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Playground</TableHead>
+                                                <TableHead>Proposed Changes</TableHead>
+                                                <TableHead>{t('admin.submittedBy')}</TableHead>
+                                                <TableHead>{t('admin.submittedOn')}</TableHead>
+                                                <TableHead>{t('admin.status')}</TableHead>
+                                                <TableHead className="text-right">{t('admin.actions')}</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pendingEditSuggestions.map((suggestion) => (
+                                                <TableRow key={suggestion.id}>
+                                                    <TableCell>
+                                                        <div>
+                                                            <div className="font-medium">{suggestion.playground?.title}</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                #{suggestion.playground?.id} • Suggestion #{suggestion.id}
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {countChanges(suggestion)} changes proposed
+                                                            </Badge>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-sm">
+                                                                {suggestion.submitAnonymously
+                                                                    ? t('playground.anonymousSubmission')
+                                                                    : suggestion.createdBy?.name || suggestion.createdBy?.email || `User #${suggestion.createdById}`
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm">
+                                                            {new Date(suggestion.createdAt).toLocaleDateString('en-GB')}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700">
+                                                            {t('admin.pending')}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleEditSuggestionReview(suggestion)}
+                                                        >
+                                                            <Edit className="mr-1 h-3 w-3" />
+                                                            {t('admin.reviewButton')}
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Mobile card list */}
+                                <div className="md:hidden space-y-3">
+                                    {pendingEditSuggestions.map((suggestion) => (
+                                        <div key={suggestion.id} className="rounded-xl border bg-card p-4 space-y-3">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="font-medium truncate">{suggestion.playground?.title}</div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        #{suggestion.playground?.id} • Suggestion #{suggestion.id}
+                                                    </div>
+                                                </div>
+                                                <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 flex-shrink-0">
+                                                    {t('admin.pending')}
+                                                </Badge>
+                                            </div>
+                                            <Badge variant="secondary" className="text-xs">
+                                                {countChanges(suggestion)} changes proposed
+                                            </Badge>
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <User className="h-3 w-3" />
+                                                    <span className="truncate">
+                                                        {suggestion.submitAnonymously
+                                                            ? t('playground.anonymousSubmission')
+                                                            : suggestion.createdBy?.name || suggestion.createdBy?.email || `User #${suggestion.createdById}`
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <span className="flex-shrink-0">{new Date(suggestion.createdAt).toLocaleDateString('en-GB')}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 border-t pt-3">
+                                                <Button variant="outline" size="sm" onClick={() => handleEditSuggestionReview(suggestion)}>
+                                                    <Edit className="mr-1 h-3 w-3" />
+                                                    {t('admin.reviewButton')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     )}

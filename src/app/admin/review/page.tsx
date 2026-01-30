@@ -25,9 +25,9 @@ export default async function ReviewPage() {
     ]);
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold">{getTranslation(defaultLocale, 'admin.reviewPlaygroundSubmissions')}</h1>
+        <div className="container mx-auto px-4 py-6 sm:px-6 sm:py-8">
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold sm:text-3xl">{getTranslation(defaultLocale, 'admin.reviewPlaygroundSubmissions')}</h1>
                 <p className="text-muted-foreground mt-2">
                     {getTranslation(defaultLocale, 'admin.reviewSubmissionsDescription')}
                 </p>

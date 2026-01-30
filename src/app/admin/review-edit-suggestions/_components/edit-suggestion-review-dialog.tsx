@@ -133,7 +133,7 @@ function EquipmentReviewSelector({
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-green-50">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         {/* Current Equipment */}
         <div>
           <h4 className="font-medium text-red-700 mb-2">{t('admin.currentEquipment')} ({currentEquipment.length})</h4>
@@ -908,7 +908,7 @@ export default function EditSuggestionReviewDialog({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between gap-4 border-t pt-4">
+        <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
             variant="outline"

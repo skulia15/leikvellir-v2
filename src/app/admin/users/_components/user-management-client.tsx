@@ -163,149 +163,266 @@ export default function UserManagementClient() {
 
     return (
         <div className="space-y-4">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>{t('admin.userTable')}</TableHead>
-                        <TableHead>{t('admin.email')}</TableHead>
-                        <TableHead>{t('admin.role')}</TableHead>
-                        <TableHead>{t('admin.status')}</TableHead>
-                        <TableHead>{t('admin.joined')}</TableHead>
-                        <TableHead>{t('admin.actions')}</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {users?.map((user) => (
-                        <TableRow key={user.id}>
-                            <TableCell>
-                                <div className="flex items-center gap-3">
-                                    {user.image && (
-                                        <Image
-                                            src={user.image}
-                                            alt={user.name ?? "User"}
-                                            className="h-8 w-8 rounded-full"
-                                            width={32}
-                                            height={32}
-                                        />
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{t('admin.userTable')}</TableHead>
+                            <TableHead>{t('admin.email')}</TableHead>
+                            <TableHead>{t('admin.role')}</TableHead>
+                            <TableHead>{t('admin.status')}</TableHead>
+                            <TableHead>{t('admin.joined')}</TableHead>
+                            <TableHead>{t('admin.actions')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users?.map((user) => (
+                            <TableRow key={user.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        {user.image && (
+                                            <Image
+                                                src={user.image}
+                                                alt={user.name ?? "User"}
+                                                className="h-8 w-8 rounded-full"
+                                                width={32}
+                                                height={32}
+                                            />
+                                        )}
+                                        <div>
+                                            <div className="font-medium">{user.name ?? "Unknown"}</div>
+                                            {user.id === currentUser?.id && (
+                                                <div className="text-xs text-muted-foreground">{t('admin.youIndicator')}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="text-sm">{user.email}</div>
+                                    {user.email?.includes("@example.com") && (
+                                        <Badge variant="outline" className="text-xs">
+                                            {t('admin.demo')}
+                                        </Badge>
                                     )}
-                                    <div>
-                                        <div className="font-medium">{user.name ?? "Unknown"}</div>
-                                        {user.id === currentUser?.id && (
-                                            <div className="text-xs text-muted-foreground">{t('admin.youIndicator')}</div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {getRoleBadge(user.role)}
+                                        {user.id !== currentUser?.id && (
+                                            <Select
+                                                value={user.role}
+                                                onValueChange={(newRole: UserRole) =>
+                                                    handleRoleChange(user.id, newRole)
+                                                }
+                                                disabled={updateRoleMutation.isPending}
+                                            >
+                                                <SelectTrigger className="w-32 h-8">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="user">{t('admin.userRole')}</SelectItem>
+                                                    <SelectItem value="admin">{t('admin.admin')}</SelectItem>
+                                                    <SelectItem value="super_admin">{t('admin.superAdmin')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         )}
                                     </div>
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="text-sm">{user.email}</div>
-                                {user.email?.includes("@example.com") && (
-                                    <Badge variant="outline" className="text-xs">
-                                        {t('admin.demo')}
-                                    </Badge>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex items-center gap-2">
-                                    {getRoleBadge(user.role)}
-                                    {user.id !== currentUser?.id && (
-                                        <Select
-                                            value={user.role}
-                                            onValueChange={(newRole: UserRole) =>
-                                                handleRoleChange(user.id, newRole)
-                                            }
-                                            disabled={updateRoleMutation.isPending}
-                                        >
-                                            <SelectTrigger className="w-32 h-8">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="user">{t('admin.userRole')}</SelectItem>
-                                                <SelectItem value="admin">{t('admin.admin')}</SelectItem>
-                                                <SelectItem value="super_admin">{t('admin.superAdmin')}</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                </div>
-                            </TableCell>
-                            <TableCell>{getStatusBadge(user)}</TableCell>
-                            <TableCell>
-                                <div className="text-sm">
-                                    {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex items-center gap-2">
-                                    {user.id !== currentUser?.id && (
-                                        <>
-                                            {user.isBanned ? (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleUnbanUser(user.id)}
-                                                    disabled={unbanUserMutation.isPending}
-                                                >
-                                                    <UserCheck className="h-4 w-4 mr-1" />
-                                                    {t('admin.unban')}
-                                                </Button>
-                                            ) : (
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() => setSelectedUserId(user.id)}
-                                                            disabled={user.role === "super_admin"}
-                                                        >
-                                                            <Ban className="h-4 w-4 mr-1" />
-                                                            {t('admin.banUser')}
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>{t('admin.banUserTitle')}</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                {t('admin.banUserDescription', { name: user.name ?? user.email })}
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <div className="space-y-4">
-                                                            <div>
-                                                                <Label htmlFor="banReason">{t('admin.reasonForBan')}</Label>
-                                                                <Input
-                                                                    id="banReason"
-                                                                    value={banReason}
-                                                                    onChange={(e) => setBanReason(e.target.value)}
-                                                                    placeholder={t('admin.enterBanReason')}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel
-                                                                onClick={() => {
-                                                                    setBanReason("");
-                                                                    setSelectedUserId(null);
-                                                                }}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(user)}</TableCell>
+                                <TableCell>
+                                    <div className="text-sm">
+                                        {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {user.id !== currentUser?.id && (
+                                            <>
+                                                {user.isBanned ? (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleUnbanUser(user.id)}
+                                                        disabled={unbanUserMutation.isPending}
+                                                    >
+                                                        <UserCheck className="h-4 w-4 mr-1" />
+                                                        {t('admin.unban')}
+                                                    </Button>
+                                                ) : (
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button
+                                                                variant="destructive"
+                                                                size="sm"
+                                                                onClick={() => setSelectedUserId(user.id)}
+                                                                disabled={user.role === "super_admin"}
                                                             >
-                                                                {t('common.cancel')}
-                                                            </AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                onClick={handleBanUser}
-                                                                disabled={!banReason.trim() || banUserMutation.isPending}
-                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                            >
+                                                                <Ban className="h-4 w-4 mr-1" />
                                                                 {t('admin.banUser')}
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            )}
-                                        </>
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>{t('admin.banUserTitle')}</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    {t('admin.banUserDescription', { name: user.name ?? user.email })}
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <div className="space-y-4">
+                                                                <div>
+                                                                    <Label htmlFor="banReason">{t('admin.reasonForBan')}</Label>
+                                                                    <Input
+                                                                        id="banReason"
+                                                                        value={banReason}
+                                                                        onChange={(e) => setBanReason(e.target.value)}
+                                                                        placeholder={t('admin.enterBanReason')}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setBanReason("");
+                                                                        setSelectedUserId(null);
+                                                                    }}
+                                                                >
+                                                                    {t('common.cancel')}
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    onClick={handleBanUser}
+                                                                    disabled={!banReason.trim() || banUserMutation.isPending}
+                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                >
+                                                                    {t('admin.banUser')}
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-3">
+                {users?.map((user) => (
+                    <div key={user.id} className="rounded-xl border bg-card p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                            {user.image && (
+                                <Image
+                                    src={user.image}
+                                    alt={user.name ?? "User"}
+                                    className="h-10 w-10 rounded-full"
+                                    width={40}
+                                    height={40}
+                                />
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <div className="font-medium truncate">
+                                    {user.name ?? "Unknown"}
+                                    {user.id === currentUser?.id && (
+                                        <span className="text-xs text-muted-foreground ml-1">({t('admin.youIndicator')})</span>
                                     )}
                                 </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                                <div className="text-sm text-muted-foreground truncate">{user.email}</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {getRoleBadge(user.role)}
+                            {getStatusBadge(user)}
+                            {user.email?.includes("@example.com") && (
+                                <Badge variant="outline" className="text-xs">{t('admin.demo')}</Badge>
+                            )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                            {t('admin.joined')}: {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
+                        </div>
+                        {user.id !== currentUser?.id && (
+                            <div className="space-y-2 border-t pt-3">
+                                <Select
+                                    value={user.role}
+                                    onValueChange={(newRole: UserRole) => handleRoleChange(user.id, newRole)}
+                                    disabled={updateRoleMutation.isPending}
+                                >
+                                    <SelectTrigger className="w-full h-9">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="user">{t('admin.userRole')}</SelectItem>
+                                        <SelectItem value="admin">{t('admin.admin')}</SelectItem>
+                                        <SelectItem value="super_admin">{t('admin.superAdmin')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {user.isBanned ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => handleUnbanUser(user.id)}
+                                        disabled={unbanUserMutation.isPending}
+                                    >
+                                        <UserCheck className="h-4 w-4 mr-1" />
+                                        {t('admin.unban')}
+                                    </Button>
+                                ) : (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => setSelectedUserId(user.id)}
+                                                disabled={user.role === "super_admin"}
+                                            >
+                                                <Ban className="h-4 w-4 mr-1" />
+                                                {t('admin.banUser')}
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>{t('admin.banUserTitle')}</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    {t('admin.banUserDescription', { name: user.name ?? user.email })}
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <Label htmlFor="banReasonMobile">{t('admin.reasonForBan')}</Label>
+                                                    <Input
+                                                        id="banReasonMobile"
+                                                        value={banReason}
+                                                        onChange={(e) => setBanReason(e.target.value)}
+                                                        placeholder={t('admin.enterBanReason')}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel onClick={() => { setBanReason(""); setSelectedUserId(null); }}>
+                                                    {t('common.cancel')}
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={handleBanUser}
+                                                    disabled={!banReason.trim() || banUserMutation.isPending}
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                >
+                                                    {t('admin.banUser')}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 } 

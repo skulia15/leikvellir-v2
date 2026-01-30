@@ -23,9 +23,9 @@ export default async function AdminPage() {
 
     return (
         <div className="bg-background">
-            <div className="container mx-auto py-6">
+            <div className="container mx-auto px-4 py-6 sm:px-6 sm:py-8">
                 <div className="mb-6">
-                    <h1 className="mb-2 text-3xl font-bold">{getTranslation(defaultLocale, 'admin.adminDashboard')}</h1>
+                    <h1 className="mb-2 text-2xl font-bold sm:text-3xl">{getTranslation(defaultLocale, 'admin.adminDashboard')}</h1>
                     <p className="text-muted-foreground">
                         {getTranslation(defaultLocale, 'admin.adminDashboardDescription')}
                     </p>

@@ -24,9 +24,9 @@ export default async function UserManagementPage() {
     }
 
     return (
-        <div className="container mx-auto p-6">
+        <div className="container mx-auto px-4 py-6 sm:px-6 sm:py-8">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold">{getTranslation(defaultLocale, 'admin.userManagement')}</h1>
+                <h1 className="text-2xl font-bold sm:text-3xl">{getTranslation(defaultLocale, 'admin.userManagement')}</h1>
                 <p className="text-muted-foreground">
                     {getTranslation(defaultLocale, 'admin.userManagementDescription')}
                 </p>
