@@ -47,11 +47,6 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/__tests__",
-    "src/test",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "vitest.config.ts"
+    "node_modules"
   ]
 }
