@@ -75,24 +75,9 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                 </Marker>
             </Map>
 
-            <div className="absolute top-2 right-2 z-10 space-y-2">
+            <div className="absolute top-2 right-2 z-10">
                 <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={handleResetPosition}
-                                className="shadow-md"
-                                aria-label={t('map.resetPosition')}
-                            >
-                                <LocateFixed className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">
-                            {t('map.resetPosition')}
-                        </TooltipContent>
-                    </Tooltip>
+                <div className="flex flex-col gap-2">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
@@ -109,6 +94,23 @@ export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailM
                             {t('map.viewLargerMap')}
                         </TooltipContent>
                     </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={handleResetPosition}
+                                className="shadow-md"
+                                aria-label={t('map.resetPosition')}
+                            >
+                                <LocateFixed className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                            {t('map.resetPosition')}
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 </TooltipProvider>
             </div>
         </div>
