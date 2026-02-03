@@ -135,6 +135,8 @@
     "additionalInformation": "Additional Information",
     "browseAllPlaygrounds": "Browse all playgrounds",
     "exploreMore": "Explore more playgrounds",
+    "nearbyPlaygrounds": "Nearby Playgrounds",
+    "exploreOnMap": "Explore on map",
     "moreInMunicipality": "More playgrounds in {{municipality}}",
     "unknown": "Unknown",
     "playgroundsFound": "Playgrounds found on the map",
