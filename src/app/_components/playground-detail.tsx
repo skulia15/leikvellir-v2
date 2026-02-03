@@ -24,7 +24,8 @@ import {
   RotateCcw,
   Sparkles,
   Star,
-  Puzzle
+  Puzzle,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -47,6 +48,8 @@ import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 import { getMunicipalityDative } from "~/lib/icelandic-declension";
+import NearbyPlaygrounds from "./nearby-playgrounds";
+import { api } from "~/trpc/react";
 
 interface PlaygroundDetailProps {
   playground: Playground;
@@ -64,6 +67,9 @@ export default function PlaygroundDetail({
   const t = useT();
   const currentLanguage = useLocale().locale;
   const dateLocale = currentLanguage === 'en' ? 'en-GB' : currentLanguage;
+
+  // Fetch all playgrounds for the "nearby" section
+  const { data: allPlaygrounds } = api.playground.getAll.useQuery();
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -467,9 +473,14 @@ export default function PlaygroundDetail({
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Interactive Map */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('playground.location')}</CardTitle>
+            <Card className="overflow-hidden border-border/60">
+              <CardHeader className="p-4 pb-3">
+                <CardTitle className="flex items-center gap-2.5 text-base">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-terrain-water/10">
+                    <MapPin className="h-4 w-4 text-terrain-water" />
+                  </span>
+                  <span>{t('playground.location')}</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <PlaygroundDetailMap
@@ -502,11 +513,16 @@ export default function PlaygroundDetail({
 
 
             {/* Additional Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('playground.additionalInformation')}</CardTitle>
+            <Card className="overflow-hidden border-border/60">
+              <CardHeader className="p-4 pb-3">
+                <CardTitle className="flex items-center gap-2.5 text-base">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-terrain-gold/10">
+                    <Info className="h-4 w-4 text-terrain-gold" />
+                  </span>
+                  <span>{t('playground.additionalInformation')}</span>
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 px-4 pb-4 pt-0">
                 <div className="space-y-2 text-sm">
                   {/* <div className="flex justify-between">
                     <span className="text-muted-foreground">
@@ -564,6 +580,15 @@ export default function PlaygroundDetail({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Nearby Playgrounds */}
+            {allPlaygrounds && allPlaygrounds.length > 1 && (
+              <NearbyPlaygrounds
+                currentPlayground={playground}
+                allPlaygrounds={allPlaygrounds}
+                limit={3}
+              />
+            )}
           </div>
         </div>
 
