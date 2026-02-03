@@ -2,7 +2,7 @@ import { type Metadata } from 'next';
 import { getBaseUrl } from './base-url';
 
 const BASE_URL = getBaseUrl();
-const DEFAULT_TITLE = 'Leiksvæði | Leikvellir á Íslandi';
+const DEFAULT_TITLE = 'Leiksvæði - Uppgötvaðu og kortleggðu leikvelli á Íslandi';
 const DEFAULT_DESCRIPTION = 'Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna.';
 
 interface SEOProps {

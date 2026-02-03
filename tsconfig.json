@@ -52,6 +52,8 @@
     "src/test",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "e2e",
+    "playwright-report"
   ]
 }
