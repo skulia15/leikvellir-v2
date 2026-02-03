@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
-import { Fira_Sans, Outfit, Vollkorn } from "next/font/google";
+import { Fira_Sans, Outfit } from "next/font/google";
 import { type Metadata, type Viewport } from "next";
 import { Toaster } from "sonner";
 
@@ -30,12 +30,6 @@ const outfit = Outfit({
   display: "swap",
 });
 
-const vollkorn = Vollkorn({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-vollkorn",
-  display: "swap",
-});
-
 export const metadata: Metadata = generateSEOMetadata();
 
 export const viewport: Viewport = {
@@ -49,7 +43,7 @@ export default async function RootLayout({
   const session = await getServerAuthSession();
 
   return (
-    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable} ${vollkorn.variable}`}>
+    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable}`}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />

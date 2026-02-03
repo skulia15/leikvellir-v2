@@ -9,7 +9,7 @@ export default {
       fontFamily: {
         sans: ["var(--font-outfit)", "var(--font-fira-sans)", ...fontFamily.sans],
         "fira-sans": ["var(--font-fira-sans)", ...fontFamily.sans],
-        display: ["var(--font-vollkorn)", ...fontFamily.serif],
+        display: ["var(--font-outfit)", ...fontFamily.sans],
       },
       borderRadius: {
         lg: "var(--radius)",
