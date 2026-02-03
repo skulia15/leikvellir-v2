@@ -54,3 +54,7 @@ yarn-error.log*
 
 .pnpm-store/
 backup_*.sql
+
+# Playwright
+playwright-report/
+test-results/
