@@ -129,6 +129,7 @@ export function MapboxMap({
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const previousPlaygroundsRef = useRef<
     (Playground & { distance?: number | null })[]
   >([]);
@@ -266,12 +267,17 @@ export function MapboxMap({
     }
   }, [userLocation, shouldCenterOnUserLocation, mapCenter]);
 
-  // Prevent auto-centering when explicit center is set
+  // Fly to explicit map center when provided (e.g., from URL deep link)
   useEffect(() => {
-    if (mapCenter) {
+    if (mapCenter && mapRef.current && isMapLoaded) {
+      mapRef.current.flyTo({
+        center: [mapCenter.lng, mapCenter.lat],
+        zoom: 15,
+        duration: 1500,
+      });
       hasAutocentered.current = true;
     }
-  }, [mapCenter]);
+  }, [mapCenter, isMapLoaded]);
 
   // Extract bounds from a map instance
   const updateBoundsFromMap = useCallback((map: mapboxgl.Map) => {
@@ -291,6 +297,7 @@ export function MapboxMap({
   const handleLoad = useCallback(
     (evt: { target: mapboxgl.Map }) => {
       updateBoundsFromMap(evt.target);
+      setIsMapLoaded(true);
     },
     [updateBoundsFromMap],
   );
