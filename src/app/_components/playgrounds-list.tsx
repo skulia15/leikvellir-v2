@@ -42,7 +42,11 @@ function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
 }
 
 export default function PlaygroundsList({ playgrounds, isLoading = false, initialMunicipality }: PlaygroundsListProps) {
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
+
+  // Default to proximity sorting if location is available, otherwise newest
+  const [sortBy, setSortBy] = useState<SortOption>(userLocation ? "proximity" : "newest");
+  const [hasSetInitialSort, setHasSetInitialSort] = useState(false);
   const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<EquipmentCategory>>(new Set());
   const [bouncyPillowActive, setBouncyPillowActive] = useState(false);
@@ -51,7 +55,13 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
   const [selectedMunicipality, setSelectedMunicipality] = useState<string>(initialMunicipality ?? "__all__");
   const t = useT();
 
-  const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
+  // Switch to proximity sorting when location becomes available (only once)
+  useEffect(() => {
+    if (userLocation && !hasSetInitialSort) {
+      setSortBy("proximity");
+      setHasSetInitialSort(true);
+    }
+  }, [userLocation, hasSetInitialSort]);
 
   // Sort playgrounds based on selected option
   useEffect(() => {
@@ -222,7 +232,13 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
               </div>
               <Select
                 value={sortBy}
-                onValueChange={(value: SortOption) => setSortBy(value)}
+                onValueChange={(value: SortOption) => {
+                  setSortBy(value);
+                  // Request location if user selects proximity sort without location
+                  if (value === "proximity" && !userLocation) {
+                    requestLocation();
+                  }
+                }}
               >
                 <SelectTrigger className="w-48">
                   <SelectValue />
@@ -230,8 +246,8 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
                 <SelectContent>
                   <SelectItem value="newest">{t('playground.newestFirst')}</SelectItem>
                   <SelectItem value="name">{t('playground.nameAZ')}</SelectItem>
-                  <SelectItem value="proximity" disabled={!userLocation}>
-                    {t('playground.distanceFromYou')} {!userLocation && t('playground.locationNeeded')}
+                  <SelectItem value="proximity">
+                    {t('playground.distanceFromYou')}
                   </SelectItem>
                   <SelectItem value="popularity" disabled>
                     {t('playground.popularity')} {t('playground.comingSoon')}
@@ -268,8 +284,8 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
               )}
             </div>
 
-            {/* Location Permission */}
-            {permission === "prompt" && (
+            {/* Location Permission - show button unless location is available */}
+            {!userLocation && (
               <Button
                 variant="outline"
                 size="sm"
