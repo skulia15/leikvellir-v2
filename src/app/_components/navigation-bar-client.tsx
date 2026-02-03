@@ -61,7 +61,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
 
     return (
         <nav className="fixed left-0 right-0 top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border">
-            <div className="container mx-auto flex h-16 items-center justify-between pr-2 md:px-4">
+            <div className="max-w-screen-2xl mx-auto flex h-16 items-center justify-between px-2 sm:px-6 lg:px-8">
                 {/* Left side - Logo, Admin Badge, and Navigation Links */}
                 <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">

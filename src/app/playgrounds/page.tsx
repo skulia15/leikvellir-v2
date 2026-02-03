@@ -33,7 +33,7 @@ export default function PlaygroundsPage() {
 
   return (
     <div className="bg-background">
-      <div className="container mx-auto py-6">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
