@@ -100,23 +100,6 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
 
     const content = (
         <div className="space-y-4">
-            {variant === "card" && (
-                <div className="flex items-center gap-2 mb-4">
-                    <PlaygroundEquipmentIcon className="h-5 w-5" />
-                    <span className="font-semibold">{t('equipment.playgroundEquipment')}</span>
-                    {selectedCount > 0 && (
-                        <Badge variant="secondary">
-                            {selectedCount} {t('equipment.selected')}
-                        </Badge>
-                    )}
-                </div>
-            )}
-
-            {/* Description text above the selection */}
-            <div className="text-sm text-muted-foreground mb-4">
-                {t('forms.selectEquipmentDescription')}
-            </div>
-
             {Object.entries(equipmentByCategory).map(([category, categoryEquipment]) => {
                 const isExpanded = expandedCategories.has(category as EquipmentCategory);
                 const categorySelectedCount = categoryEquipment.filter(eq =>

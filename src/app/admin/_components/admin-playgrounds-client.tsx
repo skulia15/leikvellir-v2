@@ -29,7 +29,7 @@ import { Pencil, Trash2, Eye, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useT } from "~/lib/i18n";
-import EditPlaygroundDialog from "./edit-playground-dialog";
+import PlaygroundFormDialog from "~/components/playground-form-dialog";
 
 export default function AdminPlaygroundsClient() {
     const [editingPlayground, setEditingPlayground] = useState<Playground | null>(null);
@@ -313,11 +313,12 @@ export default function AdminPlaygroundsClient() {
 
             {/* Edit Dialog */}
             {editingPlayground && (
-                <EditPlaygroundDialog
+                <PlaygroundFormDialog
                     playground={editingPlayground}
                     open={!!editingPlayground}
                     onOpenChange={(open: boolean) => !open && setEditingPlayground(null)}
-                    onPlaygroundDeleted={() => setEditingPlayground(null)}
+                    onDeleted={() => setEditingPlayground(null)}
+                    mode="edit-approved"
                 />
             )}
         </>

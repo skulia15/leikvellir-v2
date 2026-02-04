@@ -36,7 +36,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
-import EditPlaygroundDialog from "~/app/admin/_components/edit-playground-dialog";
+import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import SuggestEditDialog from "./suggest-edit-dialog";
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
@@ -638,10 +638,11 @@ export default function PlaygroundDetail({
 
       {/* Edit Dialog */}
       {isAdminMode && isEditDialogOpen && (
-        <EditPlaygroundDialog
+        <PlaygroundFormDialog
           playground={playground}
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
+          mode="edit-approved"
         />
       )}
 

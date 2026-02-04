@@ -2,6 +2,8 @@
   "common": {
     "loading": "Hleður...",
     "save": "Vista",
+    "saving": "Vistar...",
+    "saveChanges": "Vista breytingar",
     "cancel": "Hætta við",
     "delete": "Eyða",
     "edit": "Breyta",
@@ -34,7 +36,8 @@
     "signIn": "Skrá inn",
     "signOut": "Skrá út",
     "profile": "Notendaupplýsingar",
-    "contact": "Hafa samband"
+    "contact": "Hafa samband",
+    "mySubmissions": "Mínar innsendingar"
   },
   "auth": {
     "welcomeToLeiksvaedi": "Velkomin á Leiksvæði",
@@ -204,8 +207,6 @@
     "editFieldsToSuggestChanges": "Breyttu reitunum hér að ofan til að leggja til breytingar",
     "onlyModifiedFieldsIncluded": "Aðeins reitirnir sem þú breytir verða teknir með í tillögunni",
     "adminWillReviewChanges": "Stjórnandi mun fara yfir breytingarnar þínar áður en þær eru samþykktar",
-    "listView": "Listi",
-    "mapView": "Kort",
     "searchPlaceholder": "Leita að leiksvæðum..."
   },
   "equipment": {
@@ -400,7 +401,18 @@
     "approved": "samþykkt",
     "clickToToggleImageApproval": "Smelltu á myndir til að skipta um samþykkisstöðu",
     "removedImages": "Fjarlægðar myndir",
-    "markedForRemoval": "Merkt til að fjarlægja"
+    "markedForRemoval": "Merkt til að fjarlægja",
+    "playgroundUpdated": "Leiksvæði uppfært",
+    "playgroundApproved": "Leiksvæði samþykkt",
+    "playgroundRejected": "Leiksvæði hafnað",
+    "failedToReview": "Ekki tókst að yfirfara leiksvæði",
+    "submissionInfo": "Upplýsingar um innsendingu",
+    "confirmReject": "Staðfesta höfnun",
+    "rejectionReasonRequired": "Vinsamlegast gefðu ástæðu fyrir höfnun",
+    "editPlayground": "Breyta leiksvæði",
+    "editPlaygroundDescription": "Breyttu upplýsingum um leiksvæðið hér að neðan.",
+    "delete": "Eyða",
+    "deletePlayground": "Eyða leiksvæði"
   },
   "forms": {
     "useCurrentLocation": "Nota þína staðsetningu",
@@ -474,7 +486,7 @@
     "uploadPlaygroundImages": "Hlaða upp myndum af leiksvæði",
     "dragDropOrClick": "Dragðu og slepptu myndum eða smelltu til að velja",
     "maxFilesCompression": "Mest {{maxFiles}} skrár",
-    "imagesCoverSelection": "Myndir og forsíðumynd",
+    "imagesCoverSelection": "Val á forsíðumynd",
     "uploadedImages": "Upphlaðnar myndir",
     "clickImageSetCover": "Smelltu á mynd til að velja sem forsíðumynd",
     "imageAlt": "Mynd {{index}}",
@@ -757,7 +769,9 @@
     "selectedPlaygroundLocation": "Valin staðsetning leiksvæðis",
     "clickToSetLocation": "Smelltu á kortið til að velja staðsetningu",
     "resetPosition": "Endurstilla staðsetningu",
-    "viewLargerMap": "Opna stærra kort"
+    "viewLargerMap": "Opna stærra kort",
+    "satelliteView": "Gervihnattamynd",
+    "mapView": "Kortayfirlit"
   },
   "notFound": {
     "pageNotFound": "Síða fannst ekki",
@@ -766,5 +780,48 @@
     "browsePlaygrounds": "Skoða leiksvæði",
     "playgroundNotFound": "Leiksvæði fannst ekki",
     "playgroundNotFoundDescription": "Við gátum ekki fundið leiksvæðið sem þú ert að leita að."
+  },
+  "mySubmissions": {
+    "title": "Mínar innsendingar",
+    "description": "Skoðaðu og breyttu framlögum þínum til leiksvæða",
+    "myPlaygrounds": "Mín leiksvæði",
+    "myEditSuggestions": "Mínar breytingartillögur",
+    "noSubmissions": "Engar innsendingar ennþá",
+    "noSubmissionsDescription": "Þú hefur ekki sent inn nein leiksvæði ennþá. Byrjaðu að leggja þitt af mörkum!",
+    "noEditSuggestions": "Engar breytingartillögur",
+    "noEditSuggestionsDescription": "Þú hefur ekki lagt til neinar breytingar á leiksvæðum ennþá.",
+    "addPlayground": "Bæta við leiksvæði",
+    "status": {
+      "pending": "Bíður yfirferðar",
+      "approved": "Samþykkt",
+      "rejected": "Hafnað"
+    },
+    "rejectionReason": "Ástæða höfnunar",
+    "editSubmission": "Breyta",
+    "viewSubmission": "Skoða",
+    "viewPlayground": "Skoða leiksvæði",
+    "submissionDetails": "Innsending",
+    "suggestionDetails": "Tillaga",
+    "awaitingReview": "Bíður yfirferðar",
+    "awaitingReviewDescription": "Innsending þín er í yfirferð hjá teyminu okkar. Þú getur enn breytt henni þar til hún er yfirfarin.",
+    "suggestionAwaitingReviewDescription": "Breytingartillaga þín er í yfirferð hjá teyminu okkar. Þú getur enn breytt henni þar til hún er yfirfarin.",
+    "submissionApproved": "Innsending samþykkt",
+    "submissionApprovedDescription": "Leiksvæðið þitt hefur verið samþykkt og er nú á síðunni!",
+    "suggestionApproved": "Breytingartillaga samþykkt",
+    "suggestionApprovedDescription": "Tillögur þínar hafa verið samþykktar og bættar við leiksvæðið.",
+    "submissionRejected": "Innsendingu hafnað",
+    "suggestionRejected": "Breytingartillögu hafnað",
+    "editSubmissionDescription": "Uppfærðu innsendinguna þína áður en hún er yfirfarin.",
+    "editSuggestion": "Breyta tillögu",
+    "editSuggestionDescription": "Uppfærðu breytingartillögu þína fyrir",
+    "editSuggestionFor": "Breytingartillaga fyrir",
+    "targetPlayground": "Leiksvæði",
+    "proposedChanges": "Tillögur að breytingum",
+    "noChanges": "Engar breytingar lagðar til",
+    "suggestedEquipment": "Tillaga að leiktækjum",
+    "leaveEmptyToKeepOriginal": "Skilaðu auðu til að halda upprunalegu gildi",
+    "updateSuccess": "Innsending þín hefur verið uppfærð",
+    "updateError": "Ekki tókst að uppfæra innsendinguna. Vinsamlegast reyndu aftur.",
+    "alreadyReviewedError": "Þessi innsending hefur þegar verið yfirfarin og er ekki lengur hægt að breyta henni."
   }
 }

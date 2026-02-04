@@ -2,6 +2,8 @@
   "common": {
     "loading": "Ładowanie...",
     "save": "Zapisz",
+    "saving": "Zapisywanie...",
+    "saveChanges": "Zapisz zmiany",
     "cancel": "Anuluj",
     "delete": "Usuń",
     "edit": "Edytuj",
@@ -34,7 +36,8 @@
     "signIn": "Zaloguj się",
     "signOut": "Wyloguj się",
     "profile": "Profil",
-    "contact": "Kontakt"
+    "contact": "Kontakt",
+    "mySubmissions": "Moje zgłoszenia"
   },
   "auth": {
     "welcomeToLeiksvaedi": "Witamy w Leiksvæði",
@@ -206,8 +209,6 @@
     "editFieldsToSuggestChanges": "Edytuj powyższe pola, aby zaproponować zmiany",
     "onlyModifiedFieldsIncluded": "Tylko pola, które zmodyfikujesz, zostaną uwzględnione w Twojej propozycji",
     "adminWillReviewChanges": "Administrator przejrzy Twoje zmiany przed ich zastosowaniem",
-    "listView": "Lista",
-    "mapView": "Mapa",
     "searchPlaceholder": "Szukaj placów zabaw..."
   },
   "equipment": {
@@ -407,7 +408,18 @@
     "approved": "zatwierdzone",
     "clickToToggleImageApproval": "Kliknij na obrazy, aby przełączyć status zatwierdzenia",
     "removedImages": "Usunięte obrazy",
-    "markedForRemoval": "Oznaczone do usunięcia"
+    "markedForRemoval": "Oznaczone do usunięcia",
+    "playgroundUpdated": "Plac zabaw zaktualizowany",
+    "playgroundApproved": "Plac zabaw zatwierdzony",
+    "playgroundRejected": "Plac zabaw odrzucony",
+    "failedToReview": "Nie udało się zrecenzować placu zabaw",
+    "submissionInfo": "Informacje o zgłoszeniu",
+    "confirmReject": "Potwierdź odrzucenie",
+    "rejectionReasonRequired": "Podaj powód odrzucenia",
+    "editPlayground": "Edytuj plac zabaw",
+    "editPlaygroundDescription": "Edytuj szczegóły placu zabaw poniżej.",
+    "delete": "Usuń",
+    "deletePlayground": "Usuń plac zabaw"
   },
   "forms": {
     "useCurrentLocation": "Użyj obecnej lokalizacji",
@@ -481,7 +493,7 @@
     "uploadPlaygroundImages": "Prześlij zdjęcia placu zabaw",
     "dragDropOrClick": "Przeciągnij i upuść obrazy lub kliknij, aby przeglądać",
     "maxFilesCompression": "Maksymalnie {{maxFiles}} plików",
-    "imagesCoverSelection": "Obrazy i wybór okładki",
+    "imagesCoverSelection": "Wybór obrazu okładki",
     "uploadedImages": "Przesłane obrazy",
     "clickImageSetCover": "Kliknij obraz, aby ustawić jako okładkę",
     "imageAlt": "Obraz {{index}}",
@@ -764,7 +776,9 @@
     "selectedPlaygroundLocation": "Wybrana lokalizacja placu zabaw",
     "clickToSetLocation": "Kliknij na mapę, aby ustawić lokalizację",
     "resetPosition": "Resetuj pozycję",
-    "viewLargerMap": "Otwórz większą mapę"
+    "viewLargerMap": "Otwórz większą mapę",
+    "satelliteView": "Widok satelitarny",
+    "mapView": "Widok mapy"
   },
   "notFound": {
     "pageNotFound": "Strona nie została znaleziona",

@@ -2,6 +2,8 @@
   "common": {
     "loading": "Loading...",
     "save": "Save",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -34,7 +36,8 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "profile": "Profile",
-    "contact": "Contact"
+    "contact": "Contact",
+    "mySubmissions": "My Submissions"
   },
   "auth": {
     "welcomeToLeiksvaedi": "Welcome to Leiksvæði",
@@ -203,8 +206,6 @@
     "editFieldsToSuggestChanges": "Edit the fields above to suggest changes",
     "onlyModifiedFieldsIncluded": "Only the fields you modify will be included in your suggestion",
     "adminWillReviewChanges": "An administrator will review your changes before they are applied",
-    "listView": "List",
-    "mapView": "Map",
     "searchPlaceholder": "Search playgrounds..."
   },
   "equipment": {
@@ -400,7 +401,18 @@
     "approved": "approved",
     "clickToToggleImageApproval": "Click on images to toggle approval status",
     "removedImages": "Removed Images",
-    "markedForRemoval": "Marked for removal"
+    "markedForRemoval": "Marked for removal",
+    "playgroundUpdated": "Playground updated successfully",
+    "playgroundApproved": "Playground approved successfully",
+    "playgroundRejected": "Playground rejected",
+    "failedToReview": "Failed to review playground",
+    "submissionInfo": "Submission Info",
+    "confirmReject": "Confirm Reject",
+    "rejectionReasonRequired": "Please provide a rejection reason",
+    "editPlayground": "Edit Playground",
+    "editPlaygroundDescription": "Edit the playground details below.",
+    "delete": "Delete",
+    "deletePlayground": "Delete Playground"
   },
   "forms": {
     "useCurrentLocation": "Use Current Location",
@@ -476,7 +488,7 @@
     "dragDropOrClick": "Drag and drop images or click to browse",
     "maxFilesCompression": "Max {{maxFiles}} files",
     "maxFilesPerBatchCompression": "Max {{maxFiles}} files per upload batch",
-    "imagesCoverSelection": "Images & Cover Selection",
+    "imagesCoverSelection": "Cover image selection",
     "uploadedImages": "Uploaded Images",
     "clickImageSetCover": "Click an image to set as cover",
     "imageAlt": "Image {{index}}",
@@ -833,7 +845,9 @@
     "selectedPlaygroundLocation": "Selected playground location",
     "clickToSetLocation": "Click on the map to set location",
     "resetPosition": "Reset position",
-    "viewLargerMap": "View larger map"
+    "viewLargerMap": "View larger map",
+    "satelliteView": "Satellite view",
+    "mapView": "Map view"
   },
   "notFound": {
     "pageNotFound": "Page Not Found",
@@ -842,5 +856,48 @@
     "browsePlaygrounds": "Browse Playgrounds",
     "playgroundNotFound": "Playground Not Found",
     "playgroundNotFoundDescription": "We couldn't find the playground you're looking for."
+  },
+  "mySubmissions": {
+    "title": "My Submissions",
+    "description": "View and manage your playground contributions",
+    "myPlaygrounds": "My Playgrounds",
+    "myEditSuggestions": "My Edit Suggestions",
+    "noSubmissions": "No Submissions Yet",
+    "noSubmissionsDescription": "You haven't submitted any playgrounds yet. Start contributing to the community!",
+    "noEditSuggestions": "No Edit Suggestions",
+    "noEditSuggestionsDescription": "You haven't suggested any edits to playgrounds yet.",
+    "addPlayground": "Add a Playground",
+    "status": {
+      "pending": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "rejectionReason": "Rejection Reason",
+    "editSubmission": "Edit",
+    "viewSubmission": "View",
+    "viewPlayground": "View Playground",
+    "submissionDetails": "Submission",
+    "suggestionDetails": "Suggestion",
+    "awaitingReview": "Awaiting Review",
+    "awaitingReviewDescription": "Your submission is being reviewed by our team. You can still edit it until it's reviewed.",
+    "suggestionAwaitingReviewDescription": "Your edit suggestion is being reviewed by our team. You can still edit it until it's reviewed.",
+    "submissionApproved": "Submission Approved",
+    "submissionApprovedDescription": "Your playground has been approved and is now live on the site!",
+    "suggestionApproved": "Edit Suggestion Approved",
+    "suggestionApprovedDescription": "Your suggested changes have been applied to the playground.",
+    "submissionRejected": "Submission Rejected",
+    "suggestionRejected": "Edit Suggestion Rejected",
+    "editSubmissionDescription": "Update your playground submission before it's reviewed.",
+    "editSuggestion": "Edit Suggestion",
+    "editSuggestionDescription": "Update your edit suggestion for",
+    "editSuggestionFor": "Edit suggestion for",
+    "targetPlayground": "Target Playground",
+    "proposedChanges": "Proposed Changes",
+    "noChanges": "No changes proposed",
+    "suggestedEquipment": "Suggested Equipment",
+    "leaveEmptyToKeepOriginal": "Leave empty to keep the original value",
+    "updateSuccess": "Your submission has been updated successfully",
+    "updateError": "Failed to update your submission. Please try again.",
+    "alreadyReviewedError": "This submission has already been reviewed and can no longer be edited."
   }
 }

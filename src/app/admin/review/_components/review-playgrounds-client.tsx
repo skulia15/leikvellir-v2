@@ -17,7 +17,7 @@ import {
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { toast } from "sonner";
-import ReviewPlaygroundDialog from "./review-playground-dialog";
+import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import EditSuggestionReviewDialog from "../../review-edit-suggestions/_components/edit-suggestion-review-dialog";
 import { useT } from "~/lib/i18n";
 
@@ -510,11 +510,12 @@ export default function ReviewPlaygroundsClient({
 
             {/* Review Dialogs */}
             {selectedPlayground && (
-                <ReviewPlaygroundDialog
+                <PlaygroundFormDialog
                     playground={selectedPlayground}
                     open={isReviewDialogOpen}
                     onOpenChange={setIsReviewDialogOpen}
-                    onReview={refetchSubmissions}
+                    onSuccess={refetchSubmissions}
+                    mode="review"
                 />
             )}
 
