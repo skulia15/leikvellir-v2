@@ -265,19 +265,21 @@ export default function SuggestEditDialog({
                 control={form.control}
                 name="isSchoolGround"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>{t('forms.isSchoolGround')}</FormLabel>
-                      <FormDescription>
-                        {t('forms.isSchoolGroundDescription')}
-                      </FormDescription>
-                    </div>
+                  <FormItem className="space-y-0">
+                    <label className="flex items-start space-x-3 cursor-pointer">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="cursor-pointer">{t('forms.isSchoolGround')}</FormLabel>
+                        <FormDescription>
+                          {t('forms.isSchoolGroundDescription')}
+                        </FormDescription>
+                      </div>
+                    </label>
                   </FormItem>
                 )}
               />
@@ -332,19 +334,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="publiclyAccessible"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.publiclyAccessible')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.publiclyAccessibleDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.publiclyAccessible')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.publiclyAccessibleDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -353,19 +357,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="toddlerFriendly"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.toddlerFriendly')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.toddlerFriendlyDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.toddlerFriendly')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.toddlerFriendlyDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -384,19 +390,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasSeating"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasSeating')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasSeatingDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasSeating')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasSeatingDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -405,19 +413,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasPicnicTable"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasPicnicTable')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasPicnicTableDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasPicnicTable')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasPicnicTableDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -426,19 +436,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasGarbageCan"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasGarbageCan')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasGarbageCanDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasGarbageCan')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasGarbageCanDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -447,19 +459,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasBathroomNearby"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasBathroomNearby')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasBathroomNearbyDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasBathroomNearby')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasBathroomNearbyDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -478,19 +492,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasFencing"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasFencing')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasFencingDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasFencing')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasFencingDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
@@ -499,19 +515,21 @@ export default function SuggestEditDialog({
                   control={form.control}
                   name="hasSoftPlayArea"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>{t('forms.hasSoftPlayArea')}</FormLabel>
-                        <FormDescription className="text-xs">
-                          {t('forms.hasSoftPlayAreaDescription')}
-                        </FormDescription>
-                      </div>
+                    <FormItem className="space-y-0">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="cursor-pointer">{t('forms.hasSoftPlayArea')}</FormLabel>
+                          <FormDescription className="text-xs">
+                            {t('forms.hasSoftPlayAreaDescription')}
+                          </FormDescription>
+                        </div>
+                      </label>
                     </FormItem>
                   )}
                 />
