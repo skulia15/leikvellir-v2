@@ -771,7 +771,12 @@
     "resetPosition": "Endurstilla staðsetningu",
     "viewLargerMap": "Opna stærra kort",
     "satelliteView": "Gervihnattamynd",
-    "mapView": "Kortayfirlit"
+    "mapView": "Kortayfirlit",
+    "expand": "Stækka",
+    "collapse": "Minnka",
+    "searchAddress": "Leita að heimilisfangi...",
+    "selectLocation": "Velja staðsetningu",
+    "coordinates": "Hnit"
   },
   "notFound": {
     "pageNotFound": "Síða fannst ekki",

@@ -7,27 +7,36 @@ export interface GeocodeResult {
   formattedAddress: string | null;
 }
 
-interface GoogleGeocodingResponse {
-  status: string;
-  error_message?: string;
-  results: GoogleGeocodingResult[];
+export interface ForwardGeocodeResult {
+  lat: number;
+  lng: number;
+  municipality: string | null;
+  formattedAddress: string;
 }
 
-interface GoogleGeocodingResult {
-  address_components: AddressComponent[];
-  formatted_address: string;
+// Mapbox Geocoding API response types
+interface MapboxGeocodingResponse {
+  type: string;
+  features: MapboxFeature[];
 }
 
-interface AddressComponent {
-  long_name: string;
-  types: string[];
+interface MapboxFeature {
+  place_name: string;
+  center: [number, number]; // [lng, lat]
+  context?: MapboxContext[];
+}
+
+interface MapboxContext {
+  id: string;
+  text: string;
 }
 
 // Rate limiting configuration
+// Mapbox gives 100k free requests/month, so we can be generous
 const RATE_LIMIT = {
-  maxRequests: 10, // Maximum requests per time window
+  maxRequests: 60, // Maximum requests per time window
   timeWindow: 60 * 1000, // 1 minute in milliseconds
-  cooldownPeriod: 5 * 60 * 1000, // 5 minutes cooldown after hitting limit
+  cooldownPeriod: 30 * 1000, // 30 seconds cooldown after hitting limit
 };
 
 // Rate limiting state
@@ -128,6 +137,9 @@ function setCachedResult(lat: number, lng: number, result: GeocodeResult): void 
   }
 }
 
+/**
+ * Reverse geocode coordinates to address using Mapbox API
+ */
 export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeResult> {
   // Check cache first
   const cachedResult = getCachedResult(lat, lng);
@@ -149,7 +161,8 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
     // Add this request to rate limit tracking
     addRequest();
 
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+    // Use Mapbox Geocoding API
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=place,region,country&language=is`;
 
     const response = await fetch(url);
 
@@ -157,26 +170,9 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json() as GoogleGeocodingResponse;
+    const data = await response.json() as MapboxGeocodingResponse;
 
-    if (data.status !== "OK") {
-      console.warn(`Geocoding API returned status: ${data.status}`, data.error_message || "");
-      if (data.status === "ZERO_RESULTS") {
-        console.warn("No geocoding results found for coordinates:", lat, lng);
-      }
-
-      const emptyResult = {
-        municipality: null,
-        country: null,
-        formattedAddress: null,
-      };
-
-      // Cache empty results to avoid repeated failed requests
-      setCachedResult(lat, lng, emptyResult);
-      return emptyResult;
-    }
-
-    if (!data.results || data.results.length === 0) {
+    if (!data.features || data.features.length === 0) {
       console.warn("No geocoding results found for coordinates:", lat, lng);
       const emptyResult = {
         municipality: null,
@@ -187,9 +183,8 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       return emptyResult;
     }
 
-    const result = data.results[0];
-    if (!result) {
-      console.warn("No geocoding results found for coordinates:", lat, lng);
+    const feature = data.features[0];
+    if (!feature) {
       const emptyResult = {
         municipality: null,
         country: null,
@@ -198,40 +193,36 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       setCachedResult(lat, lng, emptyResult);
       return emptyResult;
     }
+
     let municipality: string | null = null;
     let country: string | null = null;
 
-    // Extract municipality and country from address components
-    // For Iceland, prioritize administrative_area_level_1 over locality
-    for (const component of result.address_components) {
-      const types: string[] = component.types;
-
-      // Look for country first
-      if (types.includes("country")) {
-        country = component.long_name;
-      }
-
-      // For Iceland, prioritize administrative_area_level_1 (municipality)
-      if (types.includes("administrative_area_level_1") && !municipality) {
-        municipality = component.long_name;
+    // Extract municipality and country from context
+    if (feature.context) {
+      for (const ctx of feature.context) {
+        if (ctx.id.startsWith("place.") || ctx.id.startsWith("region.")) {
+          if (!municipality) {
+            municipality = ctx.text;
+          }
+        }
+        if (ctx.id.startsWith("country.")) {
+          country = ctx.text;
+        }
       }
     }
 
-    // If no administrative_area_level_1 found, fall back to locality
-    if (!municipality) {
-      for (const component of result.address_components) {
-        const types: string[] = component.types;
-        if (types.includes("locality")) {
-          municipality = component.long_name;
-          break;
-        }
+    // If the feature itself is a place/region, use it as municipality
+    if (!municipality && feature.place_name) {
+      const parts = feature.place_name.split(", ");
+      if (parts.length > 0) {
+        municipality = parts[0] ?? null;
       }
     }
 
     const geocodeResult = {
       municipality: await normalizeMunicipalityName(municipality),
       country,
-      formattedAddress: result.formatted_address,
+      formattedAddress: feature.place_name,
     };
 
     // Cache the successful result
@@ -245,6 +236,73 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
       country: null,
       formattedAddress: null,
     };
+  }
+}
+
+/**
+ * Forward geocode an address to coordinates using Mapbox API
+ * Biased towards Iceland for better results
+ */
+export async function forwardGeocode(address: string): Promise<ForwardGeocodeResult[]> {
+  if (!address || address.trim().length < 2) {
+    return [];
+  }
+
+  // Check rate limit
+  if (!checkRateLimit()) {
+    console.warn("Geocoding request blocked due to rate limiting");
+    return [];
+  }
+
+  try {
+    // Add this request to rate limit tracking
+    addRequest();
+
+    // Use Mapbox Geocoding API with Iceland bias
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&country=IS&language=is&limit=5`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json() as MapboxGeocodingResponse;
+
+    if (!data.features || data.features.length === 0) {
+      return [];
+    }
+
+    // Process results
+    const results: ForwardGeocodeResult[] = [];
+
+    for (const feature of data.features) {
+      const [lng, lat] = feature.center;
+
+      let municipality: string | null = null;
+
+      // Extract municipality from context
+      if (feature.context) {
+        for (const ctx of feature.context) {
+          if (ctx.id.startsWith("place.") || ctx.id.startsWith("region.")) {
+            municipality = await normalizeMunicipalityName(ctx.text);
+            break;
+          }
+        }
+      }
+
+      results.push({
+        lat,
+        lng,
+        municipality,
+        formattedAddress: feature.place_name,
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error in forward geocoding:", error);
+    return [];
   }
 }
 

@@ -238,6 +238,8 @@ export function PlaygroundFormFields({
                 longitude={currentLongitude}
                 onCoordinateChange={handleMapCoordinateChange}
                 className="h-80 w-full"
+                expandable={true}
+                showSearch={true}
               />
             </div>
           </TabsContent>

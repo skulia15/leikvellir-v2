@@ -778,7 +778,12 @@
     "resetPosition": "Resetuj pozycję",
     "viewLargerMap": "Otwórz większą mapę",
     "satelliteView": "Widok satelitarny",
-    "mapView": "Widok mapy"
+    "mapView": "Widok mapy",
+    "expand": "Rozwiń",
+    "collapse": "Zwiń",
+    "searchAddress": "Szukaj adresu...",
+    "selectLocation": "Wybierz lokalizację",
+    "coordinates": "Współrzędne"
   },
   "notFound": {
     "pageNotFound": "Strona nie została znaleziona",

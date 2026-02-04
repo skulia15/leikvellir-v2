@@ -847,7 +847,12 @@
     "resetPosition": "Reset position",
     "viewLargerMap": "View larger map",
     "satelliteView": "Satellite view",
-    "mapView": "Map view"
+    "mapView": "Map view",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "searchAddress": "Search for an address...",
+    "selectLocation": "Select Location",
+    "coordinates": "Coordinates"
   },
   "notFound": {
     "pageNotFound": "Page Not Found",
