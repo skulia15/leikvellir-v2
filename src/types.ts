@@ -366,6 +366,40 @@ export const ReviewEditSuggestionSchema = z.object({
 
 export type ReviewEditSuggestionInput = z.infer<typeof ReviewEditSuggestionSchema>;
 
+// Schema for users updating their own pending submission
+export const UpdateMySubmissionSchema = z.object({
+  id: z.number(),
+  title: z.string().min(1, "Title is required").max(256, "Title too long"),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  municipality: z.string().max(256).nullable().optional(),
+  publiclyAccessible: z.boolean(),
+  toddlerFriendly: z.boolean(),
+  // School ground properties
+  isSchoolGround: z.boolean(),
+  schoolType: SchoolTypeSchema.nullable(),
+  // Amenity properties
+  hasSeating: z.boolean(),
+  hasPicnicTable: z.boolean(),
+  hasFencing: z.boolean(),
+  hasGarbageCan: z.boolean(),
+  hasBathroomNearby: z.boolean(),
+  hasSoftPlayArea: z.boolean(),
+  equipmentIds: z.array(z.number()),
+  coverImage: z.string().nullable().optional(),
+  images: z.array(z.string()),
+  submitAnonymously: z.boolean(),
+});
+
+export type UpdateMySubmissionInput = z.infer<typeof UpdateMySubmissionSchema>;
+
+// Schema for users updating their own pending edit suggestion
+export const UpdateMyEditSuggestionSchema = CreateEditSuggestionSchema.extend({
+  id: z.number(),
+});
+
+export type UpdateMyEditSuggestionInput = z.infer<typeof UpdateMyEditSuggestionSchema>;
+
 // Custom error types
 export class PlaygroundNotFoundError extends Error {
   constructor(id: number) {

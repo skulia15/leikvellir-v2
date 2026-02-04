@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown, FileText } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
@@ -22,6 +22,7 @@ import { useAdmin } from "~/lib/admin-context";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import LanguageSwitcher from "~/components/ui/language-switcher";
 import { useT } from "~/lib/i18n";
+import { api } from "~/trpc/react";
 
 interface NavigationBarClientProps {
     session: Session | null;
@@ -34,6 +35,15 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
     const t = useT();
     const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+    // Check if user has any submissions (only query if logged in)
+    const { data: mySubmissions } = api.playground.getMySubmissions.useQuery(undefined, {
+        enabled: !!session,
+    });
+    const { data: myEditSuggestions } = api.playground.getMyEditSuggestions.useQuery(undefined, {
+        enabled: !!session,
+    });
+    const hasSubmissions = (mySubmissions?.length ?? 0) > 0 || (myEditSuggestions?.length ?? 0) > 0;
 
     // Check if translations are ready and manage initial loading state
     const translationsReady = t('navigation.map') !== 'navigation.map';
@@ -278,6 +288,14 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
+                                            {hasSubmissions && (
+                                                <DropdownMenuItem asChild className="cursor-pointer">
+                                                    <Link href="/my-submissions" className="flex items-center">
+                                                        <FileText className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.mySubmissions')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            )}
                                             {!isLoading && canAccessAdmin && (
                                                 <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
                                                     {isAdminMode ? (
@@ -366,6 +384,14 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                     <span>{t('navigation.contact')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
+                                            {hasSubmissions && (
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/my-submissions" className="flex items-center">
+                                                        <FileText className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.mySubmissions')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            )}
                                             {!isLoading && isAdminMode && canAccessAdmin && (
                                                 <>
                                                     <DropdownMenuItem asChild>

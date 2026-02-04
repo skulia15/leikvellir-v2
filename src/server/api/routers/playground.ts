@@ -22,6 +22,8 @@ import {
   CreateEditSuggestionSchema,
   UpdatePlaygroundSchema,
   ReviewEditSuggestionSchema,
+  UpdateMySubmissionSchema,
+  UpdateMyEditSuggestionSchema,
 } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { logDbError, logger } from "~/lib/logging/logger";
@@ -787,4 +789,232 @@ export const playgroundRouter = createTRPCRouter({
 
     return allSuggestions ?? [];
   }),
+
+  // ============================================
+  // User's own submissions management endpoints
+  // ============================================
+
+  getMySubmissions: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const submissions = await ctx.db.query.playgrounds.findMany({
+      where: (playgrounds, { eq }) => eq(playgrounds.createdById, userId),
+      orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      with: {
+        playgroundEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+      },
+    });
+
+    return submissions ?? [];
+  }),
+
+  getMyEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const suggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
+      where: (suggestions, { eq }) => eq(suggestions.createdById, userId),
+      orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
+      with: {
+        playground: {
+          columns: {
+            id: true,
+            title: true,
+            coverImage: true,
+          },
+        },
+        suggestionEquipment: {
+          with: {
+            equipment: true,
+          },
+        },
+      },
+    });
+
+    return suggestions ?? [];
+  }),
+
+  updateMySubmission: protectedProcedure
+    .input(UpdateMySubmissionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { id, equipmentIds, ...updateData } = input;
+
+      logger.info("Updating own submission", {
+        component: "PlaygroundRouter",
+        action: "update_my_submission",
+        userId,
+        metadata: { playgroundId: id },
+      });
+
+      // Verify ownership and pending status
+      const playground = await ctx.db.query.playgrounds.findFirst({
+        where: (playgrounds, { eq, and }) =>
+          and(
+            eq(playgrounds.id, id),
+            eq(playgrounds.createdById, userId),
+            eq(playgrounds.status, "pending")
+          ),
+      });
+
+      if (!playground) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Playground not found, already reviewed, or you don't have permission to edit it",
+        });
+      }
+
+      // Get current images for cleanup
+      const oldImages = [...(playground.images ?? [])];
+      if (playground.coverImage) {
+        oldImages.push(playground.coverImage);
+      }
+
+      // Update playground data
+      const [updatedPlayground] = await ctx.db
+        .update(playgrounds)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
+        .where(eq(playgrounds.id, id))
+        .returning();
+
+      if (!updatedPlayground) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update playground",
+        });
+      }
+
+      // Update equipment relationships
+      await ctx.db
+        .delete(playgroundEquipment)
+        .where(eq(playgroundEquipment.playgroundId, id));
+
+      if (equipmentIds.length > 0) {
+        const equipmentRelations = equipmentIds.map(equipmentId => ({
+          playgroundId: id,
+          equipmentId: equipmentId,
+        }));
+
+        await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+      }
+
+      // Clean up orphaned files
+      const newImages = [...(input.images ?? [])];
+      if (input.coverImage) {
+        newImages.push(input.coverImage);
+      }
+
+      deleteOrphanedFiles(oldImages, newImages).catch(error => {
+        console.error("Error cleaning up orphaned files:", error);
+      });
+
+      logger.info("Own submission updated successfully", {
+        component: "PlaygroundRouter",
+        action: "update_my_submission_success",
+        userId,
+        metadata: { playgroundId: id },
+      });
+
+      return updatedPlayground;
+    }),
+
+  updateMyEditSuggestion: protectedProcedure
+    .input(UpdateMyEditSuggestionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { id, playgroundId, equipmentIds, removeImages, removeCoverImage, ...suggestionData } = input;
+
+      logger.info("Updating own edit suggestion", {
+        component: "PlaygroundRouter",
+        action: "update_my_edit_suggestion",
+        userId,
+        metadata: { suggestionId: id },
+      });
+
+      // Verify ownership and pending status
+      const suggestion = await ctx.db.query.playgroundEditSuggestions.findFirst({
+        where: (suggestions, { eq, and }) =>
+          and(
+            eq(suggestions.id, id),
+            eq(suggestions.createdById, userId),
+            eq(suggestions.status, "pending")
+          ),
+        with: {
+          playground: true,
+        },
+      });
+
+      if (!suggestion) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Edit suggestion not found, already reviewed, or you don't have permission to edit it",
+        });
+      }
+
+      // Process image removal (same logic as createEditSuggestion)
+      let imagesToKeep = [...(suggestion.playground?.images || [])];
+      let coverImageValue = suggestionData.coverImage;
+
+      if (removeCoverImage) {
+        coverImageValue = null;
+      }
+
+      if (removeImages && removeImages.length > 0 && suggestion.playground?.images) {
+        imagesToKeep = suggestion.playground.images.filter((_, index) =>
+          index >= removeImages.length || !removeImages[index]
+        );
+
+        if (imagesToKeep.length !== suggestion.playground.images.length) {
+          suggestionData.images = imagesToKeep;
+        }
+      }
+
+      // Update the suggestion
+      const [updatedSuggestion] = await ctx.db
+        .update(playgroundEditSuggestions)
+        .set({
+          ...suggestionData,
+          coverImage: coverImageValue,
+          equipmentIds,
+          updatedAt: new Date(),
+        })
+        .where(eq(playgroundEditSuggestions.id, id))
+        .returning();
+
+      if (!updatedSuggestion) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update edit suggestion",
+        });
+      }
+
+      // Update equipment relationships
+      await ctx.db
+        .delete(playgroundEditSuggestionEquipment)
+        .where(eq(playgroundEditSuggestionEquipment.suggestionId, id));
+
+      if (equipmentIds && equipmentIds.length > 0) {
+        const equipmentRelations = equipmentIds.map(equipmentId => ({
+          suggestionId: id,
+          equipmentId: equipmentId,
+        }));
+
+        await ctx.db.insert(playgroundEditSuggestionEquipment).values(equipmentRelations);
+      }
+
+      logger.info("Own edit suggestion updated successfully", {
+        component: "PlaygroundRouter",
+        action: "update_my_edit_suggestion_success",
+        userId,
+        metadata: { suggestionId: id },
+      });
+
+      return updatedSuggestion;
+    }),
 });
