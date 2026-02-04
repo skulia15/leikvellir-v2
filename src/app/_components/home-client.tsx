@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { List, SlidersHorizontal } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { MobileMapListToggle } from "./mobile-map-list-toggle";
+// import { MobileMapListToggle } from "./mobile-map-list-toggle";
 import {
     MapErrorBoundary,
     DataErrorBoundary,
@@ -260,10 +260,6 @@ export default function HomeClient() {
                         </div>
                     </ScrollArea>
 
-                    {/* Floating toggle to switch back to map */}
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-30">
-                        <MobileMapListToggle view={mobileView} onViewChange={setMobileView} />
-                    </div>
                 </div>
             );
         }
@@ -357,10 +353,6 @@ export default function HomeClient() {
                     </Sheet.Container>
                 </Sheet>
 
-                {/* Floating toggle to switch to list view */}
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-                    <MobileMapListToggle view={mobileView} onViewChange={setMobileView} />
-                </div>
 
                 {/* Floating button to reopen drawer when closed */}
                 {!isOpen && (
