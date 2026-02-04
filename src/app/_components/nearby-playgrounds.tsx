@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Compass, Footprints, ChevronRight } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { type Playground } from "~/types";
 import { calculateDistance, formatDistance } from "~/lib/geo-utils";
@@ -146,14 +147,20 @@ export default function NearbyPlaygrounds({
         </div>
 
         {/* Footer link to map view */}
-        <div className="px-4 py-3 bg-muted/30 border-t border-border/60">
-          <Link
-            href={`/?lat=${currentPlayground.latitude}&lng=${currentPlayground.longitude}&playground=${currentPlayground.id}`}
-            className="flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+        <div className="p-4 border-t border-border/60">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            asChild
           >
-            <MapPin className="h-3.5 w-3.5" />
-            {t('playground.exploreOnMap')}
-          </Link>
+            <Link
+              href={`/?lat=${currentPlayground.latitude}&lng=${currentPlayground.longitude}&playground=${currentPlayground.id}`}
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              {t('playground.exploreOnMap')}
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>
