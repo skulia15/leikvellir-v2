@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Map, { useMap, type MapRef, type ViewStateChangeEvent } from "react-map-gl/mapbox";
 import { Navigation } from "lucide-react";
+import { toast } from "sonner";
 import useSupercluster from "use-supercluster";
 
 import { Button } from "~/components/ui/button";
@@ -63,7 +64,7 @@ function UserLocationButton({
 
   const getUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert(t("map.geolocationNotSupported"));
+      toast.error(t("map.geolocationNotSupported"));
       return;
     }
 
@@ -88,7 +89,7 @@ function UserLocationButton({
       },
       (error) => {
         console.error("Error getting user location:", error);
-        alert(t("map.locationAccessDenied"));
+        toast.error(t("map.locationAccessDenied"));
         setIsLoading(false);
       },
       {
