@@ -26,7 +26,6 @@ import {
   Star,
   Puzzle,
   Info,
-  Camera,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -200,21 +199,8 @@ export default function PlaygroundDetail({
               images={displayImages}
               alt={playground.title}
               className=""
+              onAddPhotos={playground.status === "approved" ? handleAddPhotos : undefined}
             />
-
-            {/* Add photos CTA when no images exist */}
-            {displayImages.length === 0 && playground.status === "approved" && (
-              <button
-                onClick={handleAddPhotos}
-                className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/40 py-10 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
-              >
-                <Camera className="h-8 w-8" />
-                <div className="text-center">
-                  <p className="font-medium text-sm">{t("forms.addPhotos")}</p>
-                  <p className="text-xs mt-0.5 opacity-70">{t("playground.noEquipmentInfo")}</p>
-                </div>
-              </button>
-            )}
 
             {/* Playground Information - Combined Card */}
             <Card>

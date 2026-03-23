@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useSwipe } from "~/lib/hooks/use-swipe";
+import { useT } from "~/lib/i18n";
 
 interface ImageCarouselProps {
   images: string[];
   alt: string;
   className?: string;
+  onAddPhotos?: () => void;
 }
 
-export default function ImageCarousel({ images, alt, className }: ImageCarouselProps) {
+export default function ImageCarousel({ images, alt, className, onAddPhotos }: ImageCarouselProps) {
+  const t = useT();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -58,10 +61,17 @@ export default function ImageCarousel({ images, alt, className }: ImageCarouselP
 
   if (images.length === 0) {
     return (
-      <div className={`overflow-hidden rounded-2xl bg-gray-100 ${className ?? ''}`}>
-        <div className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center">
-          <p className="text-muted-foreground">No images available</p>
-        </div>
+      <div className={`overflow-hidden rounded-2xl bg-muted ${className ?? ''}`}>
+        <button
+          onClick={onAddPhotos}
+          disabled={!onAddPhotos}
+          className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex flex-col items-center justify-center gap-3 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-primary disabled:cursor-default disabled:hover:text-muted-foreground"
+        >
+          <Camera className="h-10 w-10" />
+          <span className="text-sm font-medium">
+            {onAddPhotos ? t("forms.addPhotos") : t("playground.noEquipmentInfo")}
+          </span>
+        </button>
       </div>
     );
   }
