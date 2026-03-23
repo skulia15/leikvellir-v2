@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { List, SlidersHorizontal } from "lucide-react";
+import { List } from "lucide-react";
 import { Button } from "~/components/ui/button";
 // import { MobileMapListToggle } from "./mobile-map-list-toggle";
 import {
@@ -52,6 +52,7 @@ export default function HomeClient() {
     const [mobileView, setMobileView] = useState<"map" | "list">("map");
     const [actualDrawerHeight, setActualDrawerHeight] = useState(0);
     const [currentSnapIndex, setCurrentSnapIndex] = useState(1); // Track snap position for conditional UI
+    const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
     const ref = useRef<SheetRef>();
 
     const searchParams = useSearchParams();
@@ -108,6 +109,14 @@ export default function HomeClient() {
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
+    // Auto-center desktop map if geolocation permission already granted
+    useEffect(() => {
+        if (!navigator.permissions) return;
+        void navigator.permissions.query({ name: "geolocation" }).then((status) => {
+            if (status.state === "granted") setLocationPermissionGranted(true);
+        });
+    }, []);
+
     // Handle URL parameters for deep linking from playground detail page
     useEffect(() => {
         const lat = searchParams.get('lat');
@@ -147,11 +156,6 @@ export default function HomeClient() {
             }).length;
     }, [playgrounds, isInitialLoading, visiblePlaygrounds, filters]);
 
-    // Count active filters for badge display when sheet is minimized
-    const activeFilterCount = useMemo(() => {
-        return Object.values(filters).filter(v => v !== undefined).length;
-    }, [filters]);
-
     // Stable callback to prevent infinite loops
     const handleVisiblePlaygroundsChange = useCallback((newVisiblePlaygrounds: (Playground & { distance?: number | null })[]) => {
         setVisiblePlaygrounds(newVisiblePlaygrounds);
@@ -180,15 +184,6 @@ export default function HomeClient() {
         return actualDrawerHeight;
     }, [isMobile, isOpen, actualDrawerHeight]);
 
-    // Filter pills (shared between desktop sidebar and mobile sheet header)
-    const filterContent = (
-        <PlaygroundFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            playgroundCount={filteredPlaygroundCount}
-        />
-    );
-
     // Playground list content (without filters — filters are placed separately)
     const playgroundListContent = (
         <DataErrorBoundary fallback={DataErrorFallback}>
@@ -211,7 +206,11 @@ export default function HomeClient() {
     // Combined content for desktop sidebar (filters + list together)
     const desktopSidebarContent = (
         <DataErrorBoundary fallback={DataErrorFallback}>
-            {filterContent}
+            <PlaygroundFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                playgroundCount={filteredPlaygroundCount}
+            />
             {isInitialLoading ? (
                 <PlaygroundListSkeleton count={6} />
             ) : (
@@ -250,7 +249,11 @@ export default function HomeClient() {
                                 {t('playground.playgroundsFound')}
                             </span>
                         </div>
-                        {filterContent}
+                        <PlaygroundFilters
+                            filters={filters}
+                            onFiltersChange={setFilters}
+                            playgroundCount={filteredPlaygroundCount}
+                        />
                     </div>
 
                     {/* Scrollable list */}
@@ -283,6 +286,7 @@ export default function HomeClient() {
                             isMobile={isMobile}
                             drawerHeight={getDrawerHeight()}
                             shouldCenterOnUserLocation={true}
+                            autoRequestLocation={true}
                             onMinimizeDrawer={handleMinimizeDrawer}
                         />
                     </MapErrorBoundary>
@@ -319,29 +323,21 @@ export default function HomeClient() {
                     >
                         <Sheet.Header className="px-4 pt-3 pb-2 border-b border-border bg-card">
                             <div className="mx-auto h-1 w-10 rounded-full bg-border mb-2" />
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-                                        {visiblePlaygrounds.length}
-                                    </span>
-                                    <span className="text-sm font-semibold text-foreground">
-                                        {t('playground.playgroundsFound')}
-                                    </span>
-                                    {/* Show filter count badge when minimized and filters are active */}
-                                    {currentSnapIndex === 2 && activeFilterCount > 0 && (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-xs font-medium">
-                                            <SlidersHorizontal className="h-3 w-3" />
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                </div>
+                            <div className="flex items-center gap-2.5">
+                                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+                                    {visiblePlaygrounds.length}
+                                </span>
+                                <span className="text-sm font-semibold text-foreground">
+                                    {t('playground.playgroundsFound')}
+                                </span>
                             </div>
-                            {/* Show filter pills when sheet is expanded (not minimized) */}
-                            {currentSnapIndex !== 2 && (
-                                <div className="mt-2">
-                                    {filterContent}
-                                </div>
-                            )}
+                            <div className="mt-2">
+                                <PlaygroundFilters
+                                    filters={filters}
+                                    onFiltersChange={setFilters}
+                                    playgroundCount={filteredPlaygroundCount}
+                                />
+                            </div>
                         </Sheet.Header>
                         <Sheet.Content className="bg-card">
                             <ScrollArea className="h-full px-2">
@@ -411,6 +407,7 @@ export default function HomeClient() {
                         isMobile={false}
                         drawerHeight={getDrawerHeight()}
                         shouldCenterOnUserLocation={true}
+                        autoRequestLocation={locationPermissionGranted}
                     />
                 </MapErrorBoundary>
             </div>

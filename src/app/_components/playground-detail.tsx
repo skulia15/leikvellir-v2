@@ -25,7 +25,8 @@ import {
   Sparkles,
   Star,
   Puzzle,
-  Info
+  Info,
+  Camera,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -49,6 +50,7 @@ import { useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 import { getMunicipalityDative } from "~/lib/icelandic-declension";
 import NearbyPlaygrounds from "./nearby-playgrounds";
+import AddPhotosDialog from "./add-photos-dialog";
 import { api } from "~/trpc/react";
 
 interface PlaygroundDetailProps {
@@ -64,6 +66,7 @@ export default function PlaygroundDetail({
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
+  const [isAddPhotosDialogOpen, setIsAddPhotosDialogOpen] = useState(false);
   const t = useT();
   const currentLanguage = useLocale().locale;
   const dateLocale = currentLanguage === 'en' ? 'en-GB' : currentLanguage;
@@ -86,6 +89,14 @@ export default function PlaygroundDetail({
     ...(playground.images ?? [])
   ].filter((img, index, arr) => arr.indexOf(img) === index); // Remove duplicates
 
+
+  const handleAddPhotos = () => {
+    if (!session) {
+      router.push(`/signin?callbackUrl=/playground/${playground.id}`);
+      return;
+    }
+    setIsAddPhotosDialogOpen(true);
+  };
 
   const handleGetDirections = () => {
     const url = getDirectionsUrl(playground.latitude, playground.longitude);
@@ -190,6 +201,20 @@ export default function PlaygroundDetail({
               alt={playground.title}
               className=""
             />
+
+            {/* Add photos CTA when no images exist */}
+            {displayImages.length === 0 && playground.status === "approved" && (
+              <button
+                onClick={handleAddPhotos}
+                className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/40 py-10 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+              >
+                <Camera className="h-8 w-8" />
+                <div className="text-center">
+                  <p className="font-medium text-sm">{t("forms.addPhotos")}</p>
+                  <p className="text-xs mt-0.5 opacity-70">{t("playground.noEquipmentInfo")}</p>
+                </div>
+              </button>
+            )}
 
             {/* Playground Information - Combined Card */}
             <Card>
@@ -652,6 +677,15 @@ export default function PlaygroundDetail({
           playground={playground}
           open={isSuggestEditDialogOpen}
           onOpenChange={setIsSuggestEditDialogOpen}
+        />
+      )}
+
+      {/* Add Photos Dialog */}
+      {isAddPhotosDialogOpen && (
+        <AddPhotosDialog
+          playgroundId={playground.id}
+          open={isAddPhotosDialogOpen}
+          onOpenChange={setIsAddPhotosDialogOpen}
         />
       )}
     </div>

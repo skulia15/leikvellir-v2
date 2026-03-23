@@ -37,6 +37,7 @@ interface MapboxMapProps {
   isMobile?: boolean;
   drawerHeight?: number;
   shouldCenterOnUserLocation?: boolean;
+  autoRequestLocation?: boolean;
   onMinimizeDrawer?: () => void;
   onTotalVisibleCountChange?: (count: number) => void;
 }
@@ -54,12 +55,15 @@ const DEFAULT_ZOOM = 15;
 function UserLocationButton({
   onLocationFound,
   onMinimizeDrawer,
+  autoRequest = false,
 }: {
   onLocationFound: (location: UserLocation) => void;
   onMinimizeDrawer?: () => void;
+  autoRequest?: boolean;
 }) {
   const mapRef = useMap();
   const [isLoading, setIsLoading] = useState(false);
+  const hasAutoRequested = useRef(false);
   const t = useT();
 
   const getUserLocation = useCallback(() => {
@@ -67,6 +71,7 @@ function UserLocationButton({
       toast.error(t("map.geolocationNotSupported"));
       return;
     }
+
 
     setIsLoading(true);
     if (onMinimizeDrawer) {
@@ -100,6 +105,13 @@ function UserLocationButton({
     );
   }, [mapRef, onLocationFound, onMinimizeDrawer, t]);
 
+  useEffect(() => {
+    if (autoRequest && !hasAutoRequested.current) {
+      hasAutoRequested.current = true;
+      getUserLocation();
+    }
+  }, [autoRequest, getUserLocation]);
+
   return (
     <Button
       onClick={getUserLocation}
@@ -122,6 +134,7 @@ export function MapboxMap({
   mapCenter,
   onVisiblePlaygroundsChange,
   shouldCenterOnUserLocation = false,
+  autoRequestLocation = false,
   isMobile = false,
   drawerHeight = 0,
   onMinimizeDrawer,
@@ -430,6 +443,7 @@ export function MapboxMap({
         <UserLocationButton
           onLocationFound={onUserLocationChange}
           onMinimizeDrawer={onMinimizeDrawer}
+          autoRequest={autoRequestLocation}
         />
       </Map>
     </div>

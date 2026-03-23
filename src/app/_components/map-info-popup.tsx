@@ -5,9 +5,10 @@
  * Image-forward design with title overlay and compact metadata.
  */
 import { Popup } from "react-map-gl/mapbox";
-import { Baby, ChevronLeft, ChevronRight, Footprints, Users, ArrowRight } from "lucide-react";
+import { Baby, Camera, ChevronLeft, ChevronRight, Footprints, Users, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import {
   calculateDistance,
@@ -31,6 +32,7 @@ export function MapInfoPopup({
 }: MapInfoPopupProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { data: session } = useSession();
   const t = useT();
 
   // Reset image index when playground changes
@@ -199,12 +201,20 @@ export function MapInfoPopup({
               )}
             </div>
           ) : (
-            <div className="h-[120px] w-full bg-muted flex items-center justify-center">
-              <div className="px-3.5 pb-3 absolute bottom-0 inset-x-0">
-                <h3 className="font-sans font-bold text-[15px] leading-snug text-foreground line-clamp-2">
-                  {playground.title}
-                </h3>
-              </div>
+            <div className="h-[120px] w-full bg-muted flex flex-col items-center justify-center gap-2">
+              <h3 className="font-sans font-bold text-[15px] leading-snug text-foreground line-clamp-2 px-3.5">
+                {playground.title}
+              </h3>
+              {playground.status === "approved" && (
+                <Link
+                  href={session ? `/playground/${playground.id}` : `/signin?callbackUrl=/playground/${playground.id}`}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  onClick={onClose}
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  {t("forms.addPhotos")}
+                </Link>
+              )}
             </div>
           )}
         </div>

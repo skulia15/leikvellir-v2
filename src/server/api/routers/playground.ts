@@ -1017,4 +1017,28 @@ export const playgroundRouter = createTRPCRouter({
 
       return updatedSuggestion;
     }),
+
+  addPhotos: protectedProcedure
+    .input(z.object({ id: z.number(), images: z.array(z.string().url()).min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, images } = input;
+
+      const playground = await ctx.db.query.playgrounds.findFirst({
+        where: (p, { eq }) => eq(p.id, id),
+      });
+
+      if (!playground) {
+        throw new PlaygroundNotFoundError(id);
+      }
+
+      const existingImages = playground.images ?? [];
+      const newImages = [...existingImages, ...images];
+      // Set cover image if none exists yet
+      const coverImage = playground.coverImage ?? images[0] ?? null;
+
+      await ctx.db
+        .update(playgrounds)
+        .set({ images: newImages, coverImage, updatedAt: new Date() })
+        .where(eq(playgrounds.id, id));
+    }),
 });
