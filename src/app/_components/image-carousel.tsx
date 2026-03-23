@@ -68,9 +68,12 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos }: I
           className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex flex-col items-center justify-center gap-3 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-primary disabled:cursor-default disabled:hover:text-muted-foreground"
         >
           <Camera className="h-10 w-10" />
-          <span className="text-sm font-medium">
-            {onAddPhotos ? t("forms.addPhotos") : t("playground.noEquipmentInfo")}
-          </span>
+          <div className="text-center">
+            <p className="text-sm font-medium">{t("playground.noImagesAvailable")}</p>
+            {onAddPhotos && (
+              <p className="text-xs mt-1 text-primary font-medium">{t("forms.addPhotos")}</p>
+            )}
+          </div>
         </button>
       </div>
     );
