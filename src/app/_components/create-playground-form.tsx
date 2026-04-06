@@ -84,6 +84,10 @@ export function CreatePlaygroundForm() {
     }
 
     const validImages = (data.images || []).filter(img => img && img.trim() !== "");
+    if (validImages.length === 0) {
+      toast.error(t('forms.imagesRequired'));
+      return;
+    }
     createPlayground.mutate({ ...data, images: validImages });
   };
 

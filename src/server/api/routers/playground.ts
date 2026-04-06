@@ -240,6 +240,19 @@ export const playgroundRouter = createTRPCRouter({
       // Include any playground field updates
       Object.assign(updateData, playgroundUpdates);
 
+      // Auto-set cover image from existing images when approving without one
+      if (action === "approve") {
+        const finalImages = (updateData as Record<string, unknown>).images as string[] | undefined
+          ?? currentPlayground.images
+          ?? [];
+        const finalCover = (updateData as Record<string, unknown>).coverImage as string | null | undefined
+          ?? currentPlayground.coverImage;
+
+        if (!finalCover && finalImages.length > 0) {
+          (updateData as Record<string, unknown>).coverImage = finalImages[0];
+        }
+      }
+
       const [updatedPlayground] = await ctx.db
         .update(playgrounds)
         .set(updateData)

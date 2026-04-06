@@ -321,7 +321,9 @@ export default function PlaygroundFormDialog({
     }
 
     if (!coverImage) {
-      toast.error(t("admin.coverImageRequired"));
+      toast.error(validImages.length === 0
+        ? t("admin.noImagesUploadFirst")
+        : t("admin.coverImageRequired"));
       return;
     }
 

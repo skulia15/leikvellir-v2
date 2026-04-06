@@ -162,50 +162,81 @@ export function ImageUpload({
 
         // Handle completion
         xhr.addEventListener("load", () => {
-          if (xhr.status === 200) {
-            const response = JSON.parse(
-              xhr.responseText,
-            ) as unknown as UploadResponse;
-            if (response.success && response.url) {
+          try {
+            if (xhr.status === 200) {
+              const response = JSON.parse(
+                xhr.responseText,
+              ) as unknown as UploadResponse;
+              if (response.success && response.url) {
 
-              // Add URL to form value - use functional state update to avoid race conditions
-              const newUrl = response.url;
-              const updatedUrls = [...currentUrlsRef.current, newUrl];
-              onChange(updatedUrls);
-              // Update the ref immediately
-              currentUrlsRef.current = updatedUrls;
+                // Add URL to form value - use functional state update to avoid race conditions
+                const newUrl = response.url;
+                const updatedUrls = [...currentUrlsRef.current, newUrl];
+                onChange(updatedUrls);
+                // Update the ref immediately
+                currentUrlsRef.current = updatedUrls;
 
-              // Set upload to success state instead of immediately removing
+                // Set upload to success state instead of immediately removing
+                setUploadProgress((prev) => {
+                  const updated = new Map(prev);
+                  updated.set(file.id, {
+                    fileId: file.id,
+                    progress: 100,
+                    state: "success",
+                    url: response.url,
+                  });
+                  return updated;
+                });
+
+                // Auto-select first image as cover if none selected and cover selection is enabled
+                if (showCoverSelection && !coverImage && onCoverImageChange) {
+                  onCoverImageChange(response.url);
+                }
+
+                // Clean up successful upload after a brief delay to allow UI to update
+                setTimeout(() => {
+                  setFiles((prev) => prev.filter((f) => f.id !== file.id));
+                  setUploadProgress((prev) => {
+                    const updated = new Map(prev);
+                    updated.delete(file.id);
+                    return updated;
+                  });
+                }, 1000); // 1 second delay
+              } else {
+                setUploadProgress((prev) => {
+                  const updated = new Map(prev);
+                  updated.set(file.id, {
+                    fileId: file.id,
+                    progress: 0,
+                    state: "error",
+                    error: response.error ?? "Upload failed",
+                  });
+                  return updated;
+                });
+              }
+            } else {
               setUploadProgress((prev) => {
                 const updated = new Map(prev);
                 updated.set(file.id, {
                   fileId: file.id,
-                  progress: 100,
-                  state: "success",
-                  url: response.url,
+                  progress: 0,
+                  state: "error",
+                  error: `Upload failed with status ${xhr.status}`,
                 });
                 return updated;
               });
-
-              // Auto-select first image as cover if none selected and cover selection is enabled
-              if (showCoverSelection && !coverImage && onCoverImageChange) {
-                onCoverImageChange(response.url);
-              }
-
-              // Clean up successful upload after a brief delay to allow UI to update
-              setTimeout(() => {
-                setFiles((prev) => prev.filter((f) => f.id !== file.id));
-                setUploadProgress((prev) => {
-                  const updated = new Map(prev);
-                  updated.delete(file.id);
-                  return updated;
-                });
-              }, 1000); // 1 second delay
-            } else {
-              throw new Error(response.error ?? "Upload failed");
             }
-          } else {
-            throw new Error(`Upload failed with status ${xhr.status}`);
+          } catch (parseError) {
+            setUploadProgress((prev) => {
+              const updated = new Map(prev);
+              updated.set(file.id, {
+                fileId: file.id,
+                progress: 0,
+                state: "error",
+                error: parseError instanceof Error ? parseError.message : "Upload failed",
+              });
+              return updated;
+            });
           }
         });
 
@@ -690,7 +721,7 @@ export function ImageUpload({
       {/* Files Being Uploaded */}
       {files.some(f => {
         const state = uploadProgress.get(f.id)?.state;
-        return state === "uploading" || state === "success";
+        return state === "uploading" || state === "success" || state === "error";
       }) && (
           <div>
             <h4 className="mb-3 text-sm font-medium">{t('forms.uploadingImages')}</h4>
@@ -698,7 +729,7 @@ export function ImageUpload({
               {files
                 .filter(f => {
                   const state = uploadProgress.get(f.id)?.state;
-                  return state === "uploading" || state === "success";
+                  return state === "uploading" || state === "success" || state === "error";
                 })
                 .map((file) => {
                   const progress = uploadProgress.get(file.id);
@@ -736,6 +767,9 @@ export function ImageUpload({
                               {progress?.state === "success" && (
                                 <CheckCircle2 className="h-4 w-4 text-green-600" />
                               )}
+                              {progress?.state === "error" && (
+                                <AlertCircle className="h-4 w-4 text-destructive" />
+                              )}
 
                               <Button
                                 type="button"
@@ -762,6 +796,25 @@ export function ImageUpload({
                             <p className="text-xs text-green-600">
                               {t('forms.uploadCompleteMoving')}
                             </p>
+                          )}
+                          {progress?.state === "error" && (
+                            <div className="space-y-1">
+                              <p className="text-xs text-destructive">
+                                {progress.error || t('forms.processingFailed')}
+                              </p>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  removeFile(file.id);
+                                  void onDrop([file]);
+                                }}
+                              >
+                                {t('common.retry') ?? 'Retry'}
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>

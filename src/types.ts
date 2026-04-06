@@ -243,6 +243,10 @@ export const CreatePlaygroundSchema = z.object({
 
         return false;
       }, "Must be a valid URL or upload path"),
+    )
+    .refine(
+      (images) => images.filter((img) => img && img.trim() !== "").length >= 1,
+      "At least one image is required",
     ),
 });
 
