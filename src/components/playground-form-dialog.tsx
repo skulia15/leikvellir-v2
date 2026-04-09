@@ -320,11 +320,6 @@ export default function PlaygroundFormDialog({
       form.setValue("coverImage", coverImage);
     }
 
-    if (!coverImage) {
-      toast.error(t("admin.coverImageRequired"));
-      return;
-    }
-
     setIsSubmitting(true);
     await reviewMutation.mutateAsync({
       id: playground.id,
