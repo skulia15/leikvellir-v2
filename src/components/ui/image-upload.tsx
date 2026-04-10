@@ -202,10 +202,28 @@ export function ImageUpload({
                 });
               }, 1000); // 1 second delay
             } else {
-              throw new Error(response.error ?? "Upload failed");
+              setUploadProgress((prev) => {
+                const updated = new Map(prev);
+                updated.set(file.id, {
+                  fileId: file.id,
+                  progress: 0,
+                  state: "error",
+                  error: response.error ?? "Upload failed",
+                });
+                return updated;
+              });
             }
           } else {
-            throw new Error(`Upload failed with status ${xhr.status}`);
+            setUploadProgress((prev) => {
+              const updated = new Map(prev);
+              updated.set(file.id, {
+                fileId: file.id,
+                progress: 0,
+                state: "error",
+                error: `Upload failed with status ${xhr.status}`,
+              });
+              return updated;
+            });
           }
         });
 

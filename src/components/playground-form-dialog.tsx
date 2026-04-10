@@ -99,6 +99,7 @@ export default function PlaygroundFormDialog({
   const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [showRejectionReason, setShowRejectionReason] = useState(false);
   const [coordinateMethod, setCoordinateMethod] = useState<"manual" | "map">("map");
   const previousCoordinatesRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -357,7 +358,7 @@ export default function PlaygroundFormDialog({
     await deleteMutation.mutateAsync({ id: playground.id });
   };
 
-  const isLoading = isSubmitting || isDeleting;
+  const isLoading = isSubmitting || isDeleting || isUploading;
 
   const getDialogTitle = () => {
     switch (mode) {
@@ -403,6 +404,7 @@ export default function PlaygroundFormDialog({
               onCoordinateChange={handleCoordinateChange}
               coordinateMethod={coordinateMethod}
               onCoordinateMethodChange={setCoordinateMethod}
+              onUploadingChange={setIsUploading}
             />
 
             {/* Submission Metadata - Review mode only */}
