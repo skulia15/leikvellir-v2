@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { MapPin, GraduationCap, Zap, Footprints } from "lucide-react";
+import { MapPin, GraduationCap, Zap, Footprints, Camera } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { type Playground } from "~/types";
 import { type MultilingualName } from "~/types";
@@ -35,17 +35,20 @@ export default function PlaygroundGridCard({
     <Card className="overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow group">
       {/* Image section */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        <Image
-          src={
-            playground.coverImage && playground.coverImage.trim() !== ""
-              ? playground.coverImage
-              : "/playground.jpg"
-          }
-          alt={playground.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
+        {playground.coverImage && playground.coverImage.trim() !== "" ? (
+          <Image
+            src={playground.coverImage}
+            alt={playground.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Camera className="h-8 w-8" />
+            <p className="text-xs font-medium">{t("forms.addPhotos")}</p>
+          </div>
+        )}
 
         {/* School ground badge overlay */}
         {playground.isSchoolGround && (
