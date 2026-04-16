@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { type UserLocation, getCurrentLocation } from "~/lib/geo-utils";
 import { logger, reportLocationError } from "~/lib/logging";
 
@@ -29,6 +29,71 @@ export function useUserLocation(): UseUserLocationReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [permission, setPermission] = useState<LocationPermission>("prompt");
     const [error, setError] = useState<string | null>(null);
+    const watchIdRef = useRef<number | null>(null);
+
+    // Start watching position for continuous updates
+    const startWatching = useCallback(() => {
+        if (watchIdRef.current !== null) return; // Already watching
+        if (!navigator.geolocation) return;
+
+        watchIdRef.current = navigator.geolocation.watchPosition(
+            (position) => {
+                const location: UserLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                setUserLocation(location);
+                // Update cache with latest position
+                try {
+                    sessionStorage.setItem(STORAGE_KEYS.userLocation, JSON.stringify(location));
+                    sessionStorage.setItem(STORAGE_KEYS.timestamp, Date.now().toString());
+                } catch {
+                    // Ignore cache write failures
+                }
+                logger.debug("Location updated via watchPosition", {
+                    component: "useUserLocation",
+                    action: "watch_update",
+                });
+            },
+            (err) => {
+                logger.warn("watchPosition error", {
+                    component: "useUserLocation",
+                    action: "watch_error",
+                    metadata: { code: err.code, message: err.message },
+                });
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 30000,
+                maximumAge: 10000, // Accept positions up to 10s old
+            },
+        );
+        logger.debug("Started watching position", {
+            component: "useUserLocation",
+            action: "watch_start",
+        });
+    }, []);
+
+    const stopWatching = useCallback(() => {
+        if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+            watchIdRef.current = null;
+            logger.debug("Stopped watching position", {
+                component: "useUserLocation",
+                action: "watch_stop",
+            });
+        }
+    }, []);
+
+    // Clean up watcher on unmount
+    useEffect(() => {
+        return () => {
+            if (watchIdRef.current !== null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+                watchIdRef.current = null;
+            }
+        };
+    }, []);
 
     // Check browser permission and load cached location on mount
     useEffect(() => {
@@ -72,6 +137,7 @@ export function useUserLocation(): UseUserLocationReturn {
                                         action: "cache_hit",
                                         metadata: { cacheAge: now - timestamp },
                                     });
+                                    startWatching();
                                     return;
                                 }
                             }
@@ -90,6 +156,7 @@ export function useUserLocation(): UseUserLocationReturn {
                                         longitude: location.lng.toFixed(6),
                                     },
                                 });
+                                startWatching();
                             } catch (err) {
                                 const error = err instanceof Error ? err : new Error(String(err));
                                 logger.warn("Failed to get current location despite permission", {
@@ -183,7 +250,7 @@ export function useUserLocation(): UseUserLocationReturn {
         };
 
         void initializeLocation();
-    }, []);
+    }, [startWatching]);
 
     const clearCachedLocation = () => {
         sessionStorage.removeItem(STORAGE_KEYS.userLocation);
@@ -235,6 +302,7 @@ export function useUserLocation(): UseUserLocationReturn {
                         longitude: location.lng.toFixed(6),
                     },
                 });
+                startWatching();
             } catch (err) {
                 const error = err instanceof Error ? err : new Error(String(err));
                 const errorMessage = error.message || "Failed to get location";
@@ -255,7 +323,7 @@ export function useUserLocation(): UseUserLocationReturn {
                 setIsLoading(false);
             }
         })();
-    }, []);
+    }, [startWatching]);
 
     const clearLocation = useCallback(() => {
         logger.info("User cleared location", {
@@ -263,11 +331,12 @@ export function useUserLocation(): UseUserLocationReturn {
             action: "clear_location",
         });
 
+        stopWatching();
         setUserLocation(null);
         setPermission("prompt");
         setError(null);
         clearCachedLocation();
-    }, []);
+    }, [stopWatching]);
 
     return {
         userLocation,
