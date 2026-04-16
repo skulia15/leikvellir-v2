@@ -50,7 +50,7 @@ export default function AddPhotosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg mx-4 sm:mx-auto overflow-hidden">
+      <DialogContent className="max-w-lg mx-4 sm:mx-auto max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" />
@@ -58,14 +58,16 @@ export default function AddPhotosDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <ImageUpload
-          value={images}
-          onChange={setImages}
-          onUploadingChange={setIsUploading}
-          config={{ maxFiles: 8 }}
-        />
+        <div className="min-h-0 overflow-y-auto">
+          <ImageUpload
+            value={images}
+            onChange={setImages}
+            onUploadingChange={setIsUploading}
+            config={{ maxFiles: 8 }}
+          />
+        </div>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-2 flex-shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel")}
           </Button>
