@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown, FileText } from "lucide-react";
+import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown, FileText, Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
@@ -118,6 +118,14 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                 >
                                     <List className="h-4 w-4" />
                                     <span>{t('navigation.allPlaygrounds')}</span>
+                                </Link>
+
+                                <Link
+                                    href="/leaderboard"
+                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                                >
+                                    <Trophy className="h-4 w-4" />
+                                    <span>{t('navigation.leaderboard')}</span>
                                 </Link>
 
                                 <Link
@@ -373,6 +381,12 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
+                                                <Link href="/leaderboard" className="flex items-center">
+                                                    <Trophy className="mr-2 h-4 w-4" />
+                                                    <span>{t('navigation.leaderboard')}</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild>
                                                 <Link href="/create-playground" className="flex items-center">
                                                     <Plus className="mr-2 h-4 w-4" />
                                                     <span>{t('navigation.addPlayground')}</span>
@@ -507,6 +521,12 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                     <Link href="/playgrounds" className="flex items-center">
                                                         <List className="mr-2 h-4 w-4" />
                                                         <span>{t('navigation.allPlaygrounds')}</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/leaderboard" className="flex items-center">
+                                                        <Trophy className="mr-2 h-4 w-4" />
+                                                        <span>{t('navigation.leaderboard')}</span>
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild>

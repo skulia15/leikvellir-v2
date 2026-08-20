@@ -133,6 +133,16 @@ export function formatSchoolType(schoolType: SchoolType | null): string {
 }
 
 /**
+ * Marker fill colours. Shared by the map pins and the map legend so the two
+ * cannot drift apart.
+ */
+export const MARKER_COLORS = {
+  open: '#22c55e', // Regular playground — always open
+  limited: '#f59e0b', // School ground, currently accessible
+  closed: '#ef4444', // School ground, closed during school hours
+} as const;
+
+/**
  * Get map marker color based on playground type and accessibility
  */
 export function getPlaygroundMarkerColor(
@@ -141,14 +151,10 @@ export function getPlaygroundMarkerColor(
   date: Date = new Date()
 ): string {
   if (!isSchoolGround) {
-    return '#22c55e'; // Green for regular playgrounds
+    return MARKER_COLORS.open;
   }
 
-  const accessible = isSchoolGroundAccessible(isSchoolGround, date);
-
-  if (accessible) {
-    return '#f59e0b'; // Amber for accessible school grounds
-  } else {
-    return '#ef4444'; // Red for inaccessible school grounds
-  }
+  return isSchoolGroundAccessible(isSchoolGround, date)
+    ? MARKER_COLORS.limited
+    : MARKER_COLORS.closed;
 }

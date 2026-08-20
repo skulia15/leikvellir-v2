@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
@@ -34,6 +36,7 @@ export default function PlaygroundList({
   // Track playground IDs for smooth animations
   const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
   const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(new Set());
+  const displayedRef = useRef<(Playground & { distance?: number | null })[]>([]);
 
   const filteredAndSortedPlaygrounds = useMemo(() => {
     // Use visible playgrounds if provided, otherwise fall back to all playgrounds
@@ -75,27 +78,30 @@ export default function PlaygroundList({
     return sortPlaygroundsByDistance(filtered, userLocation);
   }, [playgrounds, filters, userLocation, visiblePlaygrounds]);
 
-  // Handle playground list animations with staggered timing
+  // Handle playground list animations with staggered timing.
+  // The currently-rendered list is mirrored in a ref so this effect depends only
+  // on its input; depending on `displayedPlaygrounds` re-ran it on its own output.
   useEffect(() => {
     const currentIds = new Set(filteredAndSortedPlaygrounds.map(p => p.id));
+    const playgroundsToRemove = displayedRef.current.filter(p => !currentIds.has(p.id));
 
-    // Find playgrounds that need to be removed (exit animation)
-    const playgroundsToRemove = displayedPlaygrounds.filter(p => !currentIds.has(p.id));
-
-    if (playgroundsToRemove.length > 0) {
-      // Start exit animation for removed playgrounds
-      setExitingPlaygrounds(new Set(playgroundsToRemove.map(p => p.id)));
-
-      // Remove them after animation completes (longer duration for smoother exit)
-      setTimeout(() => {
-        setDisplayedPlaygrounds(filteredAndSortedPlaygrounds);
-        setExitingPlaygrounds(new Set());
-      }, 300); // Increased from 200ms for smoother animation
-    } else {
+    if (playgroundsToRemove.length === 0) {
       // Update immediately for additions, let CSS handle enter animations
+      displayedRef.current = filteredAndSortedPlaygrounds;
       setDisplayedPlaygrounds(filteredAndSortedPlaygrounds);
+      return;
     }
-  }, [filteredAndSortedPlaygrounds, displayedPlaygrounds]);
+
+    // Start exit animation, then swap in the new list once it completes
+    setExitingPlaygrounds(new Set(playgroundsToRemove.map(p => p.id)));
+    const timer = setTimeout(() => {
+      displayedRef.current = filteredAndSortedPlaygrounds;
+      setDisplayedPlaygrounds(filteredAndSortedPlaygrounds);
+      setExitingPlaygrounds(new Set());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [filteredAndSortedPlaygrounds]);
 
   if (!playgrounds) {
     return (
@@ -136,25 +142,23 @@ export default function PlaygroundList({
   return (
     <div className="">
       {userLocation && (
-        <div className="px-4 py-2.5 text-[11px] tracking-[0.08em] uppercase font-medium text-muted-foreground border-b border-border">
+        <div className="px-4 py-2.5 text-xs tracking-[0.08em] uppercase font-medium text-muted-foreground border-b border-border">
           {t('playground.sortedByDistance')}
         </div>
       )}
-      <div className="divide-y divide-border">
+      <ul className="divide-y divide-border">
         {displayedPlaygrounds.map((playground, index) => {
           const isExiting = exitingPlaygrounds.has(playground.id);
           const currentlyVisible = filteredAndSortedPlaygrounds.some(p => p.id === playground.id);
           const isNewItem = !exitingPlaygrounds.has(playground.id) && currentlyVisible;
+          const isSelected = selectedPlayground?.id === playground.id;
 
           return (
-            <div
+            <li
               key={playground.id}
               className={`
-                cursor-pointer hover:bg-accent/50 transition-all
-                ${selectedPlayground?.id === playground.id
-                  ? "bg-accent/60"
-                  : ""
-                }
+                flex items-stretch transition-colors
+                ${isSelected ? "bg-accent/60" : "hover:bg-accent/50"}
                 ${isExiting
                   ? "animate-out slide-out-to-left fade-out duration-300 ease-in-out pointer-events-none"
                   : isNewItem
@@ -165,20 +169,35 @@ export default function PlaygroundList({
               style={{
                 // Staggered animation delay for smoother appearance
                 animationDelay: isNewItem ? `${index * 50}ms` : undefined,
-                // Smooth transitions for hover and selection states
-                transition: "all 200ms ease-in-out",
               }}
-              onClick={() => !isExiting && onPlaygroundSelect(playground)}
             >
-              <PlaygroundCard
-                playground={playground}
-                distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
-                showDistance={!!userLocation}
-              />
-            </div>
+              {/* Primary action: show this playground on the map. A real button,
+                  so it is reachable by keyboard and announces its pressed state. */}
+              <button
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => !isExiting && onPlaygroundSelect(playground)}
+                className="flex-1 min-w-0 text-left cursor-pointer rounded-lg"
+              >
+                <PlaygroundCard
+                  playground={playground}
+                  distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
+                  showDistance={!!userLocation}
+                />
+              </button>
+              {/* Sibling (never nested) link: the crawlable route to the detail
+                  page, and a 44px target for thumbs. */}
+              <Link
+                href={`/playground/${playground.id}`}
+                aria-label={`${t('playground.viewDetails')}: ${playground.title}`}
+                className="flex w-11 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }
