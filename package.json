@@ -9,6 +9,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:add-blur-columns": "tsx scripts/add-image-blur-columns.ts",
     "backfill:image-blur": "tsx scripts/backfill-image-blur.ts",
     "dev": "next dev --turbo -p 3000",
     "dev:fallback": "next dev",
