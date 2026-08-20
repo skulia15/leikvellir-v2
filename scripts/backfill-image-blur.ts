@@ -10,6 +10,10 @@
  * already-generated entries are reused rather than re-downloaded. Images whose
  * placeholder cannot be generated are left null and simply load as they do now.
  */
+// Next loads .env on its own; a bare tsx script does not. Must come before the
+// db import, which validates the environment on load.
+import "dotenv/config";
+
 import { eq } from "drizzle-orm";
 
 import { db } from "../src/server/db";

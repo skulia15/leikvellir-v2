@@ -10,18 +10,28 @@
  *
  * Both statements are IF NOT EXISTS, so re-running is a no-op.
  */
+// Next loads .env on its own; a bare tsx script does not.
+import "dotenv/config";
+
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import postgres from "postgres";
 
-import { env } from "../src/env";
-
 async function main() {
+  // Read DATABASE_URL directly rather than through ~/env: that validates every
+  // var the app needs (OAuth secrets, Mapbox token) and would refuse to run a
+  // schema change over an unrelated missing key.
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.error("DATABASE_URL is not set. Is .env present in this directory?");
+    process.exit(1);
+  }
+
   const sqlPath = path.join(process.cwd(), "drizzle/0010_add_image_blur_columns.sql");
   const migration = await readFile(sqlPath, "utf8");
 
-  const sql = postgres(env.DATABASE_URL, { max: 1 });
+  const sql = postgres(databaseUrl, { max: 1 });
 
   try {
     await sql.unsafe(migration);
