@@ -31,7 +31,11 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
-import { type Playground, type EquipmentCategory, type Equipment } from "~/types";
+import { type Playground, type EquipmentCategory } from "~/types";
+
+// Equipment as it arrives on a playground: `getById` carries the full record,
+// while the map/list payload only carries id, name and category.
+type PlaygroundEquipmentItem = NonNullable<Playground["playgroundEquipment"]>[number]["equipment"];
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
@@ -127,8 +131,8 @@ export default function PlaygroundDetail({
         return <PlaygroundEquipmentIcon className="h-5 w-5 text-primary" />;
     }
   };
-  const getEquipmentByCategory = (): Record<EquipmentCategory, Equipment[]> => {
-    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, Equipment[]>;
+  const getEquipmentByCategory = (): Record<EquipmentCategory, PlaygroundEquipmentItem[]> => {
+    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, PlaygroundEquipmentItem[]>;
 
     return playground.playgroundEquipment.reduce((acc, { equipment }) => {
       if (!acc[equipment.category]) {
@@ -136,7 +140,7 @@ export default function PlaygroundDetail({
       }
       acc[equipment.category].push(equipment);
       return acc;
-    }, {} as Record<EquipmentCategory, Equipment[]>);
+    }, {} as Record<EquipmentCategory, PlaygroundEquipmentItem[]>);
   };
 
   const equipmentByCategory = getEquipmentByCategory();

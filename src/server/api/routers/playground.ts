@@ -290,14 +290,37 @@ export const playgroundRouter = createTRPCRouter({
       return updatedPlayground;
     }),
 
+  /**
+   * Public map/list payload. Every approved playground is sent at once and the
+   * result is serialized twice (RSC flight + HTML), so columns nobody renders
+   * here are excluded: moderation fields are admin-only, and the equipment
+   * image/description are only shown on the detail page, which uses `getById`.
+   */
   getAll: publicProcedure.query(async ({ ctx }) => {
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "approved"),
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      columns: {
+        reviewedById: false,
+        reviewedAt: false,
+        rejectionReason: false,
+        submitAnonymously: false,
+        updatedAt: false,
+      },
       with: {
         playgroundEquipment: {
+          columns: {
+            playgroundId: true,
+            equipmentId: true,
+          },
           with: {
-            equipment: true,
+            equipment: {
+              columns: {
+                id: true,
+                name: true,
+                category: true,
+              },
+            },
           },
         },
       },
