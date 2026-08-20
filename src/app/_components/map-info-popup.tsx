@@ -24,12 +24,20 @@ interface MapInfoPopupProps {
   playground: Playground;
   userLocation: UserLocation | null;
   onClose: () => void;
+  /**
+   * Pointer entering/leaving the popup body. A hover-opened preview uses these
+   * to stay open while the pointer is inside it, so its links stay clickable.
+   */
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 export function MapInfoPopup({
   playground,
   userLocation,
   onClose,
+  onPointerEnter,
+  onPointerLeave,
 }: MapInfoPopupProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -109,7 +117,11 @@ export function MapInfoPopup({
       maxWidth="320px"
       className="playground-info-popup"
     >
-      <div className="w-[300px] overflow-hidden">
+      <div
+        className="w-[300px] overflow-hidden"
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+      >
         {/* Image section — hero position */}
         <div className="relative">
           {hasImages ? (

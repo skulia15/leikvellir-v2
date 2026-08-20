@@ -14,9 +14,18 @@ interface MapMarkerProps {
   playground: Playground;
   isSelected?: boolean;
   onClick: (playground: Playground) => void;
+  /** Pointer entered the pin. Only fires for a real mouse, never for touch. */
+  onHoverStart?: (playground: Playground) => void;
+  onHoverEnd?: (playground: Playground) => void;
 }
 
-export function MapMarker({ playground, isSelected, onClick }: MapMarkerProps) {
+export function MapMarker({
+  playground,
+  isSelected,
+  onClick,
+  onHoverStart,
+  onHoverEnd,
+}: MapMarkerProps) {
   const markerColor = getPlaygroundMarkerColor(
     playground.isSchoolGround,
     playground.schoolType,
@@ -36,6 +45,14 @@ export function MapMarker({ playground, isSelected, onClick }: MapMarkerProps) {
       }}
     >
       <div
+        // Touch devices fire a synthetic mouseenter on tap, which would open
+        // the hover preview and then immediately have it treated as a click.
+        onPointerEnter={(e) => {
+          if (e.pointerType === "mouse") onHoverStart?.(playground);
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType === "mouse") onHoverEnd?.(playground);
+        }}
         className={`
           flex h-8 w-8 items-center justify-center rounded-full text-white
           shadow-lg cursor-pointer transition-all duration-200
