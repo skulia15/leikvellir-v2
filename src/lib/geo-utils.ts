@@ -132,3 +132,67 @@ export function sortPlaygroundsByDistance(
         return a.distance - b.distance;
     });
 } 
+/**
+ * Why a check-in needs its own position getter.
+ *
+ * getCurrentLocation() above is tuned for distance sorting: it accepts a fix
+ * up to five minutes old and skips the high-accuracy radio to save battery.
+ * Both are wrong for a check-in — a five-minute-old fix can be from another
+ * neighbourhood, which is exactly what the distance check exists to catch —
+ * and it discards coords.accuracy, which the server needs to size the radius.
+ */
+export interface FreshPosition {
+    lat: number;
+    lng: number;
+    /** Accuracy radius in metres (95% confidence), from the Geolocation API. */
+    accuracy: number;
+}
+
+export type GeoErrorKind = "denied" | "timeout" | "unavailable" | "unsupported";
+
+/**
+ * Carries a machine-readable kind rather than the English strings
+ * getCurrentLocation() rejects with, so callers can localise the message.
+ */
+export class GeoError extends Error {
+    constructor(public readonly kind: GeoErrorKind) {
+        super(kind);
+        this.name = "GeoError";
+    }
+}
+
+/**
+ * Get a NEW GPS fix for check-in. Never writes to the sessionStorage location
+ * cache used by useUserLocation — a check-in position is single-use.
+ */
+export function getFreshPosition(timeoutMs = 20000): Promise<FreshPosition> {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new GeoError("unsupported"));
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) =>
+                resolve({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                }),
+            (error) => {
+                if (error.code === error.PERMISSION_DENIED) {
+                    reject(new GeoError("denied"));
+                } else if (error.code === error.TIMEOUT) {
+                    reject(new GeoError("timeout"));
+                } else {
+                    reject(new GeoError("unavailable"));
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: timeoutMs,
+                maximumAge: 0, // Refuse cached positions.
+            },
+        );
+    });
+}

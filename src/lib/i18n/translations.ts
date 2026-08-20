@@ -95,7 +95,11 @@ const getPluralKey = (baseKey: string, count: number, locale: Locale): string =>
     case 'en':
       return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
     case 'is':
-      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+      // Icelandic takes the singular for any number ending in 1 except 11,
+      // so 21 and 101 are "1 leikvöllur" shaped, but 11 is not.
+      return count % 10 === 1 && count % 100 !== 11
+        ? `${baseKey}_one`
+        : `${baseKey}_other`;
     case 'pl':
       // Polish plural rules: 1 = one, 2-4 = few, 5+ = many, 0 = many
       if (count === 1) return `${baseKey}_one`;

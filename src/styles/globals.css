@@ -36,6 +36,16 @@
     --terrain-water: 210 60% 52%;
     --terrain-heather: 290 40% 58%;
     --terrain-stone: 240 8% 60%;
+    /* Access status badges on cards and lists. Text tones clear 4.5:1 on
+       --card; surface tones clear 4.5:1 against the white text they carry.
+       Map pins do not use these — they read MARKER_COLORS in
+       ~/lib/school-hours.ts. */
+    --status-open: 152 62% 26%;
+    --status-open-surface: 152 62% 29%;
+    --status-limited: 30 96% 28%;
+    --status-limited-surface: 26 90% 35%;
+    --status-closed: 0 74% 38%;
+    --status-closed-surface: 0 72% 42%;
   }
   .dark {
     --background: 240 15% 6%;
@@ -62,6 +72,13 @@
     --chart-3: 40 75% 58%;
     --chart-4: 210 55% 58%;
     --chart-5: 340 40% 58%;
+    /* Dark surfaces need lighter status tones to hold 4.5:1 against --card */
+    --status-open: 152 50% 60%;
+    --status-open-surface: 152 55% 34%;
+    --status-limited: 36 85% 62%;
+    --status-limited-surface: 26 80% 40%;
+    --status-closed: 0 80% 70%;
+    --status-closed-surface: 0 70% 45%;
   }
 }
 @layer base {
@@ -70,6 +87,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Keyboard focus is a primary affordance here: the result list is now fully
+     tabbable, so the ring has to read against both card and map surfaces. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  ::selection {
+    background-color: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
   }
 }
 

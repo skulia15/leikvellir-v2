@@ -9,6 +9,7 @@ import Map, { useMap, type MapRef, type ViewStateChangeEvent } from "react-map-g
 import { Navigation } from "lucide-react";
 import { toast } from "sonner";
 import useSupercluster from "use-supercluster";
+import { useSession } from "next-auth/react";
 
 import { Button } from "~/components/ui/button";
 import { env } from "~/env";
@@ -22,6 +23,7 @@ import { MapMarker } from "./map-marker";
 import { MapClusterMarker } from "./map-cluster-marker";
 import { MapUserLocation } from "./map-user-location";
 import { MapInfoPopup } from "./map-info-popup";
+import { MapLegend } from "./map-legend";
 import { useT } from "~/lib/i18n";
 
 interface MapboxMapProps {
@@ -116,10 +118,9 @@ function UserLocationButton({
     <Button
       onClick={getUserLocation}
       disabled={isLoading}
-      size="sm"
-      className="absolute right-3 top-3 z-10"
+      className="absolute right-3 top-3 z-10 min-h-11"
     >
-      <Navigation className="mr-1 h-4 w-4" />
+      <Navigation className="mr-1 h-4 w-4" aria-hidden="true" />
       {isLoading ? t("map.findingLocation") : t("map.myLocation")}
     </Button>
   );
@@ -141,6 +142,19 @@ export function MapboxMap({
   onTotalVisibleCountChange,
 }: MapboxMapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+
+  // Deliberately useQuery, not useSuspenseQuery: the map must not block its
+  // first paint on a per-user personalisation query. Badges pop in when it
+  // resolves.
+  const { data: session } = useSession();
+  const { data: checkedInPlaygroundIds } = api.checkIn.getMyPlaygroundIds.useQuery(
+    undefined,
+    { enabled: !!session, staleTime: 5 * 60 * 1000 },
+  );
+  const checkedInIds = useMemo(
+    () => new Set(checkedInPlaygroundIds ?? []),
+    [checkedInPlaygroundIds],
+  );
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -152,6 +166,9 @@ export function MapboxMap({
 
   // Calculate initial center
   const initialCenter = mapCenter ?? DEFAULT_CENTER;
+
+  // How much of the map's bottom edge is hidden behind the mobile sheet
+  const occludedBottom = isMobile ? drawerHeight : 0;
 
   // Filter playgrounds based on the provided filters
   const filteredPlaygrounds = useMemo(() => {
@@ -293,19 +310,41 @@ export function MapboxMap({
     }
   }, [mapCenter, isMapLoaded]);
 
-  // Extract bounds from a map instance
-  const updateBoundsFromMap = useCallback((map: mapboxgl.Map) => {
-    const bounds = map.getBounds();
-    if (bounds) {
-      setMapBounds([
-        bounds.getWest(),
-        bounds.getSouth(),
-        bounds.getEast(),
-        bounds.getNorth(),
-      ]);
+  // Extract bounds from a map instance.
+  // The bottom sheet covers the lower part of the map on mobile, so the bounds
+  // are read from the *unoccluded* rectangle — otherwise the list counts and
+  // shows playgrounds that are hidden underneath the sheet.
+  const updateBoundsFromMap = useCallback(
+    (map: mapboxgl.Map) => {
+      const container = map.getContainer();
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const visibleBottom = Math.max(height * 0.25, height - occludedBottom);
+
+      if (width > 0 && visibleBottom > 0) {
+        const southWest = map.unproject([0, visibleBottom]);
+        const northEast = map.unproject([width, 0]);
+        setMapBounds([
+          southWest.lng,
+          southWest.lat,
+          northEast.lng,
+          northEast.lat,
+        ]);
+      }
+
+      setZoom(map.getZoom());
+    },
+    [occludedBottom],
+  );
+
+  // Re-read bounds when the sheet is dragged: the viewport did not move, but the
+  // part of it the user can see did.
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (map && isMapLoaded) {
+      updateBoundsFromMap(map);
     }
-    setZoom(map.getZoom());
-  }, []);
+  }, [occludedBottom, isMapLoaded, updateBoundsFromMap]);
 
   // Handle map load — capture initial bounds so markers render immediately
   const handleLoad = useCallback(
@@ -331,9 +370,9 @@ export function MapboxMap({
 
       if (!mapRef.current) return;
 
-      const container = mapRef.current.getContainer();
-      const h = container.clientHeight;
-      const offsetY = h * 0.15;
+      // Shift the target up by half the occluded strip so the selected marker
+      // lands in the middle of what the user can actually see.
+      const offsetY = -occludedBottom / 2;
 
       mapRef.current.flyTo({
         center: [playground.longitude, playground.latitude],
@@ -341,7 +380,7 @@ export function MapboxMap({
         duration: 400,
       });
     },
-    [onPlaygroundSelect],
+    [onPlaygroundSelect, occludedBottom],
   );
 
   // Handle cluster click — zoom into the cluster
@@ -361,19 +400,10 @@ export function MapboxMap({
     [supercluster],
   );
 
-  // Map container style for mobile drawer offset
-  const mapContainerStyle = useMemo(() => {
-    if (isMobile && drawerHeight > 0) {
-      return {
-        height: `calc(100vh - 150px)`,
-        transition: "height 0.3s ease-in-out",
-      };
-    }
-    return { height: "100%" };
-  }, [isMobile, drawerHeight]);
-
   return (
-    <div className="relative" style={mapContainerStyle}>
+    // The map always fills its container. The sheet overlays it rather than
+    // resizing it, so nothing animates layout height on every snap.
+    <div className="relative h-full">
       <Map
         ref={mapRef}
         mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
@@ -425,6 +455,7 @@ export function MapboxMap({
               key={`marker-${playground.id}`}
               playground={playground}
               isSelected={selectedPlayground?.id === playground.id}
+              hasCheckedIn={checkedInIds.has(playground.id)}
               onClick={handleMarkerClick}
             />
           );
@@ -446,6 +477,9 @@ export function MapboxMap({
           autoRequest={autoRequestLocation}
         />
       </Map>
+
+      {/* Key to the marker colours — outside <Map> so it never pans with it */}
+      <MapLegend />
     </div>
   );
 }

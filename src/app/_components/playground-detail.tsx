@@ -38,6 +38,8 @@ import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
 import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import SuggestEditDialog from "./suggest-edit-dialog";
+import { CheckInButton } from "./check-in-button";
+import { CheckInCount } from "./check-in-count";
 import ImageCarousel from "./image-carousel";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, formatDistance } from "~/lib/geo-utils";
@@ -143,7 +145,7 @@ export default function PlaygroundDetail({
   const hasEquipment = playground.playgroundEquipment && playground.playgroundEquipment.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24 lg:pb-0">
       {/* Header with back button and admin actions */}
       <div className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between">
@@ -498,11 +500,23 @@ export default function PlaygroundDetail({
                   playground={playground}
                   className="h-64 w-full"
                 />
+                <div className="hidden lg:block p-4 pb-0">
+                  <CheckInButton
+                    playgroundId={playground.id}
+                    playgroundStatus={playground.status}
+                    size="lg"
+                  />
+                  <CheckInCount
+                    playgroundId={playground.id}
+                    showBeTheFirst={Boolean(session)}
+                    className="mt-2"
+                  />
+                </div>
                 <div className="p-4 flex gap-2">
                   <Button
                     onClick={handleGetDirections}
                     className="flex-1"
-                    size="sm"
+                    size="lg"
                   >
                     <Navigation className="mr-2 h-4 w-4" />
                     {t('playground.getDirections')}
@@ -511,7 +525,7 @@ export default function PlaygroundDetail({
                   <Button
                     variant="outline"
                     className="flex-1"
-                    size="sm"
+                    size="lg"
                     onClick={handleViewOnMap}
                   >
                     <MapPin className="mr-2 h-4 w-4" />
@@ -674,6 +688,32 @@ export default function PlaygroundDetail({
           onOpenChange={setIsAddPhotosDialogOpen}
         />
       )}
+
+      {/*
+        Mobile action bar. The sidebar that holds directions and check-in sits
+        2.6-3.5 screens down on a phone, which is the one scenario the product
+        is actually designed around: standing outside, one hand, deciding
+        whether to go in. These two actions are reachable from first paint.
+      */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card/95
+          backdrop-blur supports-[backdrop-filter]:bg-card/80 px-3 py-2.5 lg:hidden"
+        style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center gap-2">
+          <Button onClick={handleGetDirections} size="lg" className="flex-1">
+            <Navigation className="mr-2 h-4 w-4" />
+            {t('playground.getDirections')}
+          </Button>
+          <CheckInButton
+            playgroundId={playground.id}
+            playgroundStatus={playground.status}
+            size="lg"
+            variant="outline"
+            className="flex-1"
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -57,6 +57,14 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        status: {
+          open: "hsl(var(--status-open))",
+          "open-surface": "hsl(var(--status-open-surface))",
+          limited: "hsl(var(--status-limited))",
+          "limited-surface": "hsl(var(--status-limited-surface))",
+          closed: "hsl(var(--status-closed))",
+          "closed-surface": "hsl(var(--status-closed-surface))",
+        },
         terrain: {
           terracotta: "hsl(var(--terrain-terracotta))",
           moss: "hsl(var(--terrain-moss))",
