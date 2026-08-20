@@ -14,6 +14,7 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { useT } from "~/lib/i18n";
+import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 import SubmissionStatusBadge from "./submission-status-badge";
 
@@ -100,6 +101,7 @@ export default function ViewSubmissionDialog({
                     <div className="relative w-full h-48 rounded-lg overflow-hidden">
                         <Image
                             src={coverImage}
+                            {...playgroundImageBlurProps(playground, coverImage)}
                             alt={playground.title}
                             fill
                             className="object-cover"
@@ -196,6 +198,7 @@ export default function ViewSubmissionDialog({
                                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
                                         <Image
                                             src={img}
+                                            {...playgroundImageBlurProps(playground, img)}
                                             alt={`${playground.title} - ${index + 1}`}
                                             fill
                                             className="object-cover"

@@ -249,16 +249,18 @@ export const CreatePlaygroundSchema = z.object({
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
 
 /**
- * Columns the public `playground.getAll` payload leaves out. They are moderation
- * data that only admin views read, and sending them for every playground on the
- * map is pure weight, so they are optional rather than guaranteed.
+ * Columns the public `playground.getAll` payload leaves out: moderation data
+ * that only admin views read, plus the per-image blur map, which is only needed
+ * by the detail view. Sending either for every playground on the map is pure
+ * weight, so they are optional rather than guaranteed.
  */
 type PlaygroundModerationColumns =
   | "updatedAt"
   | "reviewedById"
   | "reviewedAt"
   | "rejectionReason"
-  | "submitAnonymously";
+  | "submitAnonymously"
+  | "imageBlurData";
 
 type PlaygroundColumns = InferSelectModel<typeof playgrounds>;
 

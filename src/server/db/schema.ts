@@ -128,6 +128,14 @@ export const playgrounds = createTable(
     hasSoftPlayArea: boolean("has_soft_play_area").notNull().default(false), // Soft play area (removed from equipment)
     coverImage: varchar("cover_image", { length: 512 }), // Cover image URL
     images: json("images").$type<string[]>().default([]), // JSON array of image URLs
+    // Tiny base64 JPEG of the cover, used as the `next/image` blur placeholder.
+    // Kept in its own column so the map/list payload can carry it without the
+    // full `imageBlurData` map. Null when generation failed or predates it.
+    coverImageBlur: varchar("cover_image_blur", { length: 2048 }),
+    // Blur placeholders for `images`, keyed by image URL so adding or removing
+    // a photo can't shift them out of alignment. Only sent for a single
+    // playground (detail view), never in the map payload.
+    imageBlurData: json("image_blur_data").$type<Record<string, string>>().default({}),
     status: playgroundStatusEnum("status").notNull().default("pending"), // Submission status
     reviewedById: varchar("reviewed_by", { length: 255 })
       .references(() => users.id), // Admin who reviewed the submission

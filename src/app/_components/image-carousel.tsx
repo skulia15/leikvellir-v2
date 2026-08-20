@@ -6,15 +6,18 @@ import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
+import { blurPlaceholderProps } from "~/lib/image-placeholder";
 
 interface ImageCarouselProps {
   images: string[];
   alt: string;
   className?: string;
   onAddPhotos?: () => void;
+  /** Low-quality placeholders keyed by image URL; images without one just load as before. */
+  blurData?: Record<string, string> | null;
 }
 
-export default function ImageCarousel({ images, alt, className, onAddPhotos }: ImageCarouselProps) {
+export default function ImageCarousel({ images, alt, className, onAddPhotos, blurData }: ImageCarouselProps) {
   const t = useT();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -109,6 +112,7 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos }: I
             >
               <Image
                 src={image ?? "/playground.jpg"}
+                {...blurPlaceholderProps(blurData?.[image])}
                 alt={`${alt} - Image ${index + 1}`}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 800px"

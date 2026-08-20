@@ -17,6 +17,7 @@ import {
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
+import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 
 interface MapInfoPopupProps {
@@ -139,6 +140,7 @@ export function MapInfoPopup({
                   >
                     <Image
                       src={image ?? "/playground.jpg"}
+                      {...playgroundImageBlurProps(playground, image)}
                       alt={`${playground.title} - ${index + 1}`}
                       fill
                       sizes="300px"

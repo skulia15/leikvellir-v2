@@ -11,6 +11,7 @@ import { Card, CardContent } from "~/components/ui/card";
 import { calculateDistance, formatDistance, type UserLocation } from "~/lib/geo-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
+import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 
 interface PlaygroundInfoWindowProps {
@@ -194,6 +195,7 @@ export function PlaygroundInfoWindow({
                         >
                           <Image
                             src={image ?? "/playground.jpg"}
+                            {...playgroundImageBlurProps(playground, image)}
                             alt={`${playground.title} - Image ${index + 1}`}
                             fill
                             sizes="280px"

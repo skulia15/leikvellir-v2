@@ -4,6 +4,7 @@ import { Zap, Footprints, GraduationCap } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
+import { blurPlaceholderProps } from "~/lib/image-placeholder";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
 
 function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
@@ -41,6 +42,7 @@ export default function PlaygroundCard({
                 ? playground.coverImage
                 : "/playground.jpg"
             }
+            {...blurPlaceholderProps(playground.coverImageBlur)}
             alt="Playground"
             width={150}
             height={150}

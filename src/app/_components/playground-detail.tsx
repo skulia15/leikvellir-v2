@@ -92,6 +92,15 @@ export default function PlaygroundDetail({
     ...(playground.images ?? [])
   ].filter((img, index, arr) => arr.indexOf(img) === index); // Remove duplicates
 
+  // The cover's placeholder lives in its own column so the map payload can ship
+  // it alone; fold it back in so the carousel can look up every image by URL.
+  const carouselBlurData = {
+    ...(playground.imageBlurData ?? {}),
+    ...(playground.coverImage && playground.coverImageBlur
+      ? { [playground.coverImage]: playground.coverImageBlur }
+      : {}),
+  };
+
 
   const handleAddPhotos = () => {
     if (!session) {
@@ -201,6 +210,7 @@ export default function PlaygroundDetail({
             {/* Image Carousel — full-bleed on mobile, contained on desktop */}
             <ImageCarousel
               images={displayImages}
+              blurData={carouselBlurData}
               alt={playground.title}
               className=""
               onAddPhotos={playground.status === "approved" ? handleAddPhotos : undefined}
