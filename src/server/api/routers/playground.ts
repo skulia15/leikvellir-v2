@@ -359,6 +359,25 @@ export const playgroundRouter = createTRPCRouter({
     return playgroundList ?? null;
   }),
 
+  /**
+   * Name and municipality of every approved playground, for the SEO structured
+   * data on /playgrounds. Deliberately separate from `getAll`: that payload
+   * carries images, placeholders and equipment joins, none of which end up in
+   * the JSON-LD, and pulling it just to map three fields made the page shell
+   * wait on the whole thing.
+   */
+  getSummaries: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.query.playgrounds.findMany({
+      where: (playgrounds, { eq }) => eq(playgrounds.status, "approved"),
+      orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      columns: {
+        id: true,
+        title: true,
+        municipality: true,
+      },
+    });
+  }),
+
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
     await requireAdmin(ctx.db, ctx.session.user.id);
     const playgroundList = await ctx.db.query.playgrounds.findMany({
