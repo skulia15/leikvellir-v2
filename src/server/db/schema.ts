@@ -1,6 +1,7 @@
 // schema.ts
 import { relations, sql } from "drizzle-orm";
 import {
+  date,
   index,
   integer,
   pgTableCreator,
@@ -8,6 +9,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
   doublePrecision,
   boolean,
@@ -242,6 +244,74 @@ export const playgroundEditSuggestionEquipment = createTable(
   }),
 );
 
+// Enum for why a check-in was flagged by anti-cheat
+export const checkInFlagReasonEnum = pgEnum("check_in_flag_reason", [
+  "implausible_speed",
+  "manual",
+]);
+
+// Check-ins: a user recording that they visited a playground in person.
+export const checkIns = createTable(
+  "check_in",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    playgroundId: integer("playground_id")
+      .notNull()
+      .references(() => playgrounds.id, { onDelete: "cascade" }),
+
+    // Calendar-day bucket in Atlantic/Reykjavik, computed server-side and
+    // materialised. Postgres cannot build a unique index over an expression
+    // involving now(), and the client's clock is not ours to trust.
+    checkInDate: date("check_in_date", { mode: "string" }).notNull(),
+
+    // Privacy: we deliberately do NOT store the user's reported lat/lng.
+    // These scalars are all that is needed to audit a disputed check-in.
+    distanceMeters: integer("distance_meters").notNull(),
+    accuracyMeters: integer("accuracy_meters").notNull(),
+
+    // Anti-cheat. Flagged rows still count toward a playground's visitor
+    // counter; they are excluded from every leaderboard aggregate.
+    isFlagged: boolean("is_flagged").notNull().default(false),
+    flagReason: checkInFlagReasonEnum("flag_reason"),
+    impliedSpeedKmh: integer("implied_speed_kmh"),
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => ({
+    // The cooldown. Enforced by the database rather than application logic
+    // because serverless invocations run concurrently and a read-then-write
+    // check would race.
+    userPlaygroundDayUniq: uniqueIndex("check_in_user_playground_day_uniq").on(
+      table.userId,
+      table.playgroundId,
+      table.checkInDate,
+    ),
+    playgroundIdx: index("check_in_playground_idx").on(table.playgroundId),
+    userCreatedAtIdx: index("check_in_user_created_at_idx").on(table.userId, table.createdAt),
+    // Plain composite rather than a partial index on is_flagged: drizzle-kit
+    // 0.24 handles partial indexes unreliably and push runs unattended in
+    // postbuild. Covers the same leaderboard query at negligible cost.
+    leaderboardIdx: index("check_in_leaderboard_idx").on(
+      table.isFlagged,
+      table.userId,
+      table.playgroundId,
+    ),
+  }),
+);
+
+export const checkInsRelations = relations(checkIns, ({ one }) => ({
+  user: one(users, { fields: [checkIns.userId], references: [users.id] }),
+  playground: one(playgrounds, {
+    fields: [checkIns.playgroundId],
+    references: [playgrounds.id],
+  }),
+}));
+
 export const users = createTable("user", {
   id: varchar("id", { length: 255 })
     .notNull()
@@ -259,10 +329,27 @@ export const users = createTable("user", {
   bannedAt: timestamp("banned_at", { withTimezone: true }),
   bannedById: varchar("banned_by", { length: 255 }), // Will reference users.id but removing circular ref for now
   banReason: text("ban_reason"),
-});
+
+  // Leaderboard participation is opt-in and pseudonymous: nobody appears on a
+  // public board until they choose a name and ask to be listed.
+  leaderboardOptIn: boolean("leaderboard_opt_in").notNull().default(false),
+  leaderboardName: varchar("leaderboard_name", { length: 32 }),
+  // Lowercased copy maintained by the application purely so a plain unique
+  // index can enforce case-insensitive uniqueness. A lower(...) expression
+  // index would not survive `drizzle-kit push` reliably, and push runs
+  // unattended in postbuild.
+  leaderboardNameNormalized: varchar("leaderboard_name_normalized", { length: 32 }),
+}, (table) => ({
+  // Postgres treats NULLs as distinct, so every existing user (all NULL) is
+  // unaffected by this constraint.
+  leaderboardNameUniq: uniqueIndex("user_leaderboard_name_uniq").on(
+    table.leaderboardNameNormalized,
+  ),
+}));
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  checkIns: many(checkIns),
 }));
 
 export const accounts = createTable(
@@ -354,6 +441,7 @@ export const playgroundEquipmentRelations = relations(playgroundEquipment, ({ on
 
 export const playgroundsRelations = relations(playgrounds, ({ many, one }) => ({
   playgroundEquipment: many(playgroundEquipment),
+  checkIns: many(checkIns),
   createdBy: one(users, {
     fields: [playgrounds.createdById],
     references: [users.id],

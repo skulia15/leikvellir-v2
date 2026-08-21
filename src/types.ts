@@ -3,14 +3,16 @@ import { z } from "zod";
 import type {
   playgrounds,
   equipment,
-  playgroundEditSuggestions
+  playgroundEditSuggestions,
+  checkIns
 } from "./server/db/schema";
 import {
   schoolTypeEnum,
   equipmentCategoryEnum,
   userRoleEnum,
   playgroundStatusEnum,
-  editSuggestionStatusEnum
+  editSuggestionStatusEnum,
+  checkInFlagReasonEnum
 } from "./server/db/schema";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
@@ -20,6 +22,7 @@ export type SchoolType = typeof schoolTypeEnum.enumValues[number];
 export type EquipmentCategory = typeof equipmentCategoryEnum.enumValues[number];
 export type PlaygroundStatus = typeof playgroundStatusEnum.enumValues[number];
 export type EditSuggestionStatus = typeof editSuggestionStatusEnum.enumValues[number];
+export type CheckInFlagReason = typeof checkInFlagReasonEnum.enumValues[number];
 
 // Branded types for type safety
 export type Latitude = number & { __brand: "latitude" };
@@ -68,6 +71,7 @@ export const EquipmentCategorySchema = z.enum(equipmentCategoryEnum.enumValues);
 export const UserRoleSchema = z.enum(userRoleEnum.enumValues);
 export const PlaygroundStatusSchema = z.enum(playgroundStatusEnum.enumValues);
 export const EditSuggestionStatusSchema = z.enum(editSuggestionStatusEnum.enumValues);
+export const CheckInFlagReasonSchema = z.enum(checkInFlagReasonEnum.enumValues);
 
 // Review action schema
 export const ReviewActionSchema = z.enum(["approve", "reject"]);
@@ -425,3 +429,99 @@ export class PlaygroundNotFoundError extends Error {
     this.name = "PlaygroundNotFoundError";
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Check-ins
+// ---------------------------------------------------------------------------
+
+export type CheckIn = InferSelectModel<typeof checkIns>;
+export type NewCheckIn = InferInsertModel<typeof checkIns>;
+
+export const CreateCheckInSchema = z.object({
+  playgroundId: z.number().int().positive(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  // GeolocationCoordinates.accuracy — metres, 95% confidence radius.
+  accuracy: z.number().min(0).max(100_000),
+});
+
+export type CreateCheckInInput = z.infer<typeof CreateCheckInSchema>;
+
+/**
+ * The check-in mutation reports its outcome as a discriminated union rather
+ * than throwing, so the client can key translations off `status` instead of
+ * parsing error messages. Throws stay reserved for auth and not-found.
+ *
+ * Note there is no `isFlagged` here on purpose: telling a user their check-in
+ * was flagged tells a cheater exactly where the threshold sits.
+ */
+export type CheckInResult =
+  | { status: "success"; checkInId: number; distanceMeters: number; totalCheckIns: number }
+  | { status: "already_checked_in_today" }
+  | { status: "too_far"; distanceMeters: number; allowedMeters: number }
+  | { status: "accuracy_too_poor"; accuracyMeters: number }
+  | { status: "daily_limit_reached" }
+  | { status: "not_available" };
+
+export type CheckInStatus = CheckInResult["status"];
+
+export interface PlaygroundCheckInStats {
+  totalCheckIns: number;
+  uniqueVisitors: number;
+  viewerCheckedInToday: boolean;
+  viewerHasEverCheckedIn: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboards
+// ---------------------------------------------------------------------------
+
+export const LeaderboardBoardSchema = z.enum(["explorers", "active"]);
+export type LeaderboardBoard = z.infer<typeof LeaderboardBoardSchema>;
+
+export const GetLeaderboardSchema = z.object({
+  board: LeaderboardBoardSchema,
+  limit: z.number().int().min(1).max(100).default(50),
+});
+
+/**
+ * Display names are user-generated content, so they carry the usual
+ * impersonation and profanity risk. The allowlist keeps out control
+ * characters, lookalike whitespace and markup; length is capped to match the
+ * column. Icelandic and Polish letters are covered by \p{L}.
+ */
+export const LeaderboardDisplayNameSchema = z
+  .string()
+  .trim()
+  .min(2)
+  .max(32)
+  .regex(/^[\p{L}\p{N} ._-]+$/u);
+
+export const UpdateLeaderboardProfileSchema = z.object({
+  optIn: z.boolean(),
+  displayName: LeaderboardDisplayNameSchema.optional(),
+});
+
+export interface LeaderboardRow {
+  rank: number;
+  displayName: string;
+  score: number;
+  isMe: boolean;
+}
+
+export interface LeaderboardResponse {
+  rows: LeaderboardRow[];
+  /** The caller's own standing, when they are opted in but outside the top N. */
+  me: LeaderboardRow | null;
+}
+
+export interface LeaderboardProfile {
+  optIn: boolean;
+  displayName: string | null;
+}
+
+export type UpdateLeaderboardProfileResult =
+  | { status: "ok" }
+  | { status: "name_taken" }
+  | { status: "name_required" };

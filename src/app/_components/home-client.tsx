@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { List } from "lucide-react";
-import { Button } from "~/components/ui/button";
-// import { MobileMapListToggle } from "./mobile-map-list-toggle";
 import {
     MapErrorBoundary,
     DataErrorBoundary,
@@ -47,10 +44,11 @@ export default function HomeClient() {
     const [mapCenter, setMapCenter] = useState<UserLocation | null>(null);
     const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
     const [totalVisibleCount, setTotalVisibleCount] = useState(0);
-    const [isOpen, setOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
-    const [mobileView, setMobileView] = useState<"map" | "list">("map");
     const [actualDrawerHeight, setActualDrawerHeight] = useState(0);
+    // The map reports its viewport once it has loaded; until then a count would
+    // be a guess, and "0" reads as "there is nothing here".
+    const [hasMapReported, setHasMapReported] = useState(false);
     const [currentSnapIndex, setCurrentSnapIndex] = useState(1); // Track snap position for conditional UI
     const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
     const ref = useRef<SheetRef>();
@@ -59,31 +57,77 @@ export default function HomeClient() {
     const [playgrounds] = api.playground.getAll.useSuspenseQuery();
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-    // Observe drawer height changes
+    // Measure how much of the map the sheet is actually covering.
+    //
+    // react-modal-sheet keeps its container at the height of the tallest snap
+    // point and slides it with a transform, so offsetHeight is a constant — it
+    // reported ~85% of the screen at every snap, including the collapsed one.
+    // The covered strip has to be derived from the rect's top edge instead.
+    //
+    // A transform fires neither resize nor scroll events, so the sheet is
+    // followed with rAF until it stops moving and only the settled value is
+    // committed: one render per snap rather than one per animation frame.
+    // currentSnapIndex in the deps is what restarts that poll.
     useEffect(() => {
-        if (!isMobile) return;
+        if (!isMobile) {
+            setActualDrawerHeight(0);
+            return;
+        }
 
-        const updateDrawerHeight = () => {
-            const drawerElement = document.querySelector('.react-modal-sheet-container')!;
-            if (drawerElement) {
-                setActualDrawerHeight((drawerElement as HTMLElement).offsetHeight);
-            }
+        let frame = 0;
+        let previous = -1;
+        let stableFrames = 0;
+
+        const measure = () => {
+            const drawerElement = document.querySelector<HTMLElement>(
+                '.react-modal-sheet-container',
+            );
+            if (!drawerElement) return null;
+            const rect = drawerElement.getBoundingClientRect();
+            return Math.max(
+                0,
+                Math.min(window.innerHeight - rect.top, window.innerHeight),
+            );
         };
 
-        // Update immediately
-        updateDrawerHeight();
+        const poll = () => {
+            const covered = measure();
+            const settled = covered !== null && Math.abs(covered - previous) < 1;
+            stableFrames = settled ? stableFrames + 1 : 0;
+            if (covered !== null) previous = covered;
 
-        // Set up a ResizeObserver to watch for drawer changes
-        const observer = new ResizeObserver(updateDrawerHeight);
-        const drawerElement = document.querySelector('.react-modal-sheet-container')!;
+            // Three quiet frames means the snap animation is over.
+            if (covered !== null && stableFrames >= 3) {
+                frame = 0;
+                setActualDrawerHeight(covered);
+                return;
+            }
+            frame = requestAnimationFrame(poll);
+        };
+
+        const schedule = () => {
+            previous = -1;
+            stableFrames = 0;
+            if (!frame) frame = requestAnimationFrame(poll);
+        };
+
+        schedule();
+
+        // The sheet's own height still tracks the viewport (mobile browser chrome
+        // collapsing, orientation change), and neither shows up as a snap.
+        const observer = new ResizeObserver(schedule);
+        const drawerElement = document.querySelector('.react-modal-sheet-container');
         if (drawerElement) {
             observer.observe(drawerElement);
         }
+        window.addEventListener('resize', schedule);
 
         return () => {
+            if (frame) cancelAnimationFrame(frame);
             observer.disconnect();
+            window.removeEventListener('resize', schedule);
         };
-    }, [isMobile]);
+    }, [isMobile, currentSnapIndex]);
 
     // Handle initial loading state
     useEffect(() => {
@@ -139,27 +183,29 @@ export default function HomeClient() {
         }
     }, [searchParams, playgrounds]);
 
-    // Calculate filtered playground count for the filter component
-    const filteredPlaygroundCount = useMemo(() => {
-        if (isInitialLoading || !playgrounds) return 0;
-
-        return visiblePlaygrounds.length > 0
-            ? visiblePlaygrounds.length
-            : playgrounds.filter((playground: Playground) => {
-                if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
-                    return false;
-                }
-                if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
-                    return false;
-                }
-                return true;
-            }).length;
-    }, [playgrounds, isInitialLoading, visiblePlaygrounds, filters]);
-
     // Stable callback to prevent infinite loops
     const handleVisiblePlaygroundsChange = useCallback((newVisiblePlaygrounds: (Playground & { distance?: number | null })[]) => {
         setVisiblePlaygrounds(newVisiblePlaygrounds);
+        setHasMapReported(true);
     }, []);
+
+    // Header count: the number of results actually in view, or a placeholder
+    // while the map is still establishing its bounds.
+    const isCountReady = !isInitialLoading && hasMapReported;
+    const resultCountHeader = (
+        <div className="flex items-center gap-2.5" aria-live="polite" aria-atomic="true">
+            {isCountReady ? (
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
+                    {visiblePlaygrounds.length}
+                </span>
+            ) : (
+                <span className="h-5 w-8 rounded-full bg-muted animate-pulse" aria-hidden="true" />
+            )}
+            <span className="text-sm font-semibold text-foreground">
+                {t('playground.playgroundsInView')}
+            </span>
+        </div>
+    );
 
     // Handle playground selection and snap drawer to minimized state on mobile
     const handlePlaygroundSelect = useCallback((playground: Playground | null) => {
@@ -180,9 +226,9 @@ export default function HomeClient() {
 
     // Calculate drawer height based on actual DOM element instead of state
     const getDrawerHeight = useCallback(() => {
-        if (!isMobile || !isOpen) return 0;
+        if (!isMobile) return 0;
         return actualDrawerHeight;
-    }, [isMobile, isOpen, actualDrawerHeight]);
+    }, [isMobile, actualDrawerHeight]);
 
     // Playground list content (without filters — filters are placed separately)
     const playgroundListContent = (
@@ -209,7 +255,6 @@ export default function HomeClient() {
             <PlaygroundFilters
                 filters={filters}
                 onFiltersChange={setFilters}
-                playgroundCount={filteredPlaygroundCount}
             />
             {isInitialLoading ? (
                 <PlaygroundListSkeleton count={6} />
@@ -232,44 +277,10 @@ export default function HomeClient() {
         <h1 className="sr-only">{t('playground.seoHomeHeading')}</h1>
     );
 
-    // Mobile layout — toggle between map view (with bottom sheet) and list view
+    // Mobile layout — map with a bottom sheet over it
     if (isMobile) {
-        // Full-screen list view
-        if (mobileView === "list") {
-            return (
-                <div className="fixed inset-0 flex flex-col pt-16 bg-card z-20">
-                    {seoHeading}
-                    {/* List header with count and filters */}
-                    <div className="px-4 pt-6 pb-4 border-b border-border bg-card">
-                        <div className="flex items-center gap-2.5 mb-3">
-                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-                                {visiblePlaygrounds.length}
-                            </span>
-                            <span className="text-sm font-semibold text-foreground">
-                                {t('playground.playgroundsFound')}
-                            </span>
-                        </div>
-                        <PlaygroundFilters
-                            filters={filters}
-                            onFiltersChange={setFilters}
-                            playgroundCount={filteredPlaygroundCount}
-                        />
-                    </div>
-
-                    {/* Scrollable list */}
-                    <ScrollArea className="flex-1">
-                        <div className="px-2 pb-20">
-                            {playgroundListContent}
-                        </div>
-                    </ScrollArea>
-
-                </div>
-            );
-        }
-
-        // Map view with bottom sheet
         return (
-            <div className="flex flex-col h-screen relative">
+            <div className="relative flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
                 {seoHeading}
                 {/* Map container - takes full available height */}
                 <div className="absolute inset-0 z-0">
@@ -295,7 +306,7 @@ export default function HomeClient() {
                 {/* Mobile bottom sheet */}
                 <Sheet
                     ref={ref}
-                    isOpen={isOpen}
+                    isOpen={true}
                     onClose={() => {
                         // Snap to minimized (15%) instead of fully closing,
                         // so a fast swipe down collapses rather than hides the sheet
@@ -323,19 +334,11 @@ export default function HomeClient() {
                     >
                         <Sheet.Header className="px-4 pt-3 pb-2 border-b border-border bg-card">
                             <div className="mx-auto h-1 w-10 rounded-full bg-border mb-2" />
-                            <div className="flex items-center gap-2.5">
-                                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-                                    {visiblePlaygrounds.length}
-                                </span>
-                                <span className="text-sm font-semibold text-foreground">
-                                    {t('playground.playgroundsFound')}
-                                </span>
-                            </div>
+                            {resultCountHeader}
                             <div className="mt-2">
                                 <PlaygroundFilters
                                     filters={filters}
                                     onFiltersChange={setFilters}
-                                    playgroundCount={filteredPlaygroundCount}
                                 />
                             </div>
                         </Sheet.Header>
@@ -348,22 +351,6 @@ export default function HomeClient() {
                         </Sheet.Content>
                     </Sheet.Container>
                 </Sheet>
-
-
-                {/* Floating button to reopen drawer when closed */}
-                {!isOpen && (
-                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
-                        <Button
-                            onClick={() => setOpen(true)}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 rounded-full px-6 py-3 flex items-center gap-2 text-sm"
-                        >
-                            <List className="h-4 w-4" />
-                            <span className="text-sm font-medium">
-                                {visiblePlaygrounds.length} {t('playground.playgroundsFound')}
-                            </span>
-                        </Button>
-                    </div>
-                )}
             </div>
         );
     }
@@ -377,14 +364,7 @@ export default function HomeClient() {
                 <ScrollArea className="h-full">
                     {/* Sidebar header with count badge */}
                     <div className="px-5 py-4 border-b border-border sticky top-0 bg-card z-10">
-                        <div className="flex items-center gap-2.5">
-                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-                                {visiblePlaygrounds.length}
-                            </span>
-                            <h2 className="text-sm font-semibold text-foreground">
-                                {t('playground.playgroundsFound')}
-                            </h2>
-                        </div>
+                        {resultCountHeader}
                     </div>
                     <div className="px-4 pb-4">
                         {desktopSidebarContent}

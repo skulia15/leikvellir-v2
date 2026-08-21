@@ -9,11 +9,18 @@ import Map, { useMap, type MapRef, type ViewStateChangeEvent } from "react-map-g
 import { Navigation } from "lucide-react";
 import { toast } from "sonner";
 import useSupercluster from "use-supercluster";
+import { useSession } from "next-auth/react";
 
 import { Button } from "~/components/ui/button";
 import { env } from "~/env";
 import { calculateDistance, type UserLocation } from "~/lib/geo-utils";
-import { isWithinBounds, playgroundsToGeoJSON, type MapBounds } from "~/lib/map-utils";
+import {
+  getListBounds,
+  getMarkerBounds,
+  isWithinBounds,
+  playgroundsToGeoJSON,
+  type MapBounds,
+} from "~/lib/map-utils";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
@@ -22,6 +29,7 @@ import { MapMarker } from "./map-marker";
 import { MapClusterMarker } from "./map-cluster-marker";
 import { MapUserLocation } from "./map-user-location";
 import { MapInfoPopup } from "./map-info-popup";
+import { MapLegend } from "./map-legend";
 import { useT } from "~/lib/i18n";
 
 interface MapboxMapProps {
@@ -51,6 +59,16 @@ const DEFAULT_ZOOM = 15;
 
 /** Grace period for the pointer to travel from a pin to its hover preview. */
 const HOVER_CLOSE_DELAY_MS = 150;
+
+/**
+ * Bounds are recomputed on every map settle and every sheet snap, but usually
+ * come back identical. Comparing them keeps a fresh array from re-running the
+ * clusterer and re-rendering every marker for no visible change.
+ */
+function boundsEqual(a: MapBounds | null, b: MapBounds | null): boolean {
+  if (!a || !b) return a === b;
+  return a.every((value, index) => value === b[index]);
+}
 
 /**
  * User location button — prompts for geolocation and centers the map
@@ -119,10 +137,9 @@ function UserLocationButton({
     <Button
       onClick={getUserLocation}
       disabled={isLoading}
-      size="sm"
-      className="absolute right-3 top-3 z-10"
+      className="absolute right-3 top-3 z-10 min-h-11"
     >
-      <Navigation className="mr-1 h-4 w-4" />
+      <Navigation className="mr-1 h-4 w-4" aria-hidden="true" />
       {isLoading ? t("map.findingLocation") : t("map.myLocation")}
     </Button>
   );
@@ -148,7 +165,30 @@ export function MapboxMap({
   // precedence and stays open until the map is clicked.
   const [hoveredPlayground, setHoveredPlayground] = useState<Playground | null>(null);
   const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+
+  // Deliberately useQuery, not useSuspenseQuery: the map must not block its
+  // first paint on a per-user personalisation query. Badges pop in when it
+  // resolves.
+  const { data: session } = useSession();
+  const { data: checkedInPlaygroundIds } = api.checkIn.getMyPlaygroundIds.useQuery(
+    undefined,
+    { enabled: !!session, staleTime: 5 * 60 * 1000 },
+  );
+  const checkedInIds = useMemo(
+    () => new Set(checkedInPlaygroundIds ?? []),
+    [checkedInPlaygroundIds],
+  );
+  // Two different rectangles, deliberately kept apart:
+  //  - markerBounds is the FULL map canvas (plus a margin). Every pin the user
+  //    can see on the map has to be rendered, including the ones behind the
+  //    sheet, because the sheet is an overlay the user can drag away.
+  //  - listBounds is only the part of the canvas the sheet is not covering.
+  //    The result list and its count read this one, so the list never offers a
+  //    playground that is hidden underneath the sheet.
+  // Feeding listBounds to the clusterer culls pins that are plainly visible on
+  // the map, so the two must never be merged back together.
+  const [markerBounds, setMarkerBounds] = useState<MapBounds | null>(null);
+  const [listBounds, setListBounds] = useState<MapBounds | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const previousPlaygroundsRef = useRef<
@@ -159,6 +199,9 @@ export function MapboxMap({
 
   // Calculate initial center
   const initialCenter = mapCenter ?? DEFAULT_CENTER;
+
+  // How much of the map's bottom edge is hidden behind the mobile sheet
+  const occludedBottom = isMobile ? drawerHeight : 0;
 
   // Filter playgrounds based on the provided filters
   const filteredPlaygrounds = useMemo(() => {
@@ -200,7 +243,7 @@ export function MapboxMap({
   // Supercluster for marker clustering
   const { clusters, supercluster } = useSupercluster({
     points: geoPoints.features,
-    bounds: mapBounds ?? undefined,
+    bounds: markerBounds ?? undefined,
     zoom,
     options: {
       radius: 60,
@@ -211,17 +254,17 @@ export function MapboxMap({
   // Filter playgrounds visible in the current map bounds
   const visiblePlaygrounds = useMemo(() => {
     return filteredPlaygrounds.filter((playground) => {
-      if (!mapBounds) return true;
-      return isWithinBounds(playground, mapBounds);
+      if (!listBounds) return true;
+      return isWithinBounds(playground, listBounds);
     });
-  }, [filteredPlaygrounds, mapBounds]);
+  }, [filteredPlaygrounds, listBounds]);
 
   // Count ALL playgrounds in the current viewport (ignoring filters)
   const totalPlaygroundsInBounds = useMemo(() => {
     if (!playgrounds) return 0;
-    if (!mapBounds) return playgrounds.length;
-    return playgrounds.filter((playground) => isWithinBounds(playground, mapBounds)).length;
-  }, [playgrounds, mapBounds]);
+    if (!listBounds) return playgrounds.length;
+    return playgrounds.filter((playground) => isWithinBounds(playground, listBounds)).length;
+  }, [playgrounds, listBounds]);
 
   // Notify parent of total (unfiltered) visible count
   useEffect(() => {
@@ -300,19 +343,53 @@ export function MapboxMap({
     }
   }, [mapCenter, isMapLoaded]);
 
-  // Extract bounds from a map instance
-  const updateBoundsFromMap = useCallback((map: mapboxgl.Map) => {
-    const bounds = map.getBounds();
-    if (bounds) {
-      setMapBounds([
-        bounds.getWest(),
-        bounds.getSouth(),
-        bounds.getEast(),
-        bounds.getNorth(),
-      ]);
+  // Re-read the part of the map the sheet leaves visible. Only the list cares,
+  // so this does not touch markerBounds: re-running the clusterer would
+  // re-render every pin on the map for a change the map itself never saw.
+  const updateListBoundsFromMap = useCallback(
+    (map: mapboxgl.Map) => {
+      const container = map.getContainer();
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width <= 0 || height <= 0) return;
+
+      const unproject = (point: [number, number]) => map.unproject(point);
+      const next = getListBounds(unproject, width, height, occludedBottom);
+      setListBounds((prev) => (boundsEqual(prev, next) ? prev : next));
+    },
+    [occludedBottom],
+  );
+
+  // Extract both rectangles from a map instance: see the comment on the state
+  // above for why the markers and the list read different ones.
+  const updateBoundsFromMap = useCallback(
+    (map: mapboxgl.Map) => {
+      const container = map.getContainer();
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      if (width > 0 && height > 0) {
+        const unproject = (point: [number, number]) => map.unproject(point);
+        const nextMarkerBounds = getMarkerBounds(unproject, width, height);
+        setMarkerBounds((prev) =>
+          boundsEqual(prev, nextMarkerBounds) ? prev : nextMarkerBounds,
+        );
+        updateListBoundsFromMap(map);
+      }
+
+      setZoom(map.getZoom());
+    },
+    [updateListBoundsFromMap],
+  );
+
+  // Re-read the visible rectangle when the sheet is dragged: the viewport did
+  // not move, but the part of it the user can see did.
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (map && isMapLoaded) {
+      updateListBoundsFromMap(map);
     }
-    setZoom(map.getZoom());
-  }, []);
+  }, [isMapLoaded, updateListBoundsFromMap]);
 
   // Handle map load — capture initial bounds so markers render immediately
   const handleLoad = useCallback(
@@ -372,9 +449,9 @@ export function MapboxMap({
 
       if (!mapRef.current) return;
 
-      const container = mapRef.current.getContainer();
-      const h = container.clientHeight;
-      const offsetY = h * 0.15;
+      // Shift the target up by half the occluded strip so the selected marker
+      // lands in the middle of what the user can actually see.
+      const offsetY = -occludedBottom / 2;
 
       mapRef.current.flyTo({
         center: [playground.longitude, playground.latitude],
@@ -382,7 +459,7 @@ export function MapboxMap({
         duration: 400,
       });
     },
-    [onPlaygroundSelect, cancelHoverClose],
+    [onPlaygroundSelect, cancelHoverClose, occludedBottom],
   );
 
   // Handle cluster click — zoom into the cluster
@@ -402,19 +479,10 @@ export function MapboxMap({
     [supercluster],
   );
 
-  // Map container style for mobile drawer offset
-  const mapContainerStyle = useMemo(() => {
-    if (isMobile && drawerHeight > 0) {
-      return {
-        height: `calc(100vh - 150px)`,
-        transition: "height 0.3s ease-in-out",
-      };
-    }
-    return { height: "100%" };
-  }, [isMobile, drawerHeight]);
-
   return (
-    <div className="relative" style={mapContainerStyle}>
+    // The map always fills its container. The sheet overlays it rather than
+    // resizing it, so nothing animates layout height on every snap.
+    <div className="relative h-full">
       <Map
         ref={mapRef}
         mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
@@ -466,6 +534,7 @@ export function MapboxMap({
               key={`marker-${playground.id}`}
               playground={playground}
               isSelected={selectedPlayground?.id === playground.id}
+              hasCheckedIn={checkedInIds.has(playground.id)}
               onClick={handleMarkerClick}
               onHoverStart={handleMarkerHoverStart}
               onHoverEnd={handleMarkerHoverEnd}
@@ -497,6 +566,9 @@ export function MapboxMap({
           autoRequest={autoRequestLocation}
         />
       </Map>
+
+      {/* Key to the marker colours — outside <Map> so it never pans with it */}
+      <MapLegend />
     </div>
   );
 }
