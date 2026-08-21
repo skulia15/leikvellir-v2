@@ -57,6 +57,9 @@ const DEFAULT_CENTER = {
 
 const DEFAULT_ZOOM = 15;
 
+/** Grace period for the pointer to travel from a pin to its hover preview. */
+const HOVER_CLOSE_DELAY_MS = 150;
+
 /**
  * Bounds are recomputed on every map settle and every sheet snap, but usually
  * come back identical. Comparing them keeps a fresh array from re-running the
@@ -158,6 +161,10 @@ export function MapboxMap({
   onTotalVisibleCountChange,
 }: MapboxMapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+  // Preview shown while the pointer rests on a pin. A clicked pin takes
+  // precedence and stays open until the map is clicked.
+  const [hoveredPlayground, setHoveredPlayground] = useState<Playground | null>(null);
+  const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Deliberately useQuery, not useSuspenseQuery: the map must not block its
   // first paint on a per-user personalisation query. Badges pop in when it
@@ -401,9 +408,43 @@ export function MapboxMap({
     [updateBoundsFromMap],
   );
 
+  const cancelHoverClose = useCallback(() => {
+    if (hoverCloseTimer.current) {
+      clearTimeout(hoverCloseTimer.current);
+      hoverCloseTimer.current = null;
+    }
+  }, []);
+
+  const handleMarkerHoverStart = useCallback(
+    (playground: Playground) => {
+      cancelHoverClose();
+      setHoveredPlayground(playground);
+    },
+    [cancelHoverClose],
+  );
+
+  // Closing is delayed so the pointer can cross the gap between the pin and the
+  // popup — which the popup cancels on enter — without the preview vanishing.
+  const handleMarkerHoverEnd = useCallback(() => {
+    cancelHoverClose();
+    hoverCloseTimer.current = setTimeout(
+      () => setHoveredPlayground(null),
+      HOVER_CLOSE_DELAY_MS,
+    );
+  }, [cancelHoverClose]);
+
+  useEffect(() => cancelHoverClose, [cancelHoverClose]);
+
+  const previewPlayground = selectedPlayground ?? hoveredPlayground;
+  const isHoverPreview = !selectedPlayground && Boolean(hoveredPlayground);
+
   // Handle marker click — select playground and pan map so the popup is fully visible
   const handleMarkerClick = useCallback(
     (playground: Playground) => {
+      // The click takes over from the hover preview, which must not linger and
+      // reappear when the selection is later cleared.
+      cancelHoverClose();
+      setHoveredPlayground(null);
       onPlaygroundSelect(playground);
 
       if (!mapRef.current) return;
@@ -418,7 +459,7 @@ export function MapboxMap({
         duration: 400,
       });
     },
-    [onPlaygroundSelect, occludedBottom],
+    [onPlaygroundSelect, cancelHoverClose, occludedBottom],
   );
 
   // Handle cluster click — zoom into the cluster
@@ -495,16 +536,26 @@ export function MapboxMap({
               isSelected={selectedPlayground?.id === playground.id}
               hasCheckedIn={checkedInIds.has(playground.id)}
               onClick={handleMarkerClick}
+              onHoverStart={handleMarkerHoverStart}
+              onHoverEnd={handleMarkerHoverEnd}
             />
           );
         })}
 
-        {/* Info popup for selected playground */}
-        {selectedPlayground && (
+        {/* Preview popup: a clicked pin wins and stays until the map is
+            clicked; otherwise the hovered pin previews and closes on leave. */}
+        {previewPlayground && (
           <MapInfoPopup
-            playground={selectedPlayground}
+            key={previewPlayground.id}
+            playground={previewPlayground}
             userLocation={userLocation}
-            onClose={() => onPlaygroundSelect(null)}
+            onClose={() => {
+              cancelHoverClose();
+              setHoveredPlayground(null);
+              onPlaygroundSelect(null);
+            }}
+            onPointerEnter={isHoverPreview ? cancelHoverClose : undefined}
+            onPointerLeave={isHoverPreview ? handleMarkerHoverEnd : undefined}
           />
         )}
 

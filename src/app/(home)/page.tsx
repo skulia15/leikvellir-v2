@@ -1,6 +1,6 @@
 import { api, HydrateClient } from "~/trpc/server";
 import { type Metadata, type Viewport } from "next";
-import HomeComponent from "./_components/home-client";
+import HomeComponent from "~/app/_components/home-client";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -9,7 +9,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Leiksvæði | Leikvellir á Íslandi",
-  description: "Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna á gagnvirku korti.",
+  description:
+    "Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna á gagnvirku korti.",
 };
 
 export default async function Home() {

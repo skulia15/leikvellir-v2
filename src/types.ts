@@ -252,14 +252,32 @@ export const CreatePlaygroundSchema = z.object({
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
 
+/**
+ * Columns the public `playground.getAll` payload leaves out: moderation data
+ * that only admin views read, plus the per-image blur map, which is only needed
+ * by the detail view. Sending either for every playground on the map is pure
+ * weight, so they are optional rather than guaranteed.
+ */
+type PlaygroundModerationColumns =
+  | "updatedAt"
+  | "reviewedById"
+  | "reviewedAt"
+  | "rejectionReason"
+  | "submitAnonymously"
+  | "imageBlurData";
+
+type PlaygroundColumns = InferSelectModel<typeof playgrounds>;
+
 // Playground types derived from database schema
-export type Playground = InferSelectModel<typeof playgrounds> & {
-  // Equipment relationships
+export type Playground = Omit<PlaygroundColumns, PlaygroundModerationColumns> &
+  Partial<Pick<PlaygroundColumns, PlaygroundModerationColumns>> & {
+  // Equipment relationships. `getAll` selects only the fields the map and list
+  // render; the detail page (`getById`) still gets the full equipment record.
   playgroundEquipment?: Array<{
-    createdAt: Date;
+    createdAt?: Date;
     playgroundId: number;
     equipmentId: number;
-    equipment: Equipment;
+    equipment: Pick<Equipment, "id" | "name" | "category"> & Partial<Equipment>;
   }>;
   // User relationships
   createdBy?: {

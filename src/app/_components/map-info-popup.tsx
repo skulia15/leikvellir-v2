@@ -17,18 +17,27 @@ import {
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
+import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 
 interface MapInfoPopupProps {
   playground: Playground;
   userLocation: UserLocation | null;
   onClose: () => void;
+  /**
+   * Pointer entering/leaving the popup body. A hover-opened preview uses these
+   * to stay open while the pointer is inside it, so its links stay clickable.
+   */
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 export function MapInfoPopup({
   playground,
   userLocation,
   onClose,
+  onPointerEnter,
+  onPointerLeave,
 }: MapInfoPopupProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -108,7 +117,11 @@ export function MapInfoPopup({
       maxWidth="320px"
       className="playground-info-popup"
     >
-      <div className="w-[300px] overflow-hidden">
+      <div
+        className="w-[300px] overflow-hidden"
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+      >
         {/* Image section — hero position */}
         <div className="relative">
           {hasImages ? (
@@ -139,6 +152,7 @@ export function MapInfoPopup({
                   >
                     <Image
                       src={image ?? "/playground.jpg"}
+                      {...playgroundImageBlurProps(playground, image)}
                       alt={`${playground.title} - ${index + 1}`}
                       fill
                       sizes="300px"

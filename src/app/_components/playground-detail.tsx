@@ -31,7 +31,11 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
-import { type Playground, type EquipmentCategory, type Equipment } from "~/types";
+import { type Playground, type EquipmentCategory } from "~/types";
+
+// Equipment as it arrives on a playground: `getById` carries the full record,
+// while the map/list payload only carries id, name and category.
+type PlaygroundEquipmentItem = NonNullable<Playground["playgroundEquipment"]>[number]["equipment"];
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
@@ -90,6 +94,15 @@ export default function PlaygroundDetail({
     ...(playground.images ?? [])
   ].filter((img, index, arr) => arr.indexOf(img) === index); // Remove duplicates
 
+  // The cover's placeholder lives in its own column so the map payload can ship
+  // it alone; fold it back in so the carousel can look up every image by URL.
+  const carouselBlurData = {
+    ...(playground.imageBlurData ?? {}),
+    ...(playground.coverImage && playground.coverImageBlur
+      ? { [playground.coverImage]: playground.coverImageBlur }
+      : {}),
+  };
+
 
   const handleAddPhotos = () => {
     if (!session) {
@@ -129,8 +142,8 @@ export default function PlaygroundDetail({
         return <PlaygroundEquipmentIcon className="h-5 w-5 text-primary" />;
     }
   };
-  const getEquipmentByCategory = (): Record<EquipmentCategory, Equipment[]> => {
-    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, Equipment[]>;
+  const getEquipmentByCategory = (): Record<EquipmentCategory, PlaygroundEquipmentItem[]> => {
+    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, PlaygroundEquipmentItem[]>;
 
     return playground.playgroundEquipment.reduce((acc, { equipment }) => {
       if (!acc[equipment.category]) {
@@ -138,7 +151,7 @@ export default function PlaygroundDetail({
       }
       acc[equipment.category].push(equipment);
       return acc;
-    }, {} as Record<EquipmentCategory, Equipment[]>);
+    }, {} as Record<EquipmentCategory, PlaygroundEquipmentItem[]>);
   };
 
   const equipmentByCategory = getEquipmentByCategory();
@@ -199,6 +212,7 @@ export default function PlaygroundDetail({
             {/* Image Carousel — full-bleed on mobile, contained on desktop */}
             <ImageCarousel
               images={displayImages}
+              blurData={carouselBlurData}
               alt={playground.title}
               className=""
               onAddPhotos={playground.status === "approved" ? handleAddPhotos : undefined}

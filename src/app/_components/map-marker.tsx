@@ -17,6 +17,9 @@ interface MapMarkerProps {
   /** True when the signed-in user has ever checked in here. */
   hasCheckedIn?: boolean;
   onClick: (playground: Playground) => void;
+  /** Pointer entered the pin. Only fires for a real mouse, never for touch. */
+  onHoverStart?: (playground: Playground) => void;
+  onHoverEnd?: (playground: Playground) => void;
 }
 
 export function MapMarker({
@@ -24,6 +27,8 @@ export function MapMarker({
   isSelected,
   hasCheckedIn,
   onClick,
+  onHoverStart,
+  onHoverEnd,
 }: MapMarkerProps) {
   const t = useT();
   const markerColor = getPlaygroundMarkerColor(
@@ -59,6 +64,14 @@ export function MapMarker({
       }}
     >
       <div
+        // Touch devices fire a synthetic mouseenter on tap, which would open
+        // the hover preview and then immediately have it treated as a click.
+        onPointerEnter={(e) => {
+          if (e.pointerType === "mouse") onHoverStart?.(playground);
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType === "mouse") onHoverEnd?.(playground);
+        }}
         role="button"
         tabIndex={0}
         aria-label={accessibleName}

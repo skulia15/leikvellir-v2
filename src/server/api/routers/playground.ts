@@ -26,6 +26,7 @@ import {
   UpdateMyEditSuggestionSchema,
 } from "~/types";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
+import { buildPlaygroundBlurData } from "~/lib/image-blur";
 import { logDbError, logger } from "~/lib/logging/logger";
 import type { db as dbType } from "~/server/db";
 
@@ -62,6 +63,12 @@ export const playgroundRouter = createTRPCRouter({
       });
 
       try {
+        const coverImage = input.images[0] ?? null;
+        const { coverImageBlur, imageBlurData } = await buildPlaygroundBlurData(
+          coverImage,
+          input.images,
+        );
+
         // Create playground first
         const [newPlayground] = await ctx.db
           .insert(playgrounds)
@@ -82,8 +89,10 @@ export const playgroundRouter = createTRPCRouter({
             hasGarbageCan: input.hasGarbageCan,
             hasBathroomNearby: input.hasBathroomNearby,
             hasSoftPlayArea: input.hasSoftPlayArea,
-            coverImage: input.images[0] ?? null, // First image as cover
+            coverImage, // First image as cover
             images: input.images,
+            coverImageBlur,
+            imageBlurData,
             createdById: userId,
             status: "pending", // New submissions default to pending
           })
@@ -240,6 +249,24 @@ export const playgroundRouter = createTRPCRouter({
       // Include any playground field updates
       Object.assign(updateData, playgroundUpdates);
 
+      // Refresh placeholders whenever the photos change. Existing entries are
+      // passed through so untouched images are not re-downloaded.
+      if (playgroundUpdates.images !== undefined || playgroundUpdates.coverImage !== undefined) {
+        const nextImages = playgroundUpdates.images ?? currentPlayground.images ?? [];
+        const nextCover = playgroundUpdates.coverImage !== undefined
+          ? playgroundUpdates.coverImage
+          : currentPlayground.coverImage;
+
+        Object.assign(
+          updateData,
+          await buildPlaygroundBlurData(
+            nextCover,
+            nextImages,
+            currentPlayground.imageBlurData ?? {},
+          ),
+        );
+      }
+
       const [updatedPlayground] = await ctx.db
         .update(playgrounds)
         .set(updateData)
@@ -290,20 +317,65 @@ export const playgroundRouter = createTRPCRouter({
       return updatedPlayground;
     }),
 
+  /**
+   * Public map/list payload. Every approved playground is sent at once and the
+   * result is serialized twice (RSC flight + HTML), so columns nobody renders
+   * here are excluded: moderation fields are admin-only, and the equipment
+   * image/description are only shown on the detail page, which uses `getById`.
+   */
   getAll: publicProcedure.query(async ({ ctx }) => {
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "approved"),
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      columns: {
+        reviewedById: false,
+        reviewedAt: false,
+        rejectionReason: false,
+        submitAnonymously: false,
+        updatedAt: false,
+        // The cover's placeholder ships (cards render it); the per-image map
+        // only matters on the detail page, which loads via `getById`.
+        imageBlurData: false,
+      },
       with: {
         playgroundEquipment: {
+          columns: {
+            playgroundId: true,
+            equipmentId: true,
+          },
           with: {
-            equipment: true,
+            equipment: {
+              columns: {
+                id: true,
+                name: true,
+                category: true,
+              },
+            },
           },
         },
       },
     });
 
     return playgroundList ?? null;
+  }),
+
+  /**
+   * Name and municipality of every approved playground, for the SEO structured
+   * data on /playgrounds. Deliberately separate from `getAll`: that payload
+   * carries images, placeholders and equipment joins, none of which end up in
+   * the JSON-LD, and pulling it just to map three fields made the page shell
+   * wait on the whole thing.
+   */
+  getSummaries: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.query.playgrounds.findMany({
+      where: (playgrounds, { eq }) => eq(playgrounds.status, "approved"),
+      orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
+      columns: {
+        id: true,
+        title: true,
+        municipality: true,
+      },
+    });
   }),
 
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
@@ -668,6 +740,17 @@ export const playgroundRouter = createTRPCRouter({
           if (editSuggestion.hasSoftPlayArea !== null) updateData.hasSoftPlayArea = editSuggestion.hasSoftPlayArea;
           if (editSuggestion.coverImage !== null) updateData.coverImage = editSuggestion.coverImage;
           if (editSuggestion.images !== null) updateData.images = editSuggestion.images;
+
+          if (editSuggestion.coverImage !== null || editSuggestion.images !== null) {
+            Object.assign(
+              updateData,
+              await buildPlaygroundBlurData(
+                editSuggestion.coverImage ?? editSuggestion.playground?.coverImage,
+                editSuggestion.images ?? editSuggestion.playground?.images ?? [],
+                editSuggestion.playground?.imageBlurData ?? {},
+              ),
+            );
+          }
 
           // Update the playground
           await ctx.db
@@ -1035,10 +1118,15 @@ export const playgroundRouter = createTRPCRouter({
       const newImages = [...existingImages, ...images];
       // Set cover image if none exists yet
       const coverImage = playground.coverImage ?? images[0] ?? null;
+      const blurData = await buildPlaygroundBlurData(
+        coverImage,
+        newImages,
+        playground.imageBlurData ?? {},
+      );
 
       await ctx.db
         .update(playgrounds)
-        .set({ images: newImages, coverImage, updatedAt: new Date() })
+        .set({ images: newImages, coverImage, ...blurData, updatedAt: new Date() })
         .where(eq(playgrounds.id, id));
     }),
 });

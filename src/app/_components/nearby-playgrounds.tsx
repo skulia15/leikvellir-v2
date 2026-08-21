@@ -9,6 +9,7 @@ import { type Playground } from "~/types";
 import { calculateDistance, formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
+import { blurPlaceholderProps } from "~/lib/image-placeholder";
 
 interface NearbyPlaygroundsProps {
   currentPlayground: Playground;
@@ -78,6 +79,7 @@ export default function NearbyPlaygrounds({
                         ? playground.coverImage
                         : "/playground.jpg"
                     }
+                    {...blurPlaceholderProps(playground.coverImageBlur)}
                     alt={playground.title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-110"

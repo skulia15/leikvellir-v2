@@ -6,6 +6,7 @@ import { type MultilingualName } from "~/types";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
+import { blurPlaceholderProps } from "~/lib/image-placeholder";
 
 function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
   return (
@@ -38,6 +39,7 @@ export default function PlaygroundGridCard({
         {playground.coverImage && playground.coverImage.trim() !== "" ? (
           <Image
             src={playground.coverImage}
+            {...blurPlaceholderProps(playground.coverImageBlur)}
             alt={playground.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
