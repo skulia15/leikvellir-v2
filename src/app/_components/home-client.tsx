@@ -57,31 +57,77 @@ export default function HomeClient() {
     const [playgrounds] = api.playground.getAll.useSuspenseQuery();
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-    // Observe drawer height changes
+    // Measure how much of the map the sheet is actually covering.
+    //
+    // react-modal-sheet keeps its container at the height of the tallest snap
+    // point and slides it with a transform, so offsetHeight is a constant — it
+    // reported ~85% of the screen at every snap, including the collapsed one.
+    // The covered strip has to be derived from the rect's top edge instead.
+    //
+    // A transform fires neither resize nor scroll events, so the sheet is
+    // followed with rAF until it stops moving and only the settled value is
+    // committed: one render per snap rather than one per animation frame.
+    // currentSnapIndex in the deps is what restarts that poll.
     useEffect(() => {
-        if (!isMobile) return;
+        if (!isMobile) {
+            setActualDrawerHeight(0);
+            return;
+        }
 
-        const updateDrawerHeight = () => {
-            const drawerElement = document.querySelector('.react-modal-sheet-container')!;
-            if (drawerElement) {
-                setActualDrawerHeight((drawerElement as HTMLElement).offsetHeight);
-            }
+        let frame = 0;
+        let previous = -1;
+        let stableFrames = 0;
+
+        const measure = () => {
+            const drawerElement = document.querySelector<HTMLElement>(
+                '.react-modal-sheet-container',
+            );
+            if (!drawerElement) return null;
+            const rect = drawerElement.getBoundingClientRect();
+            return Math.max(
+                0,
+                Math.min(window.innerHeight - rect.top, window.innerHeight),
+            );
         };
 
-        // Update immediately
-        updateDrawerHeight();
+        const poll = () => {
+            const covered = measure();
+            const settled = covered !== null && Math.abs(covered - previous) < 1;
+            stableFrames = settled ? stableFrames + 1 : 0;
+            if (covered !== null) previous = covered;
 
-        // Set up a ResizeObserver to watch for drawer changes
-        const observer = new ResizeObserver(updateDrawerHeight);
-        const drawerElement = document.querySelector('.react-modal-sheet-container')!;
+            // Three quiet frames means the snap animation is over.
+            if (covered !== null && stableFrames >= 3) {
+                frame = 0;
+                setActualDrawerHeight(covered);
+                return;
+            }
+            frame = requestAnimationFrame(poll);
+        };
+
+        const schedule = () => {
+            previous = -1;
+            stableFrames = 0;
+            if (!frame) frame = requestAnimationFrame(poll);
+        };
+
+        schedule();
+
+        // The sheet's own height still tracks the viewport (mobile browser chrome
+        // collapsing, orientation change), and neither shows up as a snap.
+        const observer = new ResizeObserver(schedule);
+        const drawerElement = document.querySelector('.react-modal-sheet-container');
         if (drawerElement) {
             observer.observe(drawerElement);
         }
+        window.addEventListener('resize', schedule);
 
         return () => {
+            if (frame) cancelAnimationFrame(frame);
             observer.disconnect();
+            window.removeEventListener('resize', schedule);
         };
-    }, [isMobile]);
+    }, [isMobile, currentSnapIndex]);
 
     // Handle initial loading state
     useEffect(() => {

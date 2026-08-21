@@ -14,7 +14,13 @@ import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { env } from "~/env";
 import { calculateDistance, type UserLocation } from "~/lib/geo-utils";
-import { isWithinBounds, playgroundsToGeoJSON, type MapBounds } from "~/lib/map-utils";
+import {
+  getListBounds,
+  getMarkerBounds,
+  isWithinBounds,
+  playgroundsToGeoJSON,
+  type MapBounds,
+} from "~/lib/map-utils";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
@@ -50,6 +56,16 @@ const DEFAULT_CENTER = {
 };
 
 const DEFAULT_ZOOM = 15;
+
+/**
+ * Bounds are recomputed on every map settle and every sheet snap, but usually
+ * come back identical. Comparing them keeps a fresh array from re-running the
+ * clusterer and re-rendering every marker for no visible change.
+ */
+function boundsEqual(a: MapBounds | null, b: MapBounds | null): boolean {
+  if (!a || !b) return a === b;
+  return a.every((value, index) => value === b[index]);
+}
 
 /**
  * User location button — prompts for geolocation and centers the map
@@ -155,7 +171,17 @@ export function MapboxMap({
     () => new Set(checkedInPlaygroundIds ?? []),
     [checkedInPlaygroundIds],
   );
-  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  // Two different rectangles, deliberately kept apart:
+  //  - markerBounds is the FULL map canvas (plus a margin). Every pin the user
+  //    can see on the map has to be rendered, including the ones behind the
+  //    sheet, because the sheet is an overlay the user can drag away.
+  //  - listBounds is only the part of the canvas the sheet is not covering.
+  //    The result list and its count read this one, so the list never offers a
+  //    playground that is hidden underneath the sheet.
+  // Feeding listBounds to the clusterer culls pins that are plainly visible on
+  // the map, so the two must never be merged back together.
+  const [markerBounds, setMarkerBounds] = useState<MapBounds | null>(null);
+  const [listBounds, setListBounds] = useState<MapBounds | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const previousPlaygroundsRef = useRef<
@@ -210,7 +236,7 @@ export function MapboxMap({
   // Supercluster for marker clustering
   const { clusters, supercluster } = useSupercluster({
     points: geoPoints.features,
-    bounds: mapBounds ?? undefined,
+    bounds: markerBounds ?? undefined,
     zoom,
     options: {
       radius: 60,
@@ -221,17 +247,17 @@ export function MapboxMap({
   // Filter playgrounds visible in the current map bounds
   const visiblePlaygrounds = useMemo(() => {
     return filteredPlaygrounds.filter((playground) => {
-      if (!mapBounds) return true;
-      return isWithinBounds(playground, mapBounds);
+      if (!listBounds) return true;
+      return isWithinBounds(playground, listBounds);
     });
-  }, [filteredPlaygrounds, mapBounds]);
+  }, [filteredPlaygrounds, listBounds]);
 
   // Count ALL playgrounds in the current viewport (ignoring filters)
   const totalPlaygroundsInBounds = useMemo(() => {
     if (!playgrounds) return 0;
-    if (!mapBounds) return playgrounds.length;
-    return playgrounds.filter((playground) => isWithinBounds(playground, mapBounds)).length;
-  }, [playgrounds, mapBounds]);
+    if (!listBounds) return playgrounds.length;
+    return playgrounds.filter((playground) => isWithinBounds(playground, listBounds)).length;
+  }, [playgrounds, listBounds]);
 
   // Notify parent of total (unfiltered) visible count
   useEffect(() => {
@@ -310,41 +336,53 @@ export function MapboxMap({
     }
   }, [mapCenter, isMapLoaded]);
 
-  // Extract bounds from a map instance.
-  // The bottom sheet covers the lower part of the map on mobile, so the bounds
-  // are read from the *unoccluded* rectangle — otherwise the list counts and
-  // shows playgrounds that are hidden underneath the sheet.
+  // Re-read the part of the map the sheet leaves visible. Only the list cares,
+  // so this does not touch markerBounds: re-running the clusterer would
+  // re-render every pin on the map for a change the map itself never saw.
+  const updateListBoundsFromMap = useCallback(
+    (map: mapboxgl.Map) => {
+      const container = map.getContainer();
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width <= 0 || height <= 0) return;
+
+      const unproject = (point: [number, number]) => map.unproject(point);
+      const next = getListBounds(unproject, width, height, occludedBottom);
+      setListBounds((prev) => (boundsEqual(prev, next) ? prev : next));
+    },
+    [occludedBottom],
+  );
+
+  // Extract both rectangles from a map instance: see the comment on the state
+  // above for why the markers and the list read different ones.
   const updateBoundsFromMap = useCallback(
     (map: mapboxgl.Map) => {
       const container = map.getContainer();
       const width = container.clientWidth;
       const height = container.clientHeight;
-      const visibleBottom = Math.max(height * 0.25, height - occludedBottom);
 
-      if (width > 0 && visibleBottom > 0) {
-        const southWest = map.unproject([0, visibleBottom]);
-        const northEast = map.unproject([width, 0]);
-        setMapBounds([
-          southWest.lng,
-          southWest.lat,
-          northEast.lng,
-          northEast.lat,
-        ]);
+      if (width > 0 && height > 0) {
+        const unproject = (point: [number, number]) => map.unproject(point);
+        const nextMarkerBounds = getMarkerBounds(unproject, width, height);
+        setMarkerBounds((prev) =>
+          boundsEqual(prev, nextMarkerBounds) ? prev : nextMarkerBounds,
+        );
+        updateListBoundsFromMap(map);
       }
 
       setZoom(map.getZoom());
     },
-    [occludedBottom],
+    [updateListBoundsFromMap],
   );
 
-  // Re-read bounds when the sheet is dragged: the viewport did not move, but the
-  // part of it the user can see did.
+  // Re-read the visible rectangle when the sheet is dragged: the viewport did
+  // not move, but the part of it the user can see did.
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (map && isMapLoaded) {
-      updateBoundsFromMap(map);
+      updateListBoundsFromMap(map);
     }
-  }, [occludedBottom, isMapLoaded, updateBoundsFromMap]);
+  }, [isMapLoaded, updateListBoundsFromMap]);
 
   // Handle map load — capture initial bounds so markers render immediately
   const handleLoad = useCallback(
