@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 
+import ImageLightbox from "./image-lightbox";
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
@@ -21,6 +22,10 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
   const t = useT();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  // A swipe/drag also ends in a click; remember where the press started so we
+  // can tell a tap apart from a drag and only open the lightbox on a tap.
+  const pressStart = useRef<{ x: number; y: number } | null>(null);
 
   const hasMultipleImages = images.length > 1;
 
@@ -105,10 +110,21 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
           }}
         >
           {images.map((image, index) => (
-            <div
+            <button
               key={index}
-              className="relative h-full flex-shrink-0"
+              type="button"
+              onPointerDown={(event) => {
+                pressStart.current = { x: event.clientX, y: event.clientY };
+              }}
+              onClick={(event) => {
+                const start = pressStart.current;
+                if (!start) return;
+                const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+                if (moved < 10) setIsLightboxOpen(true);
+              }}
+              className="relative h-full flex-shrink-0 cursor-zoom-in"
               style={{ width: `${100 / images.length}%` }}
+              aria-label={`View image ${index + 1}`}
             >
               <Image
                 src={image ?? "/playground.jpg"}
@@ -121,8 +137,9 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "low"}
                 quality={85}
+                draggable={false}
               />
-            </div>
+            </button>
           ))}
         </div>
 
@@ -172,6 +189,15 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
             />
           ))}
         </div>
+      )}
+      {isLightboxOpen && (
+        <ImageLightbox
+          images={images}
+          alt={alt}
+          index={selectedImageIndex}
+          onIndexChange={setSelectedImageIndex}
+          onClose={() => setIsLightboxOpen(false)}
+        />
       )}
     </div>
   );
