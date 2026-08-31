@@ -28,6 +28,10 @@ import {
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { buildPlaygroundBlurData } from "~/lib/image-blur";
 import { logDbError, logger } from "~/lib/logging/logger";
+import {
+  notifyNewEditSuggestion,
+  notifyNewSubmission,
+} from "~/server/notifications/discord";
 import type { db as dbType } from "~/server/db";
 
 /** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
@@ -128,6 +132,18 @@ export const playgroundRouter = createTRPCRouter({
             imageCount: newPlayground.images?.length ?? 0,
             equipmentCount: input.equipmentIds?.length ?? 0,
           },
+        });
+
+        // Ping the admin channel so pending submissions don't need polling.
+        // Never throws - a failed notification must not fail the submission.
+        await notifyNewSubmission({
+          playgroundId: newPlayground.id,
+          title: newPlayground.title,
+          municipality: newPlayground.municipality,
+          imageCount: newPlayground.images?.length ?? 0,
+          equipmentCount: input.equipmentIds?.length ?? 0,
+          submitterName: ctx.session.user.name,
+          submitAnonymously: input.submitAnonymously,
         });
 
         return newPlayground;
@@ -639,6 +655,27 @@ export const playgroundRouter = createTRPCRouter({
             imagesRemoved: (existingPlayground.images?.length || 0) - imagesToKeep.length,
             coverImageRemoved: removeCoverImage,
           },
+        });
+
+        // Every optional key the submitter actually sent is a suggested change;
+        // playgroundId and the anonymity flag are metadata, not changes.
+        const changedFields = Object.entries(input)
+          .filter(([key, value]) =>
+            value !== undefined &&
+            key !== "playgroundId" &&
+            key !== "submitAnonymously"
+          )
+          .map(([key]) => key);
+
+        // Ping the admin channel so pending suggestions don't need polling.
+        // Never throws - a failed notification must not fail the suggestion.
+        await notifyNewEditSuggestion({
+          suggestionId: newSuggestion.id,
+          playgroundId,
+          playgroundTitle: existingPlayground.title,
+          changedFields,
+          submitterName: ctx.session.user.name,
+          submitAnonymously: input.submitAnonymously ?? false,
         });
 
         return newSuggestion;

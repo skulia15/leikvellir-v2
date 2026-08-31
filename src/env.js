@@ -50,6 +50,9 @@ export const env = createEnv({
       process.env.NODE_ENV === "development"
         ? z.string().optional()
         : z.string(),
+    // Discord webhook that admin notifications (new submissions / edit
+    // suggestions) are posted to. Optional - notifications are skipped if unset.
+    DISCORD_ADMIN_WEBHOOK_URL: z.string().url().optional(),
     // Vercel Blob storage token for leikvellir_image_store
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.NODE_ENV === "development"
@@ -92,6 +95,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:
       process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+    DISCORD_ADMIN_WEBHOOK_URL: process.env.DISCORD_ADMIN_WEBHOOK_URL,
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.leikvellir_image_store_READ_WRITE_TOKEN,
     // PostHog Analytics
