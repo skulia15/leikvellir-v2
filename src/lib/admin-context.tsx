@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { api } from "~/trpc/react";
 
 interface AdminContextType {
     isAdminMode: boolean;
@@ -18,23 +17,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [isAdminMode, setIsAdminMode] = useState(false);
     const { data: session, status } = useSession();
 
-    // Fetch current user data including role from database
-    const { data: currentUser, isLoading: userLoading } = api.users.getCurrentUser.useQuery(
-        undefined,
-        {
-            enabled: status === "authenticated" && !!session?.user,
-            retry: false,
-        }
-    );
+    // Role and ban state ride along on the session (see the session callback in
+    // ~/server/auth), so admin-only UI can render on the first paint instead of
+    // popping in after a `users.getCurrentUser` round-trip.
+    const currentUser = session?.user ?? null;
 
     const userRole = currentUser?.role ?? null;
     const canAccessAdmin = status === "authenticated" &&
-        !!session?.user &&
         !!currentUser &&
         (currentUser.role === "admin" || currentUser.role === "super_admin") &&
         !currentUser.isBanned;
 
-    const isLoading = status === "loading" || (status === "authenticated" && userLoading);
+    const isLoading = status === "loading";
 
     // Load admin mode from localStorage on mount, with smart defaults for elevated users
     useEffect(() => {

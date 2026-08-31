@@ -36,14 +36,14 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
     const t = useT();
     const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-    // Check if user has any submissions (only query if logged in)
-    const { data: mySubmissions } = api.playground.getMySubmissions.useQuery(undefined, {
+    // Only a boolean is needed here, so this uses the lightweight endpoint
+    // rather than fetching every submission and edit suggestion in full.
+    // Whether the entry belongs in the menu rarely changes mid-session, so the
+    // answer is cached for the session instead of refetched on every mount.
+    const { data: hasSubmissions = false } = api.playground.hasMySubmissions.useQuery(undefined, {
         enabled: !!session,
+        staleTime: Infinity,
     });
-    const { data: myEditSuggestions } = api.playground.getMyEditSuggestions.useQuery(undefined, {
-        enabled: !!session,
-    });
-    const hasSubmissions = (mySubmissions?.length ?? 0) > 0 || (myEditSuggestions?.length ?? 0) > 0;
 
     // Check if translations are ready and manage initial loading state
     const translationsReady = t('navigation.map') !== 'navigation.map';

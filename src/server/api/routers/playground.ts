@@ -13,7 +13,6 @@ import {
   playgroundEquipment,
   playgroundEditSuggestions,
   playgroundEditSuggestionEquipment,
-  users,
 } from "~/server/db/schema";
 import {
   CreatePlaygroundSchema,
@@ -28,17 +27,21 @@ import {
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { buildPlaygroundBlurData } from "~/lib/image-blur";
 import { logDbError, logger } from "~/lib/logging/logger";
+import { getUserById, type UserCache } from "~/server/api/current-user";
 import {
   notifyNewEditSuggestion,
   notifyNewSubmission,
 } from "~/server/notifications/discord";
 import type { db as dbType } from "~/server/db";
 
+interface AdminCheckContext {
+  db: typeof dbType;
+  userCache?: UserCache;
+}
+
 /** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
-async function requireAdmin(db: typeof dbType, userId: string) {
-  const currentUser = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
+async function requireAdmin(ctx: AdminCheckContext, userId: string) {
+  const currentUser = await getUserById(ctx, userId);
   if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -165,7 +168,7 @@ export const playgroundRouter = createTRPCRouter({
   update: protectedProcedure
     .input(UpdatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx.db, ctx.session.user.id);
+      await requireAdmin(ctx, ctx.session.user.id);
       const { id, equipmentIds, ...updateData } = input;
 
       // Get the current playground to compare image changes
@@ -231,7 +234,7 @@ export const playgroundRouter = createTRPCRouter({
   review: protectedProcedure
     .input(ReviewPlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx.db, ctx.session.user.id);
+      await requireAdmin(ctx, ctx.session.user.id);
       const { id, action, rejectionReason, equipmentIds, ...playgroundUpdates } = input;
 
       // Get the current playground to compare image changes
@@ -395,7 +398,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx.db, ctx.session.user.id);
+    await requireAdmin(ctx, ctx.session.user.id);
     const playgroundList = await ctx.db.query.playgrounds.findMany({
       orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
       with: {
@@ -425,7 +428,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getPendingSubmissions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx.db, ctx.session.user.id);
+    await requireAdmin(ctx, ctx.session.user.id);
     const pendingPlaygrounds = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "pending"),
       orderBy: (playgrounds, { asc }) => [asc(playgrounds.createdAt)],
@@ -521,7 +524,7 @@ export const playgroundRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx.db, ctx.session.user.id);
+      await requireAdmin(ctx, ctx.session.user.id);
       // Get the playground first to access its images for cleanup
       const playground = await ctx.db.query.playgrounds.findFirst({
         where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
@@ -694,7 +697,7 @@ export const playgroundRouter = createTRPCRouter({
   reviewEditSuggestion: protectedProcedure
     .input(ReviewEditSuggestionSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx.db, ctx.session.user.id);
+      await requireAdmin(ctx, ctx.session.user.id);
       const userId = ctx.session.user.id;
       const { id, action, rejectionReason } = input;
 
@@ -839,7 +842,7 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   getPendingEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx.db, ctx.session.user.id);
+    await requireAdmin(ctx, ctx.session.user.id);
     const pendingSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
       where: (suggestions, { eq }) => eq(suggestions.status, "pending"),
       orderBy: (suggestions, { asc }) => [asc(suggestions.createdAt)],
@@ -872,7 +875,7 @@ export const playgroundRouter = createTRPCRouter({
   }),
 
   getAllEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx.db, ctx.session.user.id);
+    await requireAdmin(ctx, ctx.session.user.id);
     const allSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
       orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
       with: {
@@ -955,6 +958,29 @@ export const playgroundRouter = createTRPCRouter({
     });
 
     return suggestions ?? [];
+  }),
+
+  /**
+   * Whether the user has anything under "My submissions". The nav only needs a
+   * boolean to decide if that menu entry shows, so this asks for a single id
+   * from each table instead of pulling full rows with their equipment joins
+   * the way getMySubmissions/getMyEditSuggestions do.
+   */
+  hasMySubmissions: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const [submission, suggestion] = await Promise.all([
+      ctx.db.query.playgrounds.findFirst({
+        where: (playgrounds, { eq }) => eq(playgrounds.createdById, userId),
+        columns: { id: true },
+      }),
+      ctx.db.query.playgroundEditSuggestions.findFirst({
+        where: (suggestions, { eq }) => eq(suggestions.createdById, userId),
+        columns: { id: true },
+      }),
+    ]);
+
+    return Boolean(submission ?? suggestion);
   }),
 
   updateMySubmission: protectedProcedure

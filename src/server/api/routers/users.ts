@@ -3,13 +3,14 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { users } from "~/server/db/schema";
 import { UpdateUserRoleSchema, BanUserSchema, UnbanUserSchema } from "~/types";
 import { TRPCError } from "@trpc/server";
+import { getUserById } from "~/server/api/current-user";
 
 export const usersRouter = createTRPCRouter({
     // Get current user info (any authenticated user)
     getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-        const currentUser = await ctx.db.query.users.findFirst({
-            where: eq(users.id, ctx.session.user.id),
-        });
+        // Shared request-scoped lookup, so an admin page that also runs
+        // `requireAdmin` in its procedures only hits the database once.
+        const currentUser = await getUserById(ctx, ctx.session.user.id);
 
         if (!currentUser) {
             throw new TRPCError({

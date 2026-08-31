@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
+import { type UserRole } from "~/types";
 import {
   accounts,
   sessions,
@@ -30,15 +31,15 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      /**
+       * Carried on the session so the client never has to query for it. With
+       * `strategy: "database"` the session callback already receives the full
+       * user row, so these cost nothing extra to expose.
+       */
+      role: UserRole;
+      isBanned: boolean;
     } & DefaultSession["user"];
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
 }
 
 /**
@@ -101,13 +102,25 @@ export const authOptions: NextAuthOptions = {
         return true;
       }
     },
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: ({ session, user }) => {
+      // `user` is the full row from the users table (database session
+      // strategy), so role and ban state are already loaded here. Passing them
+      // through saves every client a `users.getCurrentUser` round-trip.
+      const dbUser = user as typeof user & {
+        role?: UserRole;
+        isBanned?: boolean;
+      };
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          role: dbUser.role ?? "user",
+          isBanned: dbUser.isBanned ?? false,
+        },
+      };
+    },
   },
   adapter: DrizzleAdapter(db, {
     usersTable: users,

@@ -14,6 +14,7 @@ import { eq } from "drizzle-orm";
 
 import { getServerAuthSession } from "~/server/auth";
 import { db } from "~/server/db";
+import { createUserCache } from "~/server/api/current-user";
 import { users } from "~/server/db/schema";
 
 /**
@@ -34,6 +35,9 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     db,
     session,
+    // Scoped to this request so repeated permission checks across procedures
+    // share one database round-trip. See ~/server/api/current-user.
+    userCache: createUserCache(),
     ...opts,
   };
 };
