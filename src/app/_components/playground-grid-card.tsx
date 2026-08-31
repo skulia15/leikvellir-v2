@@ -2,21 +2,11 @@ import Image from "next/image";
 import { MapPin, GraduationCap, Zap, Footprints, Camera } from "lucide-react";
 import { Card } from "~/components/ui/card";
 import { type Playground } from "~/types";
-import { type MultilingualName } from "~/types";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
-
-function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
-  return (
-    playground.playgroundEquipment?.some((pe) => {
-      const name = pe.equipment.name as string | MultilingualName;
-      if (typeof name === "string") return name.toLowerCase() === nameIs.toLowerCase();
-      return name.is?.toLowerCase() === nameIs.toLowerCase();
-    }) ?? false
-  );
-}
+import { hasEquipmentNamed, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 
 interface PlaygroundGridCardProps {
   playground: Playground;
@@ -30,7 +20,8 @@ export default function PlaygroundGridCard({
   showDistance = false,
 }: PlaygroundGridCardProps) {
   const t = useT();
-  const hasBouncyPillow = hasEquipmentByName(playground, "Ærslabelgur");
+  const equipmentLookup = useEquipmentLookup();
+  const hasBouncyPillow = hasEquipmentNamed(playground, "Ærslabelgur", equipmentLookup);
 
   return (
     <Card className="overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow group">

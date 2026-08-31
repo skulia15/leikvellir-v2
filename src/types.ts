@@ -277,7 +277,12 @@ export type Playground = Omit<PlaygroundColumns, PlaygroundModerationColumns> &
     createdAt?: Date;
     playgroundId: number;
     equipmentId: number;
-    equipment: Pick<Equipment, "id" | "name" | "category"> & Partial<Equipment>;
+    /**
+     * Absent on `getAll`, which returns bare join rows and expects the client
+     * to resolve them through `equipment.getCatalog` (see useEquipmentLookup).
+     * Still populated by `getById` for the detail page.
+     */
+    equipment?: Pick<Equipment, "id" | "name" | "category"> & Partial<Equipment>;
   }>;
   // User relationships
   createdBy?: {

@@ -83,7 +83,7 @@ export default function SuggestEditDialog({
       hasGarbageCan: playground.hasGarbageCan,
       hasBathroomNearby: playground.hasBathroomNearby,
       hasSoftPlayArea: playground.hasSoftPlayArea,
-      equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipment.id) ?? [],
+      equipmentIds: playground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [],
       images: playground.images || [],
       submitAnonymously: false,
       // Fields to track images marked for removal (only additional images)

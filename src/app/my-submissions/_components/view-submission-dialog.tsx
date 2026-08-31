@@ -16,6 +16,7 @@ import { Separator } from "~/components/ui/separator";
 import { useT } from "~/lib/i18n";
 import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
+import { resolveEquipment, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 import SubmissionStatusBadge from "./submission-status-badge";
 
 interface ViewSubmissionDialogProps {
@@ -30,6 +31,7 @@ export default function ViewSubmissionDialog({
     onOpenChange,
 }: ViewSubmissionDialogProps) {
     const t = useT();
+    const equipmentLookup = useEquipmentLookup();
     const validImages = (playground.images ?? []).filter(img => img && img.trim() !== "");
     const coverImage = playground.coverImage ?? validImages[0];
 
@@ -177,9 +179,9 @@ export default function ViewSubmissionDialog({
                         <div>
                             <p className="text-sm font-medium text-muted-foreground mb-2">{t('playground.equipment')}</p>
                             <div className="flex flex-wrap gap-2">
-                                {playground.playgroundEquipment.map((pe) => (
-                                    <Badge key={pe.equipmentId} variant="outline">
-                                        {pe.equipment.name?.is || pe.equipment.name?.en || "Equipment"}
+                                {resolveEquipment(playground, equipmentLookup).map((item) => (
+                                    <Badge key={item.id} variant="outline">
+                                        {item.name?.is || item.name?.en || "Equipment"}
                                     </Badge>
                                 ))}
                             </div>

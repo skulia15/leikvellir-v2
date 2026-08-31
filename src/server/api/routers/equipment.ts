@@ -14,6 +14,24 @@ export const equipmentRouter = createTRPCRouter({
         });
     }),
 
+    /**
+     * Every equipment row, active or not, with just the fields needed to render
+     * a playground's equipment. `playground.getAll` returns bare equipmentIds
+     * and the client joins against this, so the 39 distinct equipment records
+     * ship once instead of being inlined into all 659 playground links.
+     *
+     * Deliberately not filtered by `isActive`: that flag governs whether an
+     * item can be newly selected, not whether existing links render. At least
+     * one deactivated item is still referenced by approved playgrounds, and
+     * filtering here would make it silently disappear from their cards.
+     */
+    getCatalog: publicProcedure.query(async ({ ctx }) => {
+        return await ctx.db.query.equipment.findMany({
+            columns: { id: true, name: true, category: true },
+            orderBy: [equipment.category, sql`${equipment.name}->>'is'`],
+        });
+    }),
+
     // Get all equipment including inactive (admin only)
     getAllAdmin: protectedProcedure.query(async ({ ctx }) => {
         // Check if user is admin or super admin

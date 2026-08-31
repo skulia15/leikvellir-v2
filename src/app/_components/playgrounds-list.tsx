@@ -14,7 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { type Playground, type EquipmentCategory, type MultilingualName } from "~/types";
+import { type Playground, type EquipmentCategory } from "~/types";
+import {
+  hasEquipmentNamed,
+  resolveEquipment,
+  useEquipmentLookup,
+} from "~/lib/hooks/use-equipment-lookup";
 import PlaygroundGridCard from "./playground-grid-card";
 import EquipmentCategoryFilter from "./equipment-category-filter";
 import { PlaygroundsListSkeleton } from "./playgrounds-page-skeleton";
@@ -31,17 +36,8 @@ interface PlaygroundsListProps {
 
 type SortOption = "proximity" | "popularity" | "newest" | "name";
 
-function hasEquipmentByName(playground: Playground, nameIs: string): boolean {
-  return (
-    playground.playgroundEquipment?.some((pe) => {
-      const name = pe.equipment.name as string | MultilingualName;
-      if (typeof name === "string") return name.toLowerCase() === nameIs.toLowerCase();
-      return name.is?.toLowerCase() === nameIs.toLowerCase();
-    }) ?? false
-  );
-}
-
 export default function PlaygroundsList({ playgrounds, isLoading = false, initialMunicipality }: PlaygroundsListProps) {
+  const equipmentLookup = useEquipmentLookup();
   const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
 
   // Default to proximity sorting if location is available, otherwise newest
@@ -94,24 +90,24 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
     const counts = new Map<EquipmentCategory, number>();
     for (const pg of sortedPlaygrounds) {
       const categories = new Set(
-        pg.playgroundEquipment?.map((pe) => pe.equipment.category) ?? [],
+        resolveEquipment(pg, equipmentLookup).map((item) => item.category),
       );
       for (const cat of categories) {
         counts.set(cat, (counts.get(cat) ?? 0) + 1);
       }
     }
     return counts;
-  }, [sortedPlaygrounds]);
+  }, [sortedPlaygrounds, equipmentLookup]);
 
   // Count playgrounds with bouncy pillow (stable count from full list)
   const bouncyPillowCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) => hasEquipmentByName(pg, "Ærslabelgur")).length;
-  }, [sortedPlaygrounds]);
+    return sortedPlaygrounds.filter((pg) => hasEquipmentNamed(pg, "Ærslabelgur", equipmentLookup)).length;
+  }, [sortedPlaygrounds, equipmentLookup]);
 
   // Count playgrounds with football field (stable count from full list)
   const footballFieldCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) => hasEquipmentByName(pg, "Fótboltavöllur")).length;
-  }, [sortedPlaygrounds]);
+    return sortedPlaygrounds.filter((pg) => hasEquipmentNamed(pg, "Fótboltavöllur", equipmentLookup)).length;
+  }, [sortedPlaygrounds, equipmentLookup]);
 
   // Count school ground playgrounds currently closed (for "open now" filter)
   // Uses the exact same predicate as the filter to ensure count matches
@@ -142,20 +138,20 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
     // Equipment category filter (OR logic)
     if (activeCategories.size > 0) {
       result = result.filter((playground) =>
-        playground.playgroundEquipment?.some((pe) =>
-          activeCategories.has(pe.equipment.category),
+        resolveEquipment(playground, equipmentLookup).some((item) =>
+          activeCategories.has(item.category),
         ),
       );
     }
 
     // Bouncy pillow filter
     if (bouncyPillowActive) {
-      result = result.filter((pg) => hasEquipmentByName(pg, "Ærslabelgur"));
+      result = result.filter((pg) => hasEquipmentNamed(pg, "Ærslabelgur", equipmentLookup));
     }
 
     // Football field filter
     if (footballFieldActive) {
-      result = result.filter((pg) => hasEquipmentByName(pg, "Fótboltavöllur"));
+      result = result.filter((pg) => hasEquipmentNamed(pg, "Fótboltavöllur", equipmentLookup));
     }
 
     // Open now filter — hide school grounds that are currently closed
@@ -164,7 +160,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
     }
 
     return result;
-  }, [sortedPlaygrounds, selectedMunicipality, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive]);
+  }, [sortedPlaygrounds, selectedMunicipality, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive, equipmentLookup]);
 
   const handleToggleCategory = useCallback((category: EquipmentCategory) => {
     setActiveCategories((prev) => {

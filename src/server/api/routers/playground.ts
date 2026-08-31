@@ -357,19 +357,14 @@ export const playgroundRouter = createTRPCRouter({
         imageBlurData: false,
       },
       with: {
+        // Only the join rows. The equipment records themselves come from
+        // `equipment.getCatalog`, which ships the 39 distinct rows once rather
+        // than inlining them into all 659 links - that duplication was 40% of
+        // this payload, and it is parse time on a phone.
         playgroundEquipment: {
           columns: {
             playgroundId: true,
             equipmentId: true,
-          },
-          with: {
-            equipment: {
-              columns: {
-                id: true,
-                name: true,
-                category: true,
-              },
-            },
           },
         },
       },

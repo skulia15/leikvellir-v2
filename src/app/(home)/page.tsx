@@ -14,8 +14,11 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  // Prefetch playground data on the server
+  // Prefetch playground data on the server. The equipment catalog goes with
+  // it: getAll returns bare equipmentIds, so fetching the catalog in parallel
+  // here keeps the client from having to wait on a second round-trip.
   void api.playground.getAll.prefetch();
+  void api.equipment.getCatalog.prefetch();
 
   return (
     <HydrateClient>

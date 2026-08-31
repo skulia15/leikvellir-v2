@@ -34,12 +34,17 @@ import { Separator } from "~/components/ui/separator";
 import { type Playground, type EquipmentCategory } from "~/types";
 
 // Equipment as it arrives on a playground: `getById` carries the full record,
-// while the map/list payload only carries id, name and category.
-type PlaygroundEquipmentItem = NonNullable<Playground["playgroundEquipment"]>[number]["equipment"];
+// while the map/list payload carries only ids that the catalog resolves.
+type PlaygroundEquipmentItem = CatalogEquipment;
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
+import {
+  resolveEquipment,
+  useEquipmentLookup,
+  type CatalogEquipment,
+} from "~/lib/hooks/use-equipment-lookup";
 import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import SuggestEditDialog from "./suggest-edit-dialog";
 import { CheckInButton } from "./check-in-button";
@@ -68,6 +73,7 @@ export default function PlaygroundDetail({
   const router = useRouter();
   const { data: session } = useSession();
   const { isAdminMode } = useAdmin();
+  const equipmentLookup = useEquipmentLookup();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
@@ -143,9 +149,7 @@ export default function PlaygroundDetail({
     }
   };
   const getEquipmentByCategory = (): Record<EquipmentCategory, PlaygroundEquipmentItem[]> => {
-    if (!playground.playgroundEquipment) return {} as Record<EquipmentCategory, PlaygroundEquipmentItem[]>;
-
-    return playground.playgroundEquipment.reduce((acc, { equipment }) => {
+    return resolveEquipment(playground, equipmentLookup).reduce((acc, equipment) => {
       if (!acc[equipment.category]) {
         acc[equipment.category] = [];
       }

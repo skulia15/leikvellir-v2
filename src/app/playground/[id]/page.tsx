@@ -30,6 +30,9 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
   // Prefetch the data on the server for better performance
   try {
     void api.playground.getById.prefetch({ id: playgroundId });
+    // The detail payload embeds its own equipment records, but the page also
+    // renders the nearby-playgrounds list off getAll, which does not.
+    void api.equipment.getCatalog.prefetch();
   } catch {
     // If prefetch fails, let the client handle it
   }
