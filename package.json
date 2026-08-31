@@ -125,6 +125,9 @@
   "ct3aMetadata": {
     "initVersion": "7.37.0"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "packageManager": "pnpm@9.9.0",
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
