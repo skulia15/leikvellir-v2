@@ -50,8 +50,8 @@ export const env = createEnv({
       process.env.NODE_ENV === "development"
         ? z.string().optional()
         : z.string(),
-    // Discord webhook that admin notifications (new submissions / edit
-    // suggestions) are posted to. Optional - notifications are skipped if unset.
+    // Discord webhook for admin notifications (new submissions, edit suggestions,
+    // and contact form submissions). Optional - notifications are skipped/logged if unset.
     DISCORD_ADMIN_WEBHOOK_URL: z.string().url().optional(),
     // Vercel Blob storage token for leikvellir_image_store
     leikvellir_image_store_READ_WRITE_TOKEN:

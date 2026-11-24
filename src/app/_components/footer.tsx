@@ -119,11 +119,11 @@ export function Footer() {
                 </a>
 
                 <a
-                  href="mailto:skuliarnarson@gmail.com"
+                  href="mailto:skuliarnarsson@gmail.com"
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Mail className="h-4 w-4" />
-                  <span>skuliarnarson@gmail.com</span>
+                  <span>skuliarnarsson@gmail.com</span>
                 </a>
               </div>
             </div>

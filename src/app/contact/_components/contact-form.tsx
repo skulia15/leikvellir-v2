@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,24 +35,38 @@ import {
 import { toast } from "sonner";
 import { useT } from "~/lib/i18n";
 
-const contactFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  category: z.enum(["bug", "feature", "question", "other"], {
-    required_error: "Please select a category",
-  }),
-  subject: z.string().min(5, "Subject must be at least 5 characters"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-  url: z.string().optional(),
-  browser: z.string().optional(),
-});
+type ContactCategory = "bug" | "feature" | "question" | "other";
 
-type ContactFormData = z.infer<typeof contactFormSchema>;
+interface ContactFormData {
+  name: string;
+  email: string;
+  category: ContactCategory;
+  subject: string;
+  message: string;
+  url?: string;
+  browser?: string;
+}
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const t = useT();
+
+  const contactFormSchema = useMemo(
+    () =>
+      z.object({
+        name: z.string().trim().min(2, t("contact.validation.nameMin")).max(120),
+        email: z.string().trim().email(t("contact.validation.emailInvalid")).max(254),
+        category: z.enum(["bug", "feature", "question", "other"], {
+          required_error: t("contact.validation.categoryRequired"),
+        }),
+        subject: z.string().trim().min(5, t("contact.validation.subjectMin")).max(200),
+        message: z.string().trim().min(10, t("contact.validation.messageMin")).max(5000),
+        url: z.string().trim().max(500).optional(),
+        browser: z.string().trim().max(200).optional(),
+      }),
+    [t],
+  );
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -73,37 +87,37 @@ export function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      // Create email content
-      const emailSubject = `[Leiksvæði] ${t('contact.bugReports')} - ${data.subject}`;
-      const emailBody = `
-Name: ${data.name}
-Email: ${data.email}
-Category: ${t('contact.bugReports')}
-${data.url ? `URL: ${data.url}` : ''}
-${data.browser ? `Browser: ${data.browser}` : ''}
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          category: data.category,
+          subject: data.subject,
+          message: data.message,
+          url: data.url || undefined,
+          browser: data.browser || undefined,
+        }),
+      });
 
-Message:
-${data.message}
+      if (response.status === 429) {
+        toast.error(t("contact.rateLimitedError"));
+        return;
+      }
 
----
-Sent from Leiksvæði contact form
-      `.trim();
+      if (!response.ok) {
+        toast.error(t("contact.sendError"));
+        return;
+      }
 
-      // Create mailto link
-      const mailtoLink = `mailto:skuliarnarsson@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-
-      // Open email client
-      window.location.href = mailtoLink;
-
-      // Mark as submitted after a short delay
-      setTimeout(() => {
-        setIsSubmitted(true);
-        toast.success("Email client opened! Please send the email to complete your message.");
-      }, 1000);
-
+      setIsSubmitted(true);
+      toast.success(t("contact.messageSentToast"));
     } catch (error) {
-      console.error("Error creating email:", error);
-      toast.error("Error creating email. Please try again or contact skuliarnarsson@gmail.com directly.");
+      console.error("Error submitting contact form:", error);
+      toast.error(t("contact.sendError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -146,9 +160,9 @@ Sent from Leiksvæði contact form
         <CardContent className="pt-6">
           <div className="text-center">
             <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
-            <h3 className="mb-2 text-lg font-medium">{t('contact.emailReady')}</h3>
+            <h3 className="mb-2 text-lg font-medium">{t('contact.messageSent')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {t('contact.emailReadyDescription')}
+              {t('contact.messageSentDescription')}
             </p>
             <Button
               variant="outline"
@@ -212,7 +226,7 @@ Sent from Leiksvæði contact form
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('contact.category')} *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t('contact.selectCategory')} />
@@ -343,7 +357,7 @@ Sent from Leiksvæði contact form
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('contact.preparingEmail')}
+                  {t('contact.sendingMessage')}
                 </>
               ) : (
                 <>

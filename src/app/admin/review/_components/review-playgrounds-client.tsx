@@ -141,10 +141,16 @@ export default function ReviewPlaygroundsClient({
         if (suggestion.hasBathroomNearby !== null && suggestion.hasBathroomNearby !== playground.hasBathroomNearby) count++;
         if (suggestion.hasSoftPlayArea !== null && suggestion.hasSoftPlayArea !== playground.hasSoftPlayArea) count++;
 
-        // Cover image changes - both addition and removal
-        if (suggestion.coverImage !== null && suggestion.coverImage !== playground.coverImage) count++;
-        // Explicit cover image removal (null value when original has a cover)
-        else if (suggestion.coverImage === null && playground.coverImage) count++;
+        // Cover image changes - both addition/replacement and explicit removal ("")
+        if (
+            suggestion.coverImage !== null &&
+            suggestion.coverImage !== undefined &&
+            (suggestion.coverImage === ""
+                ? Boolean(playground.coverImage)
+                : suggestion.coverImage !== playground.coverImage)
+        ) {
+            count++;
+        }
 
         // For arrays, compare content rather than just references
         if (suggestion.images !== null && suggestion.images !== undefined) {

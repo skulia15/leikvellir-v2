@@ -393,10 +393,29 @@ export default function EditSuggestionReviewDialog({
   onOpenChange,
   onReview,
 }: EditSuggestionReviewDialogProps) {
-  // Calculate image changes
-  const originalImages = originalPlayground.images || [];
-  const newImages = editSuggestion.images ? editSuggestion.images.filter(img => !originalImages.includes(img)) : [];
-  const removedImages = originalPlayground.images?.filter(img => !editSuggestion.images?.includes(img)) || [];
+  // Calculate image changes (only when editSuggestion.images is explicitly provided)
+  const originalImages = originalPlayground.images ?? [];
+  const suggestedImages = editSuggestion.images;
+  const hasSuggestedImages = Array.isArray(suggestedImages);
+  const newImages = hasSuggestedImages
+    ? suggestedImages.filter((img) => !originalImages.includes(img))
+    : [];
+  const removedImages = hasSuggestedImages
+    ? originalImages.filter((img) => !suggestedImages.includes(img))
+    : [];
+  const keptOriginalImages = hasSuggestedImages
+    ? originalImages.filter((img) => suggestedImages.includes(img))
+    : originalImages;
+
+  const isCoverImageRemoved =
+    editSuggestion.coverImage === "" && Boolean(originalPlayground.coverImage);
+  const isCoverImageChanged =
+    isCoverImageRemoved ||
+    (editSuggestion.coverImage !== null &&
+      editSuggestion.coverImage !== undefined &&
+      editSuggestion.coverImage !== "" &&
+      editSuggestion.coverImage !== originalPlayground.coverImage);
+
   const hasImageChanges = newImages.length > 0 || removedImages.length > 0;
   const imageChangeCount = newImages.length + removedImages.length;
   const { t } = useTranslation();
@@ -405,15 +424,11 @@ export default function EditSuggestionReviewDialog({
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Reset selected image when edit suggestion changes
-  useEffect(() => {
-    setSelectedImage(null);
-  }, [editSuggestion.id]);
-
-  // State for managing which images the reviewer wants to approve
-  const [approvedImages, setApprovedImages] = useState<string[]>(
-    editSuggestion.images?.filter(img => !originalImages.includes(img)) || []
-  );
+  // State for managing the full approved image list (kept original images + approved new images)
+  const [approvedImages, setApprovedImages] = useState<string[]>([
+    ...keptOriginalImages,
+    ...newImages,
+  ]);
 
   // State for final values that will be applied (initialized with suggested values)
   const [finalValues, setFinalValues] = useState({
@@ -436,13 +451,55 @@ export default function EditSuggestionReviewDialog({
     equipmentIds: editSuggestion.equipmentIds,
   });
 
+  // Reset all dialog state when switching between edit suggestions
+  useEffect(() => {
+    const nextOrigImages = originalPlayground.images ?? [];
+    const nextSuggestedImages = editSuggestion.images;
+    const nextHasSuggested = Array.isArray(nextSuggestedImages);
+    const nextKeptOrig = nextHasSuggested
+      ? nextOrigImages.filter((img) => nextSuggestedImages.includes(img))
+      : nextOrigImages;
+    const nextNewImages = nextHasSuggested
+      ? nextSuggestedImages.filter((img) => !nextOrigImages.includes(img))
+      : [];
+
+    setSelectedImage(null);
+    setShowRejectionReason(false);
+    setRejectionReason("");
+    setApprovedImages([...nextKeptOrig, ...nextNewImages]);
+    setFinalValues({
+      title: editSuggestion.title,
+      latitude: editSuggestion.latitude,
+      longitude: editSuggestion.longitude,
+      municipality: editSuggestion.municipality,
+      publiclyAccessible: editSuggestion.publiclyAccessible,
+      toddlerFriendly: editSuggestion.toddlerFriendly,
+      isSchoolGround: editSuggestion.isSchoolGround,
+      schoolType: editSuggestion.schoolType,
+      hasSeating: editSuggestion.hasSeating,
+      hasPicnicTable: editSuggestion.hasPicnicTable,
+      hasFencing: editSuggestion.hasFencing,
+      hasGarbageCan: editSuggestion.hasGarbageCan,
+      hasBathroomNearby: editSuggestion.hasBathroomNearby,
+      hasSoftPlayArea: editSuggestion.hasSoftPlayArea,
+      coverImage: editSuggestion.coverImage,
+      images: editSuggestion.images,
+      equipmentIds: editSuggestion.equipmentIds,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editSuggestion.id]);
+
   const updateFinalValue = (field: string, value: string | number | boolean | string[] | number[] | null | undefined) => {
     setFinalValues(prev => ({ ...prev, [field]: value }));
   };
 
   const reviewMutation = api.playground.reviewEditSuggestion.useMutation({
-    onSuccess: () => {
-      toast.success(t('success.editSuggestionApproved'));
+    onSuccess: (_data, variables) => {
+      toast.success(
+        variables.action === "approve"
+          ? t('success.editSuggestionApproved')
+          : t('success.editSuggestionRejected'),
+      );
       onReview();
       onOpenChange(false);
       setShowRejectionReason(false);
@@ -454,13 +511,85 @@ export default function EditSuggestionReviewDialog({
   });
 
   const handleApprove = () => {
-    // Convert null values to undefined for mutation
-    const cleanedFinalValues = Object.fromEntries(
-      Object.entries({
-        ...finalValues,
-        images: approvedImages,
-      }).map(([key, value]) => [key, value === null ? undefined : value])
-    );
+    const cleanedFinalValues: {
+      title?: string;
+      latitude?: number;
+      longitude?: number;
+      municipality?: string | null;
+      publiclyAccessible?: boolean;
+      toddlerFriendly?: boolean;
+      isSchoolGround?: boolean;
+      schoolType?: "preschool" | "elementary" | null;
+      hasSeating?: boolean;
+      hasPicnicTable?: boolean;
+      hasFencing?: boolean;
+      hasGarbageCan?: boolean;
+      hasBathroomNearby?: boolean;
+      hasSoftPlayArea?: boolean;
+      coverImage?: string | null;
+      images?: string[];
+      equipmentIds?: number[];
+    } = {};
+
+    if (finalValues.title !== null && finalValues.title !== undefined) {
+      cleanedFinalValues.title = finalValues.title;
+    }
+    if (finalValues.latitude !== null && finalValues.latitude !== undefined) {
+      cleanedFinalValues.latitude = finalValues.latitude;
+    }
+    if (finalValues.longitude !== null && finalValues.longitude !== undefined) {
+      cleanedFinalValues.longitude = finalValues.longitude;
+    }
+    if (
+      finalValues.municipality !== undefined &&
+      (finalValues.municipality !== null || editSuggestion.municipality !== null)
+    ) {
+      cleanedFinalValues.municipality = finalValues.municipality;
+    }
+    if (finalValues.publiclyAccessible !== null && finalValues.publiclyAccessible !== undefined) {
+      cleanedFinalValues.publiclyAccessible = finalValues.publiclyAccessible;
+    }
+    if (finalValues.toddlerFriendly !== null && finalValues.toddlerFriendly !== undefined) {
+      cleanedFinalValues.toddlerFriendly = finalValues.toddlerFriendly;
+    }
+    if (finalValues.isSchoolGround !== null && finalValues.isSchoolGround !== undefined) {
+      cleanedFinalValues.isSchoolGround = finalValues.isSchoolGround;
+    }
+    if (
+      finalValues.schoolType !== undefined &&
+      (finalValues.schoolType !== null || editSuggestion.schoolType !== null)
+    ) {
+      cleanedFinalValues.schoolType = finalValues.schoolType;
+    }
+    if (finalValues.hasSeating !== null && finalValues.hasSeating !== undefined) {
+      cleanedFinalValues.hasSeating = finalValues.hasSeating;
+    }
+    if (finalValues.hasPicnicTable !== null && finalValues.hasPicnicTable !== undefined) {
+      cleanedFinalValues.hasPicnicTable = finalValues.hasPicnicTable;
+    }
+    if (finalValues.hasFencing !== null && finalValues.hasFencing !== undefined) {
+      cleanedFinalValues.hasFencing = finalValues.hasFencing;
+    }
+    if (finalValues.hasGarbageCan !== null && finalValues.hasGarbageCan !== undefined) {
+      cleanedFinalValues.hasGarbageCan = finalValues.hasGarbageCan;
+    }
+    if (finalValues.hasBathroomNearby !== null && finalValues.hasBathroomNearby !== undefined) {
+      cleanedFinalValues.hasBathroomNearby = finalValues.hasBathroomNearby;
+    }
+    if (finalValues.hasSoftPlayArea !== null && finalValues.hasSoftPlayArea !== undefined) {
+      cleanedFinalValues.hasSoftPlayArea = finalValues.hasSoftPlayArea;
+    }
+    if (isCoverImageRemoved || finalValues.coverImage === "") {
+      cleanedFinalValues.coverImage = null;
+    } else if (finalValues.coverImage !== null && finalValues.coverImage !== undefined) {
+      cleanedFinalValues.coverImage = finalValues.coverImage;
+    }
+    if (hasImageChanges) {
+      cleanedFinalValues.images = approvedImages;
+    }
+    if (finalValues.equipmentIds !== null && finalValues.equipmentIds !== undefined) {
+      cleanedFinalValues.equipmentIds = finalValues.equipmentIds;
+    }
 
     reviewMutation.mutate({
       id: editSuggestion.id,
@@ -485,7 +614,7 @@ export default function EditSuggestionReviewDialog({
   // Check which changes exist (only show sections with actual changes)
   const changes = [
     // Basic Information
-    editSuggestion.title !== null && editSuggestion.title !== originalPlayground.title && {
+    editSuggestion.title !== null && editSuggestion.title !== undefined && editSuggestion.title !== originalPlayground.title && {
       section: 'basic',
       field: 'title',
       label: t('playground.playgroundName'),
@@ -494,7 +623,25 @@ export default function EditSuggestionReviewDialog({
       type: 'text'
     },
 
-    editSuggestion.municipality !== null && editSuggestion.municipality !== originalPlayground.municipality && {
+    editSuggestion.latitude !== null && editSuggestion.latitude !== undefined && editSuggestion.latitude !== originalPlayground.latitude && {
+      section: 'basic',
+      field: 'latitude',
+      label: t('playground.latitude'),
+      original: originalPlayground.latitude,
+      suggested: editSuggestion.latitude,
+      type: 'coordinate'
+    },
+
+    editSuggestion.longitude !== null && editSuggestion.longitude !== undefined && editSuggestion.longitude !== originalPlayground.longitude && {
+      section: 'basic',
+      field: 'longitude',
+      label: t('playground.longitude'),
+      original: originalPlayground.longitude,
+      suggested: editSuggestion.longitude,
+      type: 'coordinate'
+    },
+
+    editSuggestion.municipality !== null && editSuggestion.municipality !== undefined && editSuggestion.municipality !== originalPlayground.municipality && {
       section: 'basic',
       field: 'municipality',
       label: t('playground.municipality'),
@@ -503,8 +650,17 @@ export default function EditSuggestionReviewDialog({
       type: 'text'
     },
 
+    isCoverImageChanged && {
+      section: 'basic',
+      field: 'coverImage',
+      label: t('forms.coverImage'),
+      original: originalPlayground.coverImage,
+      suggested: isCoverImageRemoved ? null : editSuggestion.coverImage,
+      type: 'image'
+    },
+
     // Accessibility
-    editSuggestion.publiclyAccessible !== null && editSuggestion.publiclyAccessible !== originalPlayground.publiclyAccessible && {
+    editSuggestion.publiclyAccessible !== null && editSuggestion.publiclyAccessible !== undefined && editSuggestion.publiclyAccessible !== originalPlayground.publiclyAccessible && {
       section: 'accessibility',
       field: 'publiclyAccessible',
       label: t('playground.publiclyAccessible'),
@@ -512,7 +668,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.publiclyAccessible,
       type: 'boolean'
     },
-    editSuggestion.toddlerFriendly !== null && editSuggestion.toddlerFriendly !== originalPlayground.toddlerFriendly && {
+    editSuggestion.toddlerFriendly !== null && editSuggestion.toddlerFriendly !== undefined && editSuggestion.toddlerFriendly !== originalPlayground.toddlerFriendly && {
       section: 'accessibility',
       field: 'toddlerFriendly',
       label: t('playground.toddlerFriendly'),
@@ -522,7 +678,7 @@ export default function EditSuggestionReviewDialog({
     },
 
     // School Ground
-    editSuggestion.isSchoolGround !== null && editSuggestion.isSchoolGround !== originalPlayground.isSchoolGround && {
+    editSuggestion.isSchoolGround !== null && editSuggestion.isSchoolGround !== undefined && editSuggestion.isSchoolGround !== originalPlayground.isSchoolGround && {
       section: 'school',
       field: 'isSchoolGround',
       label: t('forms.isSchoolGround'),
@@ -530,7 +686,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.isSchoolGround,
       type: 'boolean'
     },
-    editSuggestion.schoolType !== null && editSuggestion.schoolType !== originalPlayground.schoolType && {
+    editSuggestion.schoolType !== null && editSuggestion.schoolType !== undefined && editSuggestion.schoolType !== originalPlayground.schoolType && {
       section: 'school',
       field: 'schoolType',
       label: t('forms.schoolType'),
@@ -540,7 +696,7 @@ export default function EditSuggestionReviewDialog({
     },
 
     // Amenities
-    editSuggestion.hasSeating !== null && editSuggestion.hasSeating !== originalPlayground.hasSeating && {
+    editSuggestion.hasSeating !== null && editSuggestion.hasSeating !== undefined && editSuggestion.hasSeating !== originalPlayground.hasSeating && {
       section: 'amenities',
       field: 'hasSeating',
       label: t('forms.hasSeating'),
@@ -548,7 +704,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.hasSeating,
       type: 'boolean'
     },
-    editSuggestion.hasPicnicTable !== null && editSuggestion.hasPicnicTable !== originalPlayground.hasPicnicTable && {
+    editSuggestion.hasPicnicTable !== null && editSuggestion.hasPicnicTable !== undefined && editSuggestion.hasPicnicTable !== originalPlayground.hasPicnicTable && {
       section: 'amenities',
       field: 'hasPicnicTable',
       label: t('forms.hasPicnicTable'),
@@ -556,7 +712,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.hasPicnicTable,
       type: 'boolean'
     },
-    editSuggestion.hasGarbageCan !== null && editSuggestion.hasGarbageCan !== originalPlayground.hasGarbageCan && {
+    editSuggestion.hasGarbageCan !== null && editSuggestion.hasGarbageCan !== undefined && editSuggestion.hasGarbageCan !== originalPlayground.hasGarbageCan && {
       section: 'amenities',
       field: 'hasGarbageCan',
       label: t('forms.hasGarbageCan'),
@@ -564,7 +720,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.hasGarbageCan,
       type: 'boolean'
     },
-    editSuggestion.hasBathroomNearby !== null && editSuggestion.hasBathroomNearby !== originalPlayground.hasBathroomNearby && {
+    editSuggestion.hasBathroomNearby !== null && editSuggestion.hasBathroomNearby !== undefined && editSuggestion.hasBathroomNearby !== originalPlayground.hasBathroomNearby && {
       section: 'amenities',
       field: 'hasBathroomNearby',
       label: t('forms.hasBathroomNearby'),
@@ -574,7 +730,7 @@ export default function EditSuggestionReviewDialog({
     },
 
     // Safety
-    editSuggestion.hasFencing !== null && editSuggestion.hasFencing !== originalPlayground.hasFencing && {
+    editSuggestion.hasFencing !== null && editSuggestion.hasFencing !== undefined && editSuggestion.hasFencing !== originalPlayground.hasFencing && {
       section: 'safety',
       field: 'hasFencing',
       label: t('forms.hasFencing'),
@@ -582,7 +738,7 @@ export default function EditSuggestionReviewDialog({
       suggested: editSuggestion.hasFencing,
       type: 'boolean'
     },
-    editSuggestion.hasSoftPlayArea !== null && editSuggestion.hasSoftPlayArea !== originalPlayground.hasSoftPlayArea && {
+    editSuggestion.hasSoftPlayArea !== null && editSuggestion.hasSoftPlayArea !== undefined && editSuggestion.hasSoftPlayArea !== originalPlayground.hasSoftPlayArea && {
       section: 'safety',
       field: 'hasSoftPlayArea',
       label: t('forms.hasSoftPlayArea'),
@@ -592,7 +748,7 @@ export default function EditSuggestionReviewDialog({
     },
 
     // Equipment
-    editSuggestion.equipmentIds !== null && JSON.stringify(editSuggestion.equipmentIds?.sort()) !== JSON.stringify(originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId).sort() ?? []) && {
+    editSuggestion.equipmentIds !== null && editSuggestion.equipmentIds !== undefined && JSON.stringify([...editSuggestion.equipmentIds].sort()) !== JSON.stringify([...(originalPlayground.playgroundEquipment?.map(pe => pe.equipmentId) ?? [])].sort()) && {
       section: 'equipment',
       field: 'equipmentIds',
       label: t('forms.equipment'),
@@ -733,7 +889,7 @@ export default function EditSuggestionReviewDialog({
                         <h4 className="font-medium mb-2">
                           {t('forms.additionalImages')}
                           <Badge variant="outline" className="ml-2">
-                            {approvedImages.length}/{newImages.length} {t('admin.approved')}
+                            {newImages.filter((img) => approvedImages.includes(img)).length}/{newImages.length} {t('admin.approved')}
                           </Badge>
                         </h4>
                         <div className="flex flex-wrap gap-4">
@@ -817,8 +973,8 @@ export default function EditSuggestionReviewDialog({
           })()}
 
           {/* Location Map Preview */}
-          {(editSuggestion.latitude !== null && editSuggestion.latitude !== originalPlayground.latitude) ||
-            (editSuggestion.longitude !== null && editSuggestion.longitude !== originalPlayground.longitude) ? (
+          {(editSuggestion.latitude !== null && editSuggestion.latitude !== undefined && editSuggestion.latitude !== originalPlayground.latitude) ||
+            (editSuggestion.longitude !== null && editSuggestion.longitude !== undefined && editSuggestion.longitude !== originalPlayground.longitude) ? (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -851,8 +1007,8 @@ export default function EditSuggestionReviewDialog({
                   </h4>
                   <div className="rounded-lg border overflow-hidden">
                     <CoordinatePickerMap
-                      latitude={editSuggestion.latitude ?? originalPlayground.latitude}
-                      longitude={editSuggestion.longitude ?? originalPlayground.longitude}
+                      latitude={finalValues.latitude ?? editSuggestion.latitude ?? originalPlayground.latitude}
+                      longitude={finalValues.longitude ?? editSuggestion.longitude ?? originalPlayground.longitude}
                       onCoordinateChange={() => { /* Read-only map */ }}
                       className="h-64 w-full"
                     />

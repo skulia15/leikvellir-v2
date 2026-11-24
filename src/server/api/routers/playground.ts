@@ -50,6 +50,43 @@ async function requireAdmin(ctx: AdminCheckContext, userId: string) {
   }
 }
 
+/**
+ * Sentinel value stored in playgroundEditSuggestions.coverImage to distinguish
+ * an explicit cover-image removal from an untouched nullable column (null).
+ */
+const REMOVE_COVER_IMAGE_SENTINEL = "";
+
+/**
+ * Merge kept existing images with any newly added images when removeImages flags are supplied.
+ */
+function mergeEditSuggestionImages(
+  existingImages: string[],
+  suggestedImages: string[] | undefined,
+  removeImages: boolean[] | undefined,
+): { images: string[] | undefined; imagesRemovedCount: number } {
+  if (!removeImages || removeImages.length === 0 || existingImages.length === 0) {
+    return { images: suggestedImages, imagesRemovedCount: 0 };
+  }
+
+  const imagesToKeep = existingImages.filter(
+    (_, index) => index >= removeImages.length || !removeImages[index],
+  );
+  const imagesRemovedCount = existingImages.length - imagesToKeep.length;
+
+  if (imagesRemovedCount === 0) {
+    return { images: suggestedImages, imagesRemovedCount: 0 };
+  }
+
+  const newlyAddedImages = (suggestedImages ?? []).filter(
+    (img) => img.trim() !== "" && !existingImages.includes(img),
+  );
+
+  return {
+    images: Array.from(new Set([...imagesToKeep, ...newlyAddedImages])),
+    imagesRemovedCount,
+  };
+}
+
 
 export const playgroundRouter = createTRPCRouter({
 
@@ -594,25 +631,18 @@ export const playgroundRouter = createTRPCRouter({
           throw new Error("Playground not found or not approved for editing");
         }
 
-        // Process image removal
-        let imagesToKeep = [...(existingPlayground.images || [])];
-        let coverImageValue = suggestionData.coverImage;
+        // Process image removal & merge with newly added images
+        const coverImageValue = removeCoverImage
+          ? REMOVE_COVER_IMAGE_SENTINEL
+          : suggestionData.coverImage;
 
-        // Handle explicit cover image removal
-        if (removeCoverImage) {
-          coverImageValue = null;
-        }
-
-        // Handle additional image removal
-        if (removeImages && removeImages.length > 0 && existingPlayground.images) {
-          imagesToKeep = existingPlayground.images.filter((_, index) =>
-            index >= removeImages.length || !removeImages[index]
-          );
-
-          // Only update if there's an actual change
-          if (imagesToKeep.length !== existingPlayground.images.length) {
-            suggestionData.images = imagesToKeep;
-          }
+        const { images: mergedImages, imagesRemovedCount } = mergeEditSuggestionImages(
+          existingPlayground.images ?? [],
+          suggestionData.images,
+          removeImages,
+        );
+        if (mergedImages !== undefined) {
+          suggestionData.images = mergedImages;
         }
 
         // Create the edit suggestion
@@ -650,7 +680,7 @@ export const playgroundRouter = createTRPCRouter({
             suggestionId: newSuggestion.id,
             playgroundId,
             equipmentCount: equipmentIds?.length ?? 0,
-            imagesRemoved: (existingPlayground.images?.length || 0) - imagesToKeep.length,
+            imagesRemoved: imagesRemovedCount,
             coverImageRemoved: removeCoverImage,
           },
         });
@@ -694,7 +724,7 @@ export const playgroundRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await requireAdmin(ctx, ctx.session.user.id);
       const userId = ctx.session.user.id;
-      const { id, action, rejectionReason } = input;
+      const { id, action, rejectionReason, finalValues } = input;
 
       logger.info("Reviewing edit suggestion", {
         component: "PlaygroundRouter",
@@ -752,29 +782,99 @@ export const playgroundRouter = createTRPCRouter({
           throw new Error("Failed to update edit suggestion");
         }
 
-        // If approved, apply the changes to the playground
+        // If approved, apply the changes to the playground (preferring admin finalValues overrides)
         if (action === "approve") {
           const updateData: Record<string, unknown> = {
             updatedAt: new Date(),
           };
 
-          // Apply all non-null changes from the suggestion
-          if (editSuggestion.title !== null) updateData.title = editSuggestion.title;
-          if (editSuggestion.latitude !== null) updateData.latitude = editSuggestion.latitude;
-          if (editSuggestion.longitude !== null) updateData.longitude = editSuggestion.longitude;
-          if (editSuggestion.municipality !== null) updateData.municipality = editSuggestion.municipality;
-          if (editSuggestion.publiclyAccessible !== null) updateData.publiclyAccessible = editSuggestion.publiclyAccessible;
-          if (editSuggestion.toddlerFriendly !== null) updateData.toddlerFriendly = editSuggestion.toddlerFriendly;
-          if (editSuggestion.isSchoolGround !== null) updateData.isSchoolGround = editSuggestion.isSchoolGround;
-          if (editSuggestion.schoolType !== null) updateData.schoolType = editSuggestion.schoolType;
-          if (editSuggestion.hasSeating !== null) updateData.hasSeating = editSuggestion.hasSeating;
-          if (editSuggestion.hasPicnicTable !== null) updateData.hasPicnicTable = editSuggestion.hasPicnicTable;
-          if (editSuggestion.hasFencing !== null) updateData.hasFencing = editSuggestion.hasFencing;
-          if (editSuggestion.hasGarbageCan !== null) updateData.hasGarbageCan = editSuggestion.hasGarbageCan;
-          if (editSuggestion.hasBathroomNearby !== null) updateData.hasBathroomNearby = editSuggestion.hasBathroomNearby;
-          if (editSuggestion.hasSoftPlayArea !== null) updateData.hasSoftPlayArea = editSuggestion.hasSoftPlayArea;
-          if (editSuggestion.coverImage !== null) updateData.coverImage = editSuggestion.coverImage;
-          if (editSuggestion.images !== null) updateData.images = editSuggestion.images;
+          const resolveField = <T>(
+            override: T | undefined,
+            suggested: T | null | undefined,
+          ): T | undefined => {
+            if (override !== undefined) return override;
+            if (suggested !== null && suggested !== undefined) return suggested;
+            return undefined;
+          };
+
+          const title = resolveField(finalValues?.title, editSuggestion.title);
+          if (title !== undefined) updateData.title = title;
+
+          const latitude = resolveField(finalValues?.latitude, editSuggestion.latitude);
+          if (latitude !== undefined) updateData.latitude = latitude;
+
+          const longitude = resolveField(finalValues?.longitude, editSuggestion.longitude);
+          if (longitude !== undefined) updateData.longitude = longitude;
+
+          const municipality = resolveField(finalValues?.municipality, editSuggestion.municipality);
+          if (municipality !== undefined) updateData.municipality = municipality;
+
+          const publiclyAccessible = resolveField(
+            finalValues?.publiclyAccessible,
+            editSuggestion.publiclyAccessible,
+          );
+          if (publiclyAccessible !== undefined) updateData.publiclyAccessible = publiclyAccessible;
+
+          const toddlerFriendly = resolveField(
+            finalValues?.toddlerFriendly,
+            editSuggestion.toddlerFriendly,
+          );
+          if (toddlerFriendly !== undefined) updateData.toddlerFriendly = toddlerFriendly;
+
+          const isSchoolGround = resolveField(
+            finalValues?.isSchoolGround,
+            editSuggestion.isSchoolGround,
+          );
+          if (isSchoolGround !== undefined) updateData.isSchoolGround = isSchoolGround;
+
+          const schoolType = resolveField(finalValues?.schoolType, editSuggestion.schoolType);
+          if (schoolType !== undefined) updateData.schoolType = schoolType;
+
+          const hasSeating = resolveField(finalValues?.hasSeating, editSuggestion.hasSeating);
+          if (hasSeating !== undefined) updateData.hasSeating = hasSeating;
+
+          const hasPicnicTable = resolveField(
+            finalValues?.hasPicnicTable,
+            editSuggestion.hasPicnicTable,
+          );
+          if (hasPicnicTable !== undefined) updateData.hasPicnicTable = hasPicnicTable;
+
+          const hasFencing = resolveField(finalValues?.hasFencing, editSuggestion.hasFencing);
+          if (hasFencing !== undefined) updateData.hasFencing = hasFencing;
+
+          const hasGarbageCan = resolveField(
+            finalValues?.hasGarbageCan,
+            editSuggestion.hasGarbageCan,
+          );
+          if (hasGarbageCan !== undefined) updateData.hasGarbageCan = hasGarbageCan;
+
+          const hasBathroomNearby = resolveField(
+            finalValues?.hasBathroomNearby,
+            editSuggestion.hasBathroomNearby,
+          );
+          if (hasBathroomNearby !== undefined) updateData.hasBathroomNearby = hasBathroomNearby;
+
+          const hasSoftPlayArea = resolveField(
+            finalValues?.hasSoftPlayArea,
+            editSuggestion.hasSoftPlayArea,
+          );
+          if (hasSoftPlayArea !== undefined) updateData.hasSoftPlayArea = hasSoftPlayArea;
+
+          // Support explicit cover image removal (via finalValues.coverImage === null/"" or sentinel "")
+          if (finalValues?.coverImage !== undefined) {
+            updateData.coverImage =
+              finalValues.coverImage === REMOVE_COVER_IMAGE_SENTINEL
+                ? null
+                : finalValues.coverImage;
+          } else if (editSuggestion.coverImage !== null) {
+            updateData.coverImage =
+              editSuggestion.coverImage === REMOVE_COVER_IMAGE_SENTINEL
+                ? null
+                : editSuggestion.coverImage;
+          }
+
+          const images = resolveField(finalValues?.images, editSuggestion.images);
+          if (images !== undefined) updateData.images = images;
 
           if (editSuggestion.coverImage !== null || editSuggestion.images !== null) {
             Object.assign(
@@ -793,16 +893,20 @@ export const playgroundRouter = createTRPCRouter({
             .set(updateData)
             .where(eq(playgrounds.id, editSuggestion.playgroundId));
 
-          // Update equipment if changed
-          if (editSuggestion.equipmentIds !== null) {
+          // Update equipment if changed (preferring admin finalValues.equipmentIds)
+          const resolvedEquipmentIds = resolveField(
+            finalValues?.equipmentIds,
+            editSuggestion.equipmentIds,
+          );
+          if (resolvedEquipmentIds !== undefined) {
             // Remove existing equipment relationships
             await ctx.db
               .delete(playgroundEquipment)
               .where(eq(playgroundEquipment.playgroundId, editSuggestion.playgroundId));
 
             // Add new equipment relationships if any
-            if (editSuggestion.equipmentIds.length > 0) {
-              const equipmentRelations = editSuggestion.equipmentIds.map(equipmentId => ({
+            if (resolvedEquipmentIds.length > 0) {
+              const equipmentRelations = resolvedEquipmentIds.map(equipmentId => ({
                 playgroundId: editSuggestion.playgroundId,
                 equipmentId: equipmentId,
               }));
@@ -1098,22 +1202,18 @@ export const playgroundRouter = createTRPCRouter({
         });
       }
 
-      // Process image removal (same logic as createEditSuggestion)
-      let imagesToKeep = [...(suggestion.playground?.images || [])];
-      let coverImageValue = suggestionData.coverImage;
+      // Process image removal & merge with newly added images (same logic as createEditSuggestion)
+      const coverImageValue = removeCoverImage
+        ? REMOVE_COVER_IMAGE_SENTINEL
+        : suggestionData.coverImage;
 
-      if (removeCoverImage) {
-        coverImageValue = null;
-      }
-
-      if (removeImages && removeImages.length > 0 && suggestion.playground?.images) {
-        imagesToKeep = suggestion.playground.images.filter((_, index) =>
-          index >= removeImages.length || !removeImages[index]
-        );
-
-        if (imagesToKeep.length !== suggestion.playground.images.length) {
-          suggestionData.images = imagesToKeep;
-        }
+      const { images: mergedImages } = mergeEditSuggestionImages(
+        suggestion.playground?.images ?? [],
+        suggestionData.images,
+        removeImages,
+      );
+      if (mergedImages !== undefined) {
+        suggestionData.images = mergedImages;
       }
 
       // Update the suggestion

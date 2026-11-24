@@ -600,12 +600,97 @@ describe("Playground tRPC Router", () => {
       expect(ctx.db.insert).toHaveBeenCalledTimes(2);
     });
 
+    it("should preserve both kept existing images and newly added images when removeImages is provided", async () => {
+      const approvedPlayground = mockPlayground({
+        status: "approved",
+        images: ["/uploads/playgrounds/keep.jpg", "/uploads/playgrounds/remove.jpg"],
+      });
+      const suggestion = { id: 1, playgroundId: 1, status: "pending" };
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
+      ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.createEditSuggestion({
+        playgroundId: 1,
+        images: ["/uploads/playgrounds/new.jpg"],
+        removeImages: [false, true],
+      });
+
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: ["/uploads/playgrounds/keep.jpg", "/uploads/playgrounds/new.jpg"],
+        }),
+      );
+    });
+
+    it("should store empty-string removal sentinel when removeCoverImage is true", async () => {
+      const approvedPlayground = mockPlayground({
+        status: "approved",
+        coverImage: "/uploads/playgrounds/cover.jpg",
+      });
+      const suggestion = { id: 1, playgroundId: 1, status: "pending" };
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
+      ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.createEditSuggestion({
+        playgroundId: 1,
+        removeCoverImage: true,
+      });
+
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          coverImage: "",
+        }),
+      );
+    });
+
     it("should throw UNAUTHORIZED for unauthenticated user", async () => {
       const ctx = createUnauthenticatedContext();
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.createEditSuggestion({ playgroundId: 1 }),
       ).rejects.toThrow(TRPCError);
+    });
+  });
+
+  // ── updateMyEditSuggestion (protectedProcedure) ─
+  describe("updateMyEditSuggestion", () => {
+    it("should preserve both kept existing images and newly added images when removeImages is provided", async () => {
+      const existingSuggestion = {
+        id: 10,
+        playgroundId: 1,
+        status: "pending",
+        createdById: "test-user-id",
+        playground: mockPlayground({
+          images: ["/uploads/playgrounds/keep.jpg", "/uploads/playgrounds/remove.jpg"],
+        }),
+      };
+      const updated = { ...existingSuggestion, coverImage: "" };
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(existingSuggestion);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.updateMyEditSuggestion({
+        id: 10,
+        playgroundId: 1,
+        images: ["/uploads/playgrounds/added.jpg"],
+        removeImages: [false, true],
+        removeCoverImage: true,
+      });
+
+      expect(ctx.db._mocks.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: ["/uploads/playgrounds/keep.jpg", "/uploads/playgrounds/added.jpg"],
+          coverImage: "",
+        }),
+      );
     });
   });
 
@@ -656,6 +741,111 @@ describe("Playground tRPC Router", () => {
       expect(result?.status).toBe("approved");
       // update called twice: once for suggestion status, once for playground
       expect(ctx.db.update).toHaveBeenCalledTimes(2);
+
+      // Untouched coverImage: null on suggestion must NOT wipe out the existing playground coverImage
+      const playgroundUpdateArg = ctx.db._mocks.set.mock.calls[1]?.[0] as Record<string, unknown>;
+      expect(playgroundUpdateArg).toEqual(
+        expect.objectContaining({
+          title: "Updated Title",
+        }),
+      );
+      expect("coverImage" in playgroundUpdateArg).toBe(false);
+    });
+
+    it("should apply admin finalValues overrides including images and equipmentIds", async () => {
+      const suggestionWithChanges = {
+        ...mockSuggestion,
+        title: "Suggested Title",
+        latitude: 64.1,
+        longitude: -21.9,
+        toddlerFriendly: false,
+        images: ["/uploads/playgrounds/keep.jpg", "/uploads/playgrounds/suggested.jpg"],
+        equipmentIds: [1, 2],
+      };
+      const approvedSuggestion = { ...suggestionWithChanges, status: "approved" };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionWithChanges);
+      ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({
+        id: 1,
+        action: "approve",
+        finalValues: {
+          title: "Admin Adjusted Title",
+          latitude: 64.15,
+          longitude: -21.92,
+          toddlerFriendly: true,
+          images: ["/uploads/playgrounds/keep.jpg"],
+          equipmentIds: [3, 4],
+        },
+      });
+
+      const playgroundUpdateArg = ctx.db._mocks.set.mock.calls[1]?.[0] as Record<string, unknown>;
+      expect(playgroundUpdateArg).toEqual(
+        expect.objectContaining({
+          title: "Admin Adjusted Title",
+          latitude: 64.15,
+          longitude: -21.92,
+          toddlerFriendly: true,
+          images: ["/uploads/playgrounds/keep.jpg"],
+        }),
+      );
+      expect(ctx.db.delete).toHaveBeenCalledTimes(1);
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith([
+        { playgroundId: 1, equipmentId: 3 },
+        { playgroundId: 1, equipmentId: 4 },
+      ]);
+    });
+
+    it("should clear playground coverImage when suggestion stores the removal sentinel", async () => {
+      const suggestionRemovingCover = {
+        ...mockSuggestion,
+        coverImage: "",
+      };
+      const approvedSuggestion = { ...suggestionRemovingCover, status: "approved" };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionRemovingCover);
+      ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({
+        id: 1,
+        action: "approve",
+      });
+
+      const playgroundUpdateArg = ctx.db._mocks.set.mock.calls[1]?.[0] as Record<string, unknown>;
+      expect(playgroundUpdateArg).toEqual(
+        expect.objectContaining({
+          coverImage: null,
+        }),
+      );
+    });
+
+    it("should clear playground coverImage when finalValues.coverImage is explicitly null", async () => {
+      const approvedSuggestion = { ...mockSuggestion, status: "approved" };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
+      ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({
+        id: 1,
+        action: "approve",
+        finalValues: {
+          coverImage: null,
+        },
+      });
+
+      const playgroundUpdateArg = ctx.db._mocks.set.mock.calls[1]?.[0] as Record<string, unknown>;
+      expect(playgroundUpdateArg).toEqual(
+        expect.objectContaining({
+          coverImage: null,
+        }),
+      );
     });
 
     it("should reject suggestion with reason without modifying playground", async () => {

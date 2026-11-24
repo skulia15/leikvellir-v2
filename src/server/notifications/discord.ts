@@ -186,7 +186,7 @@ export async function notifyNewEditSuggestion({
   await postEmbed(
     {
       title: `✏️ Edit suggestion: ${playgroundTitle}`,
-      url: absoluteUrl("/admin/review-edit-suggestions"),
+      url: absoluteUrl("/admin/review"),
       description: "Waiting for review in the admin dashboard.",
       color: EDIT_SUGGESTION_COLOR,
       fields: [

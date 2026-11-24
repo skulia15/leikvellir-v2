@@ -53,7 +53,7 @@ import { reverseGeocode } from "~/lib/geocoding";
 import { PlaygroundFormFields } from "~/components/playground-form-fields";
 
 const playgroundFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(256),
+  title: z.string().trim().min(1, "Title is required").max(256),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   municipality: z.string().nullable(),
@@ -260,60 +260,68 @@ export default function PlaygroundFormDialog({
     return () => clearTimeout(timeoutId);
   }, [currentLatitude, currentLongitude]);
 
-  const handleSave = async () => {
-    const formData = form.getValues();
+  const onInvalid = () => {
+    toast.error(t("errors.validationError"));
+  };
+
+  const onValidSave = async (formData: PlaygroundFormData) => {
     const validImages = formData.images.filter(img => img && img.trim() !== "");
 
     setIsSubmitting(true);
 
-    if (mode === "edit-approved") {
-      await updateApprovedMutation.mutateAsync({
-        id: playground.id,
-        title: formData.title,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        municipality: formData.municipality ?? undefined,
-        publiclyAccessible: formData.publiclyAccessible,
-        toddlerFriendly: formData.toddlerFriendly,
-        isSchoolGround: formData.isSchoolGround,
-        schoolType: formData.schoolType,
-        hasSeating: formData.hasSeating,
-        hasPicnicTable: formData.hasPicnicTable,
-        hasFencing: formData.hasFencing,
-        hasGarbageCan: formData.hasGarbageCan,
-        hasBathroomNearby: formData.hasBathroomNearby,
-        hasSoftPlayArea: formData.hasSoftPlayArea,
-        equipmentIds: formData.equipmentIds,
-        coverImage: formData.coverImage,
-        images: validImages,
-      });
-    } else if (mode === "edit-pending") {
-      await updatePendingMutation.mutateAsync({
-        id: playground.id,
-        title: formData.title,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        municipality: formData.municipality ?? undefined,
-        publiclyAccessible: formData.publiclyAccessible,
-        toddlerFriendly: formData.toddlerFriendly,
-        isSchoolGround: formData.isSchoolGround,
-        schoolType: formData.schoolType,
-        hasSeating: formData.hasSeating,
-        hasPicnicTable: formData.hasPicnicTable,
-        hasFencing: formData.hasFencing,
-        hasGarbageCan: formData.hasGarbageCan,
-        hasBathroomNearby: formData.hasBathroomNearby,
-        hasSoftPlayArea: formData.hasSoftPlayArea,
-        equipmentIds: formData.equipmentIds,
-        coverImage: formData.coverImage,
-        images: validImages,
-        submitAnonymously: formData.submitAnonymously,
-      });
+    try {
+      if (mode === "edit-approved") {
+        await updateApprovedMutation.mutateAsync({
+          id: playground.id,
+          title: formData.title,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          municipality: formData.municipality ?? undefined,
+          publiclyAccessible: formData.publiclyAccessible,
+          toddlerFriendly: formData.toddlerFriendly,
+          isSchoolGround: formData.isSchoolGround,
+          schoolType: formData.schoolType,
+          hasSeating: formData.hasSeating,
+          hasPicnicTable: formData.hasPicnicTable,
+          hasFencing: formData.hasFencing,
+          hasGarbageCan: formData.hasGarbageCan,
+          hasBathroomNearby: formData.hasBathroomNearby,
+          hasSoftPlayArea: formData.hasSoftPlayArea,
+          equipmentIds: formData.equipmentIds,
+          coverImage: formData.coverImage,
+          images: validImages,
+        });
+      } else if (mode === "edit-pending") {
+        await updatePendingMutation.mutateAsync({
+          id: playground.id,
+          title: formData.title,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          municipality: formData.municipality ?? undefined,
+          publiclyAccessible: formData.publiclyAccessible,
+          toddlerFriendly: formData.toddlerFriendly,
+          isSchoolGround: formData.isSchoolGround,
+          schoolType: formData.schoolType,
+          hasSeating: formData.hasSeating,
+          hasPicnicTable: formData.hasPicnicTable,
+          hasFencing: formData.hasFencing,
+          hasGarbageCan: formData.hasGarbageCan,
+          hasBathroomNearby: formData.hasBathroomNearby,
+          hasSoftPlayArea: formData.hasSoftPlayArea,
+          equipmentIds: formData.equipmentIds,
+          coverImage: formData.coverImage,
+          images: validImages,
+          submitAnonymously: formData.submitAnonymously,
+        });
+      }
+    } catch {
+      // Error toast and isSubmitting reset are handled by mutation callbacks
     }
   };
 
-  const handleApprove = async () => {
-    const formData = form.getValues();
+  const handleSave = form.handleSubmit(onValidSave, onInvalid);
+
+  const onValidApprove = async (formData: PlaygroundFormData) => {
     const validImages = formData.images.filter(img => img && img.trim() !== "");
     let coverImage = formData.coverImage;
 
@@ -323,14 +331,20 @@ export default function PlaygroundFormDialog({
     }
 
     setIsSubmitting(true);
-    await reviewMutation.mutateAsync({
-      id: playground.id,
-      action: "approve",
-      ...formData,
-      coverImage,
-      images: validImages,
-    });
+    try {
+      await reviewMutation.mutateAsync({
+        id: playground.id,
+        action: "approve",
+        ...formData,
+        coverImage,
+        images: validImages,
+      });
+    } catch {
+      // Error toast and isSubmitting reset are handled by mutation callbacks
+    }
   };
+
+  const handleApprove = form.handleSubmit(onValidApprove, onInvalid);
 
   const handleReject = () => {
     setShowRejectionReason(true);

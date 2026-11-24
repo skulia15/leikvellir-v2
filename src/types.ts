@@ -371,10 +371,10 @@ export const ReviewEditSuggestionSchema = z.object({
   rejectionReason: z.string().optional(),
   // Allow reviewer to modify the final values before approval
   finalValues: z.object({
-    title: z.string().optional(),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-    municipality: z.string().optional(),
+    title: z.string().min(1).max(256).optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+    municipality: z.string().max(256).nullable().optional(),
     publiclyAccessible: z.boolean().optional(),
     toddlerFriendly: z.boolean().optional(),
     isSchoolGround: z.boolean().optional(),
