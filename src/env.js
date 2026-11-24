@@ -58,6 +58,8 @@ export const env = createEnv({
       process.env.NODE_ENV === "development"
         ? z.string().optional()
         : z.string(),
+    // Optional Vercel Blob store ID used to strictly validate blob URLs and filename deletes
+    BLOB_STORE_ID: z.string().min(1).optional(),
   },
 
   /**
@@ -98,6 +100,7 @@ export const env = createEnv({
     DISCORD_ADMIN_WEBHOOK_URL: process.env.DISCORD_ADMIN_WEBHOOK_URL,
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.leikvellir_image_store_READ_WRITE_TOKEN,
+    BLOB_STORE_ID: process.env.BLOB_STORE_ID,
     // PostHog Analytics
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
