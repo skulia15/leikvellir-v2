@@ -215,6 +215,7 @@
     "onlyModifiedFieldsIncluded": "Only the fields you modify will be included in your suggestion",
     "adminWillReviewChanges": "An administrator will review your changes before they are applied",
     "searchPlaceholder": "Search playgrounds...",
+    "loadMore": "Load more ({{remaining}} remaining)",
     "playgroundsInView": "Playgrounds in view",
     "closedNow": "Closed now",
     "legendTitle": "Map key",

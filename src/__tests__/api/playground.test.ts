@@ -233,6 +233,112 @@ describe("Playground tRPC Router", () => {
     });
   });
 
+  // ── getNearby (public) ──────────────────────────
+  describe("getNearby", () => {
+    it("should return closest approved playgrounds sorted by distance with minimal fields", async () => {
+      const candidates = [
+        mockPlayground({ id: 2, title: "Farther", latitude: 64.12, longitude: -21.9 }),
+        mockPlayground({ id: 3, title: "Closest", latitude: 64.072, longitude: -21.955 }),
+        mockPlayground({ id: 4, title: "Middle", latitude: 64.085, longitude: -21.94 }),
+      ];
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findMany.mockResolvedValue(candidates);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getNearby({
+        id: 1,
+        latitude: 64.071,
+        longitude: -21.954,
+        limit: 3,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result.map((p) => p.id)).toEqual([3, 4, 2]);
+      expect(result[0]!.distance).toBeLessThan(result[1]!.distance);
+      expect(result[1]!.distance).toBeLessThan(result[2]!.distance);
+
+      // Should only expose minimal fields + computed distance (no images array, status, etc.)
+      expect(Object.keys(result[0]!).sort()).toEqual([
+        "coverImage",
+        "coverImageBlur",
+        "distance",
+        "id",
+        "latitude",
+        "longitude",
+        "municipality",
+        "title",
+      ]);
+
+      // Verify DB query requests only minimal columns and passes limit
+      expect(ctx.db.query.playgrounds.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          columns: {
+            id: true,
+            title: true,
+            municipality: true,
+            coverImage: true,
+            coverImageBlur: true,
+            latitude: true,
+            longitude: true,
+          },
+          limit: 3,
+        }),
+      );
+    });
+
+    it("should exclude the current playground id and respect limit", async () => {
+      const candidates = [
+        mockPlayground({ id: 1, title: "Self", latitude: 64.071, longitude: -21.954 }),
+        mockPlayground({ id: 2, title: "Near A", latitude: 64.072, longitude: -21.954 }),
+        mockPlayground({ id: 3, title: "Near B", latitude: 64.075, longitude: -21.954 }),
+        mockPlayground({ id: 4, title: "Near C", latitude: 64.08, longitude: -21.954 }),
+      ];
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findMany.mockResolvedValue(candidates);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getNearby({
+        id: 1,
+        latitude: 64.071,
+        longitude: -21.954,
+        limit: 2,
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result.map((p) => p.id)).toEqual([2, 3]);
+    });
+
+    it("should default limit to 3 and return empty array when no nearby playgrounds exist", async () => {
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findMany.mockResolvedValue([]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getNearby({
+        id: 1,
+        latitude: 64.071,
+        longitude: -21.954,
+      });
+
+      expect(result).toEqual([]);
+      expect(ctx.db.query.playgrounds.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 3 }),
+      );
+    });
+
+    it("should reject invalid coordinates or out-of-range limit", async () => {
+      const ctx = createUnauthenticatedContext();
+      const caller = createCaller(ctx as any);
+
+      await expect(
+        caller.playground.getNearby({ id: 1, latitude: 95, longitude: -21.954 }),
+      ).rejects.toThrow();
+
+      await expect(
+        caller.playground.getNearby({ id: 1, latitude: 64.071, longitude: -21.954, limit: 0 }),
+      ).rejects.toThrow();
+    });
+  });
+
   // ── getAllForAdmin (admin only) ──────────────────
   describe("getAllForAdmin", () => {
     it("should return playgrounds of all statuses for admin", async () => {

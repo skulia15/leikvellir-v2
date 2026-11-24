@@ -43,8 +43,8 @@ import { PlaygroundDetailMap } from "./playground-detail-map";
 import { useAdmin } from "~/lib/admin-context";
 import {
   resolveEquipment,
-  useEquipmentLookup,
   type CatalogEquipment,
+  type EquipmentLookup,
 } from "~/lib/hooks/use-equipment-lookup";
 import { CheckInButton } from "./check-in-button";
 import { CheckInCount } from "./check-in-count";
@@ -64,7 +64,10 @@ import {
   shouldUseHistoryBack,
 } from "~/lib/url-state";
 import NearbyPlaygrounds from "./nearby-playgrounds";
-import { api } from "~/trpc/react";
+
+// getById embeds full equipment records, so the detail page never needs the
+// catalog; an empty lookup keeps resolveEquipment from triggering that fetch.
+const EMBEDDED_EQUIPMENT_ONLY: EquipmentLookup = new Map();
 
 const PlaygroundFormDialog = dynamic(
   () => import("~/components/playground-form-dialog"),
@@ -91,7 +94,6 @@ export default function PlaygroundDetail({
   const router = useRouter();
   const { data: session } = useSession();
   const { isAdminMode } = useAdmin();
-  const equipmentLookup = useEquipmentLookup();
   const { userLocation } = useUserLocation();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSuggestEditDialogOpen, setIsSuggestEditDialogOpen] = useState(false);
@@ -99,9 +101,6 @@ export default function PlaygroundDetail({
   const t = useT();
   const currentLanguage = useLocale().locale;
   const dateLocale = getBcp47Locale(currentLanguage);
-
-  // Fetch all playgrounds for the "nearby" section
-  const { data: allPlaygrounds } = api.playground.getAll.useQuery();
 
   // Calculate distance from user location
   const distance = getPlaygroundDistance(playground, userLocation);
@@ -184,7 +183,7 @@ export default function PlaygroundDetail({
     }
   };
   const getEquipmentByCategory = (): Record<EquipmentCategory, PlaygroundEquipmentItem[]> => {
-    return resolveEquipment(playground, equipmentLookup).reduce((acc, equipment) => {
+    return resolveEquipment(playground, EMBEDDED_EQUIPMENT_ONLY).reduce((acc, equipment) => {
       if (!acc[equipment.category]) {
         acc[equipment.category] = [];
       }
@@ -551,6 +550,7 @@ export default function PlaygroundDetail({
               <CardContent className="p-0">
                 <PlaygroundDetailMap
                   playground={playground}
+                  userLocation={userLocation}
                   className="h-64 w-full"
                 />
                 <div className="hidden lg:block p-4 pb-0">
@@ -660,13 +660,10 @@ export default function PlaygroundDetail({
             </Card>
 
             {/* Nearby Playgrounds */}
-            {allPlaygrounds && allPlaygrounds.length > 1 && (
-              <NearbyPlaygrounds
-                currentPlayground={playground}
-                allPlaygrounds={allPlaygrounds}
-                limit={3}
-              />
-            )}
+            <NearbyPlaygrounds
+              currentPlayground={playground}
+              limit={3}
+            />
           </div>
         </div>
 

@@ -14,7 +14,7 @@ export function MainContent({ children }: MainContentProps) {
     // The front page is map-first and manages its own height; every other route
     // gets the standard page padding.
     const mainClasses = isFrontPage
-        ? "flex-1 pt-16"
+        ? "flex-1 pt-16 min-h-0"
         : "flex-1 pt-16 p-4 md:p-16";
 
     return (
@@ -24,4 +24,4 @@ export function MainContent({ children }: MainContentProps) {
             </div>
         </main>
     );
-} 
+}

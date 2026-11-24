@@ -1,6 +1,6 @@
 // server/api/routers/playground.ts
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import {
@@ -28,6 +28,7 @@ import {
 import { MAX_PLAYGROUND_IMAGES } from "~/lib/image-url";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { buildPlaygroundBlurData } from "~/lib/image-blur";
+import { calculateDistance } from "~/lib/geo-utils";
 import { logDbError, logger } from "~/lib/logging/logger";
 import { getUserById, type UserCache } from "~/server/api/current-user";
 import {
@@ -507,6 +508,66 @@ export const playgroundRouter = createTRPCRouter({
       },
     });
   }),
+
+  getNearby: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        limit: z.number().int().min(1).max(20).default(3),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const candidates = await ctx.db.query.playgrounds.findMany({
+        columns: {
+          id: true,
+          title: true,
+          municipality: true,
+          coverImage: true,
+          coverImageBlur: true,
+          latitude: true,
+          longitude: true,
+        },
+        where: (playgrounds, { and, eq, ne }) =>
+          and(
+            eq(playgrounds.status, "approved"),
+            ne(playgrounds.id, input.id),
+          ),
+        orderBy: (playgrounds) => [
+          sql`(
+            6371 * acos(
+              LEAST(1.0, GREATEST(-1.0,
+                cos(radians(${input.latitude})) * cos(radians(${playgrounds.latitude})) *
+                cos(radians(${playgrounds.longitude}) - radians(${input.longitude})) +
+                sin(radians(${input.latitude})) * sin(radians(${playgrounds.latitude}))
+              ))
+            )
+          ) ASC`,
+        ],
+        limit: input.limit,
+      });
+
+      return (candidates ?? [])
+        .filter((p) => p.id !== input.id)
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          municipality: p.municipality,
+          coverImage: p.coverImage,
+          coverImageBlur: p.coverImageBlur,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          distance: calculateDistance(
+            input.latitude,
+            input.longitude,
+            p.latitude,
+            p.longitude,
+          ),
+        }))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, input.limit);
+    }),
 
   getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
     await requireAdmin(ctx, ctx.session.user.id);

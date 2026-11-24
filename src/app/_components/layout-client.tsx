@@ -1,13 +1,17 @@
 "use client";
 
-import { type ReactNode, createContext, useContext, useState, useEffect } from "react";
+import { type ReactNode, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 
 interface LayoutContextType {
     shouldShowFooter: boolean;
+    hideFooterOnMobile: boolean;
 }
 
-const LayoutContext = createContext<LayoutContextType>({ shouldShowFooter: true });
+const LayoutContext = createContext<LayoutContextType>({
+    shouldShowFooter: true,
+    hideFooterOnMobile: false,
+});
 
 export const useLayout = () => useContext(LayoutContext);
 
@@ -17,48 +21,26 @@ interface LayoutClientProps {
 
 export function LayoutClient({ children }: LayoutClientProps) {
     const pathname = usePathname();
-    const [shouldShowFooter, setShouldShowFooter] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        const isFrontPage = pathname === "/";
-
-        // Hide footer only on mobile front page to prevent scrolling
-        // Desktop front page should show footer when scrolled to bottom
-        const updateFooterVisibility = () => {
-            const isMobileDevice = window.innerWidth < 768;
-            setShouldShowFooter(!(isFrontPage && isMobileDevice));
-        };
-
-        updateFooterVisibility();
-        window.addEventListener("resize", updateFooterVisibility);
-        return () => window.removeEventListener("resize", updateFooterVisibility);
-    }, [pathname]);
-
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
-
     const isFrontPage = pathname === "/";
 
-    // On front page mobile: use h-screen with overflow-hidden to prevent scrolling
-    // On front page desktop: use min-h-screen to allow map to take full height
-    // On other pages: use min-h-screen for normal scrollable layout
-    const containerClasses = isFrontPage && isMobile
-        ? "flex flex-col h-screen"
+    // Use pure CSS responsive classes so SSR and mobile hydration match with zero CLS:
+    // - Front page mobile: fixed 100dvh with overflow-hidden so iOS Safari chrome never clips
+    // - Front page desktop (md+): min-h-screen so footer is reachable below the map
+    // - Other pages: normal scrollable min-h-screen layout
+    const containerClasses = isFrontPage
+        ? "flex flex-col h-[100dvh] overflow-hidden md:h-auto md:min-h-screen md:overflow-visible"
         : "flex flex-col min-h-screen";
 
     return (
-        <LayoutContext.Provider value={{ shouldShowFooter }}>
+        <LayoutContext.Provider
+            value={{
+                shouldShowFooter: true,
+                hideFooterOnMobile: isFrontPage,
+            }}
+        >
             <div className={containerClasses}>
                 {children}
             </div>
         </LayoutContext.Provider>
     );
-} 
+}

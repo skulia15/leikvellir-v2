@@ -2,18 +2,21 @@
  * Cluster marker showing the count of playgrounds in a cluster.
  * Scales size based on point count for visual hierarchy.
  */
+import { memo, useCallback } from "react";
 import { Marker } from "react-map-gl/mapbox";
 import { useT } from "~/lib/i18n";
 
 interface MapClusterMarkerProps {
+  clusterId: number;
   longitude: number;
   latitude: number;
   pointCount: number;
   totalPoints: number;
-  onClick: () => void;
+  onClick: (clusterId: number, lng: number, lat: number) => void;
 }
 
-export function MapClusterMarker({
+export const MapClusterMarker = memo(function MapClusterMarker({
+  clusterId,
   longitude,
   latitude,
   pointCount,
@@ -27,15 +30,20 @@ export function MapClusterMarker({
   const ratio = pointCount / totalPoints;
   const size = Math.max(44, Math.min(60, 44 + ratio * 16));
 
+  const handleClick = useCallback(
+    (e: { originalEvent: { stopPropagation: () => void } }) => {
+      e.originalEvent.stopPropagation();
+      onClick(clusterId, longitude, latitude);
+    },
+    [onClick, clusterId, longitude, latitude],
+  );
+
   return (
     <Marker
       longitude={longitude}
       latitude={latitude}
       anchor="center"
-      onClick={(e) => {
-        e.originalEvent.stopPropagation();
-        onClick();
-      }}
+      onClick={handleClick}
     >
       <div
         role="button"
@@ -44,7 +52,7 @@ export function MapClusterMarker({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onClick();
+            onClick(clusterId, longitude, latitude);
           }
         }}
         className="flex items-center justify-center rounded-full bg-primary text-primary-foreground
@@ -60,4 +68,4 @@ export function MapClusterMarker({
       </div>
     </Marker>
   );
-}
+});

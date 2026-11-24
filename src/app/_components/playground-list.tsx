@@ -13,11 +13,16 @@ import {
   type UserLocation,
 } from "~/lib/geo-utils";
 import { useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
+import { isAfterSchoolHours } from "~/lib/school-hours";
 import {
   hasActiveMapFilters,
+  hasEquipmentByName,
   matchesMapFilters,
 } from "~/lib/search-utils";
 import { useT } from "~/lib/i18n";
+
+/** Only the first few new rows stagger in; the rest appear at once. */
+const MAX_STAGGERED_ITEMS = 8;
 
 interface PlaygroundListProps {
   filters: PlaygroundFilters;
@@ -74,13 +79,30 @@ export default function PlaygroundList({
   const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
   const lastScrolledSeqRef = useRef<number>(0);
 
+  // O(1) membership for the render loop (was an O(N) .some() per row).
+  const currentIdSet = useMemo(
+    () => new Set(filteredAndSortedPlaygrounds.map((p) => p.id)),
+    [filteredAndSortedPlaygrounds],
+  );
+
+  // Resolved once here so each memoized card doesn't build its own lookup.
+  const bouncyPillowIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const p of displayedPlaygrounds) {
+      if (hasEquipmentByName(p, "Ærslabelgur", equipmentLookup)) ids.add(p.id);
+    }
+    return ids;
+  }, [displayedPlaygrounds, equipmentLookup]);
+
+  // Same answer for every school ground, so check once per render.
+  const schoolAccessibleNow = isAfterSchoolHours();
+
   // Handle playground list animations with staggered timing.
   // The currently-rendered list is mirrored in a ref so this effect depends only
   // on its input; depending on `displayedPlaygrounds` re-ran it on its own output.
   useEffect(() => {
-    const currentIds = new Set(filteredAndSortedPlaygrounds.map((p) => p.id));
     const playgroundsToRemove = displayedRef.current.filter(
-      (p) => !currentIds.has(p.id),
+      (p) => !currentIdSet.has(p.id),
     );
 
     if (playgroundsToRemove.length === 0) {
@@ -99,7 +121,7 @@ export default function PlaygroundList({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [filteredAndSortedPlaygrounds]);
+  }, [filteredAndSortedPlaygrounds, currentIdSet]);
 
   // Scroll the selected card into view when a map pin (or deep link) selects a playground
   useEffect(() => {
@@ -167,11 +189,8 @@ export default function PlaygroundList({
       <ul className="divide-y divide-border">
         {displayedPlaygrounds.map((playground, index) => {
           const isExiting = exitingPlaygrounds.has(playground.id);
-          const currentlyVisible = filteredAndSortedPlaygrounds.some(
-            (p) => p.id === playground.id,
-          );
-          const isNewItem =
-            !exitingPlaygrounds.has(playground.id) && currentlyVisible;
+          const currentlyVisible = currentIdSet.has(playground.id);
+          const isNewItem = !isExiting && currentlyVisible;
           const isSelected = selectedPlayground?.id === playground.id;
 
           return (
@@ -197,8 +216,11 @@ export default function PlaygroundList({
                 }
               `}
               style={{
-                // Staggered animation delay for smoother appearance
-                animationDelay: isNewItem ? `${index * 50}ms` : undefined,
+                // Capped stagger so long lists don't take seconds to appear
+                animationDelay:
+                  isNewItem && index < MAX_STAGGERED_ITEMS
+                    ? `${index * 30}ms`
+                    : undefined,
               }}
             >
               {/* Primary action: show this playground on the map. A real button,
@@ -216,6 +238,8 @@ export default function PlaygroundList({
                     getPlaygroundDistance(playground, userLocation)
                   }
                   showDistance={!!userLocation}
+                  hasBouncyPillow={bouncyPillowIds.has(playground.id)}
+                  isSchoolAccessibleNow={schoolAccessibleNow}
                 />
               </button>
               {/* Sibling (never nested) link: the crawlable route to the detail

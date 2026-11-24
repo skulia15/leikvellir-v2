@@ -14,13 +14,32 @@ export const SCHOOL_HOURS = {
 // Days of the week (0 = Sunday, 1 = Monday, etc.)
 export const WORKING_DAYS = [1, 2, 3, 4, 5] as const; // Monday to Friday
 
+// Cache fridagar isHoliday results per calendar day (YYYY-M-D) so repeated
+// per-marker/per-card checks don't recompute Icelandic holiday tables.
+const holidayCache = new Map<string, boolean>();
+
+function isIcelandicHoliday(date: Date): boolean {
+  const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  const cached = holidayCache.get(key);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const result = Boolean(isHoliday(date));
+  // Keep cache bounded in long-lived server processes
+  if (holidayCache.size > 366) {
+    holidayCache.clear();
+  }
+  holidayCache.set(key, result);
+  return result;
+}
+
 /**
  * Check if current time is during school hours
  * School hours are Monday-Friday 08:00-17:00
  */
 export function isSchoolHours(date: Date = new Date()): boolean {
   // Icelandic public holidays — schools are closed
-  if (isHoliday(date)) {
+  if (isIcelandicHoliday(date)) {
     return false;
   }
 

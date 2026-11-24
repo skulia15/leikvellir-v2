@@ -215,6 +215,7 @@
     "onlyModifiedFieldsIncluded": "Aðeins reitirnir sem þú breytir verða teknir með í tillögunni",
     "adminWillReviewChanges": "Stjórnandi mun fara yfir breytingarnar þínar áður en þær eru samþykktar",
     "searchPlaceholder": "Leita að leiksvæðum...",
+    "loadMore": "Sýna fleiri ({{remaining}} eftir)",
     "playgroundsInView": "Leiksvæði á sýnilegu svæði",
     "closedNow": "Lokað núna",
     "legendTitle": "Skýringar við kortið",

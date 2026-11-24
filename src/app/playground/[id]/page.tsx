@@ -44,49 +44,19 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
     notFound();
   }
 
-  // The detail payload embeds its own equipment records, but the page also
-  // renders the nearby-playgrounds list off getAll, which does not.
-  void api.equipment.getCatalog.prefetch();
+  // Nearby list is its own minimal query; the detail payload embeds its own
+  // equipment, so no catalog or full getAll is needed on this page.
+  void api.playground.getNearby.prefetch({
+    id: playground.id,
+    latitude: playground.latitude,
+    longitude: playground.longitude,
+    limit: 3,
+  });
 
   const BASE_URL = getBaseUrl();
 
-  // Get the first image for preloading (LCP optimization)
-  // This must match the image order in playground-detail.tsx
-  const displayImages = [
-    ...(playground.coverImage ? [playground.coverImage] : []),
-    ...(playground.images ?? []),
-  ].filter((img, index, arr) => arr.indexOf(img) === index);
-  const firstImage = displayImages[0];
-
   return (
     <>
-      {/* Preload LCP Image with Next.js optimization */}
-      {firstImage && (
-        <>
-          <link
-            rel="preload"
-            as="image"
-            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=640&q=85`}
-            fetchPriority="high"
-            media="(max-width: 640px)"
-          />
-          <link
-            rel="preload"
-            as="image"
-            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=828&q=85`}
-            fetchPriority="high"
-            media="(max-width: 768px)"
-          />
-          <link
-            rel="preload"
-            as="image"
-            href={`/_next/image?url=${encodeURIComponent(firstImage)}&w=1080&q=85`}
-            fetchPriority="high"
-            media="(min-width: 769px)"
-          />
-        </>
-      )}
-
       {/* Structured Data */}
       <PlaygroundSchema
         playground={{

@@ -2,13 +2,11 @@
  * Custom playground marker for the Mapbox map.
  * Color-coded based on accessibility: green (public), amber (school, accessible), red (school, not accessible).
  */
+import { memo, useCallback } from "react";
 import { Marker } from "react-map-gl/mapbox";
 import { MapPin, GraduationCap, Check } from "lucide-react";
 import { type Playground } from "~/types";
-import {
-  getPlaygroundMarkerColor,
-  isSchoolGroundAccessible,
-} from "~/lib/school-hours";
+import { isSchoolGroundAccessible, MARKER_COLORS } from "~/lib/school-hours";
 import { useT } from "~/lib/i18n";
 
 interface MapMarkerProps {
@@ -16,28 +14,38 @@ interface MapMarkerProps {
   isSelected?: boolean;
   /** True when the signed-in user has ever checked in here. */
   hasCheckedIn?: boolean;
+  /**
+   * Today's school-hours check, computed once by the map rather than per pin.
+   * Falls back to computing it here when omitted.
+   */
+  isSchoolAccessibleNow?: boolean;
   onClick: (playground: Playground) => void;
   /** Pointer entered the pin. Only fires for a real mouse, never for touch. */
   onHoverStart?: (playground: Playground) => void;
   onHoverEnd?: (playground: Playground) => void;
 }
 
-export function MapMarker({
+// Memoized: the map re-renders on every hover/pan, and with hundreds of pins
+// each re-render used to re-run the holiday + school-hours check per pin.
+export const MapMarker = memo(function MapMarker({
   playground,
   isSelected,
   hasCheckedIn,
+  isSchoolAccessibleNow,
   onClick,
   onHoverStart,
   onHoverEnd,
 }: MapMarkerProps) {
   const t = useT();
-  const markerColor = getPlaygroundMarkerColor(
-    playground.isSchoolGround,
-    playground.schoolType,
-  );
   const isSchoolGround = playground.isSchoolGround;
-  const isAccessible =
-    !isSchoolGround || isSchoolGroundAccessible(isSchoolGround);
+  const isAccessible = !isSchoolGround
+    ? true
+    : (isSchoolAccessibleNow ?? isSchoolGroundAccessible(true));
+  const markerColor = !isSchoolGround
+    ? MARKER_COLORS.open
+    : isAccessible
+      ? MARKER_COLORS.limited
+      : MARKER_COLORS.closed;
 
   // Marker colour alone cannot carry access status (WCAG 1.4.1), so the
   // accessible name states it in words.
@@ -53,15 +61,20 @@ export function MapMarker({
     ? `${playground.title} — ${statusLabel} — ${t("checkIn.visitedBadgeLabel")}`
     : `${playground.title} — ${statusLabel}`;
 
+  const handleClick = useCallback(
+    (e: { originalEvent: { stopPropagation: () => void } }) => {
+      e.originalEvent.stopPropagation();
+      onClick(playground);
+    },
+    [onClick, playground],
+  );
+
   return (
     <Marker
       longitude={playground.longitude}
       latitude={playground.latitude}
       anchor="center"
-      onClick={(e) => {
-        e.originalEvent.stopPropagation();
-        onClick(playground);
-      }}
+      onClick={handleClick}
     >
       <div
         // Touch devices fire a synthetic mouseenter on tap, which would open
@@ -109,4 +122,4 @@ export function MapMarker({
       </div>
     </Marker>
   );
-}
+});

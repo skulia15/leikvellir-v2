@@ -202,15 +202,17 @@ export default function HomeClient() {
     };
   }, [isMobile, currentSnapIndex]);
 
-  // Check if mobile
+  // Match Tailwind's `md` breakpoint. Only drives mobile-only behaviour (the
+  // sheet, drawer offset, auto-locate); layout itself is responsive CSS, so the
+  // map never remounts when this flips after hydration.
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsMobile(e.matches);
     };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    handleChange(mediaQuery);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   // Auto-center desktop map if geolocation permission already granted
@@ -415,41 +417,54 @@ export default function HomeClient() {
 
   const filtersActive = hasActiveMapFilters(filters);
 
-  // Mobile layout — map with a bottom sheet over it
-  if (isMobile) {
-    const isMobilePeek = currentSnapIndex === 2;
+  const isMobilePeek = currentSnapIndex === 2;
 
-    return (
-      <div
-        className="relative flex flex-col"
-        style={{ height: "calc(100vh - 4rem)" }}
-      >
-        {seoHeading}
-        {/* Map container - takes full available height */}
-        <div className="absolute inset-0 z-0">
-          <MapErrorBoundary fallback={MapErrorFallback}>
-            <MapComponent
-              selectedPlayground={selectedPlayground}
-              onPlaygroundSelect={handleMapPlaygroundSelect}
-              onMarkerSelect={handleMapMarkerSelect}
-              filters={filters}
-              userLocation={userLocation}
-              onUserLocationChange={setUserLocation}
-              initialViewport={initialViewport}
-              onViewportChange={handleViewportChange}
-              flyToRequest={flyToRequest}
-              onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
-              onTotalVisibleCountChange={setTotalVisibleCount}
-              isMobile={isMobile}
-              drawerHeight={getDrawerHeight()}
-              shouldCenterOnUserLocation={true}
-              autoRequestLocation={true}
-              onMinimizeDrawer={handleMinimizeDrawer}
-            />
-          </MapErrorBoundary>
-        </div>
+  // One layout for both breakpoints. Rendering separate mobile/desktop trees
+  // keyed off a post-hydration `isMobile` flip unmounted and remounted the
+  // whole WebGL map on every mobile load.
+  return (
+    <div className="relative flex h-[calc(100dvh-4rem)] w-full overflow-hidden">
+      {seoHeading}
 
-        {/* Mobile bottom sheet */}
+      {/* Desktop sidebar — hidden on mobile by CSS from the first paint */}
+      <aside className="hidden md:block w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
+        {!isMobile && (
+          <ScrollArea className="h-full">
+            {/* Sidebar header with count badge */}
+            <div className="px-5 py-4 border-b border-border sticky top-0 bg-card z-10">
+              {resultCountHeader}
+            </div>
+            <div className="px-4 pb-4">{desktopSidebarContent}</div>
+          </ScrollArea>
+        )}
+      </aside>
+
+      {/* Single persistent map */}
+      <div className="relative flex-1 h-full min-w-0 z-0">
+        <MapErrorBoundary fallback={MapErrorFallback}>
+          <MapComponent
+            selectedPlayground={selectedPlayground}
+            onPlaygroundSelect={handleMapPlaygroundSelect}
+            onMarkerSelect={handleMapMarkerSelect}
+            filters={filters}
+            userLocation={userLocation}
+            onUserLocationChange={setUserLocation}
+            initialViewport={initialViewport}
+            onViewportChange={handleViewportChange}
+            flyToRequest={flyToRequest}
+            onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
+            onTotalVisibleCountChange={setTotalVisibleCount}
+            isMobile={isMobile}
+            drawerHeight={getDrawerHeight()}
+            shouldCenterOnUserLocation={true}
+            autoRequestLocation={isMobile || locationPermissionGranted}
+            onMinimizeDrawer={handleMinimizeDrawer}
+          />
+        </MapErrorBoundary>
+      </div>
+
+      {/* Mobile bottom sheet over the map */}
+      {isMobile && (
         <MobileBottomSheet
           sheetHandleRef={sheetHandleRef}
           isOpen={true}
@@ -487,47 +502,7 @@ export default function HomeClient() {
         >
           {playgroundListContent}
         </MobileBottomSheet>
-      </div>
-    );
-  }
-
-  // Desktop layout with left sidebar
-  return (
-    <div className="flex" style={{ height: "calc(100vh - 4rem)" }}>
-      {seoHeading}
-      {/* Left sidebar with playground list */}
-      <div className="w-[420px] shadow-lg overflow-hidden flex-shrink-0 bg-card relative z-10">
-        <ScrollArea className="h-full">
-          {/* Sidebar header with count badge */}
-          <div className="px-5 py-4 border-b border-border sticky top-0 bg-card z-10">
-            {resultCountHeader}
-          </div>
-          <div className="px-4 pb-4">{desktopSidebarContent}</div>
-        </ScrollArea>
-      </div>
-
-      {/* Map takes the remaining space */}
-      <div className="flex-1 relative">
-        <MapErrorBoundary fallback={MapErrorFallback}>
-          <MapComponent
-            selectedPlayground={selectedPlayground}
-            onPlaygroundSelect={handleMapPlaygroundSelect}
-            onMarkerSelect={handleMapMarkerSelect}
-            filters={filters}
-            userLocation={userLocation}
-            onUserLocationChange={setUserLocation}
-            initialViewport={initialViewport}
-            onViewportChange={handleViewportChange}
-            flyToRequest={flyToRequest}
-            onVisiblePlaygroundsChange={handleVisiblePlaygroundsChange}
-            onTotalVisibleCountChange={setTotalVisibleCount}
-            isMobile={false}
-            drawerHeight={getDrawerHeight()}
-            shouldCenterOnUserLocation={true}
-            autoRequestLocation={locationPermissionGranted}
-          />
-        </MapErrorBoundary>
-      </div>
+      )}
     </div>
   );
 }

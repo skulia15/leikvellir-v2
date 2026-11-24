@@ -29,6 +29,7 @@ import {
 } from "~/lib/map-utils";
 import { compareIcelandic, matchesMapFilters } from "~/lib/search-utils";
 import { type MapViewportState } from "~/lib/url-state";
+import { isAfterSchoolHours } from "~/lib/school-hours";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { type PlaygroundFilters } from "./playground-filters";
@@ -62,6 +63,7 @@ interface MapboxMapProps {
     playgrounds: (Playground & { distance?: number | null })[],
   ) => void;
   isMobile?: boolean;
+  /** Height of the map the mobile sheet covers, so pins under it aren't counted as visible. */
   drawerHeight?: number;
   shouldCenterOnUserLocation?: boolean;
   autoRequestLocation?: boolean;
@@ -228,6 +230,9 @@ export function MapboxMap({
   const hasAutocentered = useRef(Boolean(initialViewport ?? mapCenter));
   const lastFlyToSeqRef = useRef<number>(0);
   const mapRef = useRef<MapRef>(null);
+
+  // Compute school-hours accessibility once per render pass instead of per marker
+  const schoolAccessibleNow = isAfterSchoolHours();
 
   // Calculate initial view state
   const initialCenter = initialViewport
@@ -551,6 +556,10 @@ export function MapboxMap({
   const shouldAutoRequestLocation =
     autoRequestLocation && !initialViewport && !mapCenter;
 
+  const handleClearSelection = useCallback(() => {
+    onPlaygroundSelect(null);
+  }, [onPlaygroundSelect]);
+
   return (
     // The map always fills its container. The sheet overlays it rather than
     // resizing it, so nothing animates layout height on every snap.
@@ -567,7 +576,7 @@ export function MapboxMap({
         mapStyle="mapbox://styles/skulipardus/cmkzwe4f2005s01skane25k5g"
         onLoad={handleLoad}
         onMoveEnd={handleMoveEnd}
-        onClick={() => onPlaygroundSelect(null)}
+        onClick={handleClearSelection}
         dragRotate={false}
         touchPitch={false}
         attributionControl={true}
@@ -590,11 +599,12 @@ export function MapboxMap({
             return (
               <MapClusterMarker
                 key={`cluster-${clusterId}`}
+                clusterId={clusterId}
                 longitude={lng}
                 latitude={lat}
                 pointCount={pointCount}
                 totalPoints={filteredPlaygrounds.length}
-                onClick={() => handleClusterClick(clusterId, lng, lat)}
+                onClick={handleClusterClick}
               />
             );
           }
@@ -607,6 +617,7 @@ export function MapboxMap({
               playground={playground}
               isSelected={selectedPlayground?.id === playground.id}
               hasCheckedIn={checkedInIds.has(playground.id)}
+              isSchoolAccessibleNow={schoolAccessibleNow}
               onClick={handleMarkerClick}
               onHoverStart={handleMarkerHoverStart}
               onHoverEnd={handleMarkerHoverEnd}

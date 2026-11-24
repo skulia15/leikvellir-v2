@@ -133,10 +133,10 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
                 {...blurPlaceholderProps(blurData?.[image])}
                 alt={`${alt} - Image ${index + 1}`}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 66vw, 800px"
+                sizes="(max-width: 1023px) 100vw, (max-width: 1536px) calc(100vw - 456px), 1080px"
                 className="object-cover"
                 priority={index === 0}
-                loading={index === 0 ? "eager" : "lazy"}
+                loading={index === 0 ? undefined : "lazy"}
                 fetchPriority={index === 0 ? "high" : "low"}
                 quality={85}
                 draggable={false}

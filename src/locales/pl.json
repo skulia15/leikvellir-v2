@@ -219,6 +219,7 @@
     "onlyModifiedFieldsIncluded": "Tylko pola, które zmodyfikujesz, zostaną uwzględnione w Twojej propozycji",
     "adminWillReviewChanges": "Administrator przejrzy Twoje zmiany przed ich zastosowaniem",
     "searchPlaceholder": "Szukaj placów zabaw...",
+    "loadMore": "Pokaż więcej (pozostało {{remaining}})",
     "playgroundsInView": "Place zabaw w widoku",
     "closedNow": "Teraz zamknięte",
     "legendTitle": "Legenda mapy",

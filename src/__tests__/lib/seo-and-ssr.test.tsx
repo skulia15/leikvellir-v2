@@ -148,6 +148,9 @@ vi.mock("~/trpc/server", () => ({
       getAll: Object.assign(() => mockServerGetAll(), {
         prefetch: () => mockServerGetAllPrefetch(),
       }),
+      getNearby: Object.assign(() => Promise.resolve([]), {
+        prefetch: () => Promise.resolve(),
+      }),
     },
     equipment: {
       getCatalog: Object.assign(() => Promise.resolve([]), {

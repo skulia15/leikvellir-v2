@@ -6,18 +6,18 @@ import { MapPin, Maximize2, LocateFixed } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { env } from "~/env";
-import { useUserLocation } from "~/lib/hooks/use-user-location";
+import { type UserLocation } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
 import { type Playground } from "~/types";
 
 interface PlaygroundDetailMapProps {
     playground: Playground;
+    userLocation?: UserLocation | null;
     className?: string;
 }
 
-export function PlaygroundDetailMap({ playground, className }: PlaygroundDetailMapProps) {
+export function PlaygroundDetailMap({ playground, userLocation = null, className }: PlaygroundDetailMapProps) {
     const [MapModule, setMapModule] = useState<typeof import("react-map-gl/mapbox") | null>(null);
-    const { userLocation } = useUserLocation();
     const mapRef = useRef<import("react-map-gl/mapbox").MapRef | null>(null);
     const t = useT();
 

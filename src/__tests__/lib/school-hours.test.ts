@@ -242,5 +242,17 @@ describe("school-hours utilities", () => {
       const result = getNextAccessibleTime(nyarsdagur10am);
       expect(result).toEqual(nyarsdagur10am);
     });
+
+    it("should return consistent results across repeated cached checks on holidays and regular weekdays", () => {
+      const regularWednesday = makeDate(2025, 0, 8, 10);
+      const nyarsdagurAfternoon = makeDate(2025, 0, 1, 14);
+
+      // Repeated checks hit the per-calendar-day holiday cache
+      for (let i = 0; i < 5; i++) {
+        expect(isSchoolHours(nyarsdagur10am)).toBe(false);
+        expect(isSchoolHours(nyarsdagurAfternoon)).toBe(false);
+        expect(isSchoolHours(regularWednesday)).toBe(true);
+      }
+    });
   });
 });

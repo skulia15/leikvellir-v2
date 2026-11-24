@@ -6,46 +6,33 @@ import { MapPin, Compass, Footprints, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { type Playground } from "~/types";
-import { calculateDistance, formatDistance } from "~/lib/geo-utils";
+import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
+import { api } from "~/trpc/react";
 
 interface NearbyPlaygroundsProps {
-  currentPlayground: Playground;
-  allPlaygrounds: Playground[];
+  currentPlayground: Pick<Playground, "id" | "latitude" | "longitude">;
   /** Maximum number of nearby playgrounds to show */
   limit?: number;
 }
 
-interface NearbyPlayground extends Playground {
-  distance: number;
-}
-
 export default function NearbyPlaygrounds({
   currentPlayground,
-  allPlaygrounds,
   limit = 3,
 }: NearbyPlaygroundsProps) {
   const t = useT();
   const { locale } = useLocale();
 
-  // Calculate distances and sort by proximity
-  const nearbyPlaygrounds: NearbyPlayground[] = allPlaygrounds
-    .filter((p) => p.id !== currentPlayground.id)
-    .map((p) => ({
-      ...p,
-      distance: calculateDistance(
-        currentPlayground.latitude,
-        currentPlayground.longitude,
-        p.latitude,
-        p.longitude
-      ),
-    }))
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, limit);
+  const { data: nearbyPlaygrounds } = api.playground.getNearby.useQuery({
+    id: currentPlayground.id,
+    latitude: currentPlayground.latitude,
+    longitude: currentPlayground.longitude,
+    limit,
+  });
 
-  if (nearbyPlaygrounds.length === 0) {
+  if (!nearbyPlaygrounds || nearbyPlaygrounds.length === 0) {
     return null;
   }
 

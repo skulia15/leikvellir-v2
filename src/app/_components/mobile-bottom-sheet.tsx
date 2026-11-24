@@ -66,7 +66,7 @@ export default function MobileBottomSheet({
         </Sheet.Header>
         <Sheet.Content className="bg-card">
           <ScrollArea className="h-full px-2">
-            <div className="pb-safe-area-inset-bottom">{children}</div>
+            <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))]">{children}</div>
           </ScrollArea>
         </Sheet.Content>
       </Sheet.Container>

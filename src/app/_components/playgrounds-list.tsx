@@ -3,7 +3,6 @@
 import { MapPin, Navigation, Search, SortAsc, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -27,7 +26,7 @@ import { PlaygroundsListSkeleton } from "./playgrounds-page-skeleton";
 import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, sortPlaygroundsByDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
-import { isSchoolGroundAccessible } from "~/lib/school-hours";
+import { isAfterSchoolHours } from "~/lib/school-hours";
 import {
   compareIcelandic,
   hasEquipmentByName,
@@ -40,6 +39,10 @@ import {
   replaceUrlSearchParams,
   serializePlaygroundsListParams,
 } from "~/lib/url-state";
+
+const PAGE_SIZE = 24;
+/** Roughly the first two rows on desktop — the cards likely to be the LCP element. */
+const PRIORITY_CARD_COUNT = 6;
 
 interface PlaygroundsListProps {
   playgrounds: Playground[];
@@ -170,41 +173,38 @@ export default function PlaygroundsList({
     }
   }, [sortBy, userLocation, playgrounds]);
 
-  // Compute category counts from the full sorted list (stable counts)
-  const categoryCounts = useMemo(() => {
+  // Category counts and the bouncy-pillow / football-field id sets in one pass
+  // over the full list (stable counts). The sets also feed the filters and the
+  // cards, so equipment is resolved once per playground rather than per use.
+  const { categoryCounts, bouncyPillowIds, footballFieldIds } = useMemo(() => {
     const counts = new Map<EquipmentCategory, number>();
-    for (const pg of sortedPlaygrounds) {
+    const bouncy = new Set<number>();
+    const football = new Set<number>();
+    for (const pg of playgrounds) {
       const categories = new Set(
         resolveEquipment(pg, equipmentLookup).map((item) => item.category),
       );
       for (const cat of categories) {
         counts.set(cat, (counts.get(cat) ?? 0) + 1);
       }
+      if (hasEquipmentByName(pg, "Ærslabelgur", equipmentLookup)) bouncy.add(pg.id);
+      if (hasEquipmentByName(pg, "Fótboltavöllur", equipmentLookup)) football.add(pg.id);
     }
-    return counts;
-  }, [sortedPlaygrounds, equipmentLookup]);
+    return { categoryCounts: counts, bouncyPillowIds: bouncy, footballFieldIds: football };
+  }, [playgrounds, equipmentLookup]);
 
-  // Count playgrounds with bouncy pillow (stable count from full list)
-  const bouncyPillowCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) =>
-      hasEquipmentByName(pg, "Ærslabelgur", equipmentLookup),
-    ).length;
-  }, [sortedPlaygrounds, equipmentLookup]);
+  const bouncyPillowCount = bouncyPillowIds.size;
+  const footballFieldCount = footballFieldIds.size;
 
-  // Count playgrounds with football field (stable count from full list)
-  const footballFieldCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) =>
-      hasEquipmentByName(pg, "Fótboltavöllur", equipmentLookup),
-    ).length;
-  }, [sortedPlaygrounds, equipmentLookup]);
+  // School hours are the same for every school ground, so check once per render
+  const schoolAccessibleNow = isAfterSchoolHours();
 
   // Count school ground playgrounds currently closed (for "open now" filter)
   // Uses the exact same predicate as the filter to ensure count matches
   const closedSchoolGroundCount = useMemo(() => {
-    return sortedPlaygrounds.filter(
-      (pg) => !isSchoolGroundAccessible(pg.isSchoolGround),
-    ).length;
-  }, [sortedPlaygrounds]);
+    if (schoolAccessibleNow) return 0;
+    return playgrounds.filter((pg) => pg.isSchoolGround).length;
+  }, [playgrounds, schoolAccessibleNow]);
 
   // Unique sorted municipalities for the dropdown filter
   const municipalities = useMemo(() => {
@@ -240,21 +240,17 @@ export default function PlaygroundsList({
 
     // Bouncy pillow filter
     if (bouncyPillowActive) {
-      result = result.filter((pg) =>
-        hasEquipmentByName(pg, "Ærslabelgur", equipmentLookup),
-      );
+      result = result.filter((pg) => bouncyPillowIds.has(pg.id));
     }
 
     // Football field filter
     if (footballFieldActive) {
-      result = result.filter((pg) =>
-        hasEquipmentByName(pg, "Fótboltavöllur", equipmentLookup),
-      );
+      result = result.filter((pg) => footballFieldIds.has(pg.id));
     }
 
     // Open now filter — hide school grounds that are currently closed
-    if (openNowActive) {
-      result = result.filter((pg) => isSchoolGroundAccessible(pg.isSchoolGround));
+    if (openNowActive && !schoolAccessibleNow) {
+      result = result.filter((pg) => !pg.isSchoolGround);
     }
 
     return result;
@@ -267,7 +263,34 @@ export default function PlaygroundsList({
     footballFieldActive,
     openNowActive,
     equipmentLookup,
+    bouncyPillowIds,
+    footballFieldIds,
+    schoolAccessibleNow,
   ]);
+
+  // Pagination resets whenever sort, search or filters change. Derived from a
+  // key rather than reset in an effect, so a filter change never renders the
+  // previous (possibly large) page count first.
+  const paginationKey = JSON.stringify([
+    sortBy,
+    searchQuery,
+    selectedMunicipality,
+    Array.from(activeCategories).sort(),
+    bouncyPillowActive,
+    footballFieldActive,
+    openNowActive,
+  ]);
+  const [pagination, setPagination] = useState({ key: paginationKey, count: PAGE_SIZE });
+  const visibleCount = pagination.key === paginationKey ? pagination.count : PAGE_SIZE;
+  const visiblePlaygrounds = useMemo(
+    () => filteredPlaygrounds.slice(0, visibleCount),
+    [filteredPlaygrounds, visibleCount],
+  );
+  const remainingCount = filteredPlaygrounds.length - visiblePlaygrounds.length;
+
+  const handleLoadMore = useCallback(() => {
+    setPagination({ key: paginationKey, count: visibleCount + PAGE_SIZE });
+  }, [paginationKey, visibleCount]);
 
   const handleToggleCategory = useCallback((category: EquipmentCategory) => {
     setActiveCategories((prev) => {
@@ -500,34 +523,38 @@ export default function PlaygroundsList({
           </CardContent>
         </Card>
       ) : (
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredPlaygrounds.map((playground, index) => (
-              <motion.div
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+            {visiblePlaygrounds.map((playground, index) => (
+              <Link
                 key={playground.id}
-                layout
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.25, delay: index < 9 ? index * 0.04 : 0 }}
+                href={`/playground/${playground.id}`}
+                className="block"
               >
-                <Link
-                  href={`/playground/${playground.id}`}
-                  className="block"
-                >
-                  <PlaygroundGridCard
-                    playground={playground}
-                    distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
-                    showDistance={!!userLocation}
-                  />
-                </Link>
-              </motion.div>
+                <PlaygroundGridCard
+                  playground={playground}
+                  distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
+                  showDistance={!!userLocation}
+                  priority={index < PRIORITY_CARD_COUNT}
+                  hasBouncyPillow={bouncyPillowIds.has(playground.id)}
+                />
+              </Link>
             ))}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+
+          {remainingCount > 0 && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleLoadMore}
+                className="min-w-[220px]"
+              >
+                {t("playground.loadMore", { remaining: remainingCount })}
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

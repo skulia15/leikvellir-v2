@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 import { MapPin, GraduationCap, Zap, Footprints, Camera } from "lucide-react";
 import { Card } from "~/components/ui/card";
@@ -6,23 +7,25 @@ import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
-import { hasEquipmentNamed, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 
 interface PlaygroundGridCardProps {
   playground: Playground;
   distance?: number;
   showDistance?: boolean;
+  priority?: boolean;
+  /** Resolved by the parent list so cards don't each build an equipment lookup. */
+  hasBouncyPillow: boolean;
 }
 
-export default function PlaygroundGridCard({
+const PlaygroundGridCard = memo(function PlaygroundGridCard({
   playground,
   distance,
   showDistance = false,
+  priority = false,
+  hasBouncyPillow,
 }: PlaygroundGridCardProps) {
   const t = useT();
   const { locale } = useLocale();
-  const equipmentLookup = useEquipmentLookup();
-  const hasBouncyPillow = hasEquipmentNamed(playground, "Ærslabelgur", equipmentLookup);
 
   return (
     <Card className="overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow group">
@@ -34,6 +37,7 @@ export default function PlaygroundGridCard({
             {...blurPlaceholderProps(playground.coverImageBlur)}
             alt={playground.title}
             fill
+            priority={priority}
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
@@ -119,4 +123,6 @@ export default function PlaygroundGridCard({
       </div>
     </Card>
   );
-}
+});
+
+export default PlaygroundGridCard;

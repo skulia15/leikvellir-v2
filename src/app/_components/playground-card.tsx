@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 import { type Playground } from "~/types";
 import { Zap, Footprints, GraduationCap, Camera } from "lucide-react";
@@ -6,24 +7,29 @@ import { estimateWalkingTime } from "~/lib/map-utils";
 import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
-import { hasEquipmentNamed, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 
 interface PlaygroundCardProps {
   playground: Playground;
   distance?: number;
   showDistance?: boolean;
+  /** Resolved by the parent list so cards don't each build an equipment lookup. */
+  hasBouncyPillow: boolean;
+  /** Today's school-hours check, computed once per list render. */
+  isSchoolAccessibleNow?: boolean;
 }
 
-export default function PlaygroundCard({
+const PlaygroundCard = memo(function PlaygroundCard({
   playground,
   distance,
   showDistance = false,
+  hasBouncyPillow,
+  isSchoolAccessibleNow,
 }: PlaygroundCardProps) {
   const t = useT();
   const { locale } = useLocale();
-  const equipmentLookup = useEquipmentLookup();
-  const hasBouncyPillow = hasEquipmentNamed(playground, "Ærslabelgur", equipmentLookup);
-  const isAccessible = isSchoolGroundAccessible(playground.isSchoolGround ?? false);
+  const isAccessible = playground.isSchoolGround
+    ? (isSchoolAccessibleNow ?? isSchoolGroundAccessible(true))
+    : true;
   const hasCover = !!playground.coverImage && playground.coverImage.trim() !== "";
 
   return (
@@ -116,4 +122,6 @@ export default function PlaygroundCard({
       </div>
     </div>
   );
-}
+});
+
+export default PlaygroundCard;
