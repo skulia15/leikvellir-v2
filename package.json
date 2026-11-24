@@ -28,7 +28,6 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "playwright:install": "playwright install chromium",
-    "postbuild": "drizzle-kit push",
     "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {

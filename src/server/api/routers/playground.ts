@@ -108,6 +108,42 @@ function mergeEditSuggestionImages(
   };
 }
 
+function collectImages(
+  images?: string[] | null,
+  coverImage?: string | null,
+): string[] {
+  const result = [...(images ?? [])];
+  if (coverImage) {
+    result.push(coverImage);
+  }
+  return result;
+}
+
+async function cleanupOrphanedImages(
+  oldImages: string[],
+  newImages: string[],
+  context: { action: string; playgroundId?: number; suggestionId?: number },
+): Promise<void> {
+  if (oldImages.length === 0) return;
+
+  try {
+    await deleteOrphanedFiles(oldImages, newImages);
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(
+      "Error cleaning up orphaned files",
+      {
+        component: "PlaygroundRouter",
+        action: context.action,
+        metadata: {
+          playgroundId: context.playgroundId,
+          suggestionId: context.suggestionId,
+        },
+      },
+      err,
+    );
+  }
+}
 
 export const playgroundRouter = createTRPCRouter({
 
@@ -271,20 +307,21 @@ export const playgroundRouter = createTRPCRouter({
         }
       }
 
-      // Clean up orphaned files after successful update
-      const oldImages = [...(currentPlayground.images ?? [])];
-      if (currentPlayground.coverImage) {
-        oldImages.push(currentPlayground.coverImage);
-      }
+      // Clean up orphaned files after successful update.
+      // Preserve current coverImage when omitted from partial update so it is not deleted.
+      const oldImages = collectImages(
+        currentPlayground.images,
+        currentPlayground.coverImage,
+      );
+      const effectiveCoverImage =
+        input.coverImage !== undefined
+          ? input.coverImage
+          : currentPlayground.coverImage;
+      const newImages = collectImages(input.images, effectiveCoverImage);
 
-      const newImages = [...(input.images ?? [])];
-      if (input.coverImage) {
-        newImages.push(input.coverImage);
-      }
-
-      // Don't await this to avoid blocking the response
-      deleteOrphanedFiles(oldImages, newImages).catch(error => {
-        console.error("Error cleaning up orphaned files:", error);
+      await cleanupOrphanedImages(oldImages, newImages, {
+        action: "update_playground_cleanup",
+        playgroundId: id,
       });
 
       return updatedPlayground;
@@ -327,9 +364,17 @@ export const playgroundRouter = createTRPCRouter({
       // Include any playground field updates
       Object.assign(updateData, playgroundUpdates);
 
-      // Refresh placeholders whenever the photos change. Existing entries are
-      // passed through so untouched images are not re-downloaded.
-      if (playgroundUpdates.images !== undefined || playgroundUpdates.coverImage !== undefined) {
+      // Clear image references when rejecting so deleted blobs aren't left dangling
+      if (action === "reject") {
+        updateData.images = [];
+        updateData.coverImage = null;
+        Object.assign(updateData, { coverImageBlur: null, imageBlurData: {} });
+      } else if (
+        playgroundUpdates.images !== undefined ||
+        playgroundUpdates.coverImage !== undefined
+      ) {
+        // Refresh placeholders whenever the photos change. Existing entries are
+        // passed through so untouched images are not re-downloaded.
         const nextImages = playgroundUpdates.images ?? currentPlayground.images ?? [];
         const nextCover = playgroundUpdates.coverImage !== undefined
           ? playgroundUpdates.coverImage
@@ -374,23 +419,35 @@ export const playgroundRouter = createTRPCRouter({
       }
 
       // Clean up orphaned files after successful review/update
-      const oldImages = [...(currentPlayground.images ?? [])];
-      if (currentPlayground.coverImage) {
-        oldImages.push(currentPlayground.coverImage);
-      }
+      if (action === "reject") {
+        const allSubmissionImages = [
+          ...collectImages(currentPlayground.images, currentPlayground.coverImage),
+          ...collectImages(playgroundUpdates.images, playgroundUpdates.coverImage),
+        ];
 
-      const newImages = [...(playgroundUpdates.images ?? currentPlayground.images ?? [])];
-      const newCoverImage = playgroundUpdates.coverImage !== undefined
-        ? playgroundUpdates.coverImage
-        : currentPlayground.coverImage;
-      if (newCoverImage) {
-        newImages.push(newCoverImage);
-      }
+        await cleanupOrphanedImages(allSubmissionImages, [], {
+          action: "review_playground_reject_cleanup",
+          playgroundId: id,
+        });
+      } else {
+        const oldImages = collectImages(
+          currentPlayground.images,
+          currentPlayground.coverImage,
+        );
+        const newCoverImage =
+          playgroundUpdates.coverImage !== undefined
+            ? playgroundUpdates.coverImage
+            : currentPlayground.coverImage;
+        const newImages = collectImages(
+          playgroundUpdates.images ?? currentPlayground.images,
+          newCoverImage,
+        );
 
-      // Don't await this to avoid blocking the response
-      deleteOrphanedFiles(oldImages, newImages).catch(error => {
-        console.error("Error cleaning up orphaned files:", error);
-      });
+        await cleanupOrphanedImages(oldImages, newImages, {
+          action: "review_playground_cleanup",
+          playgroundId: id,
+        });
+      }
 
       return updatedPlayground;
     }),
@@ -653,14 +710,12 @@ export const playgroundRouter = createTRPCRouter({
       }
 
       // Clean up all associated image files
-      const allImages = [...(playground.images ?? [])];
-      if (playground.coverImage) {
-        allImages.push(playground.coverImage);
-      }
+      const allImages = collectImages(playground.images, playground.coverImage);
 
       // Delete all images (no new images since we're deleting the playground)
-      deleteOrphanedFiles(allImages, []).catch(error => {
-        console.error("Error cleaning up files after playground deletion:", error);
+      await cleanupOrphanedImages(allImages, [], {
+        action: "delete_playground_cleanup",
+        playgroundId: input.id,
       });
 
       return deletedPlayground;
@@ -985,6 +1040,51 @@ export const playgroundRouter = createTRPCRouter({
               await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
             }
           }
+
+          // Clean up any images removed by the approved edit suggestion (or dropped via finalValues)
+          // while preserving everything still referenced by the live playground.
+          const candidateImagesToClean = [
+            ...collectImages(
+              editSuggestion.playground?.images,
+              editSuggestion.playground?.coverImage,
+            ),
+            ...collectImages(editSuggestion.images, editSuggestion.coverImage),
+          ];
+          const resolvedCoverImage =
+            "coverImage" in updateData
+              ? (updateData.coverImage as string | null)
+              : editSuggestion.playground?.coverImage;
+          const livePlaygroundImages = collectImages(
+            images !== undefined ? images : editSuggestion.playground?.images,
+            resolvedCoverImage,
+          );
+
+          await cleanupOrphanedImages(
+            candidateImagesToClean,
+            livePlaygroundImages,
+            {
+              action: "review_edit_suggestion_approve_cleanup",
+              playgroundId: editSuggestion.playgroundId,
+              suggestionId: id,
+            },
+          );
+        } else {
+          // Clean up any newly uploaded blobs on the rejected edit suggestion
+          // without deleting URLs still referenced by the live playground.
+          const suggestionImages = collectImages(
+            editSuggestion.images,
+            editSuggestion.coverImage,
+          );
+          const livePlaygroundImages = collectImages(
+            editSuggestion.playground?.images,
+            editSuggestion.playground?.coverImage,
+          );
+
+          await cleanupOrphanedImages(suggestionImages, livePlaygroundImages, {
+            action: "review_edit_suggestion_reject_cleanup",
+            playgroundId: editSuggestion.playgroundId,
+            suggestionId: id,
+          });
         }
 
         logger.info("Edit suggestion reviewed successfully", {
@@ -1184,10 +1284,7 @@ export const playgroundRouter = createTRPCRouter({
       }
 
       // Get current images for cleanup
-      const oldImages = [...(playground.images ?? [])];
-      if (playground.coverImage) {
-        oldImages.push(playground.coverImage);
-      }
+      const oldImages = collectImages(playground.images, playground.coverImage);
 
       // Update playground data
       const [updatedPlayground] = await ctx.db
@@ -1220,14 +1317,16 @@ export const playgroundRouter = createTRPCRouter({
         await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
       }
 
-      // Clean up orphaned files
-      const newImages = [...(input.images ?? [])];
-      if (input.coverImage) {
-        newImages.push(input.coverImage);
-      }
+      // Clean up orphaned files, preserving existing coverImage if omitted
+      const effectiveCoverImage =
+        input.coverImage !== undefined
+          ? input.coverImage
+          : playground.coverImage;
+      const newImages = collectImages(input.images, effectiveCoverImage);
 
-      deleteOrphanedFiles(oldImages, newImages).catch(error => {
-        console.error("Error cleaning up orphaned files:", error);
+      await cleanupOrphanedImages(oldImages, newImages, {
+        action: "update_my_submission_cleanup",
+        playgroundId: id,
       });
 
       logger.info("Own submission updated successfully", {
@@ -1319,6 +1418,30 @@ export const playgroundRouter = createTRPCRouter({
 
         await ctx.db.insert(playgroundEditSuggestionEquipment).values(equipmentRelations);
       }
+
+      // Clean up any blobs removed from the pending edit suggestion
+      // without deleting URLs still referenced by the live playground.
+      const previousSuggestionImages = collectImages(
+        suggestion.images,
+        suggestion.coverImage,
+      );
+      const stillReferencedImages = [
+        ...collectImages(updatedSuggestion.images, updatedSuggestion.coverImage),
+        ...collectImages(
+          suggestion.playground?.images,
+          suggestion.playground?.coverImage,
+        ),
+      ];
+
+      await cleanupOrphanedImages(
+        previousSuggestionImages,
+        stillReferencedImages,
+        {
+          action: "update_my_edit_suggestion_cleanup",
+          playgroundId,
+          suggestionId: id,
+        },
+      );
 
       logger.info("Own edit suggestion updated successfully", {
         component: "PlaygroundRouter",

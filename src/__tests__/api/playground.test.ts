@@ -586,6 +586,89 @@ describe("Playground tRPC Router", () => {
       expect(deleteOrphanedFiles).toHaveBeenCalled();
     });
 
+    it("should preserve existing coverImage when omitted in partial update", async () => {
+      const coverUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/cover.jpg";
+      const galleryOldUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/gallery-old.jpg";
+      const galleryNewUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/gallery-new.jpg";
+
+      const existing = mockPlayground({
+        coverImage: coverUrl,
+        images: [galleryOldUrl],
+      });
+      const updated = mockPlayground({
+        coverImage: coverUrl,
+        images: [galleryNewUrl],
+      });
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      // updateInput omits coverImage entirely
+      await caller.playground.update({
+        ...updateInput,
+        images: [galleryNewUrl],
+      });
+
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        expect.arrayContaining([galleryOldUrl, coverUrl]),
+        expect.arrayContaining([galleryNewUrl, coverUrl]),
+      );
+    });
+
+    it("should mark old coverImage for cleanup when explicitly replaced or cleared", async () => {
+      const oldCoverUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/old-cover.jpg";
+      const galleryUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/gallery.jpg";
+
+      const existing = mockPlayground({
+        coverImage: oldCoverUrl,
+        images: [galleryUrl],
+      });
+      const updated = mockPlayground({
+        coverImage: null,
+        images: [galleryUrl],
+      });
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.update({
+        ...updateInput,
+        coverImage: null,
+        images: [galleryUrl],
+      });
+
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        [galleryUrl, oldCoverUrl],
+        [galleryUrl],
+      );
+    });
+
+    it("should not fail update when deleteOrphanedFiles rejects", async () => {
+      vi.mocked(deleteOrphanedFiles).mockRejectedValueOnce(
+        new Error("Blob delete failed"),
+      );
+      const existing = mockPlayground();
+      const updated = mockPlayground({ title: "Updated Playground" });
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.update(updateInput);
+
+      expect(result).toEqual(updated);
+    });
+
     it("should throw for non-existent playground", async () => {
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
@@ -620,9 +703,22 @@ describe("Playground tRPC Router", () => {
       expect(result?.status).toBe("approved");
     });
 
-    it("should reject playground with rejection reason", async () => {
-      const pending = mockPlayground({ status: "pending" });
-      const rejected = mockPlayground({ status: "rejected", rejectionReason: "Not a playground" });
+    it("should reject playground with rejection reason and clean up all submission images", async () => {
+      const img1 =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/sub1.jpg";
+      const cover =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/sub-cover.jpg";
+      const pending = mockPlayground({
+        status: "pending",
+        images: [img1],
+        coverImage: cover,
+      });
+      const rejected = mockPlayground({
+        status: "rejected",
+        rejectionReason: "Not a playground",
+        images: [],
+        coverImage: null,
+      });
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
@@ -636,6 +732,17 @@ describe("Playground tRPC Router", () => {
       });
 
       expect(result?.status).toBe("rejected");
+      expect(ctx.db._mocks.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "rejected",
+          images: [],
+          coverImage: null,
+        }),
+      );
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        expect.arrayContaining([img1, cover]),
+        [],
+      );
     });
 
     it("should set reviewedById and reviewedAt", async () => {
@@ -1094,6 +1201,85 @@ describe("Playground tRPC Router", () => {
       expect(ctx.db.update).toHaveBeenCalledTimes(1);
     });
 
+    it("should clean up newly uploaded blobs on rejected edit suggestion while keeping live playground images", async () => {
+      const liveCover =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/live-cover.jpg";
+      const liveGallery =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/live-gallery.jpg";
+      const uploadedPhoto =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/suggested-new.jpg";
+
+      const suggestionWithPhotos = {
+        ...mockSuggestion,
+        images: [liveGallery, uploadedPhoto],
+        coverImage: uploadedPhoto,
+        playground: mockPlayground({
+          coverImage: liveCover,
+          images: [liveGallery],
+        }),
+      };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(
+        suggestionWithPhotos,
+      );
+      ctx.db._mocks.returning.mockResolvedValueOnce([
+        { ...suggestionWithPhotos, status: "rejected" },
+      ]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({
+        id: 1,
+        action: "reject",
+        rejectionReason: "Blurry photo",
+      });
+
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        expect.arrayContaining([liveGallery, uploadedPhoto]),
+        expect.arrayContaining([liveGallery, liveCover]),
+      );
+    });
+
+    it("should clean up removed photos when approving an edit suggestion while keeping live images", async () => {
+      const keepCover =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/keep-cover.jpg";
+      const keepGallery =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/keep-gallery.jpg";
+      const removedGallery =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/removed-gallery.jpg";
+
+      const suggestionRemovingPhoto = {
+        ...mockSuggestion,
+        images: [keepGallery],
+        coverImage: null,
+        playground: mockPlayground({
+          coverImage: keepCover,
+          images: [keepGallery, removedGallery],
+        }),
+      };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(
+        suggestionRemovingPhoto,
+      );
+      ctx.db._mocks.returning.mockResolvedValueOnce([
+        { ...suggestionRemovingPhoto, status: "approved" },
+      ]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({
+        id: 1,
+        action: "approve",
+      });
+
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        expect.arrayContaining([keepGallery, removedGallery, keepCover]),
+        expect.arrayContaining([keepGallery, keepCover]),
+      );
+      const [, newImagesArg] = vi.mocked(deleteOrphanedFiles).mock.calls[0]!;
+      expect(newImagesArg).not.toContain(removedGallery);
+    });
+
     it("should fail for already reviewed suggestion", async () => {
       const reviewed = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
@@ -1125,6 +1311,46 @@ describe("Playground tRPC Router", () => {
       await expect(
         caller.playground.reviewEditSuggestion({ id: 1, action: "approve" }),
       ).rejects.toThrow(TRPCError);
+    });
+  });
+
+  // ── updateMySubmission (protectedProcedure) ─────
+  describe("updateMySubmission", () => {
+    it("should preserve existing coverImage when omitted in updateMySubmission", async () => {
+      const coverUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/my-cover.jpg";
+      const oldGalleryUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/my-old.jpg";
+      const newGalleryUrl =
+        "https://abc123.public.blob.vercel-storage.com/playgrounds/my-new.jpg";
+
+      const pending = mockPlayground({
+        status: "pending",
+        coverImage: coverUrl,
+        images: [oldGalleryUrl],
+      });
+      const updated = mockPlayground({
+        status: "pending",
+        coverImage: coverUrl,
+        images: [newGalleryUrl],
+      });
+
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.updateMySubmission({
+        ...validCreateInput,
+        id: 1,
+        images: [newGalleryUrl],
+      });
+
+      expect(deleteOrphanedFiles).toHaveBeenCalledWith(
+        expect.arrayContaining([oldGalleryUrl, coverUrl]),
+        expect.arrayContaining([newGalleryUrl, coverUrl]),
+      );
     });
   });
 

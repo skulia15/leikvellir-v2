@@ -53,11 +53,12 @@ export const env = createEnv({
     // Discord webhook for admin notifications (new submissions, edit suggestions,
     // and contact form submissions). Optional - notifications are skipped/logged if unset.
     DISCORD_ADMIN_WEBHOOK_URL: z.string().url().optional(),
-    // Vercel Blob storage token for leikvellir_image_store
+    // Vercel Blob storage token for leikvellir_image_store (with BLOB_READ_WRITE_TOKEN fallback)
     leikvellir_image_store_READ_WRITE_TOKEN:
-      process.env.NODE_ENV === "development"
-        ? z.string().optional()
-        : z.string(),
+      process.env.NODE_ENV === "production" && !process.env.BLOB_READ_WRITE_TOKEN
+        ? z.string()
+        : z.string().optional(),
+    BLOB_READ_WRITE_TOKEN: z.string().optional(),
     // Optional Vercel Blob store ID used to strictly validate blob URLs and filename deletes
     BLOB_STORE_ID: z.string().min(1).optional(),
   },
@@ -100,6 +101,7 @@ export const env = createEnv({
     DISCORD_ADMIN_WEBHOOK_URL: process.env.DISCORD_ADMIN_WEBHOOK_URL,
     leikvellir_image_store_READ_WRITE_TOKEN:
       process.env.leikvellir_image_store_READ_WRITE_TOKEN,
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     BLOB_STORE_ID: process.env.BLOB_STORE_ID,
     // PostHog Analytics
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,

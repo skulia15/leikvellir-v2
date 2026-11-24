@@ -65,8 +65,11 @@ const config: NextConfig = {
   
   // Modern browser targeting to reduce polyfills
   compiler: {
-    // Remove console logs in production
-    removeConsole: process.env.NODE_ENV === "production",
+    // Remove console logs in production, preserving error and warn logs
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["error", "warn"] }
+        : false,
   },
   
   // Enables externals bundling for Pages Router like in App Router

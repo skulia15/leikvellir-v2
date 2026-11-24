@@ -230,8 +230,17 @@ This project uses the **T3 Stack** - a modern, type-safe full-stack TypeScript f
 
 5. **Run database migrations**
 
+   For local development prototyping:
+
    ```bash
    pnpm db:push
+   ```
+
+   For staging and production, generate and apply versioned SQL migrations explicitly (migrations are **not** run automatically during `pnpm build`):
+
+   ```bash
+   pnpm db:generate
+   pnpm db:migrate
    ```
 
 6. **Start development server**

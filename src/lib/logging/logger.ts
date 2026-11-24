@@ -27,8 +27,14 @@ export interface LogEntry {
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === "development";
-  private isClient = typeof window !== "undefined";
+  private get isDevelopment(): boolean {
+    return process.env.NODE_ENV === "development";
+  }
+
+  private get isClient(): boolean {
+    return typeof window !== "undefined";
+  }
+
   private isLogging = false; // Recursion guard
   private logQueue: LogEntry[] = []; // Queue to handle logs during recursion
 
@@ -97,6 +103,34 @@ class Logger {
       message.includes('$autocapture');
   }
 
+  private writeEntryToConsole(message: string, entry: LogEntry): void {
+    try {
+      switch (entry.level) {
+        case "debug":
+          console.debug(message, entry.context, entry.error);
+          break;
+        case "info":
+          console.info(message, entry.context);
+          break;
+        case "warn":
+          console.warn(message, entry.context, entry.error);
+          break;
+        case "error":
+        case "fatal":
+          console.error(message, entry.context, entry.error);
+          if (entry.error?.stack) {
+            console.error("Stack trace:", entry.error.stack);
+          }
+          if (entry.errorInfo) {
+            console.error("React Error Info:", entry.errorInfo);
+          }
+          break;
+      }
+    } catch {
+      // Silently fail to prevent further recursion
+    }
+  }
+
   private logToConsole(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
@@ -117,34 +151,15 @@ class Logger {
     try {
       const message = this.formatMessage(entry.level, entry.message, entry.context);
 
-      // Use setTimeout to break the call stack and prevent PostHog recursion
-      setTimeout(() => {
-        try {
-          switch (entry.level) {
-            case "debug":
-              console.debug(message, entry.context, entry.error);
-              break;
-            case "info":
-              console.info(message, entry.context);
-              break;
-            case "warn":
-              console.warn(message, entry.context, entry.error);
-              break;
-            case "error":
-            case "fatal":
-              console.error(message, entry.context, entry.error);
-              if (entry.error?.stack) {
-                console.error("Stack trace:", entry.error.stack);
-              }
-              if (entry.errorInfo) {
-                console.error("React Error Info:", entry.errorInfo);
-              }
-              break;
-          }
-        } catch {
-          // Silently fail to prevent further recursion
-        }
-      }, 0);
+      if (this.isClient) {
+        // Use setTimeout on the client to break the call stack and prevent PostHog recursion
+        setTimeout(() => {
+          this.writeEntryToConsole(message, entry);
+        }, 0);
+      } else {
+        // Log synchronously on the server so serverless runtimes don't drop logs
+        this.writeEntryToConsole(message, entry);
+      }
     } finally {
       this.isLogging = false;
 
@@ -152,8 +167,12 @@ class Logger {
       if (this.logQueue.length > 0) {
         const queuedEntry = this.logQueue.shift();
         if (queuedEntry) {
-          // Process next queued log asynchronously
-          setTimeout(() => this.logToConsole(queuedEntry), 10);
+          if (this.isClient) {
+            // Process next queued log asynchronously on the client
+            setTimeout(() => this.logToConsole(queuedEntry), 10);
+          } else {
+            this.logToConsole(queuedEntry);
+          }
         }
       }
     }
@@ -172,8 +191,7 @@ class Logger {
 
     // For now, just log critical errors to console in production
     if (entry.level === "fatal" || entry.level === "error") {
-      // Use setTimeout to prevent recursion with PostHog
-      setTimeout(() => {
+      const emitExternalLog = () => {
         try {
           console.error("EXTERNAL_LOG:", {
             level: entry.level,
@@ -184,7 +202,15 @@ class Logger {
         } catch {
           // Silently fail to prevent recursion
         }
-      }, 5);
+      };
+
+      if (this.isClient) {
+        // Defer on the client to prevent recursion with PostHog
+        setTimeout(emitExternalLog, 5);
+      } else {
+        // Emit synchronously on the server so serverless runtimes don't drop logs
+        emitExternalLog();
+      }
     }
   }
 

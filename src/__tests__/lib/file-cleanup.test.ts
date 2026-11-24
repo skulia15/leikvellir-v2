@@ -1,136 +1,267 @@
 // __tests__/lib/file-cleanup.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// @vitest-environment node
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// vi.hoisted runs before vi.mock hoisting, so mockUnlink is available
-const { mockUnlink } = vi.hoisted(() => ({
-  mockUnlink: vi.fn().mockResolvedValue(undefined),
+const { mockDel, mockLoggerWarn, mockLoggerError, mockEnv } = vi.hoisted(
+  () => ({
+    mockDel: vi.fn().mockResolvedValue(undefined),
+    mockLoggerWarn: vi.fn(),
+    mockLoggerError: vi.fn(),
+    mockEnv: {
+      leikvellir_image_store_READ_WRITE_TOKEN: undefined as string | undefined,
+      BLOB_READ_WRITE_TOKEN: undefined as string | undefined,
+    },
+  }),
+);
+
+vi.mock("@vercel/blob", () => ({
+  del: mockDel,
 }));
 
-vi.mock("fs/promises", () => ({
-  default: { unlink: mockUnlink },
-  unlink: mockUnlink,
+vi.mock("~/env", () => ({
+  env: mockEnv,
 }));
 
-vi.mock("path", () => ({
-  default: { join: (...parts: string[]) => parts.join("/") },
-  join: (...parts: string[]) => parts.join("/"),
+vi.mock("~/lib/logging/logger", () => ({
+  logger: {
+    warn: mockLoggerWarn,
+    error: mockLoggerError,
+  },
 }));
 
 import {
-  extractFilename,
+  isVercelBlobUrl,
+  normalizeVercelBlobUrl,
   deleteOrphanedFiles,
   deleteFileByUrl,
 } from "~/lib/file-cleanup";
 
+const BLOB_BASE = "https://abc123store.public.blob.vercel-storage.com";
+
 describe("file-cleanup utilities", () => {
+  const originalStoreToken = process.env.leikvellir_image_store_READ_WRITE_TOKEN;
+  const originalBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnv.leikvellir_image_store_READ_WRITE_TOKEN = "store-token-123";
+    mockEnv.BLOB_READ_WRITE_TOKEN = undefined;
+    delete process.env.leikvellir_image_store_READ_WRITE_TOKEN;
+    delete process.env.BLOB_READ_WRITE_TOKEN;
   });
 
-  describe("extractFilename", () => {
-    it("should extract filename from valid upload URL", () => {
-      const url = "/uploads/playgrounds/test-image_123_abc.jpg";
-      expect(extractFilename(url)).toBe("test-image_123_abc.jpg");
+  afterEach(() => {
+    if (originalStoreToken === undefined) {
+      delete process.env.leikvellir_image_store_READ_WRITE_TOKEN;
+    } else {
+      process.env.leikvellir_image_store_READ_WRITE_TOKEN = originalStoreToken;
+    }
+    if (originalBlobToken === undefined) {
+      delete process.env.BLOB_READ_WRITE_TOKEN;
+    } else {
+      process.env.BLOB_READ_WRITE_TOKEN = originalBlobToken;
+    }
+  });
+
+  describe("normalizeVercelBlobUrl / isVercelBlobUrl", () => {
+    it("should accept valid Vercel Blob Storage URLs", () => {
+      const url = `${BLOB_BASE}/playgrounds/test-image_123.jpg`;
+      expect(isVercelBlobUrl(url)).toBe(true);
+      expect(normalizeVercelBlobUrl(url)).toBe(url);
     });
 
-    it("should return null for URL without /uploads/playgrounds/ prefix", () => {
-      expect(extractFilename("/images/photo.jpg")).toBeNull();
-      expect(extractFilename("https://example.com/photo.jpg")).toBeNull();
+    it("should strip query parameters and hash fragments when normalizing", () => {
+      const url = `${BLOB_BASE}/playgrounds/image.jpg?download=1#top`;
+      expect(normalizeVercelBlobUrl(url)).toBe(
+        `${BLOB_BASE}/playgrounds/image.jpg`,
+      );
     });
 
-    it("should return null for empty string", () => {
-      expect(extractFilename("")).toBeNull();
+    it("should reject non-HTTPS Vercel Blob URLs", () => {
+      const url =
+        "http://abc123store.public.blob.vercel-storage.com/playgrounds/image.jpg";
+      expect(isVercelBlobUrl(url)).toBe(false);
+      expect(normalizeVercelBlobUrl(url)).toBeNull();
     });
 
-    it("should handle URLs with query parameters", () => {
-      const url = "/uploads/playgrounds/image.jpg?w=300";
-      expect(extractFilename(url)).toBe("image.jpg");
+    it("should reject spoofed hostnames and invalid subdomains", () => {
+      const invalidUrls = [
+        "https://evil.com/.public.blob.vercel-storage.com/playgrounds/a.jpg",
+        "https://abc123store.public.blob.vercel-storage.com.evil.com/a.jpg",
+        "https://public.blob.vercel-storage.com/playgrounds/a.jpg",
+        "https://nested.abc123store.public.blob.vercel-storage.com/a.jpg",
+        "https://user:pass@abc123store.public.blob.vercel-storage.com/a.jpg",
+        "https://abc123store.public.blob.vercel-storage.com:8443/a.jpg",
+        "https://abc123store.public.blob.vercel-storage.com/",
+      ];
+
+      for (const url of invalidUrls) {
+        expect(isVercelBlobUrl(url)).toBe(false);
+        expect(normalizeVercelBlobUrl(url)).toBeNull();
+      }
     });
 
-    it("should extract filename from full URL path", () => {
-      const url = "https://example.com/uploads/playgrounds/my-file.png";
-      expect(extractFilename(url)).toBe("my-file.png");
+    it("should reject legacy local upload paths, external URLs, and empty strings", () => {
+      expect(isVercelBlobUrl("/uploads/playgrounds/legacy.jpg")).toBe(false);
+      expect(isVercelBlobUrl("https://www.oskarsson.is/photo.jpg")).toBe(false);
+      expect(isVercelBlobUrl("")).toBe(false);
     });
   });
 
   describe("deleteOrphanedFiles", () => {
-    it("should delete files present in old list but not in new list", async () => {
-      const oldImages = [
-        "/uploads/playgrounds/old-image.jpg",
-        "/uploads/playgrounds/keep-image.jpg",
-      ];
-      const newImages = ["/uploads/playgrounds/keep-image.jpg"];
+    it("should delete Vercel Blob URLs present in old list but not in new list", async () => {
+      const oldUrl = `${BLOB_BASE}/playgrounds/old-image.jpg`;
+      const keepUrl = `${BLOB_BASE}/playgrounds/keep-image.jpg`;
 
-      await deleteOrphanedFiles(oldImages, newImages);
+      await deleteOrphanedFiles([oldUrl, keepUrl], [keepUrl]);
 
-      expect(mockUnlink).toHaveBeenCalledTimes(1);
-      // The join mock concatenates with /
-      expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining("old-image.jpg"),
-      );
+      expect(mockDel).toHaveBeenCalledTimes(1);
+      expect(mockDel).toHaveBeenCalledWith([oldUrl], {
+        token: "store-token-123",
+      });
     });
 
-    it("should not delete files present in both lists", async () => {
+    it("should deduplicate repeated URLs and ignore query param differences", async () => {
+      const oldUrl = `${BLOB_BASE}/playgrounds/old.jpg`;
+      const keepUrl = `${BLOB_BASE}/playgrounds/keep.jpg`;
+
+      await deleteOrphanedFiles(
+        [oldUrl, oldUrl, `${keepUrl}?v=1`],
+        [`${keepUrl}?v=2`],
+      );
+
+      expect(mockDel).toHaveBeenCalledTimes(1);
+      expect(mockDel).toHaveBeenCalledWith([oldUrl], {
+        token: "store-token-123",
+      });
+    });
+
+    it("should not call del when all old images remain referenced", async () => {
       const images = [
-        "/uploads/playgrounds/image1.jpg",
-        "/uploads/playgrounds/image2.jpg",
+        `${BLOB_BASE}/playgrounds/image1.jpg`,
+        `${BLOB_BASE}/playgrounds/image2.jpg`,
       ];
 
       await deleteOrphanedFiles(images, images);
 
-      expect(mockUnlink).not.toHaveBeenCalled();
+      expect(mockDel).not.toHaveBeenCalled();
     });
 
     it("should handle empty old images list (no deletions)", async () => {
-      await deleteOrphanedFiles([], ["/uploads/playgrounds/new.jpg"]);
-      expect(mockUnlink).not.toHaveBeenCalled();
+      await deleteOrphanedFiles([], [`${BLOB_BASE}/playgrounds/new.jpg`]);
+      expect(mockDel).not.toHaveBeenCalled();
     });
 
-    it("should handle empty new images list (delete all)", async () => {
-      const oldImages = [
-        "/uploads/playgrounds/a.jpg",
-        "/uploads/playgrounds/b.jpg",
-      ];
+    it("should delete all valid Vercel Blob URLs when new images list is empty", async () => {
+      const a = `${BLOB_BASE}/playgrounds/a.jpg`;
+      const b = `${BLOB_BASE}/playgrounds/b.jpg`;
 
-      await deleteOrphanedFiles(oldImages, []);
+      await deleteOrphanedFiles([a, b], []);
 
-      expect(mockUnlink).toHaveBeenCalledTimes(2);
+      expect(mockDel).toHaveBeenCalledTimes(1);
+      expect(mockDel).toHaveBeenCalledWith([a, b], {
+        token: "store-token-123",
+      });
     });
 
-    it("should handle files that fail to delete gracefully (no throw)", async () => {
-      mockUnlink.mockRejectedValueOnce(new Error("ENOENT"));
+    it("should ignore non-Vercel Blob URLs such as legacy local paths or external URLs", async () => {
+      const validBlob = `${BLOB_BASE}/playgrounds/blob.jpg`;
 
-      const oldImages = ["/uploads/playgrounds/missing.jpg"];
+      await deleteOrphanedFiles(
+        [
+          "/uploads/playgrounds/legacy.jpg",
+          "https://www.oskarsson.is/external.jpg",
+          "https://evil.com/.public.blob.vercel-storage.com/spoof.jpg",
+          validBlob,
+        ],
+        [],
+      );
 
-      // Should not throw
-      await expect(deleteOrphanedFiles(oldImages, [])).resolves.toBeUndefined();
+      expect(mockDel).toHaveBeenCalledTimes(1);
+      expect(mockDel).toHaveBeenCalledWith([validBlob], {
+        token: "store-token-123",
+      });
     });
 
-    it("should handle URLs that cannot have filenames extracted", async () => {
-      const oldImages = ["https://example.com/no-match.jpg"];
-      await deleteOrphanedFiles(oldImages, []);
-      expect(mockUnlink).not.toHaveBeenCalled();
+    it("should fall back to BLOB_READ_WRITE_TOKEN when store-specific token is unset", async () => {
+      mockEnv.leikvellir_image_store_READ_WRITE_TOKEN = undefined;
+      mockEnv.BLOB_READ_WRITE_TOKEN = "fallback-blob-token";
+      const oldUrl = `${BLOB_BASE}/playgrounds/orphan.jpg`;
+
+      await deleteOrphanedFiles([oldUrl], []);
+
+      expect(mockDel).toHaveBeenCalledWith([oldUrl], {
+        token: "fallback-blob-token",
+      });
+    });
+
+    it("should skip deletion and warn when no blob token is configured", async () => {
+      mockEnv.leikvellir_image_store_READ_WRITE_TOKEN = undefined;
+      mockEnv.BLOB_READ_WRITE_TOKEN = undefined;
+
+      await deleteOrphanedFiles([`${BLOB_BASE}/playgrounds/orphan.jpg`], []);
+
+      expect(mockDel).not.toHaveBeenCalled();
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        expect.stringContaining("missing blob storage token"),
+        expect.objectContaining({ component: "FileCleanup" }),
+      );
+    });
+
+    it("should log error and not throw when @vercel/blob del fails", async () => {
+      mockDel.mockRejectedValueOnce(new Error("Blob API error"));
+      const oldUrl = `${BLOB_BASE}/playgrounds/missing.jpg`;
+
+      await expect(
+        deleteOrphanedFiles([oldUrl], []),
+      ).resolves.toBeUndefined();
+
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to delete orphaned Vercel Blob files"),
+        expect.objectContaining({
+          component: "FileCleanup",
+          action: "delete_orphaned_files",
+        }),
+        expect.any(Error),
+      );
     });
   });
 
   describe("deleteFileByUrl", () => {
-    it("should delete file by URL and return true on success", async () => {
-      mockUnlink.mockResolvedValueOnce(undefined);
-      const result = await deleteFileByUrl("/uploads/playgrounds/file.jpg");
+    it("should delete valid Vercel Blob URL and return true", async () => {
+      const url = `${BLOB_BASE}/playgrounds/file.jpg`;
+      const result = await deleteFileByUrl(url);
+
       expect(result).toBe(true);
-      expect(mockUnlink).toHaveBeenCalledTimes(1);
+      expect(mockDel).toHaveBeenCalledWith(url, { token: "store-token-123" });
     });
 
-    it("should return false when filename cannot be extracted", async () => {
+    it("should return false and warn for non-Vercel Blob URLs", async () => {
       const result = await deleteFileByUrl("https://example.com/no-match.jpg");
+
       expect(result).toBe(false);
-      expect(mockUnlink).not.toHaveBeenCalled();
+      expect(mockDel).not.toHaveBeenCalled();
+      expect(mockLoggerWarn).toHaveBeenCalled();
     });
 
-    it("should return false when unlink fails", async () => {
-      mockUnlink.mockRejectedValueOnce(new Error("Permission denied"));
-      const result = await deleteFileByUrl("/uploads/playgrounds/file.jpg");
+    it("should return false when blob token is missing", async () => {
+      mockEnv.leikvellir_image_store_READ_WRITE_TOKEN = undefined;
+      mockEnv.BLOB_READ_WRITE_TOKEN = undefined;
+
+      const result = await deleteFileByUrl(`${BLOB_BASE}/playgrounds/file.jpg`);
+
       expect(result).toBe(false);
+      expect(mockDel).not.toHaveBeenCalled();
+      expect(mockLoggerWarn).toHaveBeenCalled();
+    });
+
+    it("should return false and log error when del rejects", async () => {
+      mockDel.mockRejectedValueOnce(new Error("Permission denied"));
+
+      const result = await deleteFileByUrl(`${BLOB_BASE}/playgrounds/file.jpg`);
+
+      expect(result).toBe(false);
+      expect(mockLoggerError).toHaveBeenCalled();
     });
   });
 });
