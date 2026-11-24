@@ -14,6 +14,7 @@ import {
 } from "~/components/ui/command";
 import { useMunicipalities } from "~/lib/api/use-municipalities";
 import { useTranslation } from "~/lib/i18n";
+import { foldIcelandic } from "~/lib/search-utils";
 
 interface MunicipalitySelectorProps {
   value?: string;
@@ -106,7 +107,19 @@ export default function MunicipalitySelector({
 
       {open && (
         <div className="absolute top-full left-0 z-50 mt-1 w-full min-w-[300px] rounded-md border bg-popover shadow-md">
-          <Command>
+          <Command
+            filter={(itemValue, search, keywords) => {
+              const foldedSearch = foldIcelandic(search).trim();
+              if (!foldedSearch) return 1;
+              const foldedValue = foldIcelandic(itemValue);
+              if (foldedValue.startsWith(foldedSearch)) return 1;
+              if (foldedValue.includes(foldedSearch)) return 0.8;
+              if (keywords?.some((kw) => foldIcelandic(kw).includes(foldedSearch))) {
+                return 0.6;
+              }
+              return 0;
+            }}
+          >
             <CommandInput
               ref={inputRef}
               placeholder={t("playground.searchMunicipality")}
@@ -120,6 +133,11 @@ export default function MunicipalitySelector({
                   <CommandItem
                     key={municipality.svfn}
                     value={municipality.nafn}
+                    keywords={
+                      municipality.nafn !== municipality.fulltnafn
+                        ? [municipality.fulltnafn]
+                        : undefined
+                    }
                     onSelect={() => handleSelect(municipality.nafn)}
                   >
                     <Check

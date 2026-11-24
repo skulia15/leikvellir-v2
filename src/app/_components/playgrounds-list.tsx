@@ -1,12 +1,14 @@
 "use client";
 
-import { MapPin, Navigation, SortAsc } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { MapPin, Navigation, Search, SortAsc, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,7 +18,6 @@ import {
 } from "~/components/ui/select";
 import { type Playground, type EquipmentCategory } from "~/types";
 import {
-  hasEquipmentNamed,
   resolveEquipment,
   useEquipmentLookup,
 } from "~/lib/hooks/use-equipment-lookup";
@@ -27,6 +28,18 @@ import { useUserLocation } from "~/lib/hooks/use-user-location";
 import { getPlaygroundDistance, sortPlaygroundsByDistance } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
+import {
+  compareIcelandic,
+  hasEquipmentByName,
+  matchesPlaygroundSearch,
+} from "~/lib/search-utils";
+import {
+  type ListSortOption,
+  parsePlaygroundsListParams,
+  recordInAppNavigation,
+  replaceUrlSearchParams,
+  serializePlaygroundsListParams,
+} from "~/lib/url-state";
 
 interface PlaygroundsListProps {
   playgrounds: Playground[];
@@ -34,55 +47,127 @@ interface PlaygroundsListProps {
   initialMunicipality?: string;
 }
 
-type SortOption = "proximity" | "popularity" | "newest" | "name";
-
-export default function PlaygroundsList({ playgrounds, isLoading = false, initialMunicipality }: PlaygroundsListProps) {
+export default function PlaygroundsList({
+  playgrounds,
+  isLoading = false,
+  initialMunicipality,
+}: PlaygroundsListProps) {
   const equipmentLookup = useEquipmentLookup();
-  const { userLocation, isLoading: locationLoading, permission, requestLocation } = useUserLocation();
-
-  // Default to proximity sorting if location is available, otherwise newest
-  const [sortBy, setSortBy] = useState<SortOption>(userLocation ? "proximity" : "newest");
-  const [hasSetInitialSort, setHasSetInitialSort] = useState(false);
-  const [sortedPlaygrounds, setSortedPlaygrounds] = useState<(Playground & { distance?: number })[]>([]);
-  const [activeCategories, setActiveCategories] = useState<Set<EquipmentCategory>>(new Set());
-  const [bouncyPillowActive, setBouncyPillowActive] = useState(false);
-  const [footballFieldActive, setFootballFieldActive] = useState(false);
-  const [openNowActive, setOpenNowActive] = useState(false);
-  const [selectedMunicipality, setSelectedMunicipality] = useState<string>(initialMunicipality ?? "__all__");
+  const { userLocation, isLoading: locationLoading, requestLocation } = useUserLocation();
+  const searchParams = useSearchParams();
   const t = useT();
 
-  // Switch to proximity sorting when location becomes available (only once)
+  const initialUrlState = useMemo(() => {
+    const parsed = parsePlaygroundsListParams(searchParams);
+    if (parsed.municipality === "__all__" && initialMunicipality) {
+      parsed.municipality = initialMunicipality;
+    }
+    return parsed;
+    // Only compute initial snapshot on mount; external URL changes are handled via effect below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Default to URL sort if provided, else proximity when location available, otherwise newest
+  const [sortBy, setSortBy] = useState<ListSortOption>(
+    initialUrlState.sortBy ?? (userLocation ? "proximity" : "newest"),
+  );
+  const [hasExplicitSort, setHasExplicitSort] = useState<boolean>(
+    initialUrlState.sortBy !== null,
+  );
+  const [hasSetInitialSort, setHasSetInitialSort] = useState<boolean>(
+    initialUrlState.sortBy !== null,
+  );
+  const [searchQuery, setSearchQuery] = useState<string>(initialUrlState.search);
+  const [activeCategories, setActiveCategories] = useState<Set<EquipmentCategory>>(
+    () => new Set(initialUrlState.activeCategories),
+  );
+  const [bouncyPillowActive, setBouncyPillowActive] = useState<boolean>(
+    initialUrlState.bouncyPillow,
+  );
+  const [footballFieldActive, setFootballFieldActive] = useState<boolean>(
+    initialUrlState.footballField,
+  );
+  const [openNowActive, setOpenNowActive] = useState<boolean>(
+    initialUrlState.openNow,
+  );
+  const [selectedMunicipality, setSelectedMunicipality] = useState<string>(
+    initialUrlState.municipality,
+  );
+  const lastWrittenQueryRef = useRef<string | null>(null);
+
+  // Record in-app navigation so playground detail Back button knows history is in-app
   useEffect(() => {
-    if (userLocation && !hasSetInitialSort) {
+    recordInAppNavigation("/playgrounds");
+  }, []);
+
+  // Switch to proximity sorting when location becomes available (only once, if user/URL didn't set sort)
+  useEffect(() => {
+    if (userLocation && !hasSetInitialSort && !hasExplicitSort) {
       setSortBy("proximity");
       setHasSetInitialSort(true);
     }
-  }, [userLocation, hasSetInitialSort]);
+  }, [userLocation, hasSetInitialSort, hasExplicitSort]);
+
+  // Sync state to URL search params cleanly via replaceState
+  useEffect(() => {
+    const params = serializePlaygroundsListParams({
+      search: searchQuery,
+      municipality: selectedMunicipality,
+      sortBy: hasExplicitSort ? sortBy : null,
+      activeCategories: Array.from(activeCategories),
+      bouncyPillow: bouncyPillowActive,
+      footballField: footballFieldActive,
+      openNow: openNowActive,
+    });
+    const nextQuery = params.toString();
+    lastWrittenQueryRef.current = nextQuery;
+    replaceUrlSearchParams(params);
+  }, [
+    searchQuery,
+    selectedMunicipality,
+    sortBy,
+    hasExplicitSort,
+    activeCategories,
+    bouncyPillowActive,
+    footballFieldActive,
+    openNowActive,
+  ]);
+
+  // React to external URL navigation (e.g. Back/Forward or clicking a filtered link)
+  const searchParamsString = searchParams.toString();
+  useEffect(() => {
+    if (lastWrittenQueryRef.current === searchParamsString) {
+      return;
+    }
+    const parsed = parsePlaygroundsListParams(searchParams);
+    setSearchQuery(parsed.search);
+    setSelectedMunicipality(parsed.municipality);
+    setActiveCategories(new Set(parsed.activeCategories));
+    setBouncyPillowActive(parsed.bouncyPillow);
+    setFootballFieldActive(parsed.footballField);
+    setOpenNowActive(parsed.openNow);
+    if (parsed.sortBy) {
+      setSortBy(parsed.sortBy);
+      setHasExplicitSort(true);
+      setHasSetInitialSort(true);
+    } else {
+      setHasExplicitSort(false);
+      setSortBy(userLocation ? "proximity" : "newest");
+    }
+  }, [searchParams, searchParamsString, userLocation]);
 
   // Sort playgrounds based on selected option
-  useEffect(() => {
-    let sorted = [...playgrounds];
-
+  const sortedPlaygrounds = useMemo<(Playground & { distance?: number })[]>(() => {
     switch (sortBy) {
       case "proximity":
-        // Use shared utility for distance sorting
-        sorted = sortPlaygroundsByDistance(playgrounds, userLocation);
-        break;
-      case "popularity":
-        // Placeholder for popularity sorting - will use rating when implemented
-        sorted = sorted.map(p => ({ ...p })).sort((a, b) => a.title.localeCompare(b.title));
-        break;
+        return sortPlaygroundsByDistance(playgrounds, userLocation);
       case "newest":
-        sorted = sorted.map(p => ({ ...p })).sort(
+        return [...playgrounds].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
-        break;
       case "name":
-        sorted = sorted.map(p => ({ ...p })).sort((a, b) => a.title.localeCompare(b.title));
-        break;
+        return [...playgrounds].sort((a, b) => compareIcelandic(a.title, b.title));
     }
-
-    setSortedPlaygrounds(sorted);
   }, [sortBy, userLocation, playgrounds]);
 
   // Compute category counts from the full sorted list (stable counts)
@@ -101,12 +186,16 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
 
   // Count playgrounds with bouncy pillow (stable count from full list)
   const bouncyPillowCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) => hasEquipmentNamed(pg, "Ærslabelgur", equipmentLookup)).length;
+    return sortedPlaygrounds.filter((pg) =>
+      hasEquipmentByName(pg, "Ærslabelgur", equipmentLookup),
+    ).length;
   }, [sortedPlaygrounds, equipmentLookup]);
 
   // Count playgrounds with football field (stable count from full list)
   const footballFieldCount = useMemo(() => {
-    return sortedPlaygrounds.filter((pg) => hasEquipmentNamed(pg, "Fótboltavöllur", equipmentLookup)).length;
+    return sortedPlaygrounds.filter((pg) =>
+      hasEquipmentByName(pg, "Fótboltavöllur", equipmentLookup),
+    ).length;
   }, [sortedPlaygrounds, equipmentLookup]);
 
   // Count school ground playgrounds currently closed (for "open now" filter)
@@ -123,12 +212,17 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
     for (const pg of playgrounds) {
       if (pg.municipality) set.add(pg.municipality);
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "is"));
+    return Array.from(set).sort(compareIcelandic);
   }, [playgrounds]);
 
-  // Filter by municipality, equipment categories (OR logic), bouncy pillow, and open now
+  // Filter by search, municipality, equipment categories (OR logic), bouncy pillow, football field, and open now
   const filteredPlaygrounds = useMemo(() => {
     let result = sortedPlaygrounds;
+
+    // Diacritic-insensitive search filter (title + municipality)
+    if (searchQuery.trim().length > 0) {
+      result = result.filter((pg) => matchesPlaygroundSearch(pg, searchQuery));
+    }
 
     // Municipality filter
     if (selectedMunicipality !== "__all__") {
@@ -146,12 +240,16 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
 
     // Bouncy pillow filter
     if (bouncyPillowActive) {
-      result = result.filter((pg) => hasEquipmentNamed(pg, "Ærslabelgur", equipmentLookup));
+      result = result.filter((pg) =>
+        hasEquipmentByName(pg, "Ærslabelgur", equipmentLookup),
+      );
     }
 
     // Football field filter
     if (footballFieldActive) {
-      result = result.filter((pg) => hasEquipmentNamed(pg, "Fótboltavöllur", equipmentLookup));
+      result = result.filter((pg) =>
+        hasEquipmentByName(pg, "Fótboltavöllur", equipmentLookup),
+      );
     }
 
     // Open now filter — hide school grounds that are currently closed
@@ -160,7 +258,16 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
     }
 
     return result;
-  }, [sortedPlaygrounds, selectedMunicipality, activeCategories, bouncyPillowActive, footballFieldActive, openNowActive, equipmentLookup]);
+  }, [
+    sortedPlaygrounds,
+    searchQuery,
+    selectedMunicipality,
+    activeCategories,
+    bouncyPillowActive,
+    footballFieldActive,
+    openNowActive,
+    equipmentLookup,
+  ]);
 
   const handleToggleCategory = useCallback((category: EquipmentCategory) => {
     setActiveCategories((prev) => {
@@ -188,27 +295,37 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
 
   const handleMunicipalityChange = useCallback((value: string) => {
     setSelectedMunicipality(value);
-    const url = new URL(window.location.href);
-    if (value === "__all__") {
-      url.searchParams.delete("municipality");
-    } else {
-      url.searchParams.set("municipality", value);
-    }
-    window.history.replaceState({}, "", url.toString());
   }, []);
 
+  const handleSortChange = useCallback(
+    (value: ListSortOption) => {
+      setSortBy(value);
+      setHasExplicitSort(true);
+      setHasSetInitialSort(true);
+      // Request location if user selects proximity sort without location
+      if (value === "proximity" && !userLocation) {
+        requestLocation();
+      }
+    },
+    [userLocation, requestLocation],
+  );
+
   const handleClearAllCategories = useCallback(() => {
+    setSearchQuery("");
     setActiveCategories(new Set());
     setBouncyPillowActive(false);
     setFootballFieldActive(false);
     setOpenNowActive(false);
     setSelectedMunicipality("__all__");
-    const url = new URL(window.location.href);
-    url.searchParams.delete("municipality");
-    window.history.replaceState({}, "", url.toString());
   }, []);
 
-  const hasActiveFilters = selectedMunicipality !== "__all__" || activeCategories.size > 0 || bouncyPillowActive || footballFieldActive || openNowActive;
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 ||
+    selectedMunicipality !== "__all__" ||
+    activeCategories.size > 0 ||
+    bouncyPillowActive ||
+    footballFieldActive ||
+    openNowActive;
 
   // Show skeleton while loading
   if (isLoading) {
@@ -217,24 +334,44 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
 
   return (
     <div className="space-y-6">
-      {/* Sorting Controls */}
+      {/* Search & Sorting Controls */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
+          {/* Search Input */}
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("playground.searchPlaceholder")}
+              aria-label={t("playground.searchPlaceholder")}
+              className="pl-10 pr-9"
+            />
+            {searchQuery.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label={t("common.close")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <SortAsc className="h-4 w-4 text-muted-foreground" />
+                <SortAsc className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="text-sm font-medium">{t('playground.sortBy')}</span>
               </div>
               <Select
                 value={sortBy}
-                onValueChange={(value: SortOption) => {
-                  setSortBy(value);
-                  // Request location if user selects proximity sort without location
-                  if (value === "proximity" && !userLocation) {
-                    requestLocation();
-                  }
-                }}
+                onValueChange={(value) => handleSortChange(value as ListSortOption)}
               >
                 <SelectTrigger className="w-48">
                   <SelectValue />
@@ -245,9 +382,6 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
                   <SelectItem value="proximity">
                     {t('playground.distanceFromYou')}
                   </SelectItem>
-                  <SelectItem value="popularity" disabled>
-                    {t('playground.popularity')} {t('playground.comingSoon')}
-                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -255,7 +389,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
               {municipalities.length > 0 && (
                 <>
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <span className="text-sm font-medium">{t('playground.municipality')}</span>
                   </div>
                   <Select
@@ -289,14 +423,14 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
                 disabled={locationLoading}
                 className="flex items-center gap-2"
               >
-                <Navigation className="h-4 w-4" />
+                <Navigation className="h-4 w-4" aria-hidden="true" />
                 {locationLoading ? t('playground.finding') : t('playground.enableLocationSorting')}
               </Button>
             )}
 
             {userLocation && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+                <MapPin className="h-3 w-3" aria-hidden="true" />
                 {t('playground.locationEnabled')}
               </Badge>
             )}
@@ -342,10 +476,10 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
       {filteredPlaygrounds.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center">
-            <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" aria-hidden="true" />
             <h3 className="mb-2 text-lg font-medium font-display">
               {hasActiveFilters
-                ? t('playground.noPlaygroundsInCategory')
+                ? t('playground.noPlaygroundsMatchingFilters')
                 : t('playground.noPlaygroundsFound')}
             </h3>
             {!hasActiveFilters && (
@@ -386,7 +520,7 @@ export default function PlaygroundsList({ playgrounds, isLoading = false, initia
                 >
                   <PlaygroundGridCard
                     playground={playground}
-                    distance={playground.distance || getPlaygroundDistance(playground, userLocation)}
+                    distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
                     showDistance={!!userLocation}
                   />
                 </Link>

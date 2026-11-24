@@ -2,6 +2,7 @@
  * Fetches municipalities from the official Icelandic registry
  * API: https://svc.skra.is/talnaefni/api/Sveitarfelog
  */
+import { foldIcelandic } from "~/lib/search-utils";
 
 export interface Municipality {
   svfn: string; // Municipality code
@@ -117,13 +118,19 @@ export async function fetchMunicipalitiesByRegion(): Promise<MunicipalityRegion[
 }
 
 /**
- * Finds a municipality by name (supports both short and full names)
+ * Finds a municipality by name (supports both short and full names, diacritic-insensitive)
  */
 export async function findMunicipalityByName(name: string): Promise<Municipality | null> {
   const municipalities = await fetchMunicipalities();
-  
-  return municipalities.find(m => 
-    m.nafn.toLowerCase() === name.toLowerCase() || 
-    m.fulltnafn.toLowerCase() === name.toLowerCase()
-  ) || null;
+  const foldedName = foldIcelandic(name).trim();
+
+  if (!foldedName) return null;
+
+  return (
+    municipalities.find(
+      (m) =>
+        foldIcelandic(m.nafn) === foldedName ||
+        foldIcelandic(m.fulltnafn) === foldedName,
+    ) || null
+  );
 }

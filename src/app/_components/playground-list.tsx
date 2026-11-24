@@ -7,8 +7,16 @@ import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import PlaygroundCard from "./playground-card";
 import { type PlaygroundFilters } from "./playground-filters";
-import { sortPlaygroundsByDistance, getPlaygroundDistance, type UserLocation } from "~/lib/geo-utils";
-import { isSchoolGroundAccessible } from "~/lib/school-hours";
+import {
+  sortPlaygroundsByDistance,
+  getPlaygroundDistance,
+  type UserLocation,
+} from "~/lib/geo-utils";
+import { useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
+import {
+  hasActiveMapFilters,
+  matchesMapFilters,
+} from "~/lib/search-utils";
 import { useT } from "~/lib/i18n";
 
 interface PlaygroundListProps {
@@ -19,6 +27,7 @@ interface PlaygroundListProps {
   visiblePlaygrounds?: (Playground & { distance?: number | null })[];
   totalVisibleCount?: number;
   onClearFilters?: () => void;
+  scrollToSelectedSeq?: number;
 }
 
 export default function PlaygroundList({
@@ -29,61 +38,47 @@ export default function PlaygroundList({
   visiblePlaygrounds,
   totalVisibleCount,
   onClearFilters,
+  scrollToSelectedSeq = 0,
 }: PlaygroundListProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+  const equipmentLookup = useEquipmentLookup();
   const t = useT();
 
   // Track playground IDs for smooth animations
-  const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<(Playground & { distance?: number | null })[]>([]);
-  const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(new Set());
+  const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<
+    (Playground & { distance?: number | null })[]
+  >([]);
+  const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(
+    new Set(),
+  );
   const displayedRef = useRef<(Playground & { distance?: number | null })[]>([]);
+  const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+  const lastScrolledSeqRef = useRef<number>(0);
 
   const filteredAndSortedPlaygrounds = useMemo(() => {
     // Use visible playgrounds if provided, otherwise fall back to all playgrounds
-    const playgroundsToUse = visiblePlaygrounds || playgrounds || [];
-
     if (visiblePlaygrounds) {
       // If using visible playgrounds from map, they're already filtered and sorted
       return visiblePlaygrounds;
     }
 
-    // Original filtering logic for fallback
-    const filtered = playgroundsToUse.filter((playground) => {
-      // Toddler friendly filter
-      if (filters.toddlerFriendly !== undefined && playground.toddlerFriendly !== filters.toddlerFriendly) {
-        return false;
-      }
-
-      // Publicly accessible filter
-      if (filters.publiclyAccessible !== undefined && playground.publiclyAccessible !== filters.publiclyAccessible) {
-        return false;
-      }
-
-      // Accessible now filter: school grounds must pass school hours check,
-      // non-school grounds use the publiclyAccessible flag
-      if (filters.accessibleNow !== undefined && filters.accessibleNow) {
-        const isCurrentlyAccessible = playground.isSchoolGround
-          ? isSchoolGroundAccessible(playground.isSchoolGround)
-          : playground.publiclyAccessible;
-
-        if (!isCurrentlyAccessible) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    const playgroundsToUse = playgrounds || [];
+    const filtered = playgroundsToUse.filter((playground) =>
+      matchesMapFilters(playground, filters, equipmentLookup),
+    );
 
     // Sort by distance using shared utility
     return sortPlaygroundsByDistance(filtered, userLocation);
-  }, [playgrounds, filters, userLocation, visiblePlaygrounds]);
+  }, [playgrounds, filters, userLocation, visiblePlaygrounds, equipmentLookup]);
 
   // Handle playground list animations with staggered timing.
   // The currently-rendered list is mirrored in a ref so this effect depends only
   // on its input; depending on `displayedPlaygrounds` re-ran it on its own output.
   useEffect(() => {
-    const currentIds = new Set(filteredAndSortedPlaygrounds.map(p => p.id));
-    const playgroundsToRemove = displayedRef.current.filter(p => !currentIds.has(p.id));
+    const currentIds = new Set(filteredAndSortedPlaygrounds.map((p) => p.id));
+    const playgroundsToRemove = displayedRef.current.filter(
+      (p) => !currentIds.has(p.id),
+    );
 
     if (playgroundsToRemove.length === 0) {
       // Update immediately for additions, let CSS handle enter animations
@@ -93,7 +88,7 @@ export default function PlaygroundList({
     }
 
     // Start exit animation, then swap in the new list once it completes
-    setExitingPlaygrounds(new Set(playgroundsToRemove.map(p => p.id)));
+    setExitingPlaygrounds(new Set(playgroundsToRemove.map((p) => p.id)));
     const timer = setTimeout(() => {
       displayedRef.current = filteredAndSortedPlaygrounds;
       setDisplayedPlaygrounds(filteredAndSortedPlaygrounds);
@@ -103,19 +98,38 @@ export default function PlaygroundList({
     return () => clearTimeout(timer);
   }, [filteredAndSortedPlaygrounds]);
 
+  // Scroll the selected card into view when a map pin (or deep link) selects a playground
+  useEffect(() => {
+    if (
+      !selectedPlayground ||
+      scrollToSelectedSeq === 0 ||
+      scrollToSelectedSeq === lastScrolledSeqRef.current
+    ) {
+      return;
+    }
+
+    const element = itemRefs.current.get(selectedPlayground.id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      lastScrolledSeqRef.current = scrollToSelectedSeq;
+    }
+  }, [selectedPlayground, scrollToSelectedSeq, displayedPlaygrounds]);
+
   if (!playgrounds) {
     return (
       <div className="flex h-32 items-center justify-center">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">{t('playground.loadingPlaygrounds')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("playground.loadingPlaygrounds")}
+          </p>
         </div>
       </div>
     );
   }
 
   if (displayedPlaygrounds.length === 0 && !exitingPlaygrounds.size) {
-    const hasActiveFilters = Object.values(filters).some((v) => v !== undefined);
+    const hasActiveFilters = hasActiveMapFilters(filters);
     const isFilteredOut = hasActiveFilters && (totalVisibleCount ?? 0) > 0;
 
     return (
@@ -123,15 +137,16 @@ export default function PlaygroundList({
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
             {isFilteredOut
-              ? t('playground.noPlaygroundsMatchingFilters')
-              : t('playground.noPlaygroundsInArea')}
+              ? t("playground.noPlaygroundsMatchingFilters")
+              : t("playground.noPlaygroundsInArea")}
           </p>
           {isFilteredOut && onClearFilters && (
             <button
+              type="button"
               onClick={onClearFilters}
               className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              {t('forms.clearFilters')}
+              {t("forms.clearFilters")}
             </button>
           )}
         </div>
@@ -143,27 +158,39 @@ export default function PlaygroundList({
     <div className="">
       {userLocation && (
         <div className="px-4 py-2.5 text-xs tracking-[0.08em] uppercase font-medium text-muted-foreground border-b border-border">
-          {t('playground.sortedByDistance')}
+          {t("playground.sortedByDistance")}
         </div>
       )}
       <ul className="divide-y divide-border">
         {displayedPlaygrounds.map((playground, index) => {
           const isExiting = exitingPlaygrounds.has(playground.id);
-          const currentlyVisible = filteredAndSortedPlaygrounds.some(p => p.id === playground.id);
-          const isNewItem = !exitingPlaygrounds.has(playground.id) && currentlyVisible;
+          const currentlyVisible = filteredAndSortedPlaygrounds.some(
+            (p) => p.id === playground.id,
+          );
+          const isNewItem =
+            !exitingPlaygrounds.has(playground.id) && currentlyVisible;
           const isSelected = selectedPlayground?.id === playground.id;
 
           return (
             <li
               key={playground.id}
+              ref={(node) => {
+                if (node) {
+                  itemRefs.current.set(playground.id, node);
+                } else {
+                  itemRefs.current.delete(playground.id);
+                }
+              }}
+              data-playground-id={playground.id}
               className={`
                 flex items-stretch transition-colors
-                ${isSelected ? "bg-accent/60" : "hover:bg-accent/50"}
-                ${isExiting
-                  ? "animate-out slide-out-to-left fade-out duration-300 ease-in-out pointer-events-none"
-                  : isNewItem
-                    ? "animate-in slide-in-from-right fade-in duration-400 ease-out"
-                    : "opacity-100 transform-none"
+                ${isSelected ? "bg-accent/60 ring-1 ring-inset ring-primary/25" : "hover:bg-accent/50"}
+                ${
+                  isExiting
+                    ? "animate-out slide-out-to-left fade-out duration-300 ease-in-out pointer-events-none"
+                    : isNewItem
+                      ? "animate-in slide-in-from-right fade-in duration-400 ease-out"
+                      : "opacity-100 transform-none"
                 }
               `}
               style={{
@@ -181,7 +208,10 @@ export default function PlaygroundList({
               >
                 <PlaygroundCard
                   playground={playground}
-                  distance={playground.distance ?? getPlaygroundDistance(playground, userLocation)}
+                  distance={
+                    playground.distance ??
+                    getPlaygroundDistance(playground, userLocation)
+                  }
                   showDistance={!!userLocation}
                 />
               </button>
@@ -189,7 +219,7 @@ export default function PlaygroundList({
                   page, and a 44px target for thumbs. */}
               <Link
                 href={`/playground/${playground.id}`}
-                aria-label={`${t('playground.viewDetails')}: ${playground.title}`}
+                aria-label={`${t("playground.viewDetails")}: ${playground.title}`}
                 className="flex w-11 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
                 <ChevronRight className="h-5 w-5" aria-hidden="true" />

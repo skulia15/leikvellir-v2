@@ -5,7 +5,11 @@
  * Handles: markers, clustering, user location, info popup, bounds tracking, deep linking.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Map, { useMap, type MapRef, type ViewStateChangeEvent } from "react-map-gl/mapbox";
+import Map, {
+  useMap,
+  type MapRef,
+  type ViewStateChangeEvent,
+} from "react-map-gl/mapbox";
 import { Navigation } from "lucide-react";
 import { toast } from "sonner";
 import useSupercluster from "use-supercluster";
@@ -14,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { env } from "~/env";
 import { calculateDistance, type UserLocation } from "~/lib/geo-utils";
+import { useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 import {
   getListBounds,
   getMarkerBounds,
@@ -21,7 +26,8 @@ import {
   playgroundsToGeoJSON,
   type MapBounds,
 } from "~/lib/map-utils";
-import { isSchoolGroundAccessible } from "~/lib/school-hours";
+import { compareIcelandic, matchesMapFilters } from "~/lib/search-utils";
+import { type MapViewportState } from "~/lib/url-state";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { type PlaygroundFilters } from "./playground-filters";
@@ -32,13 +38,25 @@ import { MapInfoPopup } from "./map-info-popup";
 import { MapLegend } from "./map-legend";
 import { useT } from "~/lib/i18n";
 
+export interface MapFlyToRequest {
+  lat: number;
+  lng: number;
+  zoom?: number;
+  offsetForPopup?: boolean;
+  seq: number;
+}
+
 interface MapboxMapProps {
   selectedPlayground: Playground | null;
   onPlaygroundSelect: (playground: Playground | null) => void;
+  onMarkerSelect?: (playground: Playground) => void;
   filters: PlaygroundFilters;
   userLocation: UserLocation | null;
   onUserLocationChange: (location: UserLocation | null) => void;
   mapCenter?: UserLocation | null;
+  initialViewport?: MapViewportState | null;
+  onViewportChange?: (viewport: MapViewportState) => void;
+  flyToRequest?: MapFlyToRequest | null;
   onVisiblePlaygroundsChange?: (
     playgrounds: (Playground & { distance?: number | null })[],
   ) => void;
@@ -93,7 +111,6 @@ function UserLocationButton({
       return;
     }
 
-
     setIsLoading(true);
     if (onMinimizeDrawer) {
       onMinimizeDrawer();
@@ -109,7 +126,11 @@ function UserLocationButton({
         // Read .current at call time to avoid stale closure
         const map = mapRef.current;
         if (map) {
-          map.flyTo({ center: [location.lng, location.lat], zoom: 15, duration: 1500 });
+          map.flyTo({
+            center: [location.lng, location.lat],
+            zoom: 15,
+            duration: 1500,
+          });
         }
         setIsLoading(false);
       },
@@ -148,10 +169,14 @@ function UserLocationButton({
 export function MapboxMap({
   selectedPlayground,
   onPlaygroundSelect,
+  onMarkerSelect,
   filters,
   userLocation,
   onUserLocationChange,
   mapCenter,
+  initialViewport,
+  onViewportChange,
+  flyToRequest,
   onVisiblePlaygroundsChange,
   shouldCenterOnUserLocation = false,
   autoRequestLocation = false,
@@ -161,23 +186,28 @@ export function MapboxMap({
   onTotalVisibleCountChange,
 }: MapboxMapProps) {
   const [playgrounds] = api.playground.getAll.useSuspenseQuery();
+  const equipmentLookup = useEquipmentLookup();
   // Preview shown while the pointer rests on a pin. A clicked pin takes
   // precedence and stays open until the map is clicked.
-  const [hoveredPlayground, setHoveredPlayground] = useState<Playground | null>(null);
+  const [hoveredPlayground, setHoveredPlayground] = useState<Playground | null>(
+    null,
+  );
   const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Deliberately useQuery, not useSuspenseQuery: the map must not block its
   // first paint on a per-user personalisation query. Badges pop in when it
   // resolves.
   const { data: session } = useSession();
-  const { data: checkedInPlaygroundIds } = api.checkIn.getMyPlaygroundIds.useQuery(
-    undefined,
-    { enabled: !!session, staleTime: 5 * 60 * 1000 },
-  );
+  const { data: checkedInPlaygroundIds } =
+    api.checkIn.getMyPlaygroundIds.useQuery(undefined, {
+      enabled: !!session,
+      staleTime: 5 * 60 * 1000,
+    });
   const checkedInIds = useMemo(
     () => new Set(checkedInPlaygroundIds ?? []),
     [checkedInPlaygroundIds],
   );
+
   // Two different rectangles, deliberately kept apart:
   //  - markerBounds is the FULL map canvas (plus a margin). Every pin the user
   //    can see on the map has to be rendered, including the ones behind the
@@ -189,50 +219,36 @@ export function MapboxMap({
   // the map, so the two must never be merged back together.
   const [markerBounds, setMarkerBounds] = useState<MapBounds | null>(null);
   const [listBounds, setListBounds] = useState<MapBounds | null>(null);
-  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [zoom, setZoom] = useState(initialViewport?.zoom ?? DEFAULT_ZOOM);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const previousPlaygroundsRef = useRef<
     (Playground & { distance?: number | null })[]
   >([]);
-  const hasAutocentered = useRef(false);
+  const hasAutocentered = useRef(Boolean(initialViewport ?? mapCenter));
+  const lastFlyToSeqRef = useRef<number>(0);
   const mapRef = useRef<MapRef>(null);
 
-  // Calculate initial center
-  const initialCenter = mapCenter ?? DEFAULT_CENTER;
+  // Calculate initial view state
+  const initialCenter = initialViewport
+    ? { lat: initialViewport.lat, lng: initialViewport.lng }
+    : (mapCenter ?? DEFAULT_CENTER);
+  const initialZoom = initialViewport?.zoom ?? DEFAULT_ZOOM;
 
   // How much of the map's bottom edge is hidden behind the mobile sheet
   const occludedBottom = isMobile ? drawerHeight : 0;
 
-  // Filter playgrounds based on the provided filters
+  const hasSearchQuery = Boolean(
+    filters.search && filters.search.trim().length > 0,
+  );
+
+  // Filter playgrounds based on all active filters (search, accessibility, equipment, amenities)
   const filteredPlaygrounds = useMemo(() => {
     return (
-      playgrounds?.filter((playground) => {
-        if (
-          filters.toddlerFriendly !== undefined &&
-          playground.toddlerFriendly !== filters.toddlerFriendly
-        ) {
-          return false;
-        }
-        if (
-          filters.publiclyAccessible !== undefined &&
-          playground.publiclyAccessible !== filters.publiclyAccessible
-        ) {
-          return false;
-        }
-        if (filters.accessibleNow !== undefined && filters.accessibleNow) {
-          // School grounds: check school hours (regardless of publiclyAccessible flag)
-          // Non-school grounds: check publiclyAccessible flag
-          const isAccessible = playground.isSchoolGround
-            ? isSchoolGroundAccessible(playground.isSchoolGround)
-            : playground.publiclyAccessible;
-          if (!isAccessible) {
-            return false;
-          }
-        }
-        return true;
-      }) || []
+      playgrounds?.filter((playground) =>
+        matchesMapFilters(playground, filters, equipmentLookup),
+      ) || []
     );
-  }, [playgrounds, filters]);
+  }, [playgrounds, filters, equipmentLookup]);
 
   // Convert to GeoJSON for supercluster
   const geoPoints = useMemo(
@@ -251,27 +267,34 @@ export function MapboxMap({
     },
   });
 
-  // Filter playgrounds visible in the current map bounds
+  // Filter playgrounds visible in the current map bounds.
+  // When a text search query is active, return all matching playgrounds nationwide so
+  // users can find and fly to playgrounds outside the current viewport.
   const visiblePlaygrounds = useMemo(() => {
+    if (hasSearchQuery) {
+      return filteredPlaygrounds;
+    }
     return filteredPlaygrounds.filter((playground) => {
       if (!listBounds) return true;
       return isWithinBounds(playground, listBounds);
     });
-  }, [filteredPlaygrounds, listBounds]);
+  }, [filteredPlaygrounds, listBounds, hasSearchQuery]);
 
   // Count ALL playgrounds in the current viewport (ignoring filters)
   const totalPlaygroundsInBounds = useMemo(() => {
     if (!playgrounds) return 0;
-    if (!listBounds) return playgrounds.length;
-    return playgrounds.filter((playground) => isWithinBounds(playground, listBounds)).length;
-  }, [playgrounds, listBounds]);
+    if (hasSearchQuery || !listBounds) return playgrounds.length;
+    return playgrounds.filter((playground) =>
+      isWithinBounds(playground, listBounds),
+    ).length;
+  }, [playgrounds, listBounds, hasSearchQuery]);
 
   // Notify parent of total (unfiltered) visible count
   useEffect(() => {
     onTotalVisibleCountChange?.(totalPlaygroundsInBounds);
   }, [totalPlaygroundsInBounds, onTotalVisibleCountChange]);
 
-  // Add distance and sort
+  // Add distance and sort (distance when available, otherwise Icelandic alphabetical order)
   const playgroundsWithDistance = useMemo(() => {
     return visiblePlaygrounds
       .map((playground) => {
@@ -289,7 +312,7 @@ export function MapboxMap({
         if (a.distance !== null && b.distance !== null) {
           return a.distance - b.distance;
         }
-        return a.title.localeCompare(b.title);
+        return compareIcelandic(a.title, b.title);
       });
   }, [visiblePlaygrounds, userLocation]);
 
@@ -313,14 +336,15 @@ export function MapboxMap({
     }
   }, [playgroundsWithDistance, onVisiblePlaygroundsChange]);
 
-  // Auto-center on user location (once)
+  // Auto-center on user location (once, only if no explicit URL viewport was provided)
   useEffect(() => {
     if (
       mapRef.current &&
       userLocation &&
       shouldCenterOnUserLocation &&
       !hasAutocentered.current &&
-      !mapCenter
+      !mapCenter &&
+      !initialViewport
     ) {
       mapRef.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
@@ -329,7 +353,7 @@ export function MapboxMap({
       });
       hasAutocentered.current = true;
     }
-  }, [userLocation, shouldCenterOnUserLocation, mapCenter]);
+  }, [userLocation, shouldCenterOnUserLocation, mapCenter, initialViewport]);
 
   // Fly to explicit map center when provided (e.g., from URL deep link)
   useEffect(() => {
@@ -342,6 +366,37 @@ export function MapboxMap({
       hasAutocentered.current = true;
     }
   }, [mapCenter, isMapLoaded]);
+
+  // Fly to a requested target (e.g., sidebar card selection or external URL viewport update)
+  useEffect(() => {
+    if (
+      !flyToRequest ||
+      flyToRequest.seq === lastFlyToSeqRef.current ||
+      !mapRef.current ||
+      !isMapLoaded
+    ) {
+      return;
+    }
+
+    lastFlyToSeqRef.current = flyToRequest.seq;
+    hasAutocentered.current = true;
+
+    const container = mapRef.current.getContainer();
+    const offsetY = flyToRequest.offsetForPopup
+      ? isMobile
+        ? -occludedBottom / 2
+        : container.clientHeight * 0.15
+      : 0;
+    const targetZoom =
+      flyToRequest.zoom ?? Math.max(mapRef.current.getZoom(), DEFAULT_ZOOM);
+
+    mapRef.current.flyTo({
+      center: [flyToRequest.lng, flyToRequest.lat],
+      zoom: targetZoom,
+      offset: [0, offsetY] as [number, number],
+      duration: 600,
+    });
+  }, [flyToRequest, isMapLoaded, isMobile, occludedBottom]);
 
   // Re-read the part of the map the sheet leaves visible. Only the list cares,
   // so this does not touch markerBounds: re-running the clusterer would
@@ -400,12 +455,21 @@ export function MapboxMap({
     [updateBoundsFromMap],
   );
 
-  // Handle map move end — update bounds and zoom
+  // Handle map move end — update bounds, zoom, and report viewport for URL syncing
   const handleMoveEnd = useCallback(
     (evt: ViewStateChangeEvent) => {
-      updateBoundsFromMap(evt.target);
+      const map = evt.target;
+      updateBoundsFromMap(map);
+      if (onViewportChange) {
+        const center = map.getCenter();
+        onViewportChange({
+          lat: center.lat,
+          lng: center.lng,
+          zoom: map.getZoom(),
+        });
+      }
     },
-    [updateBoundsFromMap],
+    [updateBoundsFromMap, onViewportChange],
   );
 
   const cancelHoverClose = useCallback(() => {
@@ -445,7 +509,11 @@ export function MapboxMap({
       // reappear when the selection is later cleared.
       cancelHoverClose();
       setHoveredPlayground(null);
-      onPlaygroundSelect(playground);
+      if (onMarkerSelect) {
+        onMarkerSelect(playground);
+      } else {
+        onPlaygroundSelect(playground);
+      }
 
       if (!mapRef.current) return;
 
@@ -459,7 +527,7 @@ export function MapboxMap({
         duration: 400,
       });
     },
-    [onPlaygroundSelect, cancelHoverClose, occludedBottom],
+    [onMarkerSelect, onPlaygroundSelect, cancelHoverClose, occludedBottom],
   );
 
   // Handle cluster click — zoom into the cluster
@@ -479,6 +547,9 @@ export function MapboxMap({
     [supercluster],
   );
 
+  const shouldAutoRequestLocation =
+    autoRequestLocation && !initialViewport && !mapCenter;
+
   return (
     // The map always fills its container. The sheet overlays it rather than
     // resizing it, so nothing animates layout height on every snap.
@@ -489,7 +560,7 @@ export function MapboxMap({
         initialViewState={{
           longitude: initialCenter.lng,
           latitude: initialCenter.lat,
-          zoom: DEFAULT_ZOOM,
+          zoom: initialZoom,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle="mapbox://styles/skulipardus/cmkzwe4f2005s01skane25k5g"
@@ -563,7 +634,7 @@ export function MapboxMap({
         <UserLocationButton
           onLocationFound={onUserLocationChange}
           onMinimizeDrawer={onMinimizeDrawer}
-          autoRequest={autoRequestLocation}
+          autoRequest={shouldAutoRequestLocation}
         />
       </Map>
 

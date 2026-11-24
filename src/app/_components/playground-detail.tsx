@@ -59,6 +59,11 @@ import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { getBcp47Locale, useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 import { formatIcelandicLocation } from "~/lib/icelandic-declension";
+import {
+  getBackFallbackPath,
+  hasRecordedInAppNavigation,
+  shouldUseHistoryBack,
+} from "~/lib/url-state";
 import NearbyPlaygrounds from "./nearby-playgrounds";
 import AddPhotosDialog from "./add-photos-dialog";
 import { api } from "~/trpc/react";
@@ -109,6 +114,23 @@ export default function PlaygroundDetail({
       : {}),
   };
 
+
+  const handleBack = () => {
+    const canGoBack =
+      typeof window !== "undefined" &&
+      shouldUseHistoryBack({
+        referrer: document.referrer,
+        currentOrigin: window.location.origin,
+        historyLength: window.history.length,
+        hasInAppReferrer: hasRecordedInAppNavigation(),
+      });
+
+    if (canGoBack) {
+      router.back();
+    } else {
+      router.push(getBackFallbackPath());
+    }
+  };
 
   const handleAddPhotos = () => {
     if (!session) {
@@ -170,7 +192,7 @@ export default function PlaygroundDetail({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.back()}
+              onClick={handleBack}
               className="flex items-center gap-2 "
             >
               <ArrowLeft className="h-4 w-4" />
