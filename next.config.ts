@@ -71,9 +71,6 @@ const config: NextConfig = {
         ? { exclude: ["error", "warn"] }
         : false,
   },
-  
-  // Enables externals bundling for Pages Router like in App Router
-  bundlePagesRouterDependencies: true,
 
   // Security and cache headers
   async headers() {

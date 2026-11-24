@@ -15,6 +15,9 @@ if (hasWindow) {
   cleanup = rtl.cleanup;
   const mocks = await import("./mocks/server");
   server = mocks.server;
+  // Preload English translations for component tests that mount LanguageProvider with initialLocale="en"
+  const { loadTranslations } = await import("~/lib/i18n/translations");
+  await loadTranslations("en");
 }
 
 // Set up environment variables for tests

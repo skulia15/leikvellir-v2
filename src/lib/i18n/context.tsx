@@ -1,10 +1,10 @@
 "use client";
 
 // lib/i18n/context.tsx
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { type Locale } from './types';
 import { defaultLocale, getBcp47Locale, isValidLocale, LOCALE_COOKIE_NAME, LOCALE_STORAGE_KEY } from './config';
-import { getTranslation } from './translations';
+import { getTranslation, isLocaleLoaded, loadTranslations } from './translations';
 
 interface LanguageContextValue {
   locale: Locale;
@@ -46,7 +46,11 @@ function persistLocale(nextLocale: Locale) {
 }
 
 export function LanguageProvider({ children, initialLocale }: LanguageProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale || defaultLocale);
+  const startingLocale = initialLocale ?? defaultLocale;
+  const [locale, setLocaleState] = useState<Locale>(startingLocale);
+  const [loadedLocale, setLoadedLocale] = useState<Locale>(() =>
+    isLocaleLoaded(startingLocale) ? startingLocale : defaultLocale,
+  );
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load locale from localStorage / cookie on mount and keep them in sync
@@ -75,6 +79,29 @@ export function LanguageProvider({ children, initialLocale }: LanguageProviderPr
     }
   }, [initialLocale]);
 
+  // Dynamically load translations for non-default locales on demand
+  useEffect(() => {
+    if (isLocaleLoaded(locale)) {
+      setLoadedLocale(locale);
+      return;
+    }
+
+    let cancelled = false;
+    void loadTranslations(locale)
+      .then(() => {
+        if (!cancelled) {
+          setLoadedLocale(locale);
+        }
+      })
+      .catch((error) => {
+        console.error(`Failed to load translations for locale "${locale}":`, error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
   // Persist locale to localStorage, cookie, and <html lang> when it changes
   useEffect(() => {
     if (isHydrated && typeof window !== 'undefined') {
@@ -82,20 +109,28 @@ export function LanguageProvider({ children, initialLocale }: LanguageProviderPr
     }
   }, [locale, isHydrated]);
 
-  const setLocale = (newLocale: Locale) => {
+  const setLocale = useCallback((newLocale: Locale) => {
     persistLocale(newLocale);
     setLocaleState(newLocale);
-  };
+  }, []);
 
-  const t = (key: string, params?: Record<string, string | number>) => {
-    return getTranslation(locale, key, params);
-  };
+  const activeLocale = isLocaleLoaded(locale) ? locale : loadedLocale;
 
-  const value: LanguageContextValue = {
-    locale,
-    setLocale,
-    t,
-  };
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>) => {
+      return getTranslation(activeLocale, key, params);
+    },
+    [activeLocale],
+  );
+
+  const value = useMemo<LanguageContextValue>(
+    () => ({
+      locale,
+      setLocale,
+      t,
+    }),
+    [locale, setLocale, t],
+  );
 
   return (
     <LanguageContext.Provider value={value}>

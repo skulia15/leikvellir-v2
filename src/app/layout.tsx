@@ -1,7 +1,6 @@
 import "~/styles/globals.css";
 
-import { GeistSans } from "geist/font/sans";
-import { Fira_Sans, Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { type Metadata, type Viewport } from "next";
 import { Toaster } from "sonner";
 
@@ -16,14 +15,6 @@ import { FloatingFeedbackButton } from "~/components/ui/floating-feedback-button
 import { LayoutClient } from "./_components/layout-client";
 import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
 import { OrganizationSchema, WebsiteSchema } from "~/lib/seo/structured-data";
-
-const firaSans = Fira_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-fira-sans",
-  display: "swap",
-  preload: true,
-});
 
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
@@ -45,13 +36,11 @@ export default async function RootLayout({
   const locale = await getServerLocale();
 
   return (
-    <html lang={locale} className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable}`}>
+    <html lang={locale} className={outfit.variable}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
         <link rel="preconnect" href="https://api.mapbox.com" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <OrganizationSchema />
         <WebsiteSchema />
       </head>

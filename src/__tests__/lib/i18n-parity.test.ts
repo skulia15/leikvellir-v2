@@ -1,9 +1,9 @@
 // __tests__/lib/i18n-parity.test.ts
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
 import is from "~/locales/is.json";
 import en from "~/locales/en.json";
 import pl from "~/locales/pl.json";
-import { getPluralKey, getTranslation } from "~/lib/i18n/translations";
+import { getPluralKey, getTranslation, loadTranslations } from "~/lib/i18n/translations";
 import {
   formatIcelandicLocation,
   getMunicipalityDative,
@@ -57,6 +57,10 @@ describe("translation key parity", () => {
 });
 
 describe("Polish CLDR pluralization", () => {
+  beforeAll(async () => {
+    await loadTranslations("pl");
+  });
+
   it.each([
     [1, "one"],
     [2, "few"],

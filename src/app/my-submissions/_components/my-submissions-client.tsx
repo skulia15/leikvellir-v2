@@ -17,12 +17,21 @@ import {
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
+import dynamic from "next/dynamic";
 import SubmissionStatusBadge from "./submission-status-badge";
 import ViewSubmissionDialog from "./view-submission-dialog";
-import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import ViewEditSuggestionDialog from "./view-edit-suggestion-dialog";
-import EditSuggestionDialog from "./edit-suggestion-dialog";
 import { useDateLocale, useT } from "~/lib/i18n";
+
+const PlaygroundFormDialog = dynamic(
+    () => import("~/components/playground-form-dialog"),
+    { ssr: false },
+);
+
+const EditSuggestionDialog = dynamic(
+    () => import("./edit-suggestion-dialog"),
+    { ssr: false },
+);
 
 // Type for edit suggestions
 interface PlaygroundEditSuggestion {

@@ -28,8 +28,13 @@ import {
 import { Pencil, Trash2, Eye, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useDateLocale, useT } from "~/lib/i18n";
-import PlaygroundFormDialog from "~/components/playground-form-dialog";
+
+const PlaygroundFormDialog = dynamic(
+    () => import("~/components/playground-form-dialog"),
+    { ssr: false },
+);
 
 export default function AdminPlaygroundsClient() {
     const [editingPlayground, setEditingPlayground] = useState<Playground | null>(null);

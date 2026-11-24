@@ -7,8 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-outfit)", "var(--font-fira-sans)", ...fontFamily.sans],
-        "fira-sans": ["var(--font-fira-sans)", ...fontFamily.sans],
+        sans: ["var(--font-outfit)", ...fontFamily.sans],
         display: ["var(--font-outfit)", ...fontFamily.sans],
       },
       borderRadius: {

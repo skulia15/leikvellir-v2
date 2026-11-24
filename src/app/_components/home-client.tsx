@@ -13,11 +13,11 @@ import {
   DataErrorFallback,
 } from "~/components/ui/error-fallbacks";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { Sheet, type SheetRef } from "react-modal-sheet";
 
 import { api } from "~/trpc/react";
 import PlaygroundList from "./playground-list";
 import { type MapFlyToRequest } from "./mapbox-map";
+import type { MobileBottomSheetHandle } from "./mobile-bottom-sheet";
 
 function MapLoadingFallback() {
   const t = useT();
@@ -33,6 +33,11 @@ const MapComponent = dynamic(
   () => import("./mapbox-map").then((mod) => ({ default: mod.MapboxMap })),
   { ssr: false, loading: MapLoadingFallback },
 );
+
+// Dynamic import for mobile bottom sheet — keeps react-modal-sheet and framer-motion out of desktop bundles
+const MobileBottomSheet = dynamic(() => import("./mobile-bottom-sheet"), {
+  ssr: false,
+});
 
 import PlaygroundFilters, {
   type PlaygroundFilters as PlaygroundFiltersType,
@@ -113,7 +118,7 @@ export default function HomeClient() {
   const [currentSnapIndex, setCurrentSnapIndex] = useState(1); // Track snap position for conditional UI
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(false);
-  const ref = useRef<SheetRef>();
+  const sheetHandleRef = useRef<MobileBottomSheetHandle | null>(null);
   const flyToSeqRef = useRef(0);
   const lastWrittenQueryRef = useRef<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -143,12 +148,28 @@ export default function HomeClient() {
     let frame = 0;
     let previous = -1;
     let stableFrames = 0;
+    let observedElement: HTMLElement | null = null;
+
+    const schedule = () => {
+      previous = -1;
+      stableFrames = 0;
+      if (!frame) frame = requestAnimationFrame(poll);
+    };
+
+    // The sheet's own height still tracks the viewport (mobile browser chrome
+    // collapsing, orientation change), and neither shows up as a snap.
+    const observer = new ResizeObserver(schedule);
 
     const measure = () => {
       const drawerElement = document.querySelector<HTMLElement>(
         ".react-modal-sheet-container",
       );
       if (!drawerElement) return null;
+      if (drawerElement !== observedElement) {
+        if (observedElement) observer.unobserve(observedElement);
+        observer.observe(drawerElement);
+        observedElement = drawerElement;
+      }
       const rect = drawerElement.getBoundingClientRect();
       return Math.max(
         0,
@@ -171,21 +192,7 @@ export default function HomeClient() {
       frame = requestAnimationFrame(poll);
     };
 
-    const schedule = () => {
-      previous = -1;
-      stableFrames = 0;
-      if (!frame) frame = requestAnimationFrame(poll);
-    };
-
     schedule();
-
-    // The sheet's own height still tracks the viewport (mobile browser chrome
-    // collapsing, orientation change), and neither shows up as a snap.
-    const observer = new ResizeObserver(schedule);
-    const drawerElement = document.querySelector(".react-modal-sheet-container");
-    if (drawerElement) {
-      observer.observe(drawerElement);
-    }
     window.addEventListener("resize", schedule);
 
     return () => {
@@ -337,8 +344,8 @@ export default function HomeClient() {
         });
 
         // If on mobile and a playground is selected, minimize the drawer
-        if (isMobile && ref.current) {
-          ref.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
+        if (isMobile && sheetHandleRef.current) {
+          sheetHandleRef.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
         }
       }
     },
@@ -361,15 +368,15 @@ export default function HomeClient() {
 
   // Handle minimizing drawer (for mobile)
   const handleMinimizeDrawer = useCallback(() => {
-    if (isMobile && ref.current) {
-      ref.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
+    if (isMobile && sheetHandleRef.current) {
+      sheetHandleRef.current.snapTo(2); // Snap to the smallest state (index 2 = 0.15)
     }
   }, [isMobile]);
 
   // Expand mobile drawer from peek when user focuses search or taps filter badge
   const handleExpandDrawer = useCallback(() => {
-    if (isMobile && currentSnapIndex === 2 && ref.current) {
-      ref.current.snapTo(1);
+    if (isMobile && currentSnapIndex === 2 && sheetHandleRef.current) {
+      sheetHandleRef.current.snapTo(1);
     }
   }, [isMobile, currentSnapIndex]);
 
@@ -462,35 +469,12 @@ export default function HomeClient() {
         </div>
 
         {/* Mobile bottom sheet */}
-        <Sheet
-          ref={ref}
+        <MobileBottomSheet
+          sheetHandleRef={sheetHandleRef}
           isOpen={true}
-          onClose={() => {
-            // Snap to minimized (15%) instead of fully closing,
-            // so a fast swipe down collapses rather than hides the sheet
-            if (ref.current) {
-              ref.current.snapTo(2);
-            }
-          }}
-          snapPoints={[0.85, 0.6, 0.15]}
-          initialSnap={1} // Start at 60% — show content immediately
-          onSnap={(snapIndex) => {
-            setCurrentSnapIndex(snapIndex);
-          }}
-          disableScrollLocking
-          style={{
-            zIndex: 30,
-          }}
-        >
-          <Sheet.Container
-            style={{
-              borderTopLeftRadius: "20px",
-              borderTopRightRadius: "20px",
-              boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.1)",
-              backgroundColor: "hsl(var(--card))",
-            }}
-          >
-            <Sheet.Header className="px-4 pt-3 pb-2 border-b border-border bg-card">
+          onSnap={setCurrentSnapIndex}
+          header={
+            <>
               <div className="mx-auto h-1 w-10 rounded-full bg-border mb-2" />
               <div className="flex items-center justify-between gap-2">
                 {resultCountHeader}
@@ -517,16 +501,11 @@ export default function HomeClient() {
                   onSearchFocus={handleExpandDrawer}
                 />
               </div>
-            </Sheet.Header>
-            <Sheet.Content className="bg-card">
-              <ScrollArea className="h-full px-2">
-                <div className="pb-safe-area-inset-bottom">
-                  {playgroundListContent}
-                </div>
-              </ScrollArea>
-            </Sheet.Content>
-          </Sheet.Container>
-        </Sheet>
+            </>
+          }
+        >
+          {playgroundListContent}
+        </MobileBottomSheet>
       </div>
     );
   }

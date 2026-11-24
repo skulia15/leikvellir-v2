@@ -1,13 +1,15 @@
 "use client";
 
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 
-import ImageLightbox from "./image-lightbox";
 import { useSwipe } from "~/lib/hooks/use-swipe";
 import { useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
+
+const ImageLightbox = dynamic(() => import("./image-lightbox"), { ssr: false });
 
 interface ImageCarouselProps {
   images: string[];

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   MapPin,
@@ -45,8 +46,6 @@ import {
   useEquipmentLookup,
   type CatalogEquipment,
 } from "~/lib/hooks/use-equipment-lookup";
-import PlaygroundFormDialog from "~/components/playground-form-dialog";
-import SuggestEditDialog from "./suggest-edit-dialog";
 import { CheckInButton } from "./check-in-button";
 import { CheckInCount } from "./check-in-count";
 import ImageCarousel from "./image-carousel";
@@ -65,8 +64,22 @@ import {
   shouldUseHistoryBack,
 } from "~/lib/url-state";
 import NearbyPlaygrounds from "./nearby-playgrounds";
-import AddPhotosDialog from "./add-photos-dialog";
 import { api } from "~/trpc/react";
+
+const PlaygroundFormDialog = dynamic(
+  () => import("~/components/playground-form-dialog"),
+  { ssr: false },
+);
+
+const SuggestEditDialog = dynamic(
+  () => import("./suggest-edit-dialog"),
+  { ssr: false },
+);
+
+const AddPhotosDialog = dynamic(
+  () => import("./add-photos-dialog"),
+  { ssr: false },
+);
 
 interface PlaygroundDetailProps {
   playground: Playground;

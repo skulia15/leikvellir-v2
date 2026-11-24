@@ -9,5 +9,5 @@ export {
   LOCALE_COOKIE_NAME,
   LOCALE_STORAGE_KEY,
 } from './config';
-export { getTranslation, hasTranslation, getPluralKey } from './translations';
+export { getTranslation, hasTranslation, getPluralKey, loadTranslations, isLocaleLoaded } from './translations';
 export type { Locale, LocaleConfig, TranslationKey, TranslationParams } from './types';

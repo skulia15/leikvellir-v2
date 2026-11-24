@@ -1,93 +1,62 @@
 // lib/i18n/translations.ts
-import { type Locale, type Translation, type Translations } from './types';
+import { type Locale, type Translation } from './types';
 
-// Import translation files
+// Statically import only the default locale so non-default locales are code-split
 import isTranslationsRaw from '../../locales/is.json';
-import enTranslationsRaw from '../../locales/en.json';
-import plTranslationsRaw from '../../locales/pl.json';
 
-// Type guard to validate translation structure
-function isValidTranslation(obj: unknown): obj is Translation {
+// Type guard to validate translation structure (used in dev and tests)
+export function isValidTranslation(obj: unknown): obj is Translation {
   if (!obj || typeof obj !== 'object') return false;
 
   const record = obj as Record<string, unknown>;
-  return Object.values(record).every(value =>
-    typeof value === 'string' || isValidTranslation(value)
+  return Object.values(record).every(
+    (value) => typeof value === 'string' || isValidTranslation(value),
   );
 }
 
-// Safely cast the imported JSON to Translation type
-function safeTranslation(raw: unknown): Translation {
-  if (isValidTranslation(raw)) {
-    return raw;
+const translationCache: Partial<Record<Locale, Translation>> = {
+  is: isTranslationsRaw as Translation,
+};
+
+const pendingLoads: Partial<Record<Locale, Promise<Translation>>> = {};
+
+const localeLoaders: Record<Exclude<Locale, 'is'>, () => Promise<{ default: unknown }>> = {
+  en: () => import('../../locales/en.json'),
+  pl: () => import('../../locales/pl.json'),
+};
+
+export const isLocaleLoaded = (locale: Locale): boolean => {
+  return Boolean(translationCache[locale]);
+};
+
+export async function loadTranslations(locale: Locale): Promise<Translation> {
+  const cached = translationCache[locale];
+  if (cached) {
+    return cached;
   }
-  throw new Error('Invalid translation file structure');
+
+  if (locale === 'is') {
+    return translationCache.is!;
+  }
+
+  if (!pendingLoads[locale]) {
+    pendingLoads[locale] = localeLoaders[locale]()
+      .then((mod) => {
+        const raw = mod.default;
+        if (process.env.NODE_ENV === 'development' && !isValidTranslation(raw)) {
+          throw new Error(`Invalid translation file structure for locale "${locale}"`);
+        }
+        const parsed = raw as Translation;
+        translationCache[locale] = parsed;
+        return parsed;
+      })
+      .finally(() => {
+        delete pendingLoads[locale];
+      });
+  }
+
+  return pendingLoads[locale]!;
 }
-
-export const translations: Translations = {
-  is: safeTranslation(isTranslationsRaw),
-  en: safeTranslation(enTranslationsRaw),
-  pl: safeTranslation(plTranslationsRaw),
-};
-
-export const getTranslation = (locale: Locale, key: string, params?: Record<string, string | number>): string => {
-  // Handle pluralization if count parameter is provided
-  if (params?.count !== undefined) {
-    const count = Number(params.count);
-    const pluralKey = getPluralKey(key, count, locale);
-    const keys = pluralKey.split('.');
-    let value: unknown = translations[locale];
-
-    for (const k of keys) {
-      if (value && typeof value === 'object' && value !== null && k in value) {
-        value = (value as Record<string, unknown>)[k];
-      } else {
-        // If plural key not found, try base key
-        break;
-      }
-    }
-
-    if (typeof value === 'string') {
-      // Replace parameters in the translation
-      if (params) {
-        return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
-          return str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramValue));
-        }, value);
-      }
-      return value;
-    }
-  }
-
-  // Regular translation logic
-  const keys = key.split('.');
-  let value: unknown = translations[locale];
-
-  for (const k of keys) {
-    if (value && typeof value === 'object' && value !== null && k in value) {
-      value = (value as Record<string, unknown>)[k];
-    } else {
-      // Fallback to English if key not found in current locale
-      if (locale !== 'en') {
-        return getTranslation('en', key, params);
-      }
-      // If not found in English either, return the key
-      return key;
-    }
-  }
-
-  if (typeof value !== 'string') {
-    return key;
-  }
-
-  // Replace parameters in the translation
-  if (params) {
-    return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
-      return str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramValue));
-    }, value);
-  }
-
-  return value;
-};
 
 // Helper function to determine the correct plural key based on count and locale
 export const getPluralKey = (baseKey: string, count: number, locale: Locale): string => {
@@ -117,17 +86,85 @@ export const getPluralKey = (baseKey: string, count: number, locale: Locale): st
   }
 };
 
-export const hasTranslation = (locale: Locale, key: string): boolean => {
+const lookupKey = (dict: Translation | undefined, key: string): string | undefined => {
+  if (!dict) return undefined;
+
   const keys = key.split('.');
-  let value: unknown = translations[locale];
+  let value: unknown = dict;
 
   for (const k of keys) {
     if (value && typeof value === 'object' && value !== null && k in value) {
       value = (value as Record<string, unknown>)[k];
     } else {
-      return false;
+      return undefined;
     }
   }
 
-  return typeof value === 'string';
+  return typeof value === 'string' ? value : undefined;
+};
+
+const interpolate = (value: string, params?: Record<string, string | number>): string => {
+  if (!params) return value;
+
+  return Object.entries(params).reduce((str, [paramKey, paramValue]) => {
+    return str.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(paramValue));
+  }, value);
+};
+
+const lookupInLocale = (
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>,
+): string | undefined => {
+  const dict = translationCache[locale];
+  if (!dict) return undefined;
+
+  if (params?.count !== undefined) {
+    const count = Number(params.count);
+    const pluralKey = getPluralKey(key, count, locale);
+    const pluralValue = lookupKey(dict, pluralKey);
+    if (pluralValue !== undefined) {
+      return interpolate(pluralValue, params);
+    }
+  }
+
+  const baseValue = lookupKey(dict, key);
+  if (baseValue !== undefined) {
+    return interpolate(baseValue, params);
+  }
+
+  return undefined;
+};
+
+export const getTranslation = (
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>,
+): string => {
+  const result = lookupInLocale(locale, key, params);
+  if (result !== undefined) {
+    return result;
+  }
+
+  // Fallback to English if already loaded
+  if (locale !== 'en' && translationCache.en) {
+    const enResult = lookupInLocale('en', key, params);
+    if (enResult !== undefined) {
+      return enResult;
+    }
+  }
+
+  // Fallback to default Icelandic locale (always loaded)
+  if (locale !== 'is') {
+    const isResult = lookupInLocale('is', key, params);
+    if (isResult !== undefined) {
+      return isResult;
+    }
+  }
+
+  return key;
+};
+
+export const hasTranslation = (locale: Locale, key: string): boolean => {
+  return lookupKey(translationCache[locale], key) !== undefined;
 };

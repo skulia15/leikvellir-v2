@@ -14,7 +14,7 @@ export type TranslationKey = string;
 export type TranslationParams = Record<string, string | number>;
 
 export interface Translation {
-  [key: string]: string | Translation;
+  [key: string]: string | string[] | Translation;
 }
 
 export type Translations = Record<string, Translation>;

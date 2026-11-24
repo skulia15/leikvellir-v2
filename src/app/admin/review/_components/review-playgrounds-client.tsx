@@ -17,9 +17,18 @@ import {
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { toast } from "sonner";
-import PlaygroundFormDialog from "~/components/playground-form-dialog";
-import EditSuggestionReviewDialog from "../../review-edit-suggestions/_components/edit-suggestion-review-dialog";
+import dynamic from "next/dynamic";
 import { useDateLocale, useT } from "~/lib/i18n";
+
+const PlaygroundFormDialog = dynamic(
+    () => import("~/components/playground-form-dialog"),
+    { ssr: false },
+);
+
+const EditSuggestionReviewDialog = dynamic(
+    () => import("../../review-edit-suggestions/_components/edit-suggestion-review-dialog"),
+    { ssr: false },
+);
 
 // Type for edit suggestions - matches the interface from the edit suggestion dialog
 interface PlaygroundEditSuggestion {

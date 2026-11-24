@@ -2,6 +2,7 @@
 
 import { Map as MapIcon, Satellite, Maximize2, Minimize2, Search, Loader2 } from "lucide-react";
 import { useState, useCallback, useEffect, useRef } from "react";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { env } from "~/env";
 import { useT } from "~/lib/i18n";
 import { forwardGeocode, type ForwardGeocodeResult } from "~/lib/geocoding";

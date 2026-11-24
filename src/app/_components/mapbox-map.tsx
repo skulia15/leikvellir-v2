@@ -10,6 +10,7 @@ import Map, {
   type MapRef,
   type ViewStateChangeEvent,
 } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Navigation } from "lucide-react";
 import { toast } from "sonner";
 import useSupercluster from "use-supercluster";

@@ -2,6 +2,7 @@
 import { cookies } from 'next/headers';
 import { defaultLocale, isValidLocale, LOCALE_COOKIE_NAME, LOCALE_STORAGE_KEY } from './config';
 import { type Locale } from './types';
+import { loadTranslations } from './translations';
 
 export { getTranslation } from './translations';
 
@@ -12,6 +13,7 @@ export async function getServerLocale(): Promise<Locale> {
       cookieStore.get(LOCALE_COOKIE_NAME)?.value ??
       cookieStore.get(LOCALE_STORAGE_KEY)?.value;
     if (raw && isValidLocale(raw)) {
+      await loadTranslations(raw);
       return raw;
     }
   } catch {
