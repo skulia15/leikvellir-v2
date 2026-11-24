@@ -15,6 +15,7 @@ import {
   playgroundEditSuggestionEquipment,
 } from "~/server/db/schema";
 import {
+  AddPhotosSchema,
   CreatePlaygroundSchema,
   PlaygroundNotFoundError,
   ReviewPlaygroundSchema,
@@ -24,6 +25,7 @@ import {
   UpdateMySubmissionSchema,
   UpdateMyEditSuggestionSchema,
 } from "~/types";
+import { MAX_PLAYGROUND_IMAGES } from "~/lib/image-url";
 import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { buildPlaygroundBlurData } from "~/lib/image-blur";
 import { logDbError, logger } from "~/lib/logging/logger";
@@ -39,10 +41,15 @@ interface AdminCheckContext {
   userCache?: UserCache;
 }
 
+/** Check whether the current user has admin or super_admin role. */
+async function isAdmin(ctx: AdminCheckContext, userId: string): Promise<boolean> {
+  const currentUser = await getUserById(ctx, userId);
+  return currentUser?.role === "admin" || currentUser?.role === "super_admin";
+}
+
 /** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
 async function requireAdmin(ctx: AdminCheckContext, userId: string) {
-  const currentUser = await getUserById(ctx, userId);
-  if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
+  if (!(await isAdmin(ctx, userId))) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Only admins can perform this action",
@@ -1260,31 +1267,111 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   addPhotos: protectedProcedure
-    .input(z.object({ id: z.number(), images: z.array(z.string().url()).min(1) }))
+    .input(AddPhotosSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, images } = input;
+      const userId = ctx.session.user.id;
 
       const playground = await ctx.db.query.playgrounds.findFirst({
-        where: (p, { eq }) => eq(p.id, id),
+        where: (p, { eq, and }) => and(eq(p.id, id), eq(p.status, "approved")),
       });
 
-      if (!playground) {
-        throw new PlaygroundNotFoundError(id);
+      if (!playground || playground.status !== "approved") {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Approved playground not found",
+        });
       }
 
       const existingImages = playground.images ?? [];
-      const newImages = [...existingImages, ...images];
-      // Set cover image if none exists yet
-      const coverImage = playground.coverImage ?? images[0] ?? null;
-      const blurData = await buildPlaygroundBlurData(
-        coverImage,
-        newImages,
-        playground.imageBlurData ?? {},
+      const uniqueNewImages = [...new Set(images)].filter(
+        (img) => !existingImages.includes(img),
       );
 
-      await ctx.db
-        .update(playgrounds)
-        .set({ images: newImages, coverImage, ...blurData, updatedAt: new Date() })
-        .where(eq(playgrounds.id, id));
+      if (uniqueNewImages.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "All submitted photos already exist on this playground",
+        });
+      }
+
+      if (existingImages.length + uniqueNewImages.length > MAX_PLAYGROUND_IMAGES) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `A playground cannot have more than ${MAX_PLAYGROUND_IMAGES} images`,
+        });
+      }
+
+      const combinedImages = [...existingImages, ...uniqueNewImages];
+      const callerIsAdmin = await isAdmin(ctx, userId);
+
+      if (callerIsAdmin) {
+        // Admins can directly update live approved playgrounds
+        const coverImage = playground.coverImage ?? uniqueNewImages[0] ?? null;
+        const blurData = await buildPlaygroundBlurData(
+          coverImage,
+          combinedImages,
+          playground.imageBlurData ?? {},
+        );
+
+        await ctx.db
+          .update(playgrounds)
+          .set({
+            images: combinedImages,
+            coverImage,
+            ...blurData,
+            updatedAt: new Date(),
+          })
+          .where(eq(playgrounds.id, id));
+
+        logger.info("Admin added photos directly to playground", {
+          component: "PlaygroundRouter",
+          action: "add_photos_direct",
+          userId,
+          metadata: { playgroundId: id, addedCount: uniqueNewImages.length },
+        });
+
+        return { status: "approved" as const };
+      }
+
+      // Non-admin photo additions must go through the edit suggestion moderation queue
+      const suggestedCoverImage = playground.coverImage
+        ? null
+        : (uniqueNewImages[0] ?? null);
+
+      const [suggestion] = await ctx.db
+        .insert(playgroundEditSuggestions)
+        .values({
+          playgroundId: id,
+          images: combinedImages,
+          coverImage: suggestedCoverImage,
+          createdById: userId,
+          status: "pending",
+        })
+        .returning();
+
+      logger.info("Non-admin photo addition routed to edit suggestions", {
+        component: "PlaygroundRouter",
+        action: "add_photos_suggestion",
+        userId,
+        metadata: {
+          playgroundId: id,
+          suggestionId: suggestion?.id,
+          addedCount: uniqueNewImages.length,
+        },
+      });
+
+      if (suggestion) {
+        await notifyNewEditSuggestion({
+          suggestionId: suggestion.id,
+          playgroundId: id,
+          playgroundTitle: playground.title,
+          changedFields: suggestedCoverImage ? ["images", "coverImage"] : ["images"],
+          submitterName: ctx.session.user.name,
+          submitAnonymously: false,
+        });
+      }
+
+      return { status: "pending" as const, suggestionId: suggestion?.id };
     }),
 });

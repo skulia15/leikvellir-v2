@@ -74,11 +74,29 @@ const config: NextConfig = {
 
   // Security and cache headers
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
+    const contentSecurityPolicy = [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+      "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
+      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://www.oskarsson.is https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://cdn.discordapp.com https://platform-lookaside.fbsbx.com https://api.mapbox.com https://*.tiles.mapbox.com",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      `connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.public.blob.vercel-storage.com blob:${isDev ? " ws: wss:" : ""}`,
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self' https://accounts.google.com https://discord.com https://www.facebook.com https://github.com",
+      "frame-ancestors 'none'",
+      ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    ].join("; ");
+
     return [
       // Security headers for all routes
       {
         source: "/(.*)",
         headers: [
+          { key: "Content-Security-Policy", value: contentSecurityPolicy },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

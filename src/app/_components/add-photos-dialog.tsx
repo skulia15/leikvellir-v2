@@ -31,10 +31,15 @@ export default function AddPhotosDialog({
   const utils = api.useUtils();
 
   const addPhotosMutation = api.playground.addPhotos.useMutation({
-    onSuccess: async () => {
-      await utils.playground.getById.invalidate({ id: playgroundId });
-      await utils.playground.getAll.invalidate();
-      toast.success(t("forms.photosSaved"));
+    onSuccess: async (result) => {
+      if (result.status === "pending") {
+        await utils.playground.getMyEditSuggestions.invalidate();
+        toast.success(t("forms.photosSubmittedForReview"));
+      } else {
+        await utils.playground.getById.invalidate({ id: playgroundId });
+        await utils.playground.getAll.invalidate();
+        toast.success(t("forms.photosSaved"));
+      }
       setImages([]);
       onOpenChange(false);
     },

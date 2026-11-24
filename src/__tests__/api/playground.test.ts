@@ -950,4 +950,196 @@ describe("Playground tRPC Router", () => {
       await expect(caller.playground.getAllEditSuggestions()).rejects.toThrow(TRPCError);
     });
   });
+
+  // ── addPhotos (protected; admin direct, user moderated) ──
+  describe("addPhotos", () => {
+    const validBlob1 =
+      "https://store.public.blob.vercel-storage.com/playgrounds/photo-1.jpg";
+    const validBlob2 =
+      "https://store.public.blob.vercel-storage.com/playgrounds/photo-2.jpg";
+
+    it("should throw UNAUTHORIZED for unauthenticated user", async () => {
+      const ctx = createUnauthenticatedContext();
+      const caller = createCaller(ctx as any);
+
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: [validBlob1] }),
+      ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    });
+
+    it("should throw FORBIDDEN for banned user", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsBanned(ctx.db);
+      const caller = createCaller(ctx as any);
+
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: [validBlob1] }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    });
+
+    it("should reject arbitrary non-allowlisted image URLs", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      const caller = createCaller(ctx as any);
+
+      await expect(
+        caller.playground.addPhotos({
+          id: 1,
+          images: ["https://evil.com/photo.jpg"],
+        }),
+      ).rejects.toThrow(TRPCError);
+
+      await expect(
+        caller.playground.addPhotos({
+          id: 1,
+          images: ["https://evil.com/.public.blob.vercel-storage.com/photo.jpg"],
+        }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("should reject more than 8 photos in a single call", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      const caller = createCaller(ctx as any);
+
+      const nineImages = Array.from(
+        { length: 9 },
+        (_, i) =>
+          `https://store.public.blob.vercel-storage.com/playgrounds/p-${i}.jpg`,
+      );
+
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: nineImages }),
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it("should reject unapproved (pending/rejected) playgrounds", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({ status: "pending" }),
+      );
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: [validBlob1] }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+      expect(ctx.db.update).not.toHaveBeenCalled();
+      expect(ctx.db.insert).not.toHaveBeenCalled();
+    });
+
+    it("should route non-admin photo additions through playgroundEditSuggestions instead of direct update", async () => {
+      const ctx = createUserContext({ userId: "regular-user-1" });
+      configureMockUserAsRegularUserForAdminRoute(ctx.db, "regular-user-1");
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({
+          status: "approved",
+          coverImage: validBlob1,
+          images: [validBlob1],
+        }),
+      );
+      ctx.db._mocks.returning.mockResolvedValueOnce([{ id: 99, status: "pending" }]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.addPhotos({
+        id: 1,
+        images: [validBlob2],
+      });
+
+      expect(result).toEqual({ status: "pending", suggestionId: 99 });
+      expect(ctx.db.update).not.toHaveBeenCalled();
+      expect(ctx.db.insert).toHaveBeenCalledTimes(1);
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playgroundId: 1,
+          images: [validBlob1, validBlob2],
+          coverImage: null, // does not overwrite existing coverImage
+          createdById: "regular-user-1",
+          status: "pending",
+        }),
+      );
+    });
+
+    it("should suggest coverImage for non-admin when approved playground has no coverImage yet", async () => {
+      const ctx = createUserContext({ userId: "regular-user-2" });
+      configureMockUserAsRegularUserForAdminRoute(ctx.db, "regular-user-2");
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({
+          status: "approved",
+          coverImage: null,
+          images: [],
+        }),
+      );
+      ctx.db._mocks.returning.mockResolvedValueOnce([{ id: 100, status: "pending" }]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.addPhotos({
+        id: 1,
+        images: [validBlob1],
+      });
+
+      expect(result).toEqual({ status: "pending", suggestionId: 100 });
+      expect(ctx.db.update).not.toHaveBeenCalled();
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playgroundId: 1,
+          images: [validBlob1],
+          coverImage: validBlob1,
+          status: "pending",
+        }),
+      );
+    });
+
+    it("should allow admin to directly update approved playground photos", async () => {
+      const ctx = createUserContext({ userId: "admin-1" });
+      configureMockUserAsAdmin(ctx.db, "admin-1");
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({
+          status: "approved",
+          coverImage: null,
+          images: [],
+        }),
+      );
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.addPhotos({
+        id: 1,
+        images: [validBlob1, validBlob2],
+      });
+
+      expect(result).toEqual({ status: "approved" });
+      expect(ctx.db.update).toHaveBeenCalledTimes(1);
+      expect(ctx.db.insert).not.toHaveBeenCalled();
+      expect(ctx.db._mocks.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: [validBlob1, validBlob2],
+          coverImage: validBlob1,
+        }),
+      );
+    });
+
+    it("should reject adding photos that would exceed the total playground image cap", async () => {
+      const ctx = createUserContext({ userId: "admin-1" });
+      configureMockUserAsAdmin(ctx.db, "admin-1");
+      const existing50 = Array.from(
+        { length: 50 },
+        (_, i) =>
+          `https://store.public.blob.vercel-storage.com/playgrounds/existing-${i}.jpg`,
+      );
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({
+          status: "approved",
+          coverImage: existing50[0],
+          images: existing50,
+        }),
+      );
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: [validBlob1] }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+      expect(ctx.db.update).not.toHaveBeenCalled();
+    });
+  });
 });

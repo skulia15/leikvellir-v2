@@ -3,6 +3,25 @@ import { formatIcelandicLocation } from '~/lib/icelandic-declension';
 
 const BASE_URL = getBaseUrl();
 
+const JSON_LD_ESCAPE_MAP: Record<string, string> = {
+  '<': '\\u003c',
+  '>': '\\u003e',
+  '&': '\\u0026',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+};
+
+/**
+ * Safely serializes structured data for embedding inside a `<script type="application/ld+json">` tag.
+ * Escapes `<`, `>`, `&`, `\u2028`, and `\u2029` to prevent `</script>` breakout and XSS while remaining valid JSON.
+ */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(
+    /[<>&\u2028\u2029]/g,
+    (char) => JSON_LD_ESCAPE_MAP[char] ?? char,
+  );
+}
+
 /**
  * Renders a JSON-LD structured data script tag.
  * Uses a plain <script> tag (not next/script) to ensure the structured data
@@ -14,7 +33,7 @@ function JsonLd({ id, data }: { id: string; data: Record<string, unknown> }) {
       id={id}
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data),
+        __html: serializeJsonLd(data),
       }}
     />
   );

@@ -15,6 +15,12 @@ import {
   checkInFlagReasonEnum
 } from "./server/db/schema";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import {
+  MAX_PHOTOS_PER_CALL,
+  MAX_PLAYGROUND_IMAGES,
+  PlaygroundImageUrlSchema,
+  RemoteImageUrlSchema,
+} from "./lib/image-url";
 
 // Schema-derived enum types for type safety
 export type UserRole = typeof userRoleEnum.enumValues[number];
@@ -100,8 +106,8 @@ export const CreateEditSuggestionSchema = z.object({
   hasSoftPlayArea: z.boolean().optional(),
   // Equipment and images
   equipmentIds: z.array(z.number()).optional(),
-  coverImage: z.string().nullable().optional(),
-  images: z.array(z.string()).optional(),
+  coverImage: PlaygroundImageUrlSchema.nullable().optional(),
+  images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES).optional(),
   // Image removal tracking
   removeImages: z.array(z.boolean()).optional(),
   removeCoverImage: z.boolean().optional(),
@@ -222,32 +228,7 @@ export const CreatePlaygroundSchema = z.object({
   hasSoftPlayArea: z.boolean(),
   submitAnonymously: z.boolean(),
   equipmentIds: z.array(z.number()),
-  images: z
-    .array(
-      z.string().refine((str) => {
-        // Accept empty strings (they'll be filtered out)
-        if (!str || str.trim() === '') {
-          return true; // Let the frontend filter these out
-        }
-
-        // Accept uploaded image paths
-        if (str.startsWith("/uploads/playgrounds/")) {
-          return true;
-        }
-
-        // Accept other valid upload paths
-        if (str.startsWith("/uploads/")) {
-          return true;
-        }
-
-        // Accept only Vercel Blob Storage URLs
-        if (str.includes(".public.blob.vercel-storage.com/")) {
-          return true;
-        }
-
-        return false;
-      }, "Must be a valid URL or upload path"),
-    ),
+  images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES),
 });
 
 export type CreatePlaygroundInput = z.infer<typeof CreatePlaygroundSchema>;
@@ -330,8 +311,8 @@ export const ReviewPlaygroundSchema = z.object({
   hasBathroomNearby: z.boolean().optional(),
   hasSoftPlayArea: z.boolean().optional(),
   equipmentIds: z.array(z.number()).optional(),
-  coverImage: z.string().nullish(),
-  images: z.array(z.string()).optional(),
+  coverImage: PlaygroundImageUrlSchema.nullish(),
+  images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES).optional(),
   submitAnonymously: z.boolean().optional(),
 });
 
@@ -357,8 +338,8 @@ export const UpdatePlaygroundSchema = z.object({
   hasBathroomNearby: z.boolean().optional(),
   hasSoftPlayArea: z.boolean().optional(),
   equipmentIds: z.array(z.number()).default([]),
-  coverImage: z.string().nullable().optional(),
-  images: z.array(z.string()),
+  coverImage: PlaygroundImageUrlSchema.nullable().optional(),
+  images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES),
 });
 
 export type UpdatePlaygroundInput = z.infer<typeof UpdatePlaygroundSchema>;
@@ -385,8 +366,8 @@ export const ReviewEditSuggestionSchema = z.object({
     hasGarbageCan: z.boolean().optional(),
     hasBathroomNearby: z.boolean().optional(),
     hasSoftPlayArea: z.boolean().optional(),
-    coverImage: z.string().nullable().optional(),
-    images: z.array(z.string()).optional(),
+    coverImage: PlaygroundImageUrlSchema.nullable().optional(),
+    images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES).optional(),
     equipmentIds: z.array(z.number()).optional(),
   }).optional(),
 });
@@ -413,8 +394,8 @@ export const UpdateMySubmissionSchema = z.object({
   hasBathroomNearby: z.boolean(),
   hasSoftPlayArea: z.boolean(),
   equipmentIds: z.array(z.number()),
-  coverImage: z.string().nullable().optional(),
-  images: z.array(z.string()),
+  coverImage: PlaygroundImageUrlSchema.nullable().optional(),
+  images: z.array(PlaygroundImageUrlSchema).max(MAX_PLAYGROUND_IMAGES),
   submitAnonymously: z.boolean(),
 });
 
@@ -426,6 +407,14 @@ export const UpdateMyEditSuggestionSchema = CreateEditSuggestionSchema.extend({
 });
 
 export type UpdateMyEditSuggestionInput = z.infer<typeof UpdateMyEditSuggestionSchema>;
+
+// Schema for adding photos to an approved playground
+export const AddPhotosSchema = z.object({
+  id: z.number().int().positive(),
+  images: z.array(RemoteImageUrlSchema).min(1).max(MAX_PHOTOS_PER_CALL),
+});
+
+export type AddPhotosInput = z.infer<typeof AddPhotosSchema>;
 
 // Custom error types
 export class PlaygroundNotFoundError extends Error {

@@ -38,37 +38,28 @@ afterEach(() => {
   cleanup?.();
 });
 
-// Mock window.URL completely for Next.js Image component
-if (hasWindow) Object.defineProperty(window, "URL", {
-  value: class MockURL {
-    href: string;
+// Preserve native WHATWG URL parsing while mocking blob object URL helpers for jsdom
+if (hasWindow) {
+  const NativeURL = globalThis.URL;
+  class TestURL extends NativeURL {
+    static override createObjectURL = vi.fn(
+      () => "blob:http://localhost:3000/mock-blob-url",
+    );
+    static override revokeObjectURL = vi.fn();
+  }
 
-    constructor(url: string, base?: string) {
-      this.href = base ? `${base}/${url}` : url;
-    }
+  Object.defineProperty(window, "URL", {
+    value: TestURL,
+    writable: true,
+    configurable: true,
+  });
 
-    static createObjectURL = vi.fn(() => "mock-blob-url");
-    static revokeObjectURL = vi.fn();
-  },
-  writable: true,
-  configurable: true,
-});
-
-// Also mock global URL for server-side code
-if (hasWindow) Object.defineProperty(global, "URL", {
-  value: class MockURL {
-    href: string;
-
-    constructor(url: string, base?: string) {
-      this.href = base ? `${base}/${url}` : url;
-    }
-
-    static createObjectURL = vi.fn(() => "mock-blob-url");
-    static revokeObjectURL = vi.fn();
-  },
-  writable: true,
-  configurable: true,
-});
+  Object.defineProperty(global, "URL", {
+    value: TestURL,
+    writable: true,
+    configurable: true,
+  });
+}
 
 // Mock FileReader for file validation tests
 interface MockFileReaderEvent {
