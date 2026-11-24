@@ -193,7 +193,7 @@ export default function PlaygroundFilters({
                         className={cn(
                           "text-xs",
                           isActive
-                            ? "text-primary-foreground/70"
+                            ? "text-primary-foreground/95"
                             : "text-muted-foreground",
                         )}
                       >

@@ -193,17 +193,17 @@ describe("school-hours utilities", () => {
 
   describe("getPlaygroundMarkerColor", () => {
     it("should return green for non-school playgrounds", () => {
-      expect(getPlaygroundMarkerColor(false, null)).toBe("#22c55e");
+      expect(getPlaygroundMarkerColor(false, null)).toBe("#16a34a");
     });
 
     it("should return amber for accessible school grounds", () => {
       const saturday10am = makeDate(2025, 0, 11, 10);
-      expect(getPlaygroundMarkerColor(true, "preschool", saturday10am)).toBe("#f59e0b");
+      expect(getPlaygroundMarkerColor(true, "preschool", saturday10am)).toBe("#d97706");
     });
 
     it("should return red for inaccessible school grounds during school hours", () => {
       const monday10am = makeDate(2025, 0, 6, 10);
-      expect(getPlaygroundMarkerColor(true, "elementary", monday10am)).toBe("#ef4444");
+      expect(getPlaygroundMarkerColor(true, "elementary", monday10am)).toBe("#dc2626");
     });
   });
 
@@ -235,7 +235,7 @@ describe("school-hours utilities", () => {
     });
 
     it("getPlaygroundMarkerColor should return amber (not red) on a holiday", () => {
-      expect(getPlaygroundMarkerColor(true, "preschool", nyarsdagur10am)).toBe("#f59e0b");
+      expect(getPlaygroundMarkerColor(true, "preschool", nyarsdagur10am)).toBe("#d97706");
     });
 
     it("getNextAccessibleTime should return the same date on a holiday (already accessible)", () => {

@@ -41,7 +41,7 @@ export default function NearbyPlaygrounds({
       <CardHeader className="p-4 pb-3">
         <CardTitle className="flex items-center gap-2.5 text-base">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-terrain-moss/10">
-            <Compass className="h-4 w-4 text-terrain-moss" />
+            <Compass className="h-4 w-4 text-terrain-moss-text" />
           </span>
           <span>{t('playground.nearbyPlaygrounds')}</span>
         </CardTitle>
@@ -80,11 +80,11 @@ export default function NearbyPlaygrounds({
                   className="absolute -top-1.5 -left-1.5 flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shadow-sm"
                   style={{
                     backgroundColor: index === 0
-                      ? 'hsl(var(--terrain-moss))'
+                      ? 'hsl(var(--terrain-moss-text))'
                       : index === 1
-                        ? 'hsl(var(--terrain-water))'
-                        : 'hsl(var(--terrain-stone))',
-                    color: 'white',
+                        ? 'hsl(var(--terrain-water-text))'
+                        : 'hsl(var(--muted-foreground))',
+                    color: 'hsl(var(--card))',
                   }}
                 >
                   {index + 1}
@@ -93,9 +93,9 @@ export default function NearbyPlaygrounds({
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                <h3 className="font-medium text-sm leading-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                   {playground.title}
-                </h4>
+                </h3>
 
                 {playground.municipality && (
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -115,9 +115,9 @@ export default function NearbyPlaygrounds({
                           ? 'hsl(var(--terrain-water) / 0.1)'
                           : 'hsl(var(--muted))',
                       color: index === 0
-                        ? 'hsl(var(--terrain-moss))'
+                        ? 'hsl(var(--terrain-moss-text))'
                         : index === 1
-                          ? 'hsl(var(--terrain-water))'
+                          ? 'hsl(var(--terrain-water-text))'
                           : 'hsl(var(--muted-foreground))',
                     }}
                   >

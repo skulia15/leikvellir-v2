@@ -3,6 +3,7 @@
 import { Home, List, LogOut, Menu, Plus, User, Settings, ShieldCheck, Eye, ClipboardCheck, Map, Users, MessageCircle, ChevronDown, FileText, Trophy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -33,6 +34,11 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
     const isSessionLoading = sessionStatus === "loading";
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
     const t = useT();
+    const pathname = usePathname();
+    const isActivePath = (href: string) =>
+        href === "/"
+            ? pathname === "/"
+            : pathname === href || pathname?.startsWith(`${href}/`) === true;
 
     // Only a boolean is needed here, so this uses the lightweight endpoint
     // rather than fetching every submission and edit suggestion in full.
@@ -53,7 +59,10 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
     };
 
     return (
-        <nav className="fixed left-0 right-0 top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border">
+        <nav
+            aria-label={t('a11y.mainNavigation')}
+            className="fixed left-0 right-0 top-0 z-50 bg-card/90 backdrop-blur-md border-b border-border"
+        >
             <div className="max-w-screen-2xl mx-auto flex h-16 items-center justify-between px-2 sm:px-6 lg:px-8">
                 {/* Left side - Logo, Admin Badge, and Navigation Links */}
                 <div className="flex items-center space-x-6">
@@ -69,15 +78,15 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                 height={62}
                                 className="mr-0.5 p-1.5"
                             />
-                            <h1 className="text-sm md:text-xl font-bold text-foreground xl:text-2xl">
+                            <span className="text-sm md:text-xl font-bold text-foreground xl:text-2xl">
                                 Leiksvæði
-                            </h1>
+                            </span>
                         </Link>
 
                         {/* Admin Mode Indicator */}
                         {session && isAdminMode && !isLoading && (
                             <Badge variant="destructive" className="ml-2">
-                                <ShieldCheck className="mr-1 h-3 w-3" />
+                                <ShieldCheck className="mr-1 h-3 w-3" aria-hidden="true" />
                                 {userRole === "super_admin" ? t('admin.superAdmin') : t('admin.adminMode')}
                             </Badge>
                         )}
@@ -87,41 +96,56 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                     <div className="hidden items-center space-x-1 md:flex">
                         <Link
                             href="/"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                            aria-current={isActivePath("/") ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-foreground hover:bg-accent ${
+                                isActivePath("/") ? "text-foreground bg-accent/60" : "text-muted-foreground"
+                            }`}
                         >
-                            <Map className="h-4 w-4" />
+                            <Map className="h-4 w-4" aria-hidden="true" />
                             <span>{t('navigation.map')}</span>
                         </Link>
 
                         <Link
                             href="/playgrounds"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                            aria-current={isActivePath("/playgrounds") ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-foreground hover:bg-accent ${
+                                isActivePath("/playgrounds") ? "text-foreground bg-accent/60" : "text-muted-foreground"
+                            }`}
                         >
-                            <List className="h-4 w-4" />
+                            <List className="h-4 w-4" aria-hidden="true" />
                             <span>{t('navigation.allPlaygrounds')}</span>
                         </Link>
 
                         <Link
                             href="/leaderboard"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                            aria-current={isActivePath("/leaderboard") ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-foreground hover:bg-accent ${
+                                isActivePath("/leaderboard") ? "text-foreground bg-accent/60" : "text-muted-foreground"
+                            }`}
                         >
-                            <Trophy className="h-4 w-4" />
+                            <Trophy className="h-4 w-4" aria-hidden="true" />
                             <span>{t('navigation.leaderboard')}</span>
                         </Link>
 
                         <Link
                             href="/create-playground"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                            aria-current={isActivePath("/create-playground") ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-foreground hover:bg-accent ${
+                                isActivePath("/create-playground") ? "text-foreground bg-accent/60" : "text-muted-foreground"
+                            }`}
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-4 w-4" aria-hidden="true" />
                             <span>{t('navigation.addPlayground')}</span>
                         </Link>
 
                         <Link
                             href="/contact"
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
+                            aria-current={isActivePath("/contact") ? "page" : undefined}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:text-foreground hover:bg-accent ${
+                                isActivePath("/contact") ? "text-foreground bg-accent/60" : "text-muted-foreground"
+                            }`}
                         >
-                            <MessageCircle className="h-4 w-4" />
+                            <MessageCircle className="h-4 w-4" aria-hidden="true" />
                             <span>{t('navigation.contact')}</span>
                         </Link>
 
@@ -132,9 +156,9 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                         variant="ghost"
                                         className="flex items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent h-auto px-3 py-2"
                                     >
-                                        <Settings className="h-3.5 w-3.5" />
+                                        <Settings className="h-3.5 w-3.5" aria-hidden="true" />
                                         <span>{t('navigation.admin')}</span>
-                                        <ChevronDown className="h-3 w-3" />
+                                        <ChevronDown className="h-3 w-3" aria-hidden="true" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start">
@@ -143,7 +167,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                             href="/admin"
                                             className="flex items-center space-x-2"
                                         >
-                                            <Settings className="h-4 w-4" />
+                                            <Settings className="h-4 w-4" aria-hidden="true" />
                                             <span>{t('admin.adminDashboard')}</span>
                                         </Link>
                                     </DropdownMenuItem>
@@ -152,7 +176,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                             href="/admin/review"
                                             className="flex items-center space-x-2"
                                         >
-                                            <ClipboardCheck className="h-4 w-4" />
+                                            <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
                                             <span>{t('navigation.review')}</span>
                                         </Link>
                                     </DropdownMenuItem>
@@ -161,7 +185,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                             href="/admin/equipment"
                                             className="flex items-center space-x-2"
                                         >
-                                            <PlaygroundEquipmentIcon className="h-4 w-4" />
+                                            <PlaygroundEquipmentIcon className="h-4 w-4" aria-hidden="true" />
                                             <span>{t('navigation.equipment')}</span>
                                         </Link>
                                     </DropdownMenuItem>
@@ -171,7 +195,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 href="/admin/users"
                                                 className="flex items-center space-x-2"
                                             >
-                                                <Users className="h-4 w-4" />
+                                                <Users className="h-4 w-4" aria-hidden="true" />
                                                 <span>{t('navigation.users')}</span>
                                             </Link>
                                         </DropdownMenuItem>
@@ -203,7 +227,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                             <div className="hidden items-center space-x-3 md:flex">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="flex items-center space-x-2 p-2">
+                                        <Button variant="ghost" className="flex items-center space-x-2 p-2" aria-label={t('a11y.userMenu')}>
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage
                                                     src={
@@ -246,8 +270,8 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                         <DropdownMenuGroup>
                                             {hasSubmissions && (
                                                 <DropdownMenuItem asChild className="cursor-pointer">
-                                                    <Link href="/my-submissions" className="flex items-center">
-                                                        <FileText className="mr-2 h-4 w-4" />
+                                                    <Link href="/my-submissions" aria-current={isActivePath("/my-submissions") ? "page" : undefined} className="flex items-center">
+                                                        <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                                                         <span>{t('navigation.mySubmissions')}</span>
                                                     </Link>
                                                 </DropdownMenuItem>
@@ -256,12 +280,12 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
                                                     {isAdminMode ? (
                                                         <>
-                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('admin.switchToUserMode')}</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                                            <ShieldCheck className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('admin.switchToAdminMode')}</span>
                                                         </>
                                                     )}
@@ -276,7 +300,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 onClick={() => void signOut()}
                                             >
                                                 <div className="flex items-center px-2 py-1.5">
-                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.signOut')}</span>
                                                 </div>
                                             </Button>
@@ -289,8 +313,8 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                             <div className="md:hidden">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <Menu className="h-4 w-4" />
+                                        <Button variant="outline" size="sm" aria-label={t('a11y.openMenu')}>
+                                            <Menu className="h-4 w-4" aria-hidden="true" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end">
@@ -317,39 +341,39 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                         <DropdownMenuSeparator />
                                         <DropdownMenuGroup>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/" className="flex items-center">
-                                                    <Home className="mr-2 h-4 w-4" />
+                                                <Link href="/" aria-current={isActivePath("/") ? "page" : undefined} className="flex items-center">
+                                                    <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.home')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/playgrounds" className="flex items-center">
-                                                    <List className="mr-2 h-4 w-4" />
+                                                <Link href="/playgrounds" aria-current={isActivePath("/playgrounds") ? "page" : undefined} className="flex items-center">
+                                                    <List className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.allPlaygrounds')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/leaderboard" className="flex items-center">
-                                                    <Trophy className="mr-2 h-4 w-4" />
+                                                <Link href="/leaderboard" aria-current={isActivePath("/leaderboard") ? "page" : undefined} className="flex items-center">
+                                                    <Trophy className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.leaderboard')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/create-playground" className="flex items-center">
-                                                    <Plus className="mr-2 h-4 w-4" />
+                                                <Link href="/create-playground" aria-current={isActivePath("/create-playground") ? "page" : undefined} className="flex items-center">
+                                                    <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.addPlayground')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/contact" className="flex items-center">
-                                                    <MessageCircle className="mr-2 h-4 w-4" />
+                                                <Link href="/contact" aria-current={isActivePath("/contact") ? "page" : undefined} className="flex items-center">
+                                                    <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.contact')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             {hasSubmissions && (
                                                 <DropdownMenuItem asChild>
-                                                    <Link href="/my-submissions" className="flex items-center">
-                                                        <FileText className="mr-2 h-4 w-4" />
+                                                    <Link href="/my-submissions" aria-current={isActivePath("/my-submissions") ? "page" : undefined} className="flex items-center">
+                                                        <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                                                         <span>{t('navigation.mySubmissions')}</span>
                                                     </Link>
                                                 </DropdownMenuItem>
@@ -361,7 +385,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                             href="/admin"
                                                             className="flex items-center"
                                                         >
-                                                            <Settings className="mr-2 h-4 w-4" />
+                                                            <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('admin.adminDashboard')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
@@ -370,7 +394,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                             href="/admin/review"
                                                             className="flex items-center"
                                                         >
-                                                            <ClipboardCheck className="mr-2 h-4 w-4" />
+                                                            <ClipboardCheck className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('navigation.review')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
@@ -379,7 +403,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                             href="/admin/equipment"
                                                             className="flex items-center"
                                                         >
-                                                            <PlaygroundEquipmentIcon className="mr-2 h-4 w-4" />
+                                                            <PlaygroundEquipmentIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('navigation.equipment')}</span>
                                                         </Link>
                                                     </DropdownMenuItem>
@@ -389,7 +413,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                                 href="/admin/users"
                                                                 className="flex items-center"
                                                             >
-                                                                <Users className="mr-2 h-4 w-4" />
+                                                                <Users className="mr-2 h-4 w-4" aria-hidden="true" />
                                                                 <span>{t('navigation.users')}</span>
                                                             </Link>
                                                         </DropdownMenuItem>
@@ -403,12 +427,12 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 <DropdownMenuItem onClick={toggleAdminMode} className="cursor-pointer">
                                                     {isAdminMode ? (
                                                         <>
-                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('admin.switchToUserMode')}</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                                            <ShieldCheck className="mr-2 h-4 w-4" aria-hidden="true" />
                                                             <span>{t('admin.switchToAdminMode')}</span>
                                                         </>
                                                     )}
@@ -423,7 +447,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 onClick={() => signOut()}
                                             >
                                                 <div className="flex items-center px-2 py-1.5">
-                                                    <LogOut className="mr-2 h-4 w-4" />
+                                                    <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.signOut')}</span>
                                                 </div>
                                             </Button>
@@ -436,51 +460,51 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                         <>
                             {/* Desktop Sign In */}
                             <div className="hidden md:block">
-                                <Link href="/signin">
-                                    <Button variant="default" size="sm">
-                                        <User className="mr-2 h-4 w-4" />
+                                <Button asChild variant="default" size="sm">
+                                    <Link href="/signin">
+                                        <User className="mr-2 h-4 w-4" aria-hidden="true" />
                                         {t('navigation.signIn')}
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             </div>
 
                             {/* Mobile Menu for Unauthenticated Users */}
                             <div className="md:hidden">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <Menu className="h-4 w-4" />
+                                        <Button variant="outline" size="sm" aria-label={t('a11y.openMenu')}>
+                                            <Menu className="h-4 w-4" aria-hidden="true" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end">
                                         <DropdownMenuGroup>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/" className="flex items-center">
-                                                    <Home className="mr-2 h-4 w-4" />
+                                                <Link href="/" aria-current={isActivePath("/") ? "page" : undefined} className="flex items-center">
+                                                    <Home className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.home')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/playgrounds" className="flex items-center">
-                                                    <List className="mr-2 h-4 w-4" />
+                                                <Link href="/playgrounds" aria-current={isActivePath("/playgrounds") ? "page" : undefined} className="flex items-center">
+                                                    <List className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.allPlaygrounds')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/leaderboard" className="flex items-center">
-                                                    <Trophy className="mr-2 h-4 w-4" />
+                                                <Link href="/leaderboard" aria-current={isActivePath("/leaderboard") ? "page" : undefined} className="flex items-center">
+                                                    <Trophy className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.leaderboard')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/create-playground" className="flex items-center">
-                                                    <Plus className="mr-2 h-4 w-4" />
+                                                <Link href="/create-playground" aria-current={isActivePath("/create-playground") ? "page" : undefined} className="flex items-center">
+                                                    <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.addPlayground')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href="/contact" className="flex items-center">
-                                                    <MessageCircle className="mr-2 h-4 w-4" />
+                                                <Link href="/contact" aria-current={isActivePath("/contact") ? "page" : undefined} className="flex items-center">
+                                                    <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
                                                     <span>{t('navigation.contact')}</span>
                                                 </Link>
                                             </DropdownMenuItem>
@@ -491,7 +515,7 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                                                 href="/signin"
                                                 className="flex items-center"
                                             >
-                                                <User className="mr-2 h-4 w-4" />
+                                                <User className="mr-2 h-4 w-4" aria-hidden="true" />
                                                 <span>{t('navigation.signIn')}</span>
                                             </Link>
                                         </DropdownMenuItem>

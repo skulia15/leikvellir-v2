@@ -154,12 +154,12 @@ export default function MySubmissionsClient({
                     <p className="text-muted-foreground mb-4">
                         {t('mySubmissions.noSubmissionsDescription')}
                     </p>
-                    <Link href="/create-playground">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
+                    <Button asChild>
+                        <Link href="/create-playground">
+                            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                             {t('mySubmissions.addPlayground')}
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 </CardContent>
             </Card>
         );
@@ -170,7 +170,7 @@ export default function MySubmissionsClient({
             <Tabs defaultValue="submissions" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="submissions" className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4" aria-hidden="true" />
                         {t('mySubmissions.myPlaygrounds')}
                         {submissions && submissions.length > 0 && (
                             <Badge variant="secondary" className="ml-1 text-xs">
@@ -179,7 +179,7 @@ export default function MySubmissionsClient({
                         )}
                     </TabsTrigger>
                     <TabsTrigger value="edits" className="flex items-center gap-2">
-                        <FileEdit className="h-4 w-4" />
+                        <FileEdit className="h-4 w-4" aria-hidden="true" />
                         {t('mySubmissions.myEditSuggestions')}
                         {editSuggestions && editSuggestions.length > 0 && (
                             <Badge variant="secondary" className="ml-1 text-xs">
@@ -195,18 +195,18 @@ export default function MySubmissionsClient({
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                                    <Plus className="h-6 w-6 text-muted-foreground" />
+                                    <Plus className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                                 </div>
-                                <h3 className="text-lg font-semibold mb-2">{t('mySubmissions.noSubmissions')}</h3>
+                                <h2 className="text-lg font-semibold mb-2">{t('mySubmissions.noSubmissions')}</h2>
                                 <p className="text-muted-foreground mb-4">
                                     {t('mySubmissions.noSubmissionsDescription')}
                                 </p>
-                                <Link href="/create-playground">
-                                    <Button>
-                                        <Plus className="mr-2 h-4 w-4" />
+                                <Button asChild>
+                                    <Link href="/create-playground">
+                                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                                         {t('mySubmissions.addPlayground')}
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             </CardContent>
                         </Card>
                     ) : (
@@ -263,24 +263,24 @@ export default function MySubmissionsClient({
                                                                     size="sm"
                                                                     onClick={() => handleEditSubmission(playground)}
                                                                 >
-                                                                    <Edit className="mr-1 h-3 w-3" />
+                                                                    <Edit className="mr-1 h-3 w-3" aria-hidden="true" />
                                                                     {t('mySubmissions.editSubmission')}
                                                                 </Button>
                                                             )}
                                                             {playground.status === "approved" ? (
-                                                                <Link href={`/playground/${playground.id}`}>
-                                                                    <Button variant="default" size="sm">
-                                                                        <ExternalLink className="mr-1 h-3 w-3" />
+                                                                <Button asChild variant="default" size="sm">
+                                                                    <Link href={`/playground/${playground.id}`}>
+                                                                        <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
                                                                         {t('mySubmissions.viewPlayground')}
-                                                                    </Button>
-                                                                </Link>
+                                                                    </Link>
+                                                                </Button>
                                                             ) : (
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => handleViewSubmission(playground)}
                                                                 >
-                                                                    <Eye className="mr-1 h-3 w-3" />
+                                                                    <Eye className="mr-1 h-3 w-3" aria-hidden="true" />
                                                                     {t('mySubmissions.viewSubmission')}
                                                                 </Button>
                                                             )}
@@ -325,17 +325,17 @@ export default function MySubmissionsClient({
                                                         size="sm"
                                                         onClick={() => handleEditSubmission(playground)}
                                                     >
-                                                        <Edit className="mr-1 h-3 w-3" />
+                                                        <Edit className="mr-1 h-3 w-3" aria-hidden="true" />
                                                         {t('mySubmissions.editSubmission')}
                                                     </Button>
                                                 )}
                                                 {playground.status === "approved" ? (
-                                                    <Link href={`/playground/${playground.id}`}>
-                                                        <Button variant="default" size="sm">
-                                                            <ExternalLink className="mr-1 h-3 w-3" />
+                                                    <Button asChild variant="default" size="sm">
+                                                        <Link href={`/playground/${playground.id}`}>
+                                                            <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
                                                             {t('mySubmissions.viewPlayground')}
-                                                        </Button>
-                                                    </Link>
+                                                        </Link>
+                                                    </Button>
                                                 ) : (
                                                     <Button
                                                         variant="ghost"

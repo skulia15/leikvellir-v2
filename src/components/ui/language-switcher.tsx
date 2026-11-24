@@ -25,7 +25,7 @@ export default function LanguageSwitcher({
   showLabel = false,
   className = ""
 }: LanguageSwitcherProps) {
-  const { locale, setLocale } = useTranslation();
+  const { locale, setLocale, t } = useTranslation();
   const currentLocaleConfig = getLocaleConfig(locale);
 
   const handleLocaleChange = (newLocale: Locale) => {
@@ -39,9 +39,14 @@ export default function LanguageSwitcher({
           variant={variant}
           size={size}
           className={`flex items-center space-x-2 ${className}`}
+          aria-label={t("a11y.changeLanguage", {
+            language: currentLocaleConfig.nativeName,
+          })}
         >
-          <Globe className="h-4 w-4" />
-          <span className="text-lg">{currentLocaleConfig.flag}</span>
+          <Globe className="h-4 w-4" aria-hidden="true" />
+          <span className="text-lg" aria-hidden="true">
+            {currentLocaleConfig.flag}
+          </span>
           {showLabel && (
             <span className="hidden sm:inline">{currentLocaleConfig.nativeName}</span>
           )}
@@ -55,14 +60,16 @@ export default function LanguageSwitcher({
             className="flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center space-x-3">
-              <span className="text-lg">{localeConfig.flag}</span>
+              <span className="text-lg" aria-hidden="true">
+                {localeConfig.flag}
+              </span>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{localeConfig.nativeName}</span>
                 <span className="text-xs text-muted-foreground">{localeConfig.name}</span>
               </div>
             </div>
             {locale === localeConfig.code && (
-              <Check className="h-4 w-4 text-primary" />
+              <Check className="h-4 w-4 text-primary" aria-hidden="true" />
             )}
           </DropdownMenuItem>
         ))}

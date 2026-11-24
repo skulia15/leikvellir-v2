@@ -11,6 +11,7 @@ import { Providers } from "./_components/providers";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 import { MainContent } from "./_components/main-content";
+import { SkipToContent } from "./_components/skip-to-content";
 import { FloatingFeedbackButton } from "~/components/ui/floating-feedback-button";
 import { LayoutClient } from "./_components/layout-client";
 import { generateRootMetadata } from "~/lib/seo/metadata";
@@ -47,6 +48,7 @@ export default async function RootLayout({
       <body className="bg-background">
         <Providers session={session} initialLocale={locale}>
           <LayoutClient>
+            <SkipToContent />
             <NavigationBar />
             <MainContent>
               {children}

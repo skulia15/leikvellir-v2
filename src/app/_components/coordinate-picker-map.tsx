@@ -1,7 +1,7 @@
 "use client";
 
 import { Map as MapIcon, Satellite, Maximize2, Minimize2, Search, Loader2 } from "lucide-react";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useId, useRef } from "react";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { env } from "~/env";
 import { useT } from "~/lib/i18n";
@@ -64,7 +64,9 @@ export function CoordinatePickerMap({
   const [searchResults, setSearchResults] = useState<ForwardGeocodeResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const listboxId = useId();
 
   const t = useT();
 
@@ -98,6 +100,7 @@ export function CoordinatePickerMap({
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
     setShowResults(true);
+    setActiveIndex(-1);
 
     // Clear previous timeout
     if (searchTimeoutRef.current) {
@@ -116,6 +119,7 @@ export function CoordinatePickerMap({
     searchTimeoutRef.current = setTimeout(async () => {
       const results = await forwardGeocode(value);
       setSearchResults(results);
+      setActiveIndex(-1);
       setIsSearching(false);
     }, 300);
   }, []);
@@ -126,6 +130,7 @@ export function CoordinatePickerMap({
     onCoordinateChange(result.lat, result.lng);
     setSearchQuery(result.formattedAddress);
     setShowResults(false);
+    setActiveIndex(-1);
 
     // Fly to the selected location
     setViewState(prev => ({
@@ -148,6 +153,7 @@ export function CoordinatePickerMap({
   useEffect(() => {
     const handleClickOutside = () => {
       setShowResults(false);
+      setActiveIndex(-1);
     };
 
     if (showResults) {
@@ -177,42 +183,108 @@ export function CoordinatePickerMap({
     ? className.replace(/h-\S+/g, '').trim()
     : className;
 
+  const isResultsOpen = showResults && searchResults.length > 0;
+
   return (
     <div className={`relative ${filteredClassName}`}>
       {/* Search bar above map */}
       {showSearch && (
         <div className="mb-2 relative" onClick={(e) => e.stopPropagation()}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={isResultsOpen}
+              aria-controls={listboxId}
+              aria-activedescendant={
+                isResultsOpen && activeIndex >= 0
+                  ? `${listboxId}-option-${activeIndex}`
+                  : undefined
+              }
+              aria-label={t("map.searchAddress")}
               placeholder={t("map.searchAddress")}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               onFocus={() => searchResults.length > 0 && setShowResults(true)}
               onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  if (searchResults.length === 0) return;
+                  e.preventDefault();
+                  setShowResults(true);
+                  setActiveIndex((prev) =>
+                    prev < searchResults.length - 1 ? prev + 1 : 0,
+                  );
+                  return;
+                }
+                if (e.key === "ArrowUp") {
+                  if (searchResults.length === 0) return;
+                  e.preventDefault();
+                  setShowResults(true);
+                  setActiveIndex((prev) =>
+                    prev <= 0 ? searchResults.length - 1 : prev - 1,
+                  );
+                  return;
+                }
+                if (e.key === "Home" && isResultsOpen) {
+                  e.preventDefault();
+                  setActiveIndex(0);
+                  return;
+                }
+                if (e.key === "End" && isResultsOpen) {
+                  e.preventDefault();
+                  setActiveIndex(searchResults.length - 1);
+                  return;
+                }
+                if (e.key === "Escape" && isResultsOpen) {
+                  e.preventDefault();
+                  setShowResults(false);
+                  setActiveIndex(-1);
+                  return;
+                }
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  // Select first result if available
                   if (searchResults.length > 0) {
-                    handleSelectResult(searchResults[0]!);
+                    const target =
+                      activeIndex >= 0 && activeIndex < searchResults.length
+                        ? searchResults[activeIndex]!
+                        : searchResults[0]!;
+                    handleSelectResult(target);
                   }
                 }
               }}
               className="pl-9 pr-8 bg-background/95 backdrop-blur-sm"
             />
             {isSearching && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
+                aria-hidden="true"
+              />
             )}
           </div>
 
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto z-50">
+          {isResultsOpen && (
+            <div
+              id={listboxId}
+              role="listbox"
+              aria-label={t("a11y.searchAddressResults")}
+              className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto z-50"
+            >
               {searchResults.map((result, index) => (
                 <button
                   key={index}
+                  id={`${listboxId}-option-${index}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
                   type="button"
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors border-b last:border-b-0"
+                  className={`w-full px-3 py-2 text-left text-sm transition-colors border-b last:border-b-0 ${
+                    index === activeIndex ? "bg-muted" : "hover:bg-muted"
+                  }`}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => handleSelectResult(result)}
                 >
                   <div className="font-medium truncate">{result.formattedAddress}</div>

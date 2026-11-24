@@ -201,17 +201,21 @@ export default function AdminPlaygroundsClient() {
                                                     size="sm"
                                                     asChild
                                                 >
-                                                    <Link href={`/playground/${playground.id}`}>
-                                                        <Eye className="h-4 w-4" />
+                                                    <Link
+                                                        href={`/playground/${playground.id}`}
+                                                        aria-label={t('a11y.viewPlayground', { title: playground.title })}
+                                                    >
+                                                        <Eye className="h-4 w-4" aria-hidden="true" />
                                                     </Link>
                                                 </Button>
 
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
+                                                    aria-label={t('a11y.editItem', { name: playground.title })}
                                                     onClick={() => setEditingPlayground(playground)}
                                                 >
-                                                    <Pencil className="h-4 w-4" />
+                                                    <Pencil className="h-4 w-4" aria-hidden="true" />
                                                 </Button>
 
                                                 <AlertDialog>
@@ -219,9 +223,10 @@ export default function AdminPlaygroundsClient() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
+                                                            aria-label={t('a11y.deleteItem', { name: playground.title })}
                                                             className="text-destructive hover:text-destructive"
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
+                                                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                         </Button>
                                                     </AlertDialogTrigger>
                                                     <AlertDialogContent>
@@ -271,24 +276,37 @@ export default function AdminPlaygroundsClient() {
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                                     <div className="flex items-center gap-1">
-                                        <User className="h-3 w-3" />
+                                        <User className="h-3 w-3" aria-hidden="true" />
                                         <span className="truncate">{playground.createdBy?.name || playground.createdBy?.email || playground.createdById}</span>
                                     </div>
                                     <span className="flex-shrink-0">{formatDate(playground.createdAt)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 border-t pt-3">
                                     <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/playground/${playground.id}`}>
-                                            <Eye className="h-4 w-4" />
+                                        <Link
+                                            href={`/playground/${playground.id}`}
+                                            aria-label={t('a11y.viewPlayground', { title: playground.title })}
+                                        >
+                                            <Eye className="h-4 w-4" aria-hidden="true" />
                                         </Link>
                                     </Button>
-                                    <Button variant="outline" size="sm" onClick={() => setEditingPlayground(playground)}>
-                                        <Pencil className="h-4 w-4" />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        aria-label={t('a11y.editItem', { name: playground.title })}
+                                        onClick={() => setEditingPlayground(playground)}
+                                    >
+                                        <Pencil className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive ml-auto">
-                                                <Trash2 className="h-4 w-4" />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                aria-label={t('a11y.deleteItem', { name: playground.title })}
+                                                className="text-destructive hover:text-destructive ml-auto"
+                                            >
+                                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>

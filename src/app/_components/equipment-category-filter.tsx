@@ -63,12 +63,18 @@ export default function EquipmentCategoryFilter({
       <p className="text-xs font-medium text-muted-foreground">
         {t("playground.filterByEquipment")}
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div
+        role="group"
+        aria-label={t("playground.filterByEquipment")}
+        className="flex flex-wrap gap-2"
+      >
         <AnimatePresence mode="popLayout">
           {/* Open now — hides school ground playgrounds during school hours */}
           {closedSchoolGroundCount > 0 && (
             <motion.button
               key="open-now"
+              type="button"
+              aria-pressed={openNowActive}
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -78,11 +84,11 @@ export default function EquipmentCategoryFilter({
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 openNowActive
-                  ? "bg-terrain-moss text-white shadow-sm"
+                  ? "bg-terrain-moss-text text-card shadow-sm"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               )}
             >
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
               {t("playground.openNow")}
             </motion.button>
           )}
@@ -96,6 +102,8 @@ export default function EquipmentCategoryFilter({
             return (
               <motion.button
                 key={key}
+                type="button"
+                aria-pressed={isActive}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -110,13 +118,13 @@ export default function EquipmentCategoryFilter({
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 {t(`equipment.categories.${key}`)}
                 <span
                   className={cn(
                     "text-xs tabular-nums",
                     isActive
-                      ? "text-primary-foreground/70"
+                      ? "text-primary-foreground/95"
                       : "text-muted-foreground",
                   )}
                 >
@@ -130,6 +138,8 @@ export default function EquipmentCategoryFilter({
           {bouncyPillowCount > 0 && (
             <motion.button
               key="bouncy-pillow"
+              type="button"
+              aria-pressed={bouncyPillowActive}
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -144,13 +154,13 @@ export default function EquipmentCategoryFilter({
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               )}
             >
-              <Zap className="h-3.5 w-3.5" />
+              <Zap className="h-3.5 w-3.5" aria-hidden="true" />
               {t("playground.bouncyPillow")}
               <span
                 className={cn(
                   "text-xs tabular-nums",
                   bouncyPillowActive
-                    ? "text-primary-foreground/70"
+                    ? "text-primary-foreground/95"
                     : "text-muted-foreground",
                 )}
               >
@@ -163,6 +173,8 @@ export default function EquipmentCategoryFilter({
           {footballFieldCount > 0 && (
             <motion.button
               key="football-field"
+              type="button"
+              aria-pressed={footballFieldActive}
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -177,13 +189,13 @@ export default function EquipmentCategoryFilter({
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               )}
             >
-              <Circle className="h-3.5 w-3.5" />
+              <Circle className="h-3.5 w-3.5" aria-hidden="true" />
               {t("playground.footballField")}
               <span
                 className={cn(
                   "text-xs tabular-nums",
                   footballFieldActive
-                    ? "text-primary-foreground/70"
+                    ? "text-primary-foreground/95"
                     : "text-muted-foreground",
                 )}
               >
@@ -202,6 +214,8 @@ export default function EquipmentCategoryFilter({
             return (
               <motion.button
                 key={key}
+                type="button"
+                aria-pressed={isActive}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -216,13 +230,13 @@ export default function EquipmentCategoryFilter({
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 {t(`equipment.categories.${key}`)}
                 <span
                   className={cn(
                     "text-xs tabular-nums",
                     isActive
-                      ? "text-primary-foreground/70"
+                      ? "text-primary-foreground/95"
                       : "text-muted-foreground",
                   )}
                 >
@@ -236,6 +250,7 @@ export default function EquipmentCategoryFilter({
           {hasActiveFilters && (
             <motion.button
               key="clear-all"
+              type="button"
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -244,7 +259,7 @@ export default function EquipmentCategoryFilter({
               onClick={onClearAll}
               className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors border border-border hover:bg-accent"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
               {t("playground.clearAllFilters")}
             </motion.button>
           )}

@@ -301,10 +301,10 @@ export default function PlaygroundDetail({
                 {/* Features & Accessibility Subsection */}
                 <Separator className="my-6" />
                 <div>
-                  <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
+                  <h2 className="font-medium text-lg mb-4 flex items-center gap-2">
                     <Eye className="h-5 w-5" />
                     {t('playground.featuresAndAccessibility')}
-                  </h3>
+                  </h2>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="flex items-center gap-3">
                       <Users className="h-5 w-5 text-blue-500" />
@@ -364,10 +364,10 @@ export default function PlaygroundDetail({
                   <>
                     <Separator className="my-6" />
                     <div>
-                      <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
+                      <h2 className="font-medium text-lg mb-4 flex items-center gap-2">
                         <Coffee className="h-5 w-5" />
                         {t('forms.amenities')}
-                      </h3>
+                      </h2>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {playground.hasSeating && (
                           <div className="flex items-center gap-3">
@@ -426,10 +426,10 @@ export default function PlaygroundDetail({
                   <>
                     <Separator className="my-6" />
                     <div>
-                      <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
+                      <h2 className="font-medium text-lg mb-4 flex items-center gap-2">
                         <Shield className="h-5 w-5" />
                         {t('forms.safetyAndStructure')}
-                      </h3>
+                      </h2>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {playground.hasFencing && (
                           <div className="flex items-center gap-3">
@@ -478,9 +478,9 @@ export default function PlaygroundDetail({
                         <div key={category} className="space-y-4">
                           <div className="flex items-center gap-3">
                             {getCategoryIcon(category)}
-                            <h4 className="font-semibold text-lg text-foreground">
+                            <h3 className="font-semibold text-lg text-foreground">
                               {t(`equipment.categories.${category}`)}
-                            </h4>
+                            </h3>
                           </div>
                           <div className="space-y-3 ml-8">
                             {equipment.map((item) => (
@@ -542,7 +542,7 @@ export default function PlaygroundDetail({
               <CardHeader className="p-4 pb-3">
                 <CardTitle className="flex items-center gap-2.5 text-base">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-terrain-water/10">
-                    <MapPin className="h-4 w-4 text-terrain-water" />
+                    <MapPin className="h-4 w-4 text-terrain-water-text" />
                   </span>
                   <span>{t('playground.location')}</span>
                 </CardTitle>
@@ -595,7 +595,7 @@ export default function PlaygroundDetail({
               <CardHeader className="p-4 pb-3">
                 <CardTitle className="flex items-center gap-2.5 text-base">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-terrain-gold/10">
-                    <Info className="h-4 w-4 text-terrain-gold" />
+                    <Info className="h-4 w-4 text-terrain-gold-text" />
                   </span>
                   <span>{t('playground.additionalInformation')}</span>
                 </CardTitle>

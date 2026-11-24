@@ -18,7 +18,7 @@ export function MainContent({ children }: MainContentProps) {
         : "flex-1 pt-16 p-4 md:p-16";
 
     return (
-        <main className={mainClasses}>
+        <main id="main-content" tabIndex={-1} className={`${mainClasses} focus:outline-none`}>
             <div id="app-container" className={isFrontPage ? "h-full" : ""}>
                 {children}
             </div>

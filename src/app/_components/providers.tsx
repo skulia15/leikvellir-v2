@@ -8,6 +8,7 @@ import { type Session } from "next-auth";
 import { ErrorProvider } from "./error-provider";
 import { AppErrorBoundary } from "~/components/ui/error-boundary";
 import { PostHogProvider } from "./posthog-provider";
+import { MotionConfig } from "motion/react";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -23,7 +24,10 @@ export function Providers({ children, session, initialLocale }: ProvidersProps) 
           <PostHogProvider>
             <SessionProvider session={session}>
               <TRPCReactProvider>
-                <AdminProvider>{children}</AdminProvider>
+                <AdminProvider>
+                  {/* Respect prefers-reduced-motion for all motion/react animations */}
+                  <MotionConfig reducedMotion="user">{children}</MotionConfig>
+                </AdminProvider>
               </TRPCReactProvider>
             </SessionProvider>
           </PostHogProvider>

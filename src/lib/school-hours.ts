@@ -156,9 +156,9 @@ export function formatSchoolType(schoolType: SchoolType | null): string {
  * cannot drift apart.
  */
 export const MARKER_COLORS = {
-  open: '#22c55e', // Regular playground — always open
-  limited: '#f59e0b', // School ground, currently accessible
-  closed: '#ef4444', // School ground, closed during school hours
+  open: '#16a34a', // Regular playground — always open (≥3:1 vs white icon)
+  limited: '#d97706', // School ground, currently accessible (≥3:1 vs white icon)
+  closed: '#dc2626', // School ground, closed during school hours
 } as const;
 
 /**

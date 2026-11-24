@@ -72,12 +72,17 @@ export default function ViewSubmissionDialog({
                             <p className="text-sm text-green-700 mt-1">
                                 {t('mySubmissions.submissionApprovedDescription')}
                             </p>
-                            <Link href={`/playground/${playground.id}`} className="inline-block mt-2">
-                                <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-100">
-                                    <ExternalLink className="mr-2 h-4 w-4" />
+                            <Button
+                                asChild
+                                size="sm"
+                                variant="outline"
+                                className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                            >
+                                <Link href={`/playground/${playground.id}`}>
+                                    <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
                                     {t('mySubmissions.viewPlayground')}
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         </div>
                     </div>
                 )}

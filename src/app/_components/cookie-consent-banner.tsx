@@ -89,10 +89,10 @@ export function CookieConsentBanner() {
             <div className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <Cookie className="h-4 w-4 md:h-5 md:w-5 text-orange-500" />
-                  <h3 className="font-semibold text-sm md:text-base">
+                  <Cookie className="h-4 w-4 md:h-5 md:w-5 text-orange-500" aria-hidden="true" />
+                  <h2 className="font-semibold text-sm md:text-base">
                     {t("cookies.cookiePreferences")}
-                  </h3>
+                  </h2>
                 </div>
                 <p className="text-xs md:text-sm text-muted-foreground mb-2">
                   {t("cookies.cookieConsentDescription")}
@@ -102,7 +102,7 @@ export function CookieConsentBanner() {
                   className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
                 >
                   {t("cookies.readPrivacyPolicy")}
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                 </Link>
               </div>
 
@@ -114,14 +114,14 @@ export function CookieConsentBanner() {
                       size="sm"
                       className="flex items-center gap-2 text-xs md:text-sm"
                     >
-                      <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                      <Settings className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
                       {t("cookies.customize")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
-                        <Cookie className="h-5 w-5" />
+                        <Cookie className="h-5 w-5" aria-hidden="true" />
                         {t("cookies.cookiePreferences")}
                       </DialogTitle>
                       <DialogDescription>
@@ -134,9 +134,9 @@ export function CookieConsentBanner() {
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-sm">
+                            <h3 className="font-medium text-sm">
                               {t("cookies.essentialCookies")}
-                            </h4>
+                            </h3>
                             <Badge variant="outline" className="text-xs">
                               {t("cookies.required")}
                             </Badge>
@@ -158,9 +158,9 @@ export function CookieConsentBanner() {
                       {/* Analytics Cookies */}
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm">
+                          <h3 className="font-medium text-sm">
                             {t("cookies.analyticsCookies")}
-                          </h4>
+                          </h3>
                           <p className="text-xs text-muted-foreground">
                             {t("cookies.analyticsCookiesShortDescription")}
                           </p>
@@ -179,9 +179,9 @@ export function CookieConsentBanner() {
                       {/* Functional Cookies */}
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm">
+                          <h3 className="font-medium text-sm">
                             {t("cookies.functionalCookies")}
-                          </h4>
+                          </h3>
                           <p className="text-xs text-muted-foreground">
                             {t("cookies.functionalCookiesShortDescription")}
                           </p>

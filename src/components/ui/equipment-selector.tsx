@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { Button } from "~/components/ui/button";
@@ -27,6 +27,7 @@ interface EquipmentSelectorProps {
 
 export function EquipmentSelector({ value, onChange, disabled, variant = "card" }: EquipmentSelectorProps) {
     const t = useT();
+    const idPrefix = useId();
     const [expandedCategories, setExpandedCategories] = useState<Set<EquipmentCategory>>(
         new Set(["core_equipment"])
     );
@@ -114,6 +115,7 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
                     >
                         <CollapsibleTrigger asChild>
                             <Button
+                                type="button"
                                 variant="ghost"
                                 className="w-full justify-between p-3 h-auto"
                                 disabled={disabled}
@@ -129,6 +131,7 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
                                     )}
                                 </div>
                                 <ChevronDown
+                                    aria-hidden="true"
                                     className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
                                         }`}
                                 />
@@ -136,44 +139,48 @@ export function EquipmentSelector({ value, onChange, disabled, variant = "card" 
                         </CollapsibleTrigger>
                         <CollapsibleContent className="space-y-2 pt-2">
                             <div className="grid grid-cols-1 gap-2 pl-6">
-                                {categoryEquipment.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                                    >
-                                        <Checkbox
-                                            checked={value.includes(item.id)}
-                                            onCheckedChange={() => toggleEquipment(item.id)}
-                                            disabled={disabled}
-                                        />
+                                {categoryEquipment.map((item) => {
+                                    const checkboxId = `${idPrefix}-equipment-${item.id}`;
+                                    return (
                                         <div
-                                            className="flex-1 min-w-0 cursor-pointer"
-                                            onClick={() => !disabled && toggleEquipment(item.id)}
+                                            key={item.id}
+                                            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                                         >
-                                            <div className="flex items-center gap-2">
-                                                {item.image && (
-                                                    <Image
-                                                        src={item.image}
-                                                        alt={handleMixedNameFormat(item.name, currentLanguage)}
-                                                        width={32}
-                                                        height={32}
-                                                        className="w-8 h-8 rounded object-cover"
-                                                    />
-                                                )}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-medium text-sm select-none">
-                                                        {handleMixedNameFormat(item.name, currentLanguage)}
+                                            <Checkbox
+                                                id={checkboxId}
+                                                checked={value.includes(item.id)}
+                                                onCheckedChange={() => toggleEquipment(item.id)}
+                                                disabled={disabled}
+                                            />
+                                            <label
+                                                htmlFor={checkboxId}
+                                                className={`flex-1 min-w-0 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    {item.image && (
+                                                        <Image
+                                                            src={item.image}
+                                                            alt=""
+                                                            width={32}
+                                                            height={32}
+                                                            className="w-8 h-8 rounded object-cover"
+                                                        />
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium text-sm select-none">
+                                                            {handleMixedNameFormat(item.name, currentLanguage)}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            {item.description && (
-                                                <div className="text-xs text-muted-foreground mt-1 select-none">
-                                                    {t(item.description)}
-                                                </div>
-                                            )}
+                                                {item.description && (
+                                                    <div className="text-xs text-muted-foreground mt-1 select-none">
+                                                        {t(item.description)}
+                                                    </div>
+                                                )}
+                                            </label>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </CollapsibleContent>
                     </Collapsible>

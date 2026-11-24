@@ -283,7 +283,7 @@ export function PlaygroundFormFields({
           name="isSchoolGround"
           render={({ field }) => (
             <FormItem className="space-y-0">
-              <label className="flex items-start space-x-3 cursor-pointer">
+              <div className="flex items-start space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -299,7 +299,7 @@ export function PlaygroundFormFields({
                     {t("forms.isSchoolGroundDescription")}
                   </FormDescription>
                 </div>
-              </label>
+              </div>
             </FormItem>
           )}
         />
@@ -361,7 +361,7 @@ export function PlaygroundFormFields({
           name="publiclyAccessible"
           render={({ field }) => (
             <FormItem className="space-y-0">
-              <label className="flex items-start space-x-3 cursor-pointer">
+              <div className="flex items-start space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -377,7 +377,7 @@ export function PlaygroundFormFields({
                     {t("forms.publiclyAccessibleDescription")}
                   </FormDescription>
                 </div>
-              </label>
+              </div>
             </FormItem>
           )}
         />
@@ -387,7 +387,7 @@ export function PlaygroundFormFields({
           name="toddlerFriendly"
           render={({ field }) => (
             <FormItem className="space-y-0">
-              <label className="flex items-start space-x-3 cursor-pointer">
+              <div className="flex items-start space-x-3">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -403,7 +403,7 @@ export function PlaygroundFormFields({
                     {t("forms.toddlerFriendlyDescription")}
                   </FormDescription>
                 </div>
-              </label>
+              </div>
             </FormItem>
           )}
         />
@@ -422,7 +422,7 @@ export function PlaygroundFormFields({
             name="hasSeating"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -438,7 +438,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasSeatingDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -448,7 +448,7 @@ export function PlaygroundFormFields({
             name="hasPicnicTable"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -464,7 +464,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasPicnicTableDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -474,7 +474,7 @@ export function PlaygroundFormFields({
             name="hasGarbageCan"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -490,7 +490,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasGarbageCanDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -500,7 +500,7 @@ export function PlaygroundFormFields({
             name="hasBathroomNearby"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -516,7 +516,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasBathroomNearbyDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -536,7 +536,7 @@ export function PlaygroundFormFields({
             name="hasFencing"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -552,7 +552,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasFencingDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -562,7 +562,7 @@ export function PlaygroundFormFields({
             name="hasSoftPlayArea"
             render={({ field }) => (
               <FormItem className="space-y-0">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -578,7 +578,7 @@ export function PlaygroundFormFields({
                       {t("forms.hasSoftPlayAreaDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />
@@ -614,7 +614,7 @@ export function PlaygroundFormFields({
             name="submitAnonymously"
             render={({ field }) => (
               <FormItem className="space-y-0 rounded-md border p-4">
-                <label className="flex items-start space-x-3 cursor-pointer">
+                <div className="flex items-start space-x-3">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -631,7 +631,7 @@ export function PlaygroundFormFields({
                       {t("forms.submitAnonymouslyDescription")}
                     </FormDescription>
                   </div>
-                </label>
+                </div>
               </FormItem>
             )}
           />

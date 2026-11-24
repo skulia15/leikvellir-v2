@@ -615,32 +615,50 @@ export function ImageUpload({
                   <div
                     className={cn(
                       "relative aspect-square overflow-hidden rounded-lg border transition-all",
-                      showCoverSelection && "cursor-pointer hover:ring-2 hover:ring-primary",
+                      showCoverSelection &&
+                        "hover:ring-2 hover:ring-primary focus-within:ring-2 focus-within:ring-primary",
                       isCover && "ring-2 ring-primary shadow-md"
                     )}
-                    onClick={() => selectCoverImage(url)}
                   >
-                    <Image
-                      src={url}
-                      alt={t('forms.imageAlt', { index: index + 1 })}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    />
+                    {showCoverSelection ? (
+                      <button
+                        type="button"
+                        onClick={() => selectCoverImage(url)}
+                        aria-pressed={isCover}
+                        aria-label={t("a11y.setAsCoverImage", { index: index + 1 })}
+                        className="relative block h-full w-full cursor-pointer focus-visible:outline-none"
+                      >
+                        <Image
+                          src={url}
+                          alt={t('forms.imageAlt', { index: index + 1 })}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        />
 
-                    {/* Cover indicator */}
-                    {isCover && (
-                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                        <div className="bg-primary text-primary-foreground rounded-full p-2">
-                          <Star className="h-4 w-4 fill-current" />
-                        </div>
-                      </div>
+                        {/* Cover indicator */}
+                        {isCover && (
+                          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                            <div className="bg-primary text-primary-foreground rounded-full p-2">
+                              <Star className="h-4 w-4 fill-current" aria-hidden="true" />
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ) : (
+                      <Image
+                        src={url}
+                        alt={t('forms.imageAlt', { index: index + 1 })}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
                     )}
 
                     {/* Remove button or marked-for-removal indicator */}
                     {/* Always show removal button, regardless of allowRemoval setting */}
                     {markedForRemoval.includes(url) ? (
-                      <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                      <div className="absolute inset-0 z-10 bg-red-500/20 flex items-center justify-center">
                         <Badge variant="destructive" className="px-2 py-1 text-xs">
                           {t('forms.markedForRemoval')}
                         </Badge>
@@ -648,13 +666,14 @@ export function ImageUpload({
                           type="button"
                           size="sm"
                           variant="secondary"
-                          className="absolute right-2 top-2 h-6 w-6 p-0"
+                          className="absolute right-2 top-2 h-7 w-7 p-0"
+                          aria-label={t("a11y.undoRemoveImage", { index: index + 1 })}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleExistingImage(url);
+                            void handleExistingImage(url);
                           }}
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
                         </Button>
                       </div>
                     ) : (
@@ -662,13 +681,14 @@ export function ImageUpload({
                         type="button"
                         size="sm"
                         variant="destructive"
-                        className="absolute right-2 top-2 h-6 w-6 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                        className="absolute right-2 top-2 z-10 h-7 w-7 p-0 opacity-100 sm:opacity-0 transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                        aria-label={t("a11y.removeImage", { index: index + 1 })}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleExistingImage(url);
+                          void handleExistingImage(url);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>
                     )}
                   </div>
@@ -749,20 +769,21 @@ export function ImageUpload({
                             {/* Status Icon */}
                             <div className="flex shrink-0 items-center gap-2">
                               {progress?.state === "uploading" && (
-                                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                <Loader2 className="h-4 w-4 animate-spin text-blue-600" aria-hidden="true" />
                               )}
                               {progress?.state === "success" && (
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
                               )}
 
                               <Button
                                 type="button"
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 w-6 p-0"
+                                className="h-7 w-7 p-0"
+                                aria-label={t("a11y.removeUploadFile", { filename: file.name })}
                                 onClick={() => removeFile(file.id)}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5" aria-hidden="true" />
                               </Button>
                             </div>
                           </div>

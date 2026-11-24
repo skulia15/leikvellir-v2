@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useT } from "~/lib/i18n";
 
 interface ImageLightboxProps {
   images: string[];
@@ -15,6 +16,8 @@ interface ImageLightboxProps {
 
 const MAX_SCALE = 4;
 const MIN_SWIPE_DISTANCE = 50;
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface Transform {
   scale: number;
@@ -37,9 +40,13 @@ export default function ImageLightbox({
   onIndexChange,
   onClose,
 }: ImageLightboxProps) {
+  const t = useT();
   const [mounted, setMounted] = useState(false);
   const [transform, setTransform] = useState<Transform>(IDENTITY);
   const [dragOffset, setDragOffset] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
   // Gesture bookkeeping lives in refs so touchmove never triggers a re-render
@@ -73,7 +80,14 @@ export default function ImageLightbox({
 
   const hasMultipleImages = images.length > 1;
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+      setPrefersReducedMotion(
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      );
+    }
+  }, []);
 
   // Reset zoom whenever the visible image changes
   useEffect(() => {
@@ -103,20 +117,96 @@ export default function ImageLightbox({
     };
   }, []);
 
-  // Lock background scroll while open
+  // Lock background scroll, hide background content from AT/keyboard,
+  // move focus into the dialog on open, and restore focus on close.
   useEffect(() => {
-    const previous = document.body.style.overflow;
+    if (!mounted) return;
+    const dialog = dialogRef.current;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    // Mark sibling body children inert & aria-hidden while modal is open
+    const hiddenSiblings: Array<{
+      el: HTMLElement;
+      prevAriaHidden: string | null;
+      prevInert: boolean;
+      hadInertAttr: boolean;
+    }> = [];
+    for (const child of Array.from(document.body.children)) {
+      if (child === dialog || !(child instanceof HTMLElement)) continue;
+      hiddenSiblings.push({
+        el: child,
+        prevAriaHidden: child.getAttribute("aria-hidden"),
+        prevInert: Boolean((child as HTMLElement & { inert?: boolean }).inert),
+        hadInertAttr: child.hasAttribute("inert"),
+      });
+      child.setAttribute("aria-hidden", "true");
+      (child as HTMLElement & { inert?: boolean }).inert = true;
+      child.setAttribute("inert", "");
+    }
+
+    closeButtonRef.current?.focus();
+
     return () => {
-      document.body.style.overflow = previous;
+      document.body.style.overflow = previousOverflow;
+      for (const { el, prevAriaHidden, prevInert, hadInertAttr } of hiddenSiblings) {
+        if (prevAriaHidden === null) {
+          el.removeAttribute("aria-hidden");
+        } else {
+          el.setAttribute("aria-hidden", prevAriaHidden);
+        }
+        (el as HTMLElement & { inert?: boolean }).inert = prevInert;
+        if (!hadInertAttr) {
+          el.removeAttribute("inert");
+        }
+      }
+      if (previouslyFocused?.isConnected) {
+        previouslyFocused.focus();
+      }
     };
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (event.key === "ArrowRight") goTo(index + 1);
-      if (event.key === "ArrowLeft") goTo(index - 1);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        goTo(index + 1);
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        goTo(index - 1);
+        return;
+      }
+      if (event.key === "Tab") {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusables = Array.from(
+          dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+        );
+        if (focusables.length === 0) {
+          event.preventDefault();
+          return;
+        }
+        const first = focusables[0]!;
+        const last = focusables[focusables.length - 1]!;
+        const active = document.activeElement;
+        if (event.shiftKey) {
+          if (active === first || !dialog.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (active === last || !dialog.contains(active)) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -240,22 +330,31 @@ export default function ImageLightbox({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+      ref={dialogRef}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200 motion-reduce:animate-none"
       role="dialog"
       aria-modal="true"
       aria-label={alt}
       onClick={onClose}
     >
       <button
-        onClick={onClose}
-        className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-        aria-label="Close"
+        ref={closeButtonRef}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+        }}
+        className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        aria-label={t("a11y.closeLightbox")}
       >
-        <X className="h-5 w-5" />
+        <X className="h-5 w-5" aria-hidden="true" />
       </button>
 
       {hasMultipleImages && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs text-white">
+        <div
+          aria-live="polite"
+          className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs text-white"
+        >
           {index + 1}/{images.length}
         </div>
       )}
@@ -263,24 +362,26 @@ export default function ImageLightbox({
       {hasMultipleImages && (
         <>
           <button
+            type="button"
             onClick={(event) => {
               event.stopPropagation();
               goTo(index - 1);
             }}
-            className="absolute left-2 sm:left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 sm:p-3 text-white transition-colors hover:bg-white/20"
-            aria-label="Previous image"
+            className="absolute left-2 sm:left-4 top-1/2 z-10 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={t("a11y.previousImage")}
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-6 w-6" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={(event) => {
               event.stopPropagation();
               goTo(index + 1);
             }}
-            className="absolute right-2 sm:right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 sm:p-3 text-white transition-colors hover:bg-white/20"
-            aria-label="Next image"
+            className="absolute right-2 sm:right-4 top-1/2 z-10 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={t("a11y.nextImage")}
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-6 w-6" aria-hidden="true" />
           </button>
         </>
       )}
@@ -303,13 +404,16 @@ export default function ImageLightbox({
           className="relative h-full w-full"
           style={{
             transform: `translate3d(${transform.x + dragOffset}px, ${transform.y}px, 0) scale(${transform.scale})`,
-            transition: isGesturing ? "none" : "transform 200ms ease-out",
+            transition:
+              isGesturing || prefersReducedMotion
+                ? "none"
+                : "transform 200ms ease-out",
           }}
         >
           <Image
             key={images[index]}
             src={images[index] ?? "/playground.jpg"}
-            alt={`${alt} - Image ${index + 1}`}
+            alt={`${alt} - ${index + 1}`}
             fill
             sizes="100vw"
             className="object-contain"
@@ -321,7 +425,7 @@ export default function ImageLightbox({
       </div>
 
       {isZoomed && (
-        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs text-white">
+        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs text-white">
           {Math.round(transform.scale * 100)}%
         </div>
       )}

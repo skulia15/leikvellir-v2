@@ -169,25 +169,27 @@ export default function EquipmentManagementClient({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {categoryEquipment.map((item) => (
+                                        {categoryEquipment.map((item) => {
+                                            const displayName = getEquipmentDisplayName(item.name, currentLanguage, t);
+                                            return (
                                             <TableRow key={item.id}>
                                                 <TableCell>
                                                     <div>
-                                                        <div className="font-medium">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
+                                                        <div className="font-medium">{displayName}</div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     {item.image ? (
                                                         <Image
                                                             src={item.image}
-                                                            alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
+                                                            alt={displayName}
                                                             width={48}
                                                             height={48}
                                                             className="w-12 h-12 rounded object-cover"
                                                         />
                                                     ) : (
                                                         <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                                                            <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
+                                                            <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                                                         </div>
                                                     )}
                                                 </TableCell>
@@ -206,78 +208,102 @@ export default function EquipmentManagementClient({
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
+                                                            aria-label={t('a11y.editItem', { name: displayName })}
                                                             onClick={() => handleEdit(item)}
                                                         >
-                                                            <Pencil className="h-4 w-4" />
+                                                            <Pencil className="h-4 w-4" aria-hidden="true" />
                                                         </Button>
                                                         {item.isActive ? (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
+                                                                aria-label={t('a11y.deleteItem', { name: displayName })}
                                                                 onClick={() => handleDelete(item)}
                                                                 disabled={deleteMutation.isPending}
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                             </Button>
                                                         ) : (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
+                                                                aria-label={t('a11y.restoreItem', { name: displayName })}
                                                                 onClick={() => handleRestore(item)}
                                                                 disabled={restoreMutation.isPending}
                                                             >
-                                                                <RotateCcw className="h-4 w-4" />
+                                                                <RotateCcw className="h-4 w-4" aria-hidden="true" />
                                                             </Button>
                                                         )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>
 
                             {/* Mobile card list */}
                             <div className="md:hidden space-y-2">
-                                {categoryEquipment.map((item) => (
+                                {categoryEquipment.map((item) => {
+                                    const displayName = getEquipmentDisplayName(item.name, currentLanguage, t);
+                                    return (
                                     <div key={item.id} className="flex items-center gap-3 rounded-lg border bg-card p-3">
                                         <div className="flex-shrink-0">
                                             {item.image ? (
                                                 <Image
                                                     src={item.image}
-                                                    alt={getEquipmentDisplayName(item.name, currentLanguage, t)}
+                                                    alt={displayName}
                                                     width={48}
                                                     height={48}
                                                     className="w-12 h-12 rounded object-cover"
                                                 />
                                             ) : (
                                                 <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                                                    <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" />
+                                                    <PlaygroundEquipmentIcon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                                                 </div>
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="font-medium truncate">{getEquipmentDisplayName(item.name, currentLanguage, t)}</div>
+                                            <div className="font-medium truncate">{displayName}</div>
                                             <Badge variant={item.isActive ? "default" : "secondary"} className="mt-1 text-xs">
                                                 {item.isActive ? t('admin.active') : t('admin.inactive')}
                                             </Badge>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">
-                                            <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                                                <Pencil className="h-4 w-4" />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                aria-label={t('a11y.editItem', { name: displayName })}
+                                                onClick={() => handleEdit(item)}
+                                            >
+                                                <Pencil className="h-4 w-4" aria-hidden="true" />
                                             </Button>
                                             {item.isActive ? (
-                                                <Button variant="outline" size="sm" onClick={() => handleDelete(item)} disabled={deleteMutation.isPending}>
-                                                    <Trash2 className="h-4 w-4" />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    aria-label={t('a11y.deleteItem', { name: displayName })}
+                                                    onClick={() => handleDelete(item)}
+                                                    disabled={deleteMutation.isPending}
+                                                >
+                                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                 </Button>
                                             ) : (
-                                                <Button variant="outline" size="sm" onClick={() => handleRestore(item)} disabled={restoreMutation.isPending}>
-                                                    <RotateCcw className="h-4 w-4" />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    aria-label={t('a11y.restoreItem', { name: displayName })}
+                                                    onClick={() => handleRestore(item)}
+                                                    disabled={restoreMutation.isPending}
+                                                >
+                                                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>

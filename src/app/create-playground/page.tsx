@@ -35,7 +35,7 @@ export default async function CreatePlayground() {
       className="flex flex-col items-center justify-center gap-12 pt-12 pb-16"
       id="create-playground"
     >
-      <h1 className="text-3xl font-bold hidden">{getTranslation(locale, 'playground.submitNewPlayground')}</h1>
+      <h1 className="sr-only">{getTranslation(locale, 'playground.submitNewPlayground')}</h1>
 
       {session?.user ? (
         <>

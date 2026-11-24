@@ -73,11 +73,12 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
     return (
       <div className={`overflow-hidden rounded-2xl bg-muted ${className ?? ''}`}>
         <button
+          type="button"
           onClick={onAddPhotos}
           disabled={!onAddPhotos}
           className="relative aspect-[4/3] sm:aspect-auto sm:h-[400px] md:h-[500px] lg:h-[600px] w-full flex flex-col items-center justify-center gap-3 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-primary disabled:cursor-default disabled:hover:text-muted-foreground"
         >
-          <Camera className="h-10 w-10" />
+          <Camera className="h-10 w-10" aria-hidden="true" />
           <div className="text-center">
             <p className="text-sm font-medium">{t("playground.noImagesAvailable")}</p>
             {onAddPhotos && (
@@ -111,84 +112,113 @@ export default function ImageCarousel({ images, alt, className, onAddPhotos, blu
             width: `${images.length * 100}%`
           }}
         >
-          {images.map((image, index) => (
-            <button
-              key={index}
-              type="button"
-              onPointerDown={(event) => {
-                pressStart.current = { x: event.clientX, y: event.clientY };
-              }}
-              onClick={(event) => {
-                const start = pressStart.current;
-                if (!start) return;
-                const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
-                if (moved < 10) setIsLightboxOpen(true);
-              }}
-              className="relative h-full flex-shrink-0 cursor-zoom-in"
-              style={{ width: `${100 / images.length}%` }}
-              aria-label={`View image ${index + 1}`}
-            >
-              <Image
-                src={image ?? "/playground.jpg"}
-                {...blurPlaceholderProps(blurData?.[image])}
-                alt={`${alt} - Image ${index + 1}`}
-                fill
-                sizes="(max-width: 1023px) 100vw, (max-width: 1536px) calc(100vw - 456px), 1080px"
-                className="object-cover"
-                priority={index === 0}
-                loading={index === 0 ? undefined : "lazy"}
-                fetchPriority={index === 0 ? "high" : "low"}
-                quality={85}
-                draggable={false}
-              />
-            </button>
-          ))}
+          {images.map((image, index) => {
+            const isCurrent = index === selectedImageIndex;
+            return (
+              <button
+                key={index}
+                type="button"
+                tabIndex={isCurrent ? 0 : -1}
+                aria-hidden={!isCurrent}
+                onPointerDown={(event) => {
+                  pressStart.current = { x: event.clientX, y: event.clientY };
+                }}
+                onPointerCancel={() => {
+                  pressStart.current = null;
+                }}
+                onClick={(event) => {
+                  const start = pressStart.current;
+                  pressStart.current = null;
+                  if (!start) {
+                    // Keyboard activation (Enter/Space) does not fire pointerdown
+                    setSelectedImageIndex(index);
+                    setIsLightboxOpen(true);
+                    return;
+                  }
+                  const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+                  if (moved < 10) {
+                    setSelectedImageIndex(index);
+                    setIsLightboxOpen(true);
+                  }
+                }}
+                className="relative h-full flex-shrink-0 cursor-zoom-in"
+                style={{ width: `${100 / images.length}%` }}
+                aria-label={t("a11y.viewImage", { index: index + 1, total: images.length })}
+              >
+                <Image
+                  src={image ?? "/playground.jpg"}
+                  {...blurPlaceholderProps(blurData?.[image])}
+                  alt={`${alt} - ${t("forms.imageAlt", { index: index + 1 })}`}
+                  fill
+                  sizes="(max-width: 1023px) 100vw, (max-width: 1536px) calc(100vw - 456px), 1080px"
+                  className="object-cover"
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "low"}
+                  quality={85}
+                  draggable={false}
+                />
+              </button>
+            );
+          })}
         </div>
 
-        {/* Navigation arrows — visible on hover */}
+        {/* Navigation arrows — visible on touch, hover, and keyboard focus */}
         {hasMultipleImages && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-300">
             <button
+              type="button"
               onClick={previousImage}
               disabled={isTransitioning}
-              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
-              aria-label="Previous image"
+              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+              aria-label={t("a11y.previousImage")}
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={nextImage}
               disabled={isTransitioning}
-              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
-              aria-label="Next image"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/80 transition-colors disabled:opacity-50 backdrop-blur-sm"
+              aria-label={t("a11y.nextImage")}
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         )}
 
         {/* Image counter */}
         {hasMultipleImages && (
-          <div className="absolute top-3 right-3 rounded-full bg-black/70 px-2.5 py-1 text-xs text-white backdrop-blur-sm">
+          <div
+            aria-live="polite"
+            className="absolute top-3 right-3 rounded-full bg-black/70 px-2.5 py-1 text-xs text-white backdrop-blur-sm"
+          >
             {selectedImageIndex + 1}/{images.length}
           </div>
         )}
       </div>
 
-      {/* Dot indicators — below image */}
+      {/* Dot indicators — below image with 44px touch targets */}
       {hasMultipleImages && (
-        <div className="flex justify-center gap-1 mt-2">
+        <div className="flex flex-wrap justify-center mt-1">
           {images.map((_, index) => (
             <button
               key={index}
+              type="button"
               onClick={() => changeImage(index)}
               disabled={isTransitioning}
-              className={`h-1.5 w-1.5 rounded-full transition-colors disabled:opacity-50 ${index === selectedImageIndex
-                ? 'bg-primary'
-                : 'bg-muted-foreground/30'
-                }`}
-              aria-label={`Go to image ${index + 1}`}
-            />
+              className="flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-50"
+              aria-label={t("a11y.goToImage", { index: index + 1 })}
+              aria-current={index === selectedImageIndex ? "true" : undefined}
+            >
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 rounded-full transition-colors ${index === selectedImageIndex
+                  ? 'bg-primary'
+                  : 'bg-muted-foreground/30'
+                  }`}
+              />
+            </button>
           ))}
         </div>
       )}

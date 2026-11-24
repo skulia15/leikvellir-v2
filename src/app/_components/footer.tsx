@@ -33,7 +33,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               {/* <Playground className="h-6 w-6 text-primary" /> */}
-              <h3 className="text-lg font-bold font-display">{t('footer.brand')}</h3>
+              <h2 className="text-lg font-bold font-display">{t('footer.brand')}</h2>
               <Badge variant="outline" className="text-xs">
                 {t('footer.beta')}
               </Badge>
@@ -43,7 +43,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-4 w-4" aria-hidden="true" />
                 <span>{t('footer.location')}</span>
               </div>
 
@@ -52,7 +52,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.quickLinks')}</h4>
+            <h2 className="text-sm font-semibold text-foreground mb-4">{t('footer.quickLinks')}</h2>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -99,7 +99,7 @@ export function Footer() {
 
           {/* Developer & Contact */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.developer')}</h4>
+            <h2 className="text-sm font-semibold text-foreground mb-4">{t('footer.developer')}</h2>
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-medium">Skúli Arnarsson</p>

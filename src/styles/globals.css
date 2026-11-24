@@ -34,6 +34,12 @@
     --terrain-water: 210 60% 52%;
     --terrain-heather: 290 40% 58%;
     --terrain-stone: 240 8% 60%;
+    /* Terrain tones darkened for text/icons on cards: the base tones above are
+       decorative (dots, tints) and fall below 4.5:1 as small text on white. */
+    --terrain-moss-text: 152 55% 28%;
+    --terrain-water-text: 210 65% 38%;
+    --terrain-gold-text: 36 90% 32%;
+    --terrain-heather-text: 290 40% 40%;
     /* Access status badges on cards and lists. Text tones clear 4.5:1 on
        --card; surface tones clear 4.5:1 against the white text they carry.
        Map pins do not use these — they read MARKER_COLORS in
@@ -70,6 +76,10 @@
     --chart-3: 40 75% 58%;
     --chart-4: 210 55% 58%;
     --chart-5: 340 40% 58%;
+    --terrain-moss-text: 152 45% 58%;
+    --terrain-water-text: 210 65% 68%;
+    --terrain-gold-text: 40 85% 62%;
+    --terrain-heather-text: 290 45% 72%;
     /* Dark surfaces need lighter status tones to hold 4.5:1 against --card */
     --status-open: 152 50% 60%;
     --status-open-surface: 152 55% 34%;
@@ -214,21 +224,26 @@
 }
 
 .mapboxgl-popup-close-button {
+  /* 44px hit area with a 32px visible disc, so the popup keeps its light look */
   font-size: 0;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  top: 8px !important;
-  right: 8px !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.92) 15.5px, transparent 16px);
+  top: 2px !important;
+  right: 2px !important;
   color: hsl(var(--foreground));
   z-index: 10;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.14));
   transition: background 150ms ease, transform 150ms ease;
+}
+
+.mapboxgl-popup-close-button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -4px;
 }
 
 .mapboxgl-popup-close-button::after {
@@ -239,8 +254,21 @@
 }
 
 .mapboxgl-popup-close-button:hover {
-  background: rgba(255, 255, 255, 1);
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 15.5px, transparent 16px);
   transform: scale(1.05);
+}
+
+/* Honour OS-level reduced motion: collapse CSS animations/transitions
+   (shimmer, ping, tailwindcss-animate enter/exit) to an instant change. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .mapboxgl-popup-tip {

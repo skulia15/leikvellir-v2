@@ -266,7 +266,7 @@ export default function SuggestEditDialog({
                 name="isSchoolGround"
                 render={({ field }) => (
                   <FormItem className="space-y-0">
-                    <label className="flex items-start space-x-3 cursor-pointer">
+                    <div className="flex items-start space-x-3">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -279,7 +279,7 @@ export default function SuggestEditDialog({
                           {t('forms.isSchoolGroundDescription')}
                         </FormDescription>
                       </div>
-                    </label>
+                    </div>
                   </FormItem>
                 )}
               />
@@ -335,7 +335,7 @@ export default function SuggestEditDialog({
                   name="publiclyAccessible"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -348,7 +348,7 @@ export default function SuggestEditDialog({
                             {t('forms.publiclyAccessibleDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -358,7 +358,7 @@ export default function SuggestEditDialog({
                   name="toddlerFriendly"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -371,7 +371,7 @@ export default function SuggestEditDialog({
                             {t('forms.toddlerFriendlyDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -391,7 +391,7 @@ export default function SuggestEditDialog({
                   name="hasSeating"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -404,7 +404,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasSeatingDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -414,7 +414,7 @@ export default function SuggestEditDialog({
                   name="hasPicnicTable"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -427,7 +427,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasPicnicTableDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -437,7 +437,7 @@ export default function SuggestEditDialog({
                   name="hasGarbageCan"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -450,7 +450,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasGarbageCanDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -460,7 +460,7 @@ export default function SuggestEditDialog({
                   name="hasBathroomNearby"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -473,7 +473,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasBathroomNearbyDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -493,7 +493,7 @@ export default function SuggestEditDialog({
                   name="hasFencing"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -506,7 +506,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasFencingDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -516,7 +516,7 @@ export default function SuggestEditDialog({
                   name="hasSoftPlayArea"
                   render={({ field }) => (
                     <FormItem className="space-y-0">
-                      <label className="flex items-start space-x-3 cursor-pointer">
+                      <div className="flex items-start space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -529,7 +529,7 @@ export default function SuggestEditDialog({
                             {t('forms.hasSoftPlayAreaDescription')}
                           </FormDescription>
                         </div>
-                      </label>
+                      </div>
                     </FormItem>
                   )}
                 />

@@ -925,5 +925,27 @@
     "updateSuccess": "Your submission has been updated successfully",
     "updateError": "Failed to update your submission. Please try again.",
     "alreadyReviewedError": "This submission has already been reviewed and can no longer be edited."
+  },
+  "a11y": {
+    "skipToMainContent": "Skip to main content",
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open navigation menu",
+    "userMenu": "User menu",
+    "changeLanguage": "Change language ({{language}})",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "viewImage": "View image {{index}} of {{total}}",
+    "goToImage": "Go to image {{index}}",
+    "closeLightbox": "Close image viewer",
+    "setAsCoverImage": "Set image {{index}} as cover image",
+    "removeImage": "Remove image {{index}}",
+    "undoRemoveImage": "Undo removing image {{index}}",
+    "removeUploadFile": "Remove {{filename}}",
+    "viewPlayground": "View {{title}}",
+    "editItem": "Edit {{name}}",
+    "deleteItem": "Delete {{name}}",
+    "restoreItem": "Restore {{name}}",
+    "searchAddressResults": "Address search results",
+    "selectUserRole": "Select role for {{user}}"
   }
 }

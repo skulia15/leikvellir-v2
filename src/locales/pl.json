@@ -934,5 +934,27 @@
     "updateSuccess": "Twoje zgłoszenie zostało zaktualizowane",
     "updateError": "Nie udało się zaktualizować zgłoszenia. Spróbuj ponownie.",
     "alreadyReviewedError": "To zgłoszenie zostało już zweryfikowane i nie można go dalej edytować."
+  },
+  "a11y": {
+    "skipToMainContent": "Przejdź do głównej treści",
+    "mainNavigation": "Nawigacja główna",
+    "openMenu": "Otwórz menu nawigacyjne",
+    "userMenu": "Menu użytkownika",
+    "changeLanguage": "Zmień język ({{language}})",
+    "previousImage": "Poprzednie zdjęcie",
+    "nextImage": "Następne zdjęcie",
+    "viewImage": "Zobacz zdjęcie {{index}} z {{total}}",
+    "goToImage": "Przejdź do zdjęcia {{index}}",
+    "closeLightbox": "Zamknij podgląd zdjęcia",
+    "setAsCoverImage": "Ustaw zdjęcie {{index}} jako zdjęcie główne",
+    "removeImage": "Usuń zdjęcie {{index}}",
+    "undoRemoveImage": "Cofnij usunięcie zdjęcia {{index}}",
+    "removeUploadFile": "Usuń {{filename}}",
+    "viewPlayground": "Zobacz {{title}}",
+    "editItem": "Edytuj {{name}}",
+    "deleteItem": "Usuń {{name}}",
+    "restoreItem": "Przywróć {{name}}",
+    "searchAddressResults": "Wyniki wyszukiwania adresu",
+    "selectUserRole": "Wybierz rolę dla {{user}}"
   }
 }

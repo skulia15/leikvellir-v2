@@ -219,7 +219,10 @@ export default function UserManagementClient() {
                                                 }
                                                 disabled={updateRoleMutation.isPending}
                                             >
-                                                <SelectTrigger className="w-32 h-8">
+                                                <SelectTrigger
+                                                    className="w-32 h-8"
+                                                    aria-label={t('a11y.selectUserRole', { user: user.name ?? user.email })}
+                                                >
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -273,9 +276,9 @@ export default function UserManagementClient() {
                                                             </AlertDialogHeader>
                                                             <div className="space-y-4">
                                                                 <div>
-                                                                    <Label htmlFor="banReason">{t('admin.reasonForBan')}</Label>
+                                                                    <Label htmlFor={`banReason-${user.id}`}>{t('admin.reasonForBan')}</Label>
                                                                     <Input
-                                                                        id="banReason"
+                                                                        id={`banReason-${user.id}`}
                                                                         value={banReason}
                                                                         onChange={(e) => setBanReason(e.target.value)}
                                                                         placeholder={t('admin.enterBanReason')}
@@ -353,7 +356,10 @@ export default function UserManagementClient() {
                                     onValueChange={(newRole: UserRole) => handleRoleChange(user.id, newRole)}
                                     disabled={updateRoleMutation.isPending}
                                 >
-                                    <SelectTrigger className="w-full h-9">
+                                    <SelectTrigger
+                                        className="w-full h-9"
+                                        aria-label={t('a11y.selectUserRole', { user: user.name ?? user.email })}
+                                    >
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -396,9 +402,9 @@ export default function UserManagementClient() {
                                             </AlertDialogHeader>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <Label htmlFor="banReasonMobile">{t('admin.reasonForBan')}</Label>
+                                                    <Label htmlFor={`banReasonMobile-${user.id}`}>{t('admin.reasonForBan')}</Label>
                                                     <Input
-                                                        id="banReasonMobile"
+                                                        id={`banReasonMobile-${user.id}`}
                                                         value={banReason}
                                                         onChange={(e) => setBanReason(e.target.value)}
                                                         placeholder={t('admin.enterBanReason')}

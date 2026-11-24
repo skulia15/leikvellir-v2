@@ -106,7 +106,7 @@ const PlaygroundCard = memo(function PlaygroundCard({
               </span>
             )}
             {hasBouncyPillow && (
-              <span className="flex items-center gap-1.5 text-terrain-heather font-medium">
+              <span className="flex items-center gap-1.5 text-terrain-heather-text font-medium">
                 <Zap className="h-3 w-3" aria-hidden="true" />
                 {t('playground.bouncyPillow')}
               </span>

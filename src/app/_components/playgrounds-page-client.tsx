@@ -32,12 +32,12 @@ export default function PlaygroundsPageClient() {
                 {t('playground.allPlaygroundsDescription')}
               </p>
             </div>
-            <Link href="/create-playground">
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
+            <Button asChild className="flex items-center gap-2">
+              <Link href="/create-playground">
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 {t('playground.createPlayground')}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
 

@@ -176,41 +176,50 @@ export function MapInfoPopup({
 
               {/* Navigation arrows */}
               {hasMultipleImages && (
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-200">
                   <button
+                    type="button"
                     onClick={previousImage}
                     disabled={isTransitioning}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-1.5 text-foreground hover:bg-white transition-colors disabled:opacity-50 shadow-sm"
-                    aria-label="Previous image"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground hover:bg-white transition-colors disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={t("a11y.previousImage")}
                   >
-                    <ChevronLeft className="h-3.5 w-3.5" />
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button
+                    type="button"
                     onClick={nextImage}
                     disabled={isTransitioning}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-1.5 text-foreground hover:bg-white transition-colors disabled:opacity-50 shadow-sm"
-                    aria-label="Next image"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground hover:bg-white transition-colors disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={t("a11y.nextImage")}
                   >
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               )}
 
               {/* Dot indicators on image */}
               {hasMultipleImages && (
-                <div className="absolute bottom-[42px] inset-x-0 flex justify-center gap-1">
+                <div className="absolute bottom-[34px] inset-x-0 flex justify-center">
                   {images.map((_, index) => (
                     <button
                       key={index}
+                      type="button"
                       onClick={() => changeImage(index)}
                       disabled={isTransitioning}
-                      className={`h-1.5 rounded-full transition-all disabled:opacity-50 ${
-                        index === currentImageIndex
-                          ? "w-4 bg-white"
-                          : "w-1.5 bg-white/50"
-                      }`}
-                      aria-label={`Go to image ${index + 1}`}
-                    />
+                      className="flex h-7 min-w-7 items-center justify-center px-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
+                      aria-label={t("a11y.goToImage", { index: index + 1 })}
+                      aria-current={index === currentImageIndex ? "true" : undefined}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`block h-1.5 rounded-full transition-all ${
+                          index === currentImageIndex
+                            ? "w-4 bg-white"
+                            : "w-1.5 bg-white/60"
+                        }`}
+                      />
+                    </button>
                   ))}
                 </div>
               )}
@@ -226,7 +235,7 @@ export function MapInfoPopup({
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
                   onClick={onClose}
                 >
-                  <Camera className="h-3.5 w-3.5" />
+                  <Camera className="h-3.5 w-3.5" aria-hidden="true" />
                   {t("forms.addPhotos")}
                 </Link>
               )}
@@ -240,20 +249,30 @@ export function MapInfoPopup({
           <div className="flex items-center gap-2 flex-wrap min-w-0 text-xs text-muted-foreground">
             {walkingTime && (
               <span className="flex items-center gap-1 font-medium text-foreground/70">
-                <Footprints className="h-3 w-3" />
+                <Footprints className="h-3 w-3" aria-hidden="true" />
                 {walkingTime.text}
               </span>
             )}
             {playground.toddlerFriendly && (
-              <span className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-terrain-moss" />
-                <Baby className="h-3 w-3" />
+              <span
+                className="flex items-center gap-1"
+                role="img"
+                aria-label={t("playground.toddlerFriendly")}
+                title={t("playground.toddlerFriendly")}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-terrain-moss" aria-hidden="true" />
+                <Baby className="h-3 w-3" aria-hidden="true" />
               </span>
             )}
             {playground.publiclyAccessible && (
-              <span className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-terrain-water" />
-                <Users className="h-3 w-3" />
+              <span
+                className="flex items-center gap-1"
+                role="img"
+                aria-label={t("playground.publiclyAccessible")}
+                title={t("playground.publiclyAccessible")}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-terrain-water" aria-hidden="true" />
+                <Users className="h-3 w-3" aria-hidden="true" />
               </span>
             )}
           </div>
@@ -264,7 +283,7 @@ export function MapInfoPopup({
             className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap flex-shrink-0"
           >
             {t("playground.viewDetails")}
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
       </div>

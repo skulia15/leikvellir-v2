@@ -925,5 +925,27 @@
     "updateSuccess": "Innsending þín hefur verið uppfærð",
     "updateError": "Ekki tókst að uppfæra innsendinguna. Vinsamlegast reyndu aftur.",
     "alreadyReviewedError": "Þessi innsending hefur þegar verið yfirfarin og er ekki lengur hægt að breyta henni."
+  },
+  "a11y": {
+    "skipToMainContent": "Fara beint í meginmál",
+    "mainNavigation": "Aðalvalmynd",
+    "openMenu": "Opna valmynd",
+    "userMenu": "Notendavalmynd",
+    "changeLanguage": "Skipta um tungumál ({{language}})",
+    "previousImage": "Fyrri mynd",
+    "nextImage": "Næsta mynd",
+    "viewImage": "Skoða mynd {{index}} af {{total}}",
+    "goToImage": "Fara á mynd {{index}}",
+    "closeLightbox": "Loka myndaskoðara",
+    "setAsCoverImage": "Stilla mynd {{index}} sem forsíðumynd",
+    "removeImage": "Fjarlægja mynd {{index}}",
+    "undoRemoveImage": "Afturkalla fjarlægingu á mynd {{index}}",
+    "removeUploadFile": "Fjarlægja {{filename}}",
+    "viewPlayground": "Skoða {{title}}",
+    "editItem": "Breyta {{name}}",
+    "deleteItem": "Eyða {{name}}",
+    "restoreItem": "Endurheimta {{name}}",
+    "searchAddressResults": "Leitarniðurstöður fyrir heimilisfang",
+    "selectUserRole": "Velja hlutverk fyrir {{user}}"
   }
 }

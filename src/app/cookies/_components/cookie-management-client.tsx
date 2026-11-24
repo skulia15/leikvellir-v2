@@ -96,7 +96,7 @@ export default function CookieManagementPage() {
                 {/* Page Title */}
                 <div className="mb-8">
                     <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-                        <Cookie className="h-6 w-6 sm:h-8 sm:w-8" />
+                        <Cookie className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden="true" />
                         {t("cookies.cookieManagement")}
                     </h1>
                     <p className="text-sm sm:text-base text-muted-foreground mt-2">
@@ -109,7 +109,7 @@ export default function CookieManagementPage() {
                         <Card className="border-green-200 bg-green-50">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-2 text-green-800">
-                                    <Save className="h-4 w-4" />
+                                    <Save className="h-4 w-4" aria-hidden="true" />
                                     <span className="font-medium">{t("success.settingsSaved")}</span>
                                 </div>
                             </CardContent>
@@ -129,7 +129,7 @@ export default function CookieManagementPage() {
                             <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="font-semibold">{t("cookies.essentialCookies")}</h3>
+                                        <h2 className="font-semibold">{t("cookies.essentialCookies")}</h2>
                                         <Badge variant="secondary">{t("cookies.required")}</Badge>
                                     </div>
                                     <p className="text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export default function CookieManagementPage() {
                             <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="font-semibold">{t("cookies.analyticsCookies")}</h3>
+                                        <h2 className="font-semibold">{t("cookies.analyticsCookies")}</h2>
                                         <Badge variant={preferences.analytics ? "default" : "outline"}>
                                             {preferences.analytics
                                                 ? t("cookies.enabled")
@@ -173,7 +173,7 @@ export default function CookieManagementPage() {
                             <div className="flex items-center justify-between py-6 first:pt-0 last:pb-0">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="font-semibold">{t("cookies.functionalCookies")}</h3>
+                                        <h2 className="font-semibold">{t("cookies.functionalCookies")}</h2>
                                         <Badge variant={preferences.functional ? "default" : "outline"}>
                                             {preferences.functional
                                                 ? t("cookies.enabled")
@@ -203,7 +203,7 @@ export default function CookieManagementPage() {
                             disabled={!hasChanges}
                             className="flex items-center gap-2"
                         >
-                            <Save className="h-4 w-4" />
+                            <Save className="h-4 w-4" aria-hidden="true" />
                             {t("cookies.savePreferences")}
                         </Button>
 
@@ -212,7 +212,7 @@ export default function CookieManagementPage() {
                             onClick={resetToDefaults}
                             className="flex items-center gap-2"
                         >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="h-4 w-4" aria-hidden="true" />
                             {t("cookies.resetToDefaults")}
                         </Button>
 
@@ -228,7 +228,7 @@ export default function CookieManagementPage() {
                     {/* Information */}
                     <Card>
                         <CardContent className="p-6">
-                            <h3 className="font-semibold mb-3">{t("cookies.cookieInformation")}</h3>
+                            <h2 className="font-semibold mb-3">{t("cookies.cookieInformation")}</h2>
                             <div className="mt-4 pt-4 border-t">
                                 <p className="text-xs text-muted-foreground">
                                     {t("cookies.learnMore")}{" "}
