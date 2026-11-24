@@ -57,6 +57,20 @@ async function requireAdmin(ctx: AdminCheckContext, userId: string) {
   }
 }
 
+/** Check whether the given userId belongs to a non-banned admin or super_admin. */
+async function isAdminUser(
+  ctx: AdminCheckContext,
+  userId: string | undefined,
+): Promise<boolean> {
+  if (!userId) return false;
+  const currentUser = await getUserById(ctx, userId);
+  return Boolean(
+    currentUser &&
+      !currentUser.isBanned &&
+      (currentUser.role === "admin" || currentUser.role === "super_admin"),
+  );
+}
+
 /**
  * Sentinel value stored in playgroundEditSuggestions.coverImage to distinguish
  * an explicit cover-image removal from an untouched nullable column (null).
@@ -140,6 +154,7 @@ export const playgroundRouter = createTRPCRouter({
             hasGarbageCan: input.hasGarbageCan,
             hasBathroomNearby: input.hasBathroomNearby,
             hasSoftPlayArea: input.hasSoftPlayArea,
+            submitAnonymously: input.submitAnonymously,
             coverImage, // First image as cover
             images: input.images,
             coverImageBlur,
@@ -512,14 +527,6 @@ export const playgroundRouter = createTRPCRouter({
               columns: {
                 id: true,
                 name: true,
-                email: true,
-              },
-            },
-            reviewedBy: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
               },
             },
           },
@@ -531,8 +538,55 @@ export const playgroundRouter = createTRPCRouter({
             action: "playground_not_found",
             metadata: { playgroundId: input.id },
           });
-          throw new PlaygroundNotFoundError(input.id);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `Playground with id ${input.id} not found`,
+          });
         }
+
+        const sessionUserId = ctx.session?.user?.id;
+        const isCreator = Boolean(
+          sessionUserId && playground.createdById === sessionUserId,
+        );
+        const needsAdminCheck =
+          Boolean(sessionUserId) &&
+          !isCreator &&
+          (playground.status !== "approved" ||
+            playground.submitAnonymously ||
+            playground.rejectionReason != null);
+        const isAdmin = needsAdminCheck
+          ? await isAdminUser(ctx, sessionUserId)
+          : false;
+        const isAuthorizedForPrivateFields = isAdmin || isCreator;
+
+        if (playground.status !== "approved" && !isAuthorizedForPrivateFields) {
+          logger.warn("Playground not found or not publicly accessible", {
+            component: "PlaygroundRouter",
+            action: "playground_not_found",
+            metadata: { playgroundId: input.id },
+          });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `Playground with id ${input.id} not found`,
+          });
+        }
+
+        const shouldRedactCreator =
+          playground.submitAnonymously && !isAuthorizedForPrivateFields;
+
+        const {
+          createdBy,
+          reviewedBy: _reviewedBy,
+          ...playgroundRest
+        } = playground as typeof playground & { reviewedBy?: unknown };
+
+        const sanitizedCreatedBy =
+          shouldRedactCreator || !createdBy
+            ? null
+            : {
+                id: createdBy.id,
+                name: createdBy.name,
+              };
 
         logger.debug("Playground fetched successfully", {
           component: "PlaygroundRouter",
@@ -544,10 +598,20 @@ export const playgroundRouter = createTRPCRouter({
           },
         });
 
-        return playground;
+        return {
+          ...playgroundRest,
+          createdById: shouldRedactCreator ? null : playgroundRest.createdById,
+          rejectionReason: isAuthorizedForPrivateFields
+            ? playgroundRest.rejectionReason
+            : null,
+          createdBy: sanitizedCreatedBy,
+        };
       } catch (error) {
-        if (error instanceof PlaygroundNotFoundError) {
-          throw error; // Re-throw custom errors
+        if (
+          error instanceof TRPCError ||
+          error instanceof PlaygroundNotFoundError
+        ) {
+          throw error; // Re-throw expected tRPC / custom errors
         }
 
         const err = error instanceof Error ? error : new Error(String(error));

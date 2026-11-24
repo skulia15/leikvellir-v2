@@ -250,8 +250,12 @@ type PlaygroundModerationColumns =
 type PlaygroundColumns = InferSelectModel<typeof playgrounds>;
 
 // Playground types derived from database schema
-export type Playground = Omit<PlaygroundColumns, PlaygroundModerationColumns> &
+export type Playground = Omit<
+  PlaygroundColumns,
+  PlaygroundModerationColumns | "createdById"
+> &
   Partial<Pick<PlaygroundColumns, PlaygroundModerationColumns>> & {
+  createdById: string | null;
   // Equipment relationships. `getAll` selects only the fields the map and list
   // render; the detail page (`getById`) still gets the full equipment record.
   playgroundEquipment?: Array<{
@@ -269,12 +273,12 @@ export type Playground = Omit<PlaygroundColumns, PlaygroundModerationColumns> &
   createdBy?: {
     id: string;
     name: string | null;
-    email: string;
+    email?: string;
   } | null;
   reviewedBy?: {
     id: string;
     name: string | null;
-    email: string;
+    email?: string;
   } | null;
 };
 

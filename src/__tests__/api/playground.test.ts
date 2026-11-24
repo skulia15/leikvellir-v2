@@ -120,6 +120,28 @@ describe("Playground tRPC Router", () => {
         expect.objectContaining({
           coverImage: "/uploads/playgrounds/test-image.jpg",
           status: "pending",
+          submitAnonymously: false,
+        }),
+      );
+    });
+
+    it("should persist submitAnonymously when set to true", async () => {
+      const created = mockPlayground({ status: "pending", submitAnonymously: true });
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db._mocks.returning.mockResolvedValueOnce([created]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.create({
+        ...validCreateInput,
+        submitAnonymously: true,
+      });
+
+      expect(result).toEqual(created);
+      expect(ctx.db._mocks.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          submitAnonymously: true,
+          status: "pending",
         }),
       );
     });
@@ -264,12 +286,13 @@ describe("Playground tRPC Router", () => {
 
   // ── getById (public) ────────────────────────────
   describe("getById", () => {
-    it("should return playground with full relations by ID", async () => {
+    it("should return approved playground with equipment and creator name without email or reviewedBy", async () => {
       const playground = mockPlayground({
         playgroundEquipment: [
           { playgroundId: 1, equipmentId: 1, equipment: { id: 1, name: { is: "Slide" } } },
         ],
         createdBy: { id: "user-1", name: "User", email: "user@test.com" },
+        reviewedBy: { id: "admin-1", name: "Admin", email: "admin@test.com" },
       });
       const ctx = createUnauthenticatedContext();
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
@@ -277,25 +300,229 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       const result = await caller.playground.getById({ id: 1 });
 
-      expect(result).toEqual(playground);
+      expect(result.id).toBe(1);
+      expect(result.playgroundEquipment).toEqual(playground.playgroundEquipment);
+      expect(result.createdBy).toEqual({ id: "user-1", name: "User" });
+      expect("email" in (result.createdBy ?? {})).toBe(false);
+      expect("reviewedBy" in result).toBe(false);
+
+      // Verify DB query does not select email or reviewedBy
+      const findFirstCall = ctx.db.query.playgrounds.findFirst.mock.calls[0]?.[0];
+      expect(findFirstCall?.with?.createdBy).toEqual({
+        columns: { id: true, name: true },
+      });
+      expect(findFirstCall?.with?.reviewedBy).toBeUndefined();
     });
 
-    it("should throw for non-existent ID", async () => {
+    it("should throw NOT_FOUND for non-existent ID", async () => {
       const ctx = createUnauthenticatedContext();
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
-      await expect(caller.playground.getById({ id: 999 })).rejects.toThrow();
+      await expect(caller.playground.getById({ id: 999 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
     });
 
-    it("should work without authentication", async () => {
+    it("should work without authentication for approved playground", async () => {
       const playground = mockPlayground();
       const ctx = createUnauthenticatedContext();
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
 
       const caller = createCaller(ctx as any);
       const result = await caller.playground.getById({ id: 1 });
-      expect(result).toEqual(playground);
+      expect(result).toEqual({
+        ...playground,
+        createdBy: null,
+      });
+    });
+
+    it("should redact createdBy and createdById for anonymous playground when caller is unauthenticated", async () => {
+      const playground = mockPlayground({
+        submitAnonymously: true,
+        createdById: "creator-1",
+        createdBy: { id: "creator-1", name: "Secret Submitter", email: "secret@test.com" },
+      });
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.submitAnonymously).toBe(true);
+      expect(result.createdBy).toBeNull();
+      expect(result.createdById).toBeNull();
+    });
+
+    it("should redact createdBy and createdById for anonymous playground when caller is another regular user", async () => {
+      const playground = mockPlayground({
+        submitAnonymously: true,
+        createdById: "creator-1",
+        createdBy: { id: "creator-1", name: "Secret Submitter", email: "secret@test.com" },
+      });
+      const ctx = createUserContext({ userId: "other-user-2" });
+      ctx.db.query.users.findFirst.mockResolvedValueOnce({
+        role: "user",
+        isBanned: false,
+      });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.createdBy).toBeNull();
+      expect(result.createdById).toBeNull();
+    });
+
+    it("should preserve createdBy (without email) for anonymous playground when caller is the creator", async () => {
+      const playground = mockPlayground({
+        submitAnonymously: true,
+        createdById: "creator-1",
+        createdBy: { id: "creator-1", name: "Creator Name", email: "creator@test.com" },
+      });
+      const ctx = createUserContext({ userId: "creator-1" });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.createdBy).toEqual({ id: "creator-1", name: "Creator Name" });
+      expect("email" in (result.createdBy ?? {})).toBe(false);
+      expect(result.createdById).toBe("creator-1");
+    });
+
+    it("should preserve createdBy (without email) for anonymous playground when caller is an admin", async () => {
+      const playground = mockPlayground({
+        submitAnonymously: true,
+        createdById: "creator-1",
+        createdBy: { id: "creator-1", name: "Creator Name", email: "creator@test.com" },
+      });
+      const ctx = createUserContext({ userId: "admin-1" });
+      ctx.db.query.users.findFirst.mockResolvedValueOnce({
+        role: "admin",
+        isBanned: false,
+      });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.createdBy).toEqual({ id: "creator-1", name: "Creator Name" });
+      expect("email" in (result.createdBy ?? {})).toBe(false);
+      expect(result.createdById).toBe("creator-1");
+    });
+
+    it("should throw NOT_FOUND for pending playground when caller is unauthenticated", async () => {
+      const pending = mockPlayground({ status: "pending", createdById: "creator-1" });
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+
+      const caller = createCaller(ctx as any);
+      await expect(caller.playground.getById({ id: 1 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    });
+
+    it("should throw NOT_FOUND for rejected playground (not leaking rejectionReason) when caller is unauthenticated", async () => {
+      const rejected = mockPlayground({
+        status: "rejected",
+        rejectionReason: "Private backyard",
+        createdById: "creator-1",
+      });
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(rejected);
+
+      const caller = createCaller(ctx as any);
+      await expect(caller.playground.getById({ id: 1 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    });
+
+    it("should throw NOT_FOUND for pending playground when caller is another regular user", async () => {
+      const pending = mockPlayground({ status: "pending", createdById: "creator-1" });
+      const ctx = createUserContext({ userId: "other-user-2" });
+      ctx.db.query.users.findFirst.mockResolvedValueOnce({
+        role: "user",
+        isBanned: false,
+      });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+
+      const caller = createCaller(ctx as any);
+      await expect(caller.playground.getById({ id: 1 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    });
+
+    it("should throw NOT_FOUND for pending playground when caller is a banned admin", async () => {
+      const pending = mockPlayground({ status: "pending", createdById: "creator-1" });
+      const ctx = createUserContext({ userId: "banned-admin" });
+      ctx.db.query.users.findFirst.mockResolvedValueOnce({
+        role: "admin",
+        isBanned: true,
+      });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+
+      const caller = createCaller(ctx as any);
+      await expect(caller.playground.getById({ id: 1 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    });
+
+    it("should allow creator to fetch their own pending or rejected playground with rejectionReason", async () => {
+      const rejected = mockPlayground({
+        status: "rejected",
+        rejectionReason: "Duplicate submission",
+        createdById: "creator-1",
+        createdBy: { id: "creator-1", name: "Creator", email: "creator@test.com" },
+      });
+      const ctx = createUserContext({ userId: "creator-1" });
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(rejected);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.status).toBe("rejected");
+      expect(result.rejectionReason).toBe("Duplicate submission");
+      expect(result.createdBy).toEqual({ id: "creator-1", name: "Creator" });
+      expect("email" in (result.createdBy ?? {})).toBe(false);
+    });
+
+    it("should allow admin and super_admin to fetch non-approved playgrounds", async () => {
+      for (const role of ["admin", "super_admin"] as const) {
+        const pending = mockPlayground({
+          status: "pending",
+          createdById: "creator-1",
+          createdBy: { id: "creator-1", name: "Creator", email: "creator@test.com" },
+        });
+        const ctx = createUserContext({ userId: `${role}-1` });
+        ctx.db.query.users.findFirst.mockResolvedValueOnce({
+          role,
+          isBanned: false,
+        });
+        ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+
+        const caller = createCaller(ctx as any);
+        const result = await caller.playground.getById({ id: 1 });
+
+        expect(result.status).toBe("pending");
+        expect(result.createdBy).toEqual({ id: "creator-1", name: "Creator" });
+        expect("email" in (result.createdBy ?? {})).toBe(false);
+      }
+    });
+
+    it("should strip stale rejectionReason on approved playgrounds for non-authorized callers", async () => {
+      const approvedWithStaleReason = mockPlayground({
+        status: "approved",
+        rejectionReason: "Old internal note",
+        createdById: "creator-1",
+      });
+      const ctx = createUnauthenticatedContext();
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedWithStaleReason);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getById({ id: 1 });
+
+      expect(result.rejectionReason).toBeNull();
     });
   });
 
