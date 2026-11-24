@@ -8,7 +8,7 @@ import { Check, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
-import { useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { formatDistance, getFreshPosition, GeoError } from "~/lib/geo-utils";
 
@@ -40,6 +40,7 @@ export function CheckInButton({
   variant = "default",
 }: CheckInButtonProps) {
   const t = useT();
+  const { locale } = useLocale();
   const { data: session } = useSession();
   const router = useRouter();
   const utils = api.useUtils();
@@ -81,7 +82,7 @@ export function CheckInButton({
         case "too_far":
           setMessage(
             t("checkIn.tooFar", {
-              distance: formatDistance(result.distanceMeters / 1000),
+              distance: formatDistance(result.distanceMeters / 1000, locale),
             }),
           );
           break;

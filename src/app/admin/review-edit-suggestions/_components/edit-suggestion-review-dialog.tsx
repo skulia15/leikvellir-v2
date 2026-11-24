@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 import { CoordinatePickerMap } from "~/app/_components/coordinate-picker-map";
-import { useLocale, useTranslation } from "~/lib/i18n";
+import { useDateLocale, useLocale, useTranslation } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { type Playground, type Equipment } from "~/types";
 import { handleMixedNameFormat } from "~/lib/multilingual-utils";
@@ -248,7 +248,7 @@ function EditableFieldChange({
         return value === 'preschool' ? t('forms.preschoolType') : t('forms.elementaryType');
       case "equipment":
         if (!Array.isArray(value) || value.length === 0) return t('common.notSet');
-        return `${value.length} ${value.length === 1 ? t('equipment.itemSingular') : t('equipment.items')}`;
+        return `${value.length} ${value.length === 1 ? t('equipment.itemSingular') : t('common.items')}`;
       case "image":
         return value ? (
           <Image
@@ -400,6 +400,7 @@ export default function EditSuggestionReviewDialog({
   const hasImageChanges = newImages.length > 0 || removedImages.length > 0;
   const imageChangeCount = newImages.length + removedImages.length;
   const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const [showRejectionReason, setShowRejectionReason] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -448,7 +449,7 @@ export default function EditSuggestionReviewDialog({
       setRejectionReason("");
     },
     onError: (error) => {
-      toast.error(error.message || t('error.reviewFailed'));
+      toast.error(error.message || t('errors.reviewFailed'));
     },
   });
 
@@ -470,7 +471,7 @@ export default function EditSuggestionReviewDialog({
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      toast.error(t('error.rejectionReasonRequired'));
+      toast.error(t('errors.rejectionReasonRequired'));
       return;
     }
 
@@ -654,7 +655,7 @@ export default function EditSuggestionReviewDialog({
               <div className="flex flex-col space-y-1">
                 <span className="text-muted-foreground">{t('admin.submittedOn')}:</span>
                 <span className="font-medium">
-                  {new Date(editSuggestion.createdAt).toLocaleDateString('en-GB')}
+                  {new Date(editSuggestion.createdAt).toLocaleDateString(dateLocale)}
                 </span>
               </div>
               <div className="flex flex-col space-y-1">

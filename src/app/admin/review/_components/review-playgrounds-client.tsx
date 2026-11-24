@@ -19,7 +19,7 @@ import { type Playground } from "~/types";
 import { toast } from "sonner";
 import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import EditSuggestionReviewDialog from "../../review-edit-suggestions/_components/edit-suggestion-review-dialog";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 
 // Type for edit suggestions - matches the interface from the edit suggestion dialog
 interface PlaygroundEditSuggestion {
@@ -72,6 +72,7 @@ export default function ReviewPlaygroundsClient({
     const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
     const [isEditSuggestionDialogOpen, setIsEditSuggestionDialogOpen] = useState(false);
     const t = useT();
+    const dateLocale = useDateLocale();
 
     // Use tRPC queries with initial data
     const { data: pendingSubmissions, refetch: refetchSubmissions } = api.playground.getPendingSubmissions.useQuery();
@@ -240,7 +241,7 @@ export default function ReviewPlaygroundsClient({
                     ) : (
                         <Card>
                             <CardHeader>
-                                <CardTitle>New Playground Submissions</CardTitle>
+                                <CardTitle>{t('admin.newPlaygroundSubmissions')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 {/* Desktop table */}
@@ -289,7 +290,7 @@ export default function ReviewPlaygroundsClient({
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="text-sm">
-                                                            {new Date(playground.createdAt).toLocaleDateString('en-GB')}
+                                                            {new Date(playground.createdAt).toLocaleDateString(dateLocale)}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
@@ -355,7 +356,7 @@ export default function ReviewPlaygroundsClient({
                                                         }
                                                     </span>
                                                 </div>
-                                                <span className="flex-shrink-0">{new Date(playground.createdAt).toLocaleDateString('en-GB')}</span>
+                                                <span className="flex-shrink-0">{new Date(playground.createdAt).toLocaleDateString(dateLocale)}</span>
                                             </div>
                                             <div className="flex items-center gap-2 border-t pt-3">
                                                 <Button variant="outline" size="sm" onClick={() => handleReview(playground)} disabled={reviewMutation.isPending}>
@@ -392,7 +393,7 @@ export default function ReviewPlaygroundsClient({
                     ) : (
                         <Card>
                             <CardHeader>
-                                <CardTitle>Edit Suggestions</CardTitle>
+                                <CardTitle>{t('admin.editSuggestionSubmissions')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 {/* Desktop table */}
@@ -400,8 +401,8 @@ export default function ReviewPlaygroundsClient({
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Playground</TableHead>
-                                                <TableHead>Proposed Changes</TableHead>
+                                                <TableHead>{t('admin.playground')}</TableHead>
+                                                <TableHead>{t('admin.proposedChanges')}</TableHead>
                                                 <TableHead>{t('admin.submittedBy')}</TableHead>
                                                 <TableHead>{t('admin.submittedOn')}</TableHead>
                                                 <TableHead>{t('admin.status')}</TableHead>
@@ -439,7 +440,7 @@ export default function ReviewPlaygroundsClient({
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="text-sm">
-                                                            {new Date(suggestion.createdAt).toLocaleDateString('en-GB')}
+                                                            {new Date(suggestion.createdAt).toLocaleDateString(dateLocale)}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
@@ -491,7 +492,7 @@ export default function ReviewPlaygroundsClient({
                                                         }
                                                     </span>
                                                 </div>
-                                                <span className="flex-shrink-0">{new Date(suggestion.createdAt).toLocaleDateString('en-GB')}</span>
+                                                <span className="flex-shrink-0">{new Date(suggestion.createdAt).toLocaleDateString(dateLocale)}</span>
                                             </div>
                                             <div className="flex items-center gap-2 border-t pt-3">
                                                 <Button variant="outline" size="sm" onClick={() => handleEditSuggestionReview(suggestion)}>

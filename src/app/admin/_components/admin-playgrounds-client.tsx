@@ -28,7 +28,7 @@ import {
 import { Pencil, Trash2, Eye, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 import PlaygroundFormDialog from "~/components/playground-form-dialog";
 
 export default function AdminPlaygroundsClient() {
@@ -36,6 +36,7 @@ export default function AdminPlaygroundsClient() {
     const [playgrounds] = api.playground.getAllForAdmin.useSuspenseQuery();
     const utils = api.useUtils();
     const t = useT();
+    const dateLocale = useDateLocale();
 
     const deletePlayground = api.playground.delete.useMutation({
         onSuccess: () => {
@@ -56,7 +57,7 @@ export default function AdminPlaygroundsClient() {
     };
 
     const formatDate = (date: Date) => {
-        return new Date(date).toLocaleDateString('en-GB');
+        return new Date(date).toLocaleDateString(dateLocale);
     };
 
     const getStatusBadge = (status: Playground["status"]) => {

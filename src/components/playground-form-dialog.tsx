@@ -46,7 +46,7 @@ import {
 } from "~/components/ui/form";
 import { Textarea } from "~/components/ui/textarea";
 
-import { useTranslation } from "~/lib/i18n";
+import { useDateLocale, useTranslation } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 import { type Playground } from "~/types";
 import { reverseGeocode } from "~/lib/geocoding";
@@ -96,6 +96,7 @@ export default function PlaygroundFormDialog({
   mode,
 }: PlaygroundFormDialogProps) {
   const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const utils = api.useUtils();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -423,7 +424,7 @@ export default function PlaygroundFormDialog({
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      {new Date(playground.createdAt).toLocaleDateString()}
+                      {new Date(playground.createdAt).toLocaleDateString(dateLocale)}
                     </span>
                   </div>
                 </div>

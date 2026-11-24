@@ -12,7 +12,7 @@ import {
 } from "~/components/ui/dialog";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 import SubmissionStatusBadge from "./submission-status-badge";
 
 interface PlaygroundEditSuggestion {
@@ -70,6 +70,7 @@ export default function ViewEditSuggestionDialog({
     onOpenChange,
 }: ViewEditSuggestionDialogProps) {
     const t = useT();
+    const dateLocale = useDateLocale();
 
     // Count the proposed changes
     const getChanges = () => {
@@ -94,28 +95,28 @@ export default function ViewEditSuggestionDialog({
             changes.push({ field: t('playground.schoolGround'), value: suggestion.isSchoolGround ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasSeating !== null && suggestion.hasSeating !== undefined) {
-            changes.push({ field: t('amenities.hasSeating'), value: suggestion.hasSeating ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasSeating'), value: suggestion.hasSeating ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasPicnicTable !== null && suggestion.hasPicnicTable !== undefined) {
-            changes.push({ field: t('amenities.hasPicnicTable'), value: suggestion.hasPicnicTable ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasPicnicTable'), value: suggestion.hasPicnicTable ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasFencing !== null && suggestion.hasFencing !== undefined) {
-            changes.push({ field: t('amenities.hasFencing'), value: suggestion.hasFencing ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasFencing'), value: suggestion.hasFencing ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasGarbageCan !== null && suggestion.hasGarbageCan !== undefined) {
-            changes.push({ field: t('amenities.hasGarbageCan'), value: suggestion.hasGarbageCan ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasGarbageCan'), value: suggestion.hasGarbageCan ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasBathroomNearby !== null && suggestion.hasBathroomNearby !== undefined) {
-            changes.push({ field: t('amenities.hasBathroomNearby'), value: suggestion.hasBathroomNearby ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasBathroomNearby'), value: suggestion.hasBathroomNearby ? t('common.yes') : t('common.no') });
         }
         if (suggestion.hasSoftPlayArea !== null && suggestion.hasSoftPlayArea !== undefined) {
-            changes.push({ field: t('amenities.hasSoftPlayArea'), value: suggestion.hasSoftPlayArea ? t('common.yes') : t('common.no') });
+            changes.push({ field: t('forms.hasSoftPlayArea'), value: suggestion.hasSoftPlayArea ? t('common.yes') : t('common.no') });
         }
         if (suggestion.images !== null && suggestion.images !== undefined) {
-            changes.push({ field: t('playground.photos'), value: `${suggestion.images.length} ${t('playground.photos')}` });
+            changes.push({ field: t('playground.images'), value: t('playground.imageCount', { count: suggestion.images.length }) });
         }
         if (suggestion.equipmentIds !== null && suggestion.equipmentIds !== undefined) {
-            changes.push({ field: t('playground.equipment'), value: `${suggestion.equipmentIds.length} items` });
+            changes.push({ field: t('playground.equipment'), value: `${suggestion.equipmentIds.length} ${t('common.items')}` });
         }
 
         return changes;
@@ -198,7 +199,7 @@ export default function ViewEditSuggestionDialog({
                     </div>
                     <div>
                         <p className="text-sm font-medium text-muted-foreground">{t('admin.submittedOn')}</p>
-                        <p className="text-sm">{new Date(suggestion.createdAt).toLocaleDateString('en-GB')}</p>
+                        <p className="text-sm">{new Date(suggestion.createdAt).toLocaleDateString(dateLocale)}</p>
                     </div>
                 </div>
 

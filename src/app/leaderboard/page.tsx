@@ -1,6 +1,5 @@
 import { api } from "~/trpc/server";
-import { getTranslation } from "~/lib/i18n/server";
-import { defaultLocale } from "~/lib/i18n/config";
+import { getServerLocale, getTranslation } from "~/lib/i18n/server";
 import LeaderboardClient from "./_components/leaderboard-client";
 
 /**
@@ -8,6 +7,7 @@ import LeaderboardClient from "./_components/leaderboard-client";
  * a leaderboard nobody can look at is not much of a leaderboard.
  */
 export default async function LeaderboardPage() {
+  const locale = await getServerLocale();
   // Fetched server-side and handed down as initial data, matching the pattern
   // in /my-submissions, so the board is painted rather than skeletoned.
   const [explorers, active] = await Promise.all([
@@ -20,10 +20,10 @@ export default async function LeaderboardPage() {
       <div className="max-w-screen-2xl mx-auto px-2 sm:px-6 lg:px-8 py-6 pt-24">
         <div className="mb-6">
           <h1 className="text-2xl font-bold sm:text-3xl">
-            {getTranslation(defaultLocale, "leaderboard.title")}
+            {getTranslation(locale, "leaderboard.title")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {getTranslation(defaultLocale, "leaderboard.description")}
+            {getTranslation(locale, "leaderboard.description")}
           </p>
         </div>
 

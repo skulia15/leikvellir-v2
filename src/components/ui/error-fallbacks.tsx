@@ -91,8 +91,7 @@ export function FormErrorFallback({
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          {error.message ||
-            "An unexpected error occurred while loading the form."}
+          {error.message || t('errors.unexpectedError')}
         </p>
         <div className="flex gap-2">
           <Button onClick={reset} variant="default">
@@ -134,7 +133,7 @@ export function MapErrorFallback({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {error.message || "Failed to initialize the map component."}
+            {error.message || t('errors.unexpectedError')}
           </p>
           <Button onClick={reset} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
@@ -170,7 +169,7 @@ export function DataErrorFallback({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {error.message || "Failed to fetch data."}
+            {error.message || t('errors.unexpectedError')}
           </p>
           <Button
             onClick={reset}

@@ -4,6 +4,8 @@
 
 import { type Playground } from "~/types";
 import { calculateDistance, type UserLocation } from "./geo-utils";
+import { defaultLocale, getBcp47Locale } from "./i18n/config";
+import { type Locale } from "./i18n/types";
 
 /** Mapbox-style bounds tuple: [west, south, east, north] (lng/lat order) */
 export type MapBounds = [number, number, number, number];
@@ -116,25 +118,31 @@ export function isWithinBounds(
  * Estimate walking time from distance in kilometers.
  * Uses average walking speed of 5 km/h.
  */
-export function estimateWalkingTime(distanceKm: number): {
+export function estimateWalkingTime(
+  distanceKm: number,
+  locale: Locale = defaultLocale,
+): {
   minutes: number;
   text: string;
 } {
   const minutes = Math.ceil((distanceKm / 5) * 60);
+  const tag = getBcp47Locale(locale);
+  const fmt = (value: number, unit: "minute" | "hour") =>
+    new Intl.NumberFormat(tag, { style: "unit", unit, unitDisplay: "short" }).format(value);
 
   if (minutes < 1) {
-    return { minutes: 0, text: "< 1 min" };
+    return { minutes: 0, text: `< ${fmt(1, "minute")}` };
   }
   if (minutes < 60) {
-    return { minutes, text: `${minutes} min` };
+    return { minutes, text: fmt(minutes, "minute") };
   }
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (remainingMinutes === 0) {
-    return { minutes, text: `${hours} hr` };
+    return { minutes, text: fmt(hours, "hour") };
   }
-  return { minutes, text: `${hours} hr ${remainingMinutes} min` };
+  return { minutes, text: `${fmt(hours, "hour")} ${fmt(remainingMinutes, "minute")}` };
 }
 
 /**

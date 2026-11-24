@@ -1,9 +1,10 @@
 import { type Metadata } from 'next';
 import { getBaseUrl } from './base-url';
+import { formatIcelandicLocation } from '~/lib/icelandic-declension';
 
 const BASE_URL = getBaseUrl();
 const DEFAULT_TITLE = 'Leiksvæði - Uppgötvaðu og kortleggðu leikvelli á Íslandi';
-const DEFAULT_DESCRIPTION = 'Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna.';
+const DEFAULT_DESCRIPTION = 'Uppgötvaðu og kortleggðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna.';
 
 interface SEOProps {
   title?: string;
@@ -78,8 +79,6 @@ export function generateMetadata({
       title: fullTitle,
       description,
       images: [image],
-      creator: '@leiskvæði',
-      site: '@leiskvæði',
     },
 
     // Additional metadata
@@ -150,8 +149,7 @@ export function generatePlaygroundMetadata(playground: {
   images?: string[] | null;
 }) {
   const title = playground.name;
-  const locationText = playground.municipality || 'á Íslandi';
-  const description = `${playground.name} - leiksvæði í ${locationText}. Skoðaðu leiktæki, myndir, aðgengi og staðsetningu. Finndu fleiri leiksvæði á Íslandi.`;
+  const description = `${playground.name} - leiksvæði ${formatIcelandicLocation(playground.municipality)}. Skoðaðu leiktæki, myndir, aðgengi og staðsetningu. Finndu fleiri leiksvæði á Íslandi.`;
   const image = playground.images?.[0] || `${BASE_URL}/og-image.png`;
   const url = `${BASE_URL}/playground/${playground.id}`;
 

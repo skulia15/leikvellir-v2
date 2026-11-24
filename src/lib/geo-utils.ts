@@ -3,6 +3,8 @@
  */
 
 import { type Playground } from "~/types";
+import { defaultLocale, getBcp47Locale } from "./i18n/config";
+import { type Locale } from "./i18n/types";
 
 export interface UserLocation {
     lat: number;
@@ -55,10 +57,12 @@ export function getPlaygroundDistance(
 /**
  * Format distance for display
  */
-export function formatDistance(distance: number): string {
-    return distance < 1
-        ? `${Math.round(distance * 1000)}m`
-        : `${distance.toFixed(1)}km`;
+export function formatDistance(distance: number, locale: Locale = defaultLocale): string {
+    const tag = getBcp47Locale(locale);
+    if (distance < 1) {
+        return new Intl.NumberFormat(tag, { style: "unit", unit: "meter", unitDisplay: "short", maximumFractionDigits: 0 }).format(Math.round(distance * 1000));
+    }
+    return new Intl.NumberFormat(tag, { style: "unit", unit: "kilometer", unitDisplay: "short", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(distance);
 }
 
 /**

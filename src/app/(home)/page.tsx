@@ -10,7 +10,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Leiksvæði | Leikvellir á Íslandi",
   description:
-    "Uppgötvaðu og kortlegðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna á gagnvirku korti.",
+    "Uppgötvaðu og kortleggðu leiksvæði víðsvegar um Ísland. Finndu skemmtilega leikvelli með leiktækjum og ítarlegum upplýsingum fyrir fjölskylduna á gagnvirku korti.",
 };
 
 export default async function Home() {

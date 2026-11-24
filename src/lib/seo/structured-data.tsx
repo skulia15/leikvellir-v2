@@ -1,4 +1,5 @@
 import { getBaseUrl } from './base-url';
+import { formatIcelandicLocation } from '~/lib/icelandic-declension';
 
 const BASE_URL = getBaseUrl();
 
@@ -28,7 +29,7 @@ interface OrganizationSchemaProps {
 
 export function OrganizationSchema({
   name = 'Leiksvæði',
-  description = 'Finndu og kortleggðu leiksvæði og róluvellir víðsvegar um landið',
+  description = 'Finndu og kortleggðu leiksvæði og róluvelli víðsvegar um landið',
   url = BASE_URL,
   logo = `${BASE_URL}/android-chrome-512x512.png`
 }: OrganizationSchemaProps = {}) {
@@ -109,7 +110,7 @@ export function PlaygroundSchema({ playground }: PlaygroundSchemaProps) {
     '@type': 'Playground',
     '@id': `${BASE_URL}/playground/${playground.id}`,
     name: playground.name,
-    description: `${playground.name} - leiksvæði í ${playground.municipality || 'á Íslandi'}`,
+    description: `${playground.name} - leiksvæði ${formatIcelandicLocation(playground.municipality)}`,
     url: `${BASE_URL}/playground/${playground.id}`,
     geo: {
       '@type': 'GeoCoordinates',

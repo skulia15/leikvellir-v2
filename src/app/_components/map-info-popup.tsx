@@ -16,7 +16,7 @@ import {
 } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
 import { useSwipe } from "~/lib/hooks/use-swipe";
-import { useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 
@@ -43,6 +43,7 @@ export function MapInfoPopup({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { data: session } = useSession();
   const t = useT();
+  const { locale } = useLocale();
 
   // Reset image index when playground changes
   useEffect(() => {
@@ -58,7 +59,7 @@ export function MapInfoPopup({
       )
     : null;
 
-  const walkingTime = distance ? estimateWalkingTime(distance) : null;
+  const walkingTime = distance ? estimateWalkingTime(distance, locale) : null;
 
   // Get all available images, removing duplicates
   const images = [

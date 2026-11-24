@@ -2,6 +2,18 @@
 import { type LocaleConfig, type Locale } from './types';
 
 export const defaultLocale: Locale = 'is';
+export const LOCALE_STORAGE_KEY = 'leiksvaedi-locale';
+export const LOCALE_COOKIE_NAME = 'NEXT_LOCALE';
+
+const bcp47LocaleMap: Record<Locale, string> = {
+  is: 'is-IS',
+  en: 'en-GB',
+  pl: 'pl-PL',
+};
+
+export const getBcp47Locale = (locale: Locale): string => {
+  return bcp47LocaleMap[locale] ?? 'is-IS';
+};
 
 export const locales: LocaleConfig[] = [
   {

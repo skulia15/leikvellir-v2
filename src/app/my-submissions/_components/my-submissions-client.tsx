@@ -22,7 +22,7 @@ import ViewSubmissionDialog from "./view-submission-dialog";
 import PlaygroundFormDialog from "~/components/playground-form-dialog";
 import ViewEditSuggestionDialog from "./view-edit-suggestion-dialog";
 import EditSuggestionDialog from "./edit-suggestion-dialog";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 
 // Type for edit suggestions
 interface PlaygroundEditSuggestion {
@@ -79,6 +79,7 @@ export default function MySubmissionsClient({
     initialEditSuggestions: _initialEditSuggestions,
 }: MySubmissionsClientProps) {
     const t = useT();
+    const dateLocale = useDateLocale();
 
     // Dialog states for playground submissions
     const [selectedSubmission, setSelectedSubmission] = useState<Playground | null>(null);
@@ -239,7 +240,7 @@ export default function MySubmissionsClient({
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="text-sm">
-                                                            {new Date(playground.createdAt).toLocaleDateString('en-GB')}
+                                                            {new Date(playground.createdAt).toLocaleDateString(dateLocale)}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
@@ -301,7 +302,7 @@ export default function MySubmissionsClient({
                                                 )}
                                             </div>
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                <span>{new Date(playground.createdAt).toLocaleDateString('en-GB')}</span>
+                                                <span>{new Date(playground.createdAt).toLocaleDateString(dateLocale)}</span>
                                             </div>
                                             {playground.status === "rejected" && playground.rejectionReason && (
                                                 <div className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
@@ -389,7 +390,7 @@ export default function MySubmissionsClient({
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="text-sm">
-                                                            {new Date(suggestion.createdAt).toLocaleDateString('en-GB')}
+                                                            {new Date(suggestion.createdAt).toLocaleDateString(dateLocale)}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
@@ -437,7 +438,7 @@ export default function MySubmissionsClient({
                                                 <SubmissionStatusBadge status={suggestion.status} />
                                             </div>
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                <span>{new Date(suggestion.createdAt).toLocaleDateString('en-GB')}</span>
+                                                <span>{new Date(suggestion.createdAt).toLocaleDateString(dateLocale)}</span>
                                             </div>
                                             {suggestion.status === "rejected" && suggestion.rejectionReason && (
                                                 <div className="text-sm text-red-600 bg-red-50 p-2 rounded-lg">

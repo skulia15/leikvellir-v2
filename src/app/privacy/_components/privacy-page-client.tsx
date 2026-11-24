@@ -272,7 +272,7 @@ export function PrivacyPageClient() {
                                 <p><strong>{t('privacy.email')}</strong> skuliarnarsson@gmail.com</p>
                                 <p><strong>{t('privacy.developer')}</strong> Skúli Arnarsson</p>
                                 <p><strong>{t('privacy.github')}</strong> <Link href="https://github.com/skulia15" className="text-blue-600 hover:underline">github.com/skulia15</Link></p>
-                                <p><strong>{t('privacy.location')}</strong> Hafnarfjörður, Iceland</p>
+                                <p><strong>{t('privacy.location')}</strong> {t('footer.location')}</p>
                             </div>
 
                             <div className="mt-4 p-3 bg-gray-50 rounded-lg">

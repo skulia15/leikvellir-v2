@@ -27,16 +27,6 @@ interface EquipmentManagementClientProps {
     initialData: Equipment[];
 }
 
-const categoryLabels: Record<string, string> = {
-    core_equipment: "Core Equipment",
-    climbing_and_movement: "Climbing & Movement",
-    imaginative_and_themed: "Imaginative & Themed",
-    spinning_and_motion: "Spinning & Motion",
-    fitness_and_obstacle: "Fitness & Obstacle",
-    toddler_friendly: "Toddler Friendly",
-    additional_common_equipment: "Additional Equipment",
-};
-
 export default function EquipmentManagementClient({
     initialData,
 }: EquipmentManagementClientProps) {
@@ -154,7 +144,7 @@ export default function EquipmentManagementClient({
                             <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-2">
                                     <PlaygroundEquipmentIcon className="h-5 w-5" />
-                                    <span className="truncate">{categoryLabels[category] || category}</span>
+                                    <span className="truncate">{t(`equipment.categories.${category}`)}</span>
                                     <Badge variant="outline" className="text-xs flex-shrink-0">
                                         {categoryEquipment.length} {t("equipment.itemsText")}
                                     </Badge>

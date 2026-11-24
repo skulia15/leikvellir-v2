@@ -36,7 +36,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { type UserRole } from "~/types";
 import Image from "next/image";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 
 // Define the user type based on the database schema
 type User = {
@@ -56,6 +56,7 @@ export default function UserManagementClient() {
     const [banReason, setBanReason] = useState("");
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const t = useT();
+    const dateLocale = useDateLocale();
 
     const utils = api.useUtils();
 
@@ -233,7 +234,7 @@ export default function UserManagementClient() {
                                 <TableCell>{getStatusBadge(user)}</TableCell>
                                 <TableCell>
                                     <div className="text-sm">
-                                        {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
+                                        {user.emailVerified?.toLocaleDateString(dateLocale) ?? t('playground.unknown')}
                                     </div>
                                 </TableCell>
                                 <TableCell>
@@ -343,7 +344,7 @@ export default function UserManagementClient() {
                             )}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                            {t('admin.joined')}: {user.emailVerified?.toLocaleDateString('en-GB') ?? "Unknown"}
+                            {t('admin.joined')}: {user.emailVerified?.toLocaleDateString(dateLocale) ?? t('playground.unknown')}
                         </div>
                         {user.id !== currentUser?.id && (
                             <div className="space-y-2 border-t pt-3">

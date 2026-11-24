@@ -56,9 +56,9 @@ import { estimateWalkingTime } from "~/lib/map-utils";
 import { getDirectionsUrl } from "~/lib/directions";
 import { getAccessibilityStatus, formatSchoolType } from "~/lib/school-hours";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
-import { useT, useLocale } from "~/lib/i18n";
+import { getBcp47Locale, useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
-import { getMunicipalityDative } from "~/lib/icelandic-declension";
+import { formatIcelandicLocation } from "~/lib/icelandic-declension";
 import NearbyPlaygrounds from "./nearby-playgrounds";
 import AddPhotosDialog from "./add-photos-dialog";
 import { api } from "~/trpc/react";
@@ -80,7 +80,7 @@ export default function PlaygroundDetail({
   const [isAddPhotosDialogOpen, setIsAddPhotosDialogOpen] = useState(false);
   const t = useT();
   const currentLanguage = useLocale().locale;
-  const dateLocale = currentLanguage === 'en' ? 'en-GB' : currentLanguage;
+  const dateLocale = getBcp47Locale(currentLanguage);
 
   // Fetch all playgrounds for the "nearby" section
   const { data: allPlaygrounds } = api.playground.getAll.useQuery();
@@ -258,7 +258,7 @@ export default function PlaygroundDetail({
                     <div>
                       <p className="font-medium">{t('playground.distanceFromYou')}</p>
                       <p className="text-sm font-medium text-green-600">
-                        {estimateWalkingTime(distance).text} · {formatDistance(distance)}
+                        {estimateWalkingTime(distance, currentLanguage).text} · {formatDistance(distance, currentLanguage)}
                       </p>
                     </div>
                   </div>
@@ -672,7 +672,7 @@ export default function PlaygroundDetail({
                 href={`/playgrounds?municipality=${encodeURIComponent(playground.municipality)}`}
                 className="text-sm text-primary hover:underline"
               >
-                {t('playground.moreInMunicipality', { municipality: currentLanguage === 'is' ? getMunicipalityDative(playground.municipality) : playground.municipality })}
+                {t('playground.moreInMunicipality', { municipality: currentLanguage === 'is' ? formatIcelandicLocation(playground.municipality) : playground.municipality })}
               </Link>
             </>
           )}

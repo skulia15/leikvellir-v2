@@ -98,7 +98,7 @@ export default function SuggestEditDialog({
       form.reset();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to submit edit suggestion");
+      toast.error(error.message || t('errors.failedToSubmitEditSuggestion'));
     },
   });
 
@@ -631,7 +631,7 @@ export default function SuggestEditDialog({
                 disabled={createEditSuggestionMutation.isPending || isUploading}
               >
                 {createEditSuggestionMutation.isPending ? (
-                  "Submitting..."
+                  t('actions.submitting')
                 ) : isUploading ? (
                   t('forms.uploadingImages')
                 ) : (

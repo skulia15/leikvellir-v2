@@ -381,7 +381,7 @@ export default function EditSuggestionDialog({
                                                     />
                                                 </FormControl>
                                                 <FormLabel className="font-normal">
-                                                    {t('playground.isSchoolGround')}
+                                                    {t('forms.isSchoolGround')}
                                                 </FormLabel>
                                             </FormItem>
                                         )}
@@ -393,14 +393,14 @@ export default function EditSuggestionDialog({
                                             name="schoolType"
                                             render={({ field }) => (
                                                 <FormItem className="ml-6">
-                                                    <FormLabel>{t('playground.schoolType')}</FormLabel>
+                                                    <FormLabel>{t('forms.schoolType')}</FormLabel>
                                                     <Select
                                                         value={field.value ?? ""}
                                                         onValueChange={(value) => field.onChange(value || null)}
                                                     >
                                                         <FormControl>
                                                             <SelectTrigger>
-                                                                <SelectValue placeholder={t('playground.selectSchoolType')} />
+                                                                <SelectValue placeholder={t('forms.selectSchoolType')} />
                                                             </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent>
@@ -430,7 +430,7 @@ export default function EditSuggestionDialog({
                                                         {t('playground.submitAnonymously')}
                                                     </FormLabel>
                                                     <FormDescription>
-                                                        {t('playground.submitAnonymouslyDescription')}
+                                                        {t('forms.submitAnonymouslyDescription')}
                                                     </FormDescription>
                                                 </div>
                                             </FormItem>
@@ -469,7 +469,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasSeating')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasSeating')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -481,7 +481,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasPicnicTable')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasPicnicTable')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -493,7 +493,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasFencing')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasFencing')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -505,7 +505,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasGarbageCan')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasGarbageCan')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -517,7 +517,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasBathroomNearby')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasBathroomNearby')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -529,7 +529,7 @@ export default function EditSuggestionDialog({
                                             <FormControl>
                                                 <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                                             </FormControl>
-                                            <FormLabel className="font-normal">{t('amenities.hasSoftPlayArea')}</FormLabel>
+                                            <FormLabel className="font-normal">{t('forms.hasSoftPlayArea')}</FormLabel>
                                         </FormItem>
                                     )}
                                 />
@@ -542,7 +542,7 @@ export default function EditSuggestionDialog({
                                     name="images"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>{t('playground.photos')}</FormLabel>
+                                            <FormLabel>{t('playground.images')}</FormLabel>
                                             <FormControl>
                                                 <ImageUpload
                                                     value={field.value ?? []}
@@ -553,7 +553,7 @@ export default function EditSuggestionDialog({
                                                 />
                                             </FormControl>
                                             <FormDescription>
-                                                {t('playground.uploadPhotosDescription')}
+                                                {t('admin.uploadImagesDescription')}
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>

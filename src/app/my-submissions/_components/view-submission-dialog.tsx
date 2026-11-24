@@ -13,7 +13,7 @@ import {
 } from "~/components/ui/dialog";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
-import { useT } from "~/lib/i18n";
+import { useDateLocale, useT } from "~/lib/i18n";
 import { playgroundImageBlurProps } from "~/lib/image-placeholder";
 import { type Playground } from "~/types";
 import { resolveEquipment, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
@@ -32,6 +32,7 @@ export default function ViewSubmissionDialog({
 }: ViewSubmissionDialogProps) {
     const t = useT();
     const equipmentLookup = useEquipmentLookup();
+    const dateLocale = useDateLocale();
     const validImages = (playground.images ?? []).filter(img => img && img.trim() !== "");
     const coverImage = playground.coverImage ?? validImages[0];
 
@@ -119,7 +120,7 @@ export default function ViewSubmissionDialog({
                     </div>
                     <div>
                         <p className="text-sm font-medium text-muted-foreground">{t('admin.submittedOn')}</p>
-                        <p className="text-sm">{new Date(playground.createdAt).toLocaleDateString('en-GB')}</p>
+                        <p className="text-sm">{new Date(playground.createdAt).toLocaleDateString(dateLocale)}</p>
                     </div>
                     <div>
                         <p className="text-sm font-medium text-muted-foreground">{t('playground.coordinates')}</p>
@@ -129,8 +130,8 @@ export default function ViewSubmissionDialog({
                         </p>
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-muted-foreground">{t('playground.photoCount')}</p>
-                        <p className="text-sm">{validImages.length} {t('playground.photos')}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{t('playground.images')}</p>
+                        <p className="text-sm">{t('playground.imageCount', { count: validImages.length })}</p>
                     </div>
                 </div>
 
@@ -152,22 +153,22 @@ export default function ViewSubmissionDialog({
                             </Badge>
                         )}
                         {playground.hasSeating && (
-                            <Badge variant="outline">{t('amenities.hasSeating')}</Badge>
+                            <Badge variant="outline">{t('forms.hasSeating')}</Badge>
                         )}
                         {playground.hasPicnicTable && (
-                            <Badge variant="outline">{t('amenities.hasPicnicTable')}</Badge>
+                            <Badge variant="outline">{t('forms.hasPicnicTable')}</Badge>
                         )}
                         {playground.hasFencing && (
-                            <Badge variant="outline">{t('amenities.hasFencing')}</Badge>
+                            <Badge variant="outline">{t('forms.hasFencing')}</Badge>
                         )}
                         {playground.hasGarbageCan && (
-                            <Badge variant="outline">{t('amenities.hasGarbageCan')}</Badge>
+                            <Badge variant="outline">{t('forms.hasGarbageCan')}</Badge>
                         )}
                         {playground.hasBathroomNearby && (
-                            <Badge variant="outline">{t('amenities.hasBathroomNearby')}</Badge>
+                            <Badge variant="outline">{t('forms.hasBathroomNearby')}</Badge>
                         )}
                         {playground.hasSoftPlayArea && (
-                            <Badge variant="outline">{t('amenities.hasSoftPlayArea')}</Badge>
+                            <Badge variant="outline">{t('forms.hasSoftPlayArea')}</Badge>
                         )}
                     </div>
                 </div>
@@ -194,7 +195,7 @@ export default function ViewSubmissionDialog({
                     <>
                         <Separator />
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground mb-2">{t('playground.allPhotos')}</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">{t('playground.allImages')}</p>
                             <div className="grid grid-cols-3 gap-2">
                                 {validImages.map((img, index) => (
                                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden">

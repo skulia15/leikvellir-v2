@@ -4,7 +4,7 @@ import { Card } from "~/components/ui/card";
 import { type Playground } from "~/types";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
-import { useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
 import { hasEquipmentNamed, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
 
@@ -20,6 +20,7 @@ export default function PlaygroundGridCard({
   showDistance = false,
 }: PlaygroundGridCardProps) {
   const t = useT();
+  const { locale } = useLocale();
   const equipmentLookup = useEquipmentLookup();
   const hasBouncyPillow = hasEquipmentNamed(playground, "Ærslabelgur", equipmentLookup);
 
@@ -111,7 +112,7 @@ export default function PlaygroundGridCard({
           <div className="pt-2 border-t border-border">
             <span className="flex items-center gap-1.5 text-xs tabular-nums font-medium text-muted-foreground">
               <Footprints className="h-3 w-3" />
-              {estimateWalkingTime(distance).text} · {formatDistance(distance)}
+              {estimateWalkingTime(distance, locale).text} · {formatDistance(distance, locale)}
             </span>
           </div>
         )}

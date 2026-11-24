@@ -2,7 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { AdminProvider } from "~/lib/admin-context";
-import { LanguageProvider } from "~/lib/i18n";
+import { LanguageProvider, type Locale } from "~/lib/i18n";
 import { TRPCReactProvider } from "~/trpc/react";
 import { type Session } from "next-auth";
 import { ErrorProvider } from "./error-provider";
@@ -12,12 +12,13 @@ import { PostHogProvider } from "./posthog-provider";
 interface ProvidersProps {
   children: React.ReactNode;
   session: Session | null;
+  initialLocale?: Locale;
 }
 
-export function Providers({ children, session }: ProvidersProps) {
+export function Providers({ children, session, initialLocale }: ProvidersProps) {
   return (
     <ErrorProvider>
-      <LanguageProvider>
+      <LanguageProvider initialLocale={initialLocale}>
         <AppErrorBoundary>
           <PostHogProvider>
             <SessionProvider session={session}>

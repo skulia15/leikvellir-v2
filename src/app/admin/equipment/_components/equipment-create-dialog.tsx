@@ -268,7 +268,7 @@ export default function EquipmentCreateDialog({
                                 {createMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {t('common.creating')}
+                                        {t('actions.creating')}
                                     </>
                                 ) : (
                                     t('equipment.createEquipment')

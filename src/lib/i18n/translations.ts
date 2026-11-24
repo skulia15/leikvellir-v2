@@ -90,23 +90,30 @@ export const getTranslation = (locale: Locale, key: string, params?: Record<stri
 };
 
 // Helper function to determine the correct plural key based on count and locale
-const getPluralKey = (baseKey: string, count: number, locale: Locale): string => {
+export const getPluralKey = (baseKey: string, count: number, locale: Locale): string => {
+  const absCount = Math.abs(count);
   switch (locale) {
     case 'en':
-      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+      return absCount === 1 ? `${baseKey}_one` : `${baseKey}_other`;
     case 'is':
-      // Icelandic takes the singular for any number ending in 1 except 11,
-      // so 21 and 101 are "1 leikvöllur" shaped, but 11 is not.
-      return count % 10 === 1 && count % 100 !== 11
+      // Icelandic CLDR: integers ending in 1 (except 11) take the singular, e.g. "21 mynd"
+      return Number.isInteger(absCount) && absCount % 10 === 1 && absCount % 100 !== 11
         ? `${baseKey}_one`
         : `${baseKey}_other`;
-    case 'pl':
-      // Polish plural rules: 1 = one, 2-4 = few, 5+ = many, 0 = many
-      if (count === 1) return `${baseKey}_one`;
-      if (count >= 2 && count <= 4) return `${baseKey}_few`;
+    case 'pl': {
+      // Polish CLDR cardinal plural rules:
+      // 1 = one; mod10 in 2..4 (excluding mod100 in 12..14) = few; other integers = many; decimals = other
+      if (!Number.isInteger(absCount)) return `${baseKey}_other`;
+      if (absCount === 1) return `${baseKey}_one`;
+      const mod10 = absCount % 10;
+      const mod100 = absCount % 100;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+        return `${baseKey}_few`;
+      }
       return `${baseKey}_many`;
+    }
     default:
-      return count === 1 ? `${baseKey}_one` : `${baseKey}_other`;
+      return absCount === 1 ? `${baseKey}_one` : `${baseKey}_other`;
   }
 };
 

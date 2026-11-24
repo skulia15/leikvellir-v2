@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { type Playground } from "~/types";
 import { calculateDistance, formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
-import { useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
 
 interface NearbyPlaygroundsProps {
@@ -28,6 +28,7 @@ export default function NearbyPlaygrounds({
   limit = 3,
 }: NearbyPlaygroundsProps) {
   const t = useT();
+  const { locale } = useLocale();
 
   // Calculate distances and sort by proximity
   const nearbyPlaygrounds: NearbyPlayground[] = allPlaygrounds
@@ -134,10 +135,10 @@ export default function NearbyPlaygrounds({
                     }}
                   >
                     <Footprints className="h-3 w-3" />
-                    {estimateWalkingTime(playground.distance).text}
+                    {estimateWalkingTime(playground.distance, locale).text}
                   </span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {formatDistance(playground.distance)}
+                    {formatDistance(playground.distance, locale)}
                   </span>
                 </div>
               </div>

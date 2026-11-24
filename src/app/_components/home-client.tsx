@@ -18,11 +18,14 @@ import { useRef } from "react";
 import { api } from "~/trpc/react";
 import PlaygroundList from "./playground-list";
 
-const MapLoadingFallback = () => (
-    <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
-        <div className="text-muted-foreground text-sm">Loading map...</div>
-    </div>
-);
+function MapLoadingFallback() {
+    const t = useT();
+    return (
+        <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
+            <div className="text-muted-foreground text-sm">{t('map.loadingMap')}</div>
+        </div>
+    );
+}
 
 // Dynamic import for Mapbox — no SSR (mapbox-gl uses WebGL which requires a browser)
 const MapComponent = dynamic(

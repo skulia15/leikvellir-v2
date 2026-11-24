@@ -119,6 +119,11 @@
     "reset": "Resetuj",
     "creating": "Tworzenie...",
     "images": "Zdjęcia",
+    "imageCount_one": "{{count}} zdjęcie",
+    "imageCount_few": "{{count}} zdjęcia",
+    "imageCount_many": "{{count}} zdjęć",
+    "imageCount_other": "{{count}} zdjęcia",
+    "allImages": "Wszystkie zdjęcia",
     "back": "Wstecz",
     "playgroundInformation": "Informacje o placu zabaw",
     "distanceFromYou": "Odległość od Ciebie",
@@ -134,6 +139,7 @@
     "noImagesAvailable": "Brak dostępnych zdjęć",
     "equipmentMayBeAdded": "Szczegóły wyposażenia mogą zostać dodane później",
     "quickActions": "Szybkie akcje",
+    "additionalInformation": "Dodatkowe informacje",
     "getDirections": "Uzyskaj wskazówki",
     "viewOnMap": "Zobacz na mapie",
     "viewDetails": "Zobacz szczegóły",
@@ -323,11 +329,7 @@
     "noEquipmentAvailable": "Brak dostępnego sprzętu",
     "clearAllSelections": "Wyczyść wszystkie wybory",
     "editEquipment": "Edytuj wyposażenie",
-    "updateDetails": "Zaktualizuj szczegóły wyposażenia",
-    "equipmentDeleted": "Sprzęt usunięty pomyślnie",
-    "equipmentRestored": "Sprzęt przywrócony pomyślnie",
-    "equipmentUpdated": "Wyposażenie zaktualizowane pomyślnie",
-    "userRoleUpdated": "Rola użytkownika zaktualizowana pomyślnie"
+    "updateDetails": "Zaktualizuj szczegóły wyposażenia"
   },
   "admin": {
     "adminMode": "Tryb administratora",
@@ -487,7 +489,8 @@
     "editPlayground": "Edytuj plac zabaw",
     "editPlaygroundDescription": "Edytuj szczegóły placu zabaw poniżej.",
     "delete": "Usuń",
-    "deletePlayground": "Usuń plac zabaw"
+    "deletePlayground": "Usuń plac zabaw",
+    "newPlaygroundSubmissions": "Nowe zgłoszenia placów zabaw"
   },
   "forms": {
     "useCurrentLocation": "Użyj obecnej lokalizacji",
@@ -552,6 +555,7 @@
     "clickToSetCover": "i kliknij na zdjęcie, aby ustawić je jako okładkę",
     "selectEquipmentAtPlayground": "Wybierz wyposażenie dostępne na tym placu zabaw",
     "maximumFilesExceeded": "Maksymalnie {{maxFiles}} plików dozwolone. Obecnie masz {{currentFiles}} plików.",
+    "maximumBatchFilesExceeded": "Maksymalnie {{maxFiles}} plików na jedną partię. Próbujesz przesłać {{batchSize}} plików.",
     "onlyImageFilesSupported": "{{filename}}: Obsługiwane są tylko pliki obrazów",
     "failedToResizeImages": "Nie udało się zmienić rozmiaru obrazów: {{error}}",
     "fileValidationError": "{{filename}}: {{error}}",
@@ -564,6 +568,7 @@
     "uploadPlaygroundImages": "Prześlij zdjęcia placu zabaw",
     "dragDropOrClick": "Przeciągnij i upuść obrazy lub kliknij, aby przeglądać",
     "maxFilesCompression": "Maksymalnie {{maxFiles}} plików",
+    "maxFilesPerBatchCompression": "Maks. {{maxFiles}} plików na partię",
     "imagesCoverSelection": "Wybór obrazu okładki",
     "uploadedImages": "Przesłane obrazy",
     "clickImageSetCover": "Kliknij obraz, aby ustawić jako okładkę",
@@ -574,7 +579,9 @@
     "uploadProgress": "{{progress}}% przesłano",
     "uploadCompleteMoving": "Przesyłanie zakończone! Przenoszenie do galerii...",
     "imagesUploadedStats": "{{uploaded}} z {{maxFiles}} obrazów przesłanych",
+    "imagesUploadedBatchStats": "Przesłano zdjęcia: {{uploaded}}, oczekujące: {{pending}} (maks. {{maxPerBatch}} na partię)",
     "markedForRemoval": "Oznaczone do usunięcia",
+    "removedImages": "Usunięte zdjęcia",
     "submitAnonymously": "Prześlij anonimowo",
     "submitAnonymouslyDescription": "Twoje imię zostanie ukryte na stronie publicznej, ale administratorzy nadal będą mogli zobaczyć, kto przesłał ten plac zabaw",
     "schoolGroundSettings": "Ustawienia terenu szkolnego",
@@ -594,7 +601,8 @@
     "deleting": "Usuwanie...",
     "created": "Utworzono",
     "updated": "Zaktualizowano",
-    "deleted": "Usunięto"
+    "deleted": "Usunięto",
+    "submitting": "Wysyłanie..."
   },
   "errors": {
     "somethingWentWrong": "Coś poszło nie tak",
@@ -615,7 +623,7 @@
     "formErrorDescription": "Wystąpił problem z formularzem. Może to być spowodowane błędem walidacji lub problemem z połączeniem.",
     "backToMap": "Powrót do mapy",
     "mapLoadingError": "Błąd ładowania mapy",
-    "mapErrorDescription": "Nie można załadować mapy. Może to być spowodowane problemem z siecią lub API Google Maps.",
+    "mapErrorDescription": "Nie można załadować mapy. Może to być spowodowane problemem z siecią lub usługą map.",
     "retryMap": "Ponów próbę załadowania mapy",
     "dataLoadingError": "Błąd ładowania danych",
     "dataErrorDescription": "Nie można załadować danych. Może to być problem z połączeniem z bazą danych.",
@@ -623,7 +631,8 @@
     "failedToCreateEquipment": "Nie udało się utworzyć wyposażenia",
     "failedToDeleteEquipment": "Nie udało się usunąć wyposażenia",
     "failedToRestoreEquipment": "Nie udało się przywrócić wyposażenia",
-    "failedToUpdateEquipment": "Nie udało się zaktualizować wyposażenia"
+    "failedToUpdateEquipment": "Nie udało się zaktualizować wyposażenia",
+    "failedToSubmitEditSuggestion": "Nie udało się wysłać propozycji zmian"
   },
   "success": {
     "playgroundCreated": "Plac zabaw został utworzony pomyślnie",
@@ -854,7 +863,8 @@
     "collapse": "Zwiń",
     "searchAddress": "Szukaj adresu...",
     "selectLocation": "Wybierz lokalizację",
-    "coordinates": "Współrzędne"
+    "coordinates": "Współrzędne",
+    "loadingMap": "Ładowanie mapy..."
   },
   "notFound": {
     "pageNotFound": "Strona nie została znaleziona",
@@ -863,5 +873,48 @@
     "browsePlaygrounds": "Przeglądaj place zabaw",
     "playgroundNotFound": "Plac zabaw nie został znaleziony",
     "playgroundNotFoundDescription": "Nie mogliśmy znaleźć placu zabaw, którego szukasz."
+  },
+  "mySubmissions": {
+    "title": "Moje zgłoszenia",
+    "description": "Przeglądaj i zarządzaj swoimi zgłoszeniami placów zabaw",
+    "myPlaygrounds": "Moje place zabaw",
+    "myEditSuggestions": "Moje propozycje zmian",
+    "noSubmissions": "Brak zgłoszeń",
+    "noSubmissionsDescription": "Nie zgłosiłeś jeszcze żadnego placu zabaw. Zacznij współtworzyć społeczność!",
+    "noEditSuggestions": "Brak propozycji zmian",
+    "noEditSuggestionsDescription": "Nie zaproponowałeś jeszcze żadnych zmian w placach zabaw.",
+    "addPlayground": "Dodaj plac zabaw",
+    "status": {
+      "pending": "Oczekuje na weryfikację",
+      "approved": "Zatwierdzone",
+      "rejected": "Odrzucone"
+    },
+    "rejectionReason": "Powód odrzucenia",
+    "editSubmission": "Edytuj",
+    "viewSubmission": "Zobacz",
+    "viewPlayground": "Zobacz plac zabaw",
+    "submissionDetails": "Zgłoszenie",
+    "suggestionDetails": "Propozycja",
+    "awaitingReview": "Oczekuje na weryfikację",
+    "awaitingReviewDescription": "Twoje zgłoszenie jest weryfikowane przez nasz zespół. Możesz je edytować do czasu zakończenia weryfikacji.",
+    "suggestionAwaitingReviewDescription": "Twoja propozycja zmian jest weryfikowana przez nasz zespół. Możesz ją edytować do czasu zakończenia weryfikacji.",
+    "submissionApproved": "Zgłoszenie zatwierdzone",
+    "submissionApprovedDescription": "Twój plac zabaw został zatwierdzony i jest już widoczny na stronie!",
+    "suggestionApproved": "Propozycja zmian zatwierdzona",
+    "suggestionApprovedDescription": "Proponowane zmiany zostały zastosowane do placu zabaw.",
+    "submissionRejected": "Zgłoszenie odrzucone",
+    "suggestionRejected": "Propozycja zmian odrzucona",
+    "editSubmissionDescription": "Zaktualizuj swoje zgłoszenie placu zabaw przed jego weryfikacją.",
+    "editSuggestion": "Edytuj propozycję",
+    "editSuggestionDescription": "Zaktualizuj swoją propozycję zmian dla",
+    "editSuggestionFor": "Propozycja zmian dla",
+    "targetPlayground": "Plac zabaw",
+    "proposedChanges": "Proponowane zmiany",
+    "noChanges": "Brak proponowanych zmian",
+    "suggestedEquipment": "Proponowane wyposażenie",
+    "leaveEmptyToKeepOriginal": "Pozostaw puste, aby zachować pierwotną wartość",
+    "updateSuccess": "Twoje zgłoszenie zostało zaktualizowane",
+    "updateError": "Nie udało się zaktualizować zgłoszenia. Spróbuj ponownie.",
+    "alreadyReviewedError": "To zgłoszenie zostało już zweryfikowane i nie można go dalej edytować."
   }
 }

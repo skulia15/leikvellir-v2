@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 
 import NavigationBar from "./_components/navigation-bar";
 import { getServerAuthSession } from "~/server/auth";
+import { getServerLocale } from "~/lib/i18n/server";
 import { Providers } from "./_components/providers";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
@@ -41,9 +42,10 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getServerAuthSession();
+  const locale = await getServerLocale();
 
   return (
-    <html lang="is" className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable}`}>
+    <html lang={locale} className={`${GeistSans.variable} ${firaSans.variable} ${outfit.variable}`}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
@@ -54,7 +56,7 @@ export default async function RootLayout({
         <WebsiteSchema />
       </head>
       <body className="bg-background">
-        <Providers session={session}>
+        <Providers session={session} initialLocale={locale}>
           <LayoutClient>
             <NavigationBar />
             <MainContent>

@@ -3,7 +3,7 @@ import { type Playground } from "~/types";
 import { Zap, Footprints, GraduationCap, Camera } from "lucide-react";
 import { formatDistance } from "~/lib/geo-utils";
 import { estimateWalkingTime } from "~/lib/map-utils";
-import { useT } from "~/lib/i18n";
+import { useLocale, useT } from "~/lib/i18n";
 import { blurPlaceholderProps } from "~/lib/image-placeholder";
 import { isSchoolGroundAccessible } from "~/lib/school-hours";
 import { hasEquipmentNamed, useEquipmentLookup } from "~/lib/hooks/use-equipment-lookup";
@@ -20,6 +20,7 @@ export default function PlaygroundCard({
   showDistance = false,
 }: PlaygroundCardProps) {
   const t = useT();
+  const { locale } = useLocale();
   const equipmentLookup = useEquipmentLookup();
   const hasBouncyPillow = hasEquipmentNamed(playground, "Ærslabelgur", equipmentLookup);
   const isAccessible = isSchoolGroundAccessible(playground.isSchoolGround ?? false);
@@ -107,7 +108,7 @@ export default function PlaygroundCard({
             {showDistance && distance !== undefined && (
               <span className="flex items-center gap-1.5 tabular-nums font-medium text-foreground">
                 <Footprints className="h-3 w-3" aria-hidden="true" />
-                {estimateWalkingTime(distance).text} · {formatDistance(distance)}
+                {estimateWalkingTime(distance, locale).text} · {formatDistance(distance, locale)}
               </span>
             )}
           </div>

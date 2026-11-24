@@ -123,6 +123,9 @@
     "reset": "Reset",
     "creating": "Creating...",
     "images": "Images",
+    "imageCount_one": "{{count}} image",
+    "imageCount_other": "{{count}} images",
+    "allImages": "All images",
     "back": "Back",
     "playgroundInformation": "Playground Information",
     "distanceFromYou": "Distance from You",
@@ -190,6 +193,8 @@
     },
     "submitNewPlayground": "Submit a new playground",
     "signInToSubmitPlayground": "Please sign in to submit a new playground.",
+    "amenities": "Amenities",
+    "safetyAndStructure": "Safety & Structure",
     "submittedBy": "Submitted by",
     "anonymousSubmission": "Anonymous",
     "accessibleNow": "Accessible Now",
@@ -475,7 +480,8 @@
     "editPlayground": "Edit Playground",
     "editPlaygroundDescription": "Edit the playground details below.",
     "delete": "Delete",
-    "deletePlayground": "Delete Playground"
+    "deletePlayground": "Delete Playground",
+    "newPlaygroundSubmissions": "New Playground Submissions"
   },
   "forms": {
     "useCurrentLocation": "Use Current Location",
@@ -586,7 +592,8 @@
     "deleting": "Deleting...",
     "created": "Created",
     "updated": "Updated",
-    "deleted": "Deleted"
+    "deleted": "Deleted",
+    "submitting": "Submitting..."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -607,7 +614,7 @@
     "formErrorDescription": "There was an issue with the form. This might be due to a validation error or connection issue.",
     "backToMap": "Back to Map",
     "mapLoadingError": "Map Loading Error",
-    "mapErrorDescription": "Unable to load the map. This might be due to a network issue or Google Maps API problem.",
+    "mapErrorDescription": "Unable to load the map. This might be due to a network issue or a problem with the map service.",
     "retryMap": "Retry Map",
     "dataLoadingError": "Data Loading Error",
     "dataErrorDescription": "Unable to load the data. This might be a database connection issue.",
@@ -615,7 +622,8 @@
     "failedToCreateEquipment": "Failed to create equipment",
     "failedToDeleteEquipment": "Failed to delete equipment",
     "failedToRestoreEquipment": "Failed to restore equipment",
-    "failedToUpdateEquipment": "Failed to update equipment"
+    "failedToUpdateEquipment": "Failed to update equipment",
+    "failedToSubmitEditSuggestion": "Failed to submit edit suggestion"
   },
   "success": {
     "playgroundCreated": "Playground created successfully",
@@ -659,79 +667,7 @@
     "functionalCookiesShortDescription": "Remember your preferences and settings",
     "acceptAll": "Accept All",
     "essentialOnly": "Essential Only",
-    "functionalCookies": "Functional Cookies",
-    "cookieUsage": "Cookie Usage",
-    "cookieUsageText": "We use cookies and similar technologies to enhance your experience and understand how our service is used. Here's a breakdown of our cookie usage:",
-    "essentialCookiesTitle": "Essential Cookies",
-    "essentialCookiesText": "Required for basic functionality. Cannot be disabled.",
-    "essentialCookiesList": [
-      "Authentication session cookies",
-      "Security tokens",
-      "Form submission protection",
-      "User preference storage"
-    ],
-    "analyticsCookiesTitle": "Analytics Cookies",
-    "analyticsCookiesText": "Help us understand usage patterns (via PostHog).",
-    "analyticsCookiesList": [
-      "Page views and user journeys",
-      "Feature usage statistics",
-      "Performance metrics",
-      "Anonymous user behavior tracking"
-    ],
-    "functionalCookiesTitle": "Functional Cookies",
-    "functionalCookiesText": "Enhance your experience with the platform.",
-    "functionalCookiesList": [
-      "Location cache (browser storage)",
-      "Map preferences",
-      "Filter settings",
-      "UI state persistence"
-    ],
-    "thirdPartyCookiesTitle": "Third-Party Cookies",
-    "thirdPartyCookiesText": "From external services we integrate with.",
-    "thirdPartyCookiesList": [
-      "Google Maps API cookies",
-      "Discord OAuth cookies",
-      "PostHog analytics cookies",
-      "CDN and performance cookies"
-    ],
-    "managingCookies": "Managing Cookies",
-    "managingCookiesText": "You can manage your cookie preferences using our cookie banner or through your browser settings. Disabling certain cookies may limit some functionality.",
-    "howWeUseInformation": "How We Use Your Information",
-    "serviceFunctionality": "Service Functionality",
-    "serviceFunctionalityList": [
-      "Authenticate users and manage accounts",
-      "Display and manage playground submissions",
-      "Calculate distances to playgrounds (when location is shared)",
-      "Moderate content and prevent abuse"
-    ],
-    "analyticsAndImprovement": "Analytics and Improvement",
-    "analyticsImprovementList": [
-      "Understand usage patterns and popular features",
-      "Monitor system performance and reliability",
-      "Identify and fix bugs or issues",
-      "Plan new features based on user needs"
-    ],
-    "communication": "Communication",
-    "communicationList": [
-      "Send important service updates",
-      "Respond to support requests",
-      "Notify about policy changes"
-    ],
-    "dataSharingTitle": "Data Sharing and Third Parties",
-    "dataSharingText": "We do not sell, trade, or rent your personal information to third parties. We may share information only in these specific circumstances:",
-    "serviceProviders": "Service Providers",
-    "serviceProvidersText": "PostHog (analytics), Vercel (hosting), Google Maps (mapping services)",
-    "legalRequirements": "Legal Requirements",
-    "legalRequirementsText": "When required by law or to protect rights and safety",
-    "publicContent": "Public Content",
-    "publicContentText": "Approved playground submissions are publicly visible on the map",
-    "contactUs": "Contact Us",
-    "contactUsText": "If you have questions about this Privacy Policy or want to exercise your rights:",
-    "email": "Email:",
-    "developer": "Developer:",
-    "github": "GitHub:",
-    "location": "Location:",
-    "privacyNotice": "This privacy policy may be updated periodically. We will notify users of significant changes via email or through the application."
+    "functionalCookies": "Functional Cookies"
   },
   "contact": {
     "pageTitle": "Contact & Feedback - Leiksvæði",
@@ -918,7 +854,8 @@
     "collapse": "Collapse",
     "searchAddress": "Search for an address...",
     "selectLocation": "Select Location",
-    "coordinates": "Coordinates"
+    "coordinates": "Coordinates",
+    "loadingMap": "Loading map..."
   },
   "notFound": {
     "pageNotFound": "Page Not Found",
