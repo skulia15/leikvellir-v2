@@ -657,7 +657,9 @@
     "essentialCookies": "Niezbędne pliki cookie",
     "essentialCookiesDescription": "Te pliki cookie są niezbędne do działania strony internetowej i nie można ich wyłączyć.",
     "analyticsCookies": "Pliki cookie analityczne",
-    "analyticsCookiesDescription": "Te pliki cookie pomagają nam zrozumieć, jak odwiedzający korzystają z naszej strony internetowej.",
+    "analyticsCookiesDescription": "Te pliki cookie pomagają nam zrozumieć, jak odwiedzający korzystają z naszej strony internetowej (przez PostHog).",
+    "functionalCookies": "Pliki cookie funkcjonalne",
+    "functionalCookiesDescription": "Te pliki cookie zapamiętują Twoje preferencje i ustawienia, takie jak język, ustawienia mapy i filtrów.",
     "marketingCookies": "Pliki cookie marketingowe",
     "marketingCookiesDescription": "Te pliki cookie są używane do śledzenia odwiedzających i wyświetlania odpowiednich reklam.",
     "savePreferences": "Zapisz preferencje",
@@ -672,12 +674,13 @@
     "customize": "Dostosuj",
     "cookieSettingsDescription": "Wybierz, które pliki cookie chcesz zezwolić. Niezbędnych plików cookie nie można wyłączyć, ponieważ są wymagane do podstawowej funkcjonalności.",
     "required": "Wymagane",
+    "enabled": "Włączone",
+    "disabled": "Wyłączone",
     "essentialCookiesShortDescription": "Uwierzytelnianie, bezpieczeństwo i podstawowa funkcjonalność",
     "analyticsCookiesShortDescription": "Analityka PostHog do zrozumienia wzorców użytkowania",
     "functionalCookiesShortDescription": "Zapamiętywanie Twoich preferencji i ustawień",
     "acceptAll": "Zaakceptuj wszystko",
-    "essentialOnly": "Tylko niezbędne",
-    "functionalCookies": "Pliki cookie funkcjonalne"
+    "essentialOnly": "Tylko niezbędne"
   },
   "privacy": {
     "privacyPolicy": "Polityka Prywatności",
@@ -690,22 +693,22 @@
     "informationWeCollect": "Informacje, które gromadzimy",
     "accountInformation": "Informacje o koncie",
     "accountInfoItems": [
-      "Adres e-mail (przez Discord OAuth)",
-      "Nazwa wyświetlana (przez Discord OAuth)",
-      "ID użytkownika Discord (do uwierzytelniania)",
+      "Adres e-mail (przez Google, Facebook lub Discord OAuth)",
+      "Nazwa wyświetlana i zdjęcie profilowe (przez Google, Facebook lub Discord OAuth)",
+      "Identyfikator użytkownika dostawcy OAuth (do uwierzytelniania przez Google, Facebook lub Discord)",
       "Znaczniki czasu utworzenia konta i ostatniego logowania"
     ],
     "userGeneratedContent": "Treści generowane przez użytkowników",
     "userContentItems": [
       "Zgłoszenia placów zabaw (lokalizacja, tytuł, zdjęcia, szczegóły wyposażenia)",
-      "Przesłane fotografie placów zabaw",
+      "Przesłane fotografie placów zabaw (przechowywane w Vercel Blob)",
       "Informacje o wyposażeniu i dostępności"
     ],
     "locationData": "Dane lokalizacyjne",
     "locationDataItems": [
-      "Przybliżona lokalizacja (gdy dobrowolnie udostępniona do obliczeń odległości)",
+      "Przybliżona lokalizacja (gdy dobrowolnie udostępniona do wyśrodkowania mapy i obliczania odległości w przeglądarce)",
       "Współrzędne placów zabaw (do celów mapowania)",
-      "Dane lokalizacyjne są przechowywane lokalnie w Twojej przeglądarce i nie są wysyłane na nasze serwery"
+      "Zameldowania GPS (check-in): podczas zameldowania na placu zabaw współrzędne GPS są wysyłane na nasz serwer wyłącznie w celu weryfikacji odległości od placu zabaw; dokładna szerokość i długość geograficzna nie są przechowywane — zapisywane są jedynie obliczona odległość i dokładność GPS"
     ],
     "technicalInformation": "Informacje techniczne",
     "technicalInfoItems": [
@@ -743,13 +746,13 @@
     "thirdPartyCookiesTitle": "Pliki cookie stron trzecich",
     "thirdPartyCookiesText": "Z zewnętrznych usług, z którymi się integrujemy.",
     "thirdPartyCookiesList": [
-      "Pliki cookie API Google Maps",
-      "Pliki cookie Discord OAuth",
+      "Usługi mapowe Mapbox i pamięć przeglądarki",
+      "Pliki cookie uwierzytelniania Google, Facebook i Discord OAuth",
       "Pliki cookie analityczne PostHog",
-      "Pliki cookie CDN i wydajności"
+      "Hosting Vercel, przechowywanie multimediów Vercel Blob i wydajność CDN"
     ],
     "managingCookies": "Zarządzanie plikami cookie",
-    "managingCookiesText": "Możesz zarządzać swoimi preferencjami plików cookie za pomocą naszego banera plików cookie lub przez ustawienia przeglądarki. Wyłączenie niektórych plików cookie może ograniczyć część funkcjonalności.",
+    "managingCookiesText": "Możesz zarządzać swoimi preferencjami plików cookie za pomocą naszego banera plików cookie, na stronie Zarządzanie plikami cookie (/cookies) lub w ustawieniach przeglądarki. Wyłączenie niektórych plików cookie może ograniczyć część funkcjonalności.",
     "howWeUseInformation": "Jak używamy Twoich informacji",
     "serviceFunctionality": "Funkcjonalność usługi",
     "serviceFunctionalityList": [
@@ -774,7 +777,7 @@
     "dataSharingTitle": "Udostępnianie danych i strony trzecie",
     "dataSharingText": "Nie sprzedajemy, nie wymieniamy ani nie wynajmujemy Twoich danych osobowych stronom trzecim. Możemy udostępniać informacje tylko w tych konkretnych okolicznościach:",
     "serviceProviders": "Dostawcy usług",
-    "serviceProvidersText": "PostHog (analityka), Vercel (hosting), Google Maps (usługi mapowania)",
+    "serviceProvidersText": "PostHog (analityka w UE), Vercel (hosting) i Vercel Blob (przechowywanie zdjęć), Mapbox (usługi mapowe) oraz Google, Facebook i Discord (uwierzytelnianie OAuth)",
     "legalRequirements": "Wymagania prawne",
     "legalRequirementsText": "Gdy wymagane przez prawo lub w celu ochrony praw i bezpieczeństwa",
     "publicContent": "Treści publiczne",

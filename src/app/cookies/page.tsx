@@ -15,13 +15,3 @@ export const metadata: Metadata = generateSEOMetadata({
 export default function CookiesPage() {
     return <CookieManagementPage />;
 }
-
-// TypeScript declarations for global objects
-declare global {
-    interface Window {
-        posthog?: {
-            opt_in_capturing: () => void;
-            opt_out_capturing: () => void;
-        };
-    }
-}

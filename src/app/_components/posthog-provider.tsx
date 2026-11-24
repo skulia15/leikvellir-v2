@@ -96,3 +96,9 @@ function SuspendedPostHogPageView({ posthog }: { posthog: PostHog | null }) {
     </Suspense>
   );
 }
+
+declare global {
+  interface Window {
+    posthog?: PostHog;
+  }
+}

@@ -648,7 +648,9 @@
     "essentialCookies": "Nauðsynlegar vafrakökur",
     "essentialCookiesDescription": "Þessar vafrakökur eru nauðsynlegar fyrir vefinn til að virka og er ekki hægt að slökkva á þeim.",
     "analyticsCookies": "Greiningarvafrakökur",
-    "analyticsCookiesDescription": "Þessar vafrakökur hjálpa okkur að skilja hvernig gestir nota vefsíðuna okkar.",
+    "analyticsCookiesDescription": "Þessar vafrakökur hjálpa okkur að skilja hvernig gestir nota vefsíðuna okkar (í gegnum PostHog).",
+    "functionalCookies": "Virknivafrakökur",
+    "functionalCookiesDescription": "Þessar vafrakökur muna kjörstillingar þínar og stillingar, svo sem tungumál, kortastillingar og síustillingar.",
     "marketingCookies": "Markaðsvafrakökur",
     "marketingCookiesDescription": "Þessar vafrakökur eru notaðar til að fylgjast með gestum og sýna viðeigandi auglýsingar.",
     "savePreferences": "Vista stillingar",
@@ -663,12 +665,13 @@
     "customize": "Sérsníða",
     "cookieSettingsDescription": "Veldu hvaða vafrakökur þú vilt leyfa. Ekki er hægt að slökkva á nauðsynlegum vafrakökum þar sem þær eru nauðsynlegar fyrir grunnvirkni.",
     "required": "Nauðsynlegt",
+    "enabled": "Virkt",
+    "disabled": "Óvirkt",
     "essentialCookiesShortDescription": "Auðkenning, öryggi og grunnvirkni",
     "analyticsCookiesShortDescription": "PostHog greiningar til að skilja notkunarmynstur",
     "functionalCookiesShortDescription": "Muna kjörstillingar þínar og stillingar",
     "acceptAll": "Samþykkja allt",
-    "essentialOnly": "Aðeins nauðsynlegar",
-    "functionalCookies": "Virknivafrakökur"
+    "essentialOnly": "Aðeins nauðsynlegar"
   },
   "privacy": {
     "privacyPolicy": "Persónuverndarstefna",
@@ -681,22 +684,22 @@
     "informationWeCollect": "Upplýsingar sem við söfnum",
     "accountInformation": "Reikningsupplýsingar",
     "accountInfoItems": [
-      "Netfang (í gegnum Discord OAuth)",
-      "Birtingarnafn (í gegnum Discord OAuth)",
-      "Discord notendaauðkenni (fyrir auðkenningu)",
+      "Netfang (í gegnum Google, Facebook eða Discord OAuth)",
+      "Birtingarnafn og prófílmynd (í gegnum Google, Facebook eða Discord OAuth)",
+      "Auðkenni notanda hjá OAuth-þjónustu (fyrir auðkenningu með Google, Facebook eða Discord)",
       "Tímastimplar fyrir stofnun reiknings og síðustu innskráningu"
     ],
     "userGeneratedContent": "Notendaframleitt efni",
     "userContentItems": [
       "Leiksvæðaskil (staðsetning, titill, myndir, tækjaupplýsingar)",
-      "Upphlaðnar ljósmyndir af leiksvæðum",
+      "Upphlaðnar ljósmyndir af leiksvæðum (geymdar í Vercel Blob)",
       "Upplýsingar um tæki og aðgengi"
     ],
     "locationData": "Staðsetningargögn",
     "locationDataItems": [
-      "Áætluð staðsetning (þegar sjálfviljugt deilt fyrir fjarlægðarútreikninga)",
+      "Áætluð staðsetning (þegar deilt sjálfviljugt til að miðja kortið og reikna fjarlægðir í vafranum)",
       "Hnit leiksvæða (í kortlagningu)",
-      "Staðsetningargögn eru geymd á þinni tölvu og ekki send á þjóna okkar"
+      "GPS-innskráningar (check-ins): þegar þú skráir heimsókn á leiksvæði eru GPS-hnit send á þjón okkar eingöngu til að staðfesta fjarlægð frá leiksvæðinu; nákvæm lengdar- og breiddargráða er ekki geymd — aðeins reiknuð fjarlægð og nákvæmnigildi eru vistuð"
     ],
     "technicalInformation": "Tæknilegar upplýsingar",
     "technicalInfoItems": [
@@ -734,13 +737,13 @@
     "thirdPartyCookiesTitle": "Þriðja aðila vafrakökur",
     "thirdPartyCookiesText": "Frá ytri þjónustum sem við samþættum við.",
     "thirdPartyCookiesList": [
-      "Google Maps API vafrakökur",
-      "Discord OAuth vafrakökur",
+      "Mapbox kortaþjónusta og vafrageymsla",
+      "Auðkenningarvafrakökur frá Google, Facebook og Discord OAuth",
       "PostHog greiningarvafrakökur",
-      "CDN og afkastavafrakökur"
+      "Vercel hýsing, Vercel Blob myndahýsing og CDN afkastageta"
     ],
     "managingCookies": "Stjórnun vafrakaka",
-    "managingCookiesText": "Þú getur stjórnað vafrakökustillingum þínum með því að nota vafrakökuborða okkar eða í gegnum vafrastillingar þínar. Ef þú slekkur á ákveðnum vafrakökum getur það takmarkað suma virkni.",
+    "managingCookiesText": "Þú getur stjórnað vafrakökustillingum þínum með vafrakökuborða okkar, á síðunni Stjórnun vafrakaka (/cookies) eða í vafrastillingum þínum. Ef þú slekkur á ákveðnum vafrakökum getur það takmarkað suma virkni.",
     "howWeUseInformation": "Hvernig við notum upplýsingar þínar",
     "serviceFunctionality": "Þjónustuvirkni",
     "serviceFunctionalityList": [
@@ -765,7 +768,7 @@
     "dataSharingTitle": "Gagnadeiling og þriðju aðilar",
     "dataSharingText": "Við seljum, deilum eða leigjum ekki persónuupplýsingar þínar til þriðju aðila. Við getum deilt upplýsingum aðeins við þessar sérstakar aðstæður:",
     "serviceProviders": "Þjónustuaðilar",
-    "serviceProvidersText": "PostHog (greiningar), Vercel (hýsing), Google Maps (kortaþjónustur)",
+    "serviceProvidersText": "PostHog (greiningar, hýst í ESB), Vercel (hýsing) og Vercel Blob (myndageymsla), Mapbox (kortaþjónusta), og Google, Facebook og Discord (OAuth-auðkenning)",
     "legalRequirements": "Lagalegar kröfur",
     "legalRequirementsText": "Þegar krafist er af lögum eða til að vernda réttindi og öryggi",
     "publicContent": "Opinbert efni",

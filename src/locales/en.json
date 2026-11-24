@@ -648,7 +648,9 @@
     "essentialCookies": "Essential Cookies",
     "essentialCookiesDescription": "These cookies are necessary for the website to function and cannot be switched off.",
     "analyticsCookies": "Analytics Cookies",
-    "analyticsCookiesDescription": "These cookies help us understand how visitors interact with our website.",
+    "analyticsCookiesDescription": "These cookies help us understand how visitors interact with our website (via PostHog).",
+    "functionalCookies": "Functional Cookies",
+    "functionalCookiesDescription": "These cookies remember your preferences and settings, such as language, map preferences, and filter settings.",
     "marketingCookies": "Marketing Cookies",
     "marketingCookiesDescription": "These cookies are used to track visitors and display relevant advertisements.",
     "savePreferences": "Save Preferences",
@@ -663,12 +665,13 @@
     "customize": "Customize",
     "cookieSettingsDescription": "Choose which cookies you'd like to allow. Essential cookies cannot be disabled as they're required for basic functionality.",
     "required": "Required",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
     "essentialCookiesShortDescription": "Authentication, security, and basic functionality",
     "analyticsCookiesShortDescription": "PostHog analytics to understand usage patterns",
     "functionalCookiesShortDescription": "Remember your preferences and settings",
     "acceptAll": "Accept All",
-    "essentialOnly": "Essential Only",
-    "functionalCookies": "Functional Cookies"
+    "essentialOnly": "Essential Only"
   },
   "contact": {
     "pageTitle": "Contact & Feedback - Leiksvæði",
@@ -754,22 +757,22 @@
     "informationWeCollect": "Information We Collect",
     "accountInformation": "Account Information",
     "accountInfoItems": [
-      "Email address (via Discord OAuth)",
-      "Display name (via Discord OAuth)",
-      "Discord user ID (for authentication)",
+      "Email address (via Google, Facebook, or Discord OAuth)",
+      "Display name and profile picture (via Google, Facebook, or Discord OAuth)",
+      "OAuth provider user ID (for authentication with Google, Facebook, or Discord)",
       "Account creation and last login timestamps"
     ],
     "userGeneratedContent": "User-Generated Content",
     "userContentItems": [
       "Playground submissions (location, title, images, equipment details)",
-      "Uploaded photographs of playgrounds",
+      "Uploaded photographs of playgrounds (stored via Vercel Blob)",
       "Equipment and accessibility information"
     ],
     "locationData": "Location Data",
     "locationDataItems": [
-      "Approximate location (when voluntarily shared for distance calculations)",
+      "Approximate location (when voluntarily shared to center the map and calculate distances in your browser)",
       "Playground coordinates (for mapping purposes)",
-      "Location data is stored locally in your browser and not sent to our servers"
+      "GPS check-ins: when you check in at a playground, your GPS coordinates are sent to our server strictly to verify distance to the playground; raw latitude and longitude are not stored—only the computed distance and GPS accuracy values are saved"
     ],
     "technicalInformation": "Technical Information",
     "technicalInfoItems": [
@@ -807,13 +810,13 @@
     "thirdPartyCookiesTitle": "Third-Party Cookies",
     "thirdPartyCookiesText": "From external services we integrate with.",
     "thirdPartyCookiesList": [
-      "Google Maps API cookies",
-      "Discord OAuth cookies",
+      "Mapbox mapping service requests and storage",
+      "Google, Facebook, and Discord OAuth authentication cookies",
       "PostHog analytics cookies",
-      "CDN and performance cookies"
+      "Vercel hosting, Vercel Blob media delivery, and CDN performance"
     ],
     "managingCookies": "Managing Cookies",
-    "managingCookiesText": "You can manage your cookie preferences using our cookie banner or through your browser settings. Disabling certain cookies may limit some functionality.",
+    "managingCookiesText": "You can manage your cookie preferences using our cookie banner, on the Cookie Management page (/cookies), or through your browser settings. Disabling certain cookies may limit some functionality.",
     "howWeUseInformation": "How We Use Your Information",
     "serviceFunctionality": "Service Functionality",
     "serviceFunctionalityList": [
@@ -838,7 +841,7 @@
     "dataSharingTitle": "Data Sharing and Third Parties",
     "dataSharingText": "We do not sell, trade, or rent your personal information to third parties. We may share information only in these specific circumstances:",
     "serviceProviders": "Service Providers",
-    "serviceProvidersText": "PostHog (analytics), Vercel (hosting), Google Maps (mapping services)",
+    "serviceProvidersText": "PostHog (analytics, EU-hosted), Vercel (hosting) and Vercel Blob (image storage), Mapbox (mapping services), and Google, Facebook & Discord (OAuth authentication)",
     "legalRequirements": "Legal Requirements",
     "legalRequirementsText": "When required by law or to protect rights and safety",
     "publicContent": "Public Content",
