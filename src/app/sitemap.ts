@@ -4,6 +4,11 @@ import { playgrounds } from '~/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { getBaseUrl } from '~/lib/seo/base-url';
 
+// Rendered per request: at build time there is no database access on the
+// Workers build (postgres.js uses `cloudflare:sockets`), and a prerendered
+// sitemap would silently ship without any playground URLs.
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const BASE_URL = getBaseUrl();
   

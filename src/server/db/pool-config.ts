@@ -38,6 +38,18 @@ export function isPooledDatabaseUrl(databaseUrl: string): boolean {
 }
 
 /**
+ * `sslmode=require` makes postgres.js call `tls.connect` with
+ * `rejectUnauthorized: false`, which Cloudflare Workers (workerd) does not
+ * implement: the connection never completes and times out. Upgrade it to full
+ * certificate verification instead (Neon serves publicly trusted certificates),
+ * which also closes the MITM gap that `require` leaves open.
+ */
+export function resolveSslOption(databaseUrl: string): "verify-full" | undefined {
+  const match = /[?&]sslmode=([^&]+)/i.exec(databaseUrl);
+  return match?.[1]?.toLowerCase() === "require" ? "verify-full" : undefined;
+}
+
+/**
  * Builds serverless-safe postgres.js client options.
  * - Keeps pool size conservative (`max: 3` in production, `5` in dev/test; overridable via DATABASE_POOL_MAX)
  * - Sets `idle_timeout` (20s), `connect_timeout` (10s), and `max_lifetime` (30m)
@@ -53,11 +65,14 @@ export function buildPostgresOptions(
       ? input.prepare
       : !(isProd || isPooledDatabaseUrl(input.databaseUrl));
 
+  const ssl = resolveSslOption(input.databaseUrl);
+
   return {
     max,
     idle_timeout: 20,
     connect_timeout: 10,
     max_lifetime: 60 * 30,
     prepare,
+    ...(ssl ? { ssl } : {}),
   };
 }

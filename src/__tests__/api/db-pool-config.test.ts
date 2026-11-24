@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildPostgresOptions,
   isPooledDatabaseUrl,
+  resolveSslOption,
 } from "~/server/db/pool-config";
 
 describe("postgres.js serverless pool config", () => {
@@ -76,6 +77,29 @@ describe("postgres.js serverless pool config", () => {
 
       expect(opts.max).toBe(8);
       expect(opts.prepare).toBe(true);
+    });
+  });
+
+  describe("resolveSslOption", () => {
+    it("upgrades sslmode=require to verify-full (workerd has no rejectUnauthorized)", () => {
+      expect(
+        resolveSslOption("postgres://u:p@ep-x-pooler.neon.tech/db?sslmode=require"),
+      ).toBe("verify-full");
+      expect(
+        buildPostgresOptions({
+          databaseUrl: "postgres://u:p@ep-x-pooler.neon.tech/db?sslmode=require",
+          nodeEnv: "production",
+        }).ssl,
+      ).toBe("verify-full");
+    });
+
+    it("leaves other modes and plain URLs to postgres.js", () => {
+      expect(resolveSslOption("postgres://u:p@localhost:5432/db")).toBeUndefined();
+      expect(resolveSslOption("postgres://u:p@h/db?sslmode=disable")).toBeUndefined();
+      expect(resolveSslOption("postgres://u:p@h/db?sslmode=verify-full")).toBeUndefined();
+      expect(
+        buildPostgresOptions({ databaseUrl: "postgres://u:p@localhost/db", nodeEnv: "development" }),
+      ).not.toHaveProperty("ssl");
     });
   });
 });

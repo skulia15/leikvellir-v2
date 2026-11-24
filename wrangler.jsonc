@@ -1,0 +1,36 @@
+// Production worker for leiksvæði.is (OpenNext on Cloudflare Workers).
+// Secrets (DATABASE_URL, NEXTAUTH_*, OAuth ids, Discord webhook, blob token)
+// live on the worker itself: `wrangler secret put <NAME>`. Never put them here.
+// NEXT_PUBLIC_* values are inlined at build time from the build environment.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "leiksvaedi",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Used by OpenNext for internal revalidation requests
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "leiksvaedi"
+    }
+  ],
+  "images": {
+    // next/image optimisation via Cloudflare Images
+    "binding": "IMAGES"
+  },
+  "placement": { "mode": "smart" },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true, "invocation_logs": true }
+  },
+  "routes": [
+    { "pattern": "xn--leiksvi-rxa4g.is", "custom_domain": true },
+    { "pattern": "www.xn--leiksvi-rxa4g.is", "custom_domain": true }
+  ]
+}

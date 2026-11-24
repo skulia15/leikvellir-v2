@@ -58,3 +58,8 @@ backup_*.sql
 # Playwright
 playwright-report/
 test-results/
+
+# cloudflare / opennext
+.open-next
+.wrangler
+.dev.vars*

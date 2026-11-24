@@ -9,6 +9,25 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   // Transpile packages that need special handling with Turbopack/pnpm
   transpilePackages: ["fridagar"],
+
+  // Cloudflare Workers build (`pnpm cf:build`) only:
+  // - sharp is a native module that Next always externalises and Workers cannot
+  //   load, so swap in a stub that throws. Blur placeholders are then skipped at
+  //   runtime (image-blur catches).
+  // - postgres.js's Node build upgrades its socket via node:tls, which workerd
+  //   cannot do (connections hang until CONNECT_TIMEOUT). Use its Workers build,
+  //   whose `cloudflare:sockets` import is served by a shim (scripts/cf-postbuild.mjs).
+  ...(process.env.CF_WORKERS_BUILD === "1"
+    ? {
+        turbopack: {
+          resolveAlias: {
+            sharp: "./src/lib/stubs/sharp-unavailable.ts",
+            postgres: "./node_modules/postgres/cf/src/index.js",
+            "cloudflare:sockets": "./src/lib/stubs/cloudflare-sockets.ts",
+          },
+        },
+      }
+    : {}),
   
   images: {
     // Enable modern image formats for better compression
