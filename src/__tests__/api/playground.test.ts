@@ -166,8 +166,41 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await caller.playground.create(validCreateInput);
 
-      // insert called twice: once for playground, once for equipment
+      // insert called twice inside a transaction: once for playground, once for equipment
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
       expect(ctx.db.insert).toHaveBeenCalledTimes(2);
+    });
+
+    it("should deduplicate equipmentIds before inserting relations", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ id: 5, status: "pending" })]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.create({
+        ...validCreateInput,
+        equipmentIds: [1, 2, 1, 3, 2],
+      });
+
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { playgroundId: 5, equipmentId: 1 },
+        { playgroundId: 5, equipmentId: 2 },
+        { playgroundId: 5, equipmentId: 3 },
+      ]);
+    });
+
+    it("should map invalid equipmentId foreign key error (23503) to BAD_REQUEST", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ id: 5, status: "pending" })]);
+      ctx.db._mocks.values
+        .mockReturnValueOnce({ returning: ctx.db._mocks.returning })
+        .mockRejectedValueOnce(Object.assign(new Error("FK violation"), { code: "23503" }));
+
+      const caller = createCaller(ctx as any);
+      await expect(caller.playground.create(validCreateInput)).rejects.toMatchObject({
+        code: "BAD_REQUEST",
+      });
     });
 
     it("should throw UNAUTHORIZED for unauthenticated request", async () => {
@@ -341,7 +374,7 @@ describe("Playground tRPC Router", () => {
 
   // ── getAllForAdmin (admin only) ──────────────────
   describe("getAllForAdmin", () => {
-    it("should return playgrounds of all statuses for admin", async () => {
+    it("should return bounded playgrounds of all statuses for admin", async () => {
       const allPlaygrounds = [
         mockPlayground({ status: "approved" }),
         mockPlayground({ id: 2, status: "pending" }),
@@ -356,6 +389,33 @@ describe("Playground tRPC Router", () => {
 
       expect(result).toEqual(allPlaygrounds);
       expect(result).toHaveLength(3);
+      expect(ctx.db.query.playgrounds.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 200, offset: 0 }),
+      );
+    });
+
+    it("should support pagination, status, and search filters", async () => {
+      const filtered = [mockPlayground({ status: "pending" })];
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findMany.mockResolvedValue(filtered);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getAllForAdmin({
+        limit: 50,
+        offset: 10,
+        status: "pending",
+        search: "Reykjavík",
+      });
+
+      expect(result).toEqual(filtered);
+      expect(ctx.db.query.playgrounds.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 50,
+          offset: 10,
+          where: expect.anything(),
+        }),
+      );
     });
 
     it("should throw FORBIDDEN for regular user", async () => {
@@ -420,7 +480,7 @@ describe("Playground tRPC Router", () => {
       expect(findFirstCall?.with?.reviewedBy).toBeUndefined();
     });
 
-    it("should throw NOT_FOUND for non-existent ID", async () => {
+    it("should throw TRPCError NOT_FOUND for non-existent ID", async () => {
       const ctx = createUnauthenticatedContext();
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
@@ -647,7 +707,7 @@ describe("Playground tRPC Router", () => {
       images: ["/uploads/playgrounds/new-image.jpg"],
     };
 
-    it("should update playground fields", async () => {
+    it("should update playground fields inside a transaction", async () => {
       const existing = mockPlayground();
       const updated = mockPlayground({ title: "Updated Playground" });
       const ctx = createUserContext();
@@ -659,10 +719,11 @@ describe("Playground tRPC Router", () => {
       const result = await caller.playground.update(updateInput);
 
       expect(result).toEqual(updated);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
       expect(ctx.db.update).toHaveBeenCalled();
     });
 
-    it("should update equipment relations (delete old, insert new)", async () => {
+    it("should deduplicate equipmentIds when updating relations", async () => {
       const existing = mockPlayground();
       const updated = mockPlayground();
       const ctx = createUserContext();
@@ -671,11 +732,14 @@ describe("Playground tRPC Router", () => {
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
       const caller = createCaller(ctx as any);
-      await caller.playground.update(updateInput);
+      await caller.playground.update({ ...updateInput, equipmentIds: [1, 3, 1, 3] });
 
-      // delete old equipment + insert new
       expect(ctx.db.delete).toHaveBeenCalled();
       expect(ctx.db.insert).toHaveBeenCalled();
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { playgroundId: 1, equipmentId: 1 },
+        { playgroundId: 1, equipmentId: 3 },
+      ]);
     });
 
     it("should call deleteOrphanedFiles for image cleanup", async () => {
@@ -775,13 +839,15 @@ describe("Playground tRPC Router", () => {
       expect(result).toEqual(updated);
     });
 
-    it("should throw for non-existent playground", async () => {
+    it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
-      await expect(caller.playground.update(updateInput)).rejects.toThrow();
+      await expect(caller.playground.update(updateInput)).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
     });
 
     it("should throw FORBIDDEN for non-admin user", async () => {
@@ -795,7 +861,7 @@ describe("Playground tRPC Router", () => {
 
   // ── review (admin only) ─────────────────────────
   describe("review", () => {
-    it("should approve playground and set status to approved", async () => {
+    it("should approve pending playground inside a transaction", async () => {
       const pending = mockPlayground({ status: "pending" });
       const approved = mockPlayground({ status: "approved" });
       const ctx = createUserContext();
@@ -807,6 +873,7 @@ describe("Playground tRPC Router", () => {
       const result = await caller.playground.review({ id: 1, action: "approve" });
 
       expect(result?.status).toBe("approved");
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
     });
 
     it("should reject playground with rejection reason and clean up all submission images", async () => {
@@ -870,7 +937,7 @@ describe("Playground tRPC Router", () => {
       );
     });
 
-    it("should apply optional field updates during review", async () => {
+    it("should apply optional field updates and deduplicate equipmentIds during review", async () => {
       const pending = mockPlayground({ status: "pending", title: "Old Title" });
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
@@ -883,6 +950,7 @@ describe("Playground tRPC Router", () => {
         action: "approve",
         title: "New Title",
         toddlerFriendly: true,
+        equipmentIds: [2, 2, 4],
       });
 
       expect(ctx.db._mocks.set).toHaveBeenCalledWith(
@@ -891,9 +959,39 @@ describe("Playground tRPC Router", () => {
           toddlerFriendly: true,
         }),
       );
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { playgroundId: 1, equipmentId: 2 },
+        { playgroundId: 1, equipmentId: 4 },
+      ]);
     });
 
-    it("should throw for non-existent playground", async () => {
+    it("should throw TRPCError CONFLICT if playground is already reviewed", async () => {
+      const approved = mockPlayground({ status: "approved" });
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(approved);
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.review({ id: 1, action: "approve" }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(ctx.db.update).not.toHaveBeenCalled();
+    });
+
+    it("should throw TRPCError CONFLICT on concurrent review race (empty returning)", async () => {
+      const pending = mockPlayground({ status: "pending" });
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
+      ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status = 'pending'
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.review({ id: 1, action: "approve" }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+    });
+
+    it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
@@ -901,7 +999,7 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.review({ id: 999, action: "approve" }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
     it("should throw FORBIDDEN for non-admin user", async () => {
@@ -917,7 +1015,7 @@ describe("Playground tRPC Router", () => {
 
   // ── delete (admin only) ─────────────────────────
   describe("delete", () => {
-    it("should delete playground and return deleted record", async () => {
+    it("should delete playground inside a transaction and return deleted record", async () => {
       const playground = mockPlayground();
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
@@ -928,6 +1026,7 @@ describe("Playground tRPC Router", () => {
       const result = await caller.playground.delete({ id: 1 });
 
       expect(result).toEqual(playground);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
     });
 
     it("should delete edit suggestions before playground", async () => {
@@ -963,13 +1062,15 @@ describe("Playground tRPC Router", () => {
       );
     });
 
-    it("should throw for non-existent playground", async () => {
+    it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
-      await expect(caller.playground.delete({ id: 999 })).rejects.toThrow();
+      await expect(caller.playground.delete({ id: 999 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
     });
 
     it("should throw FORBIDDEN for non-admin user", async () => {
@@ -983,7 +1084,7 @@ describe("Playground tRPC Router", () => {
 
   // ── createEditSuggestion (protectedProcedure) ───
   describe("createEditSuggestion", () => {
-    it("should create edit suggestion for approved playground", async () => {
+    it("should create edit suggestion for approved playground inside a transaction", async () => {
       const approvedPlayground = mockPlayground({ status: "approved" });
       const suggestion = { id: 1, playgroundId: 1, title: "Edited Title", status: "pending" };
       const ctx = createUserContext();
@@ -998,9 +1099,10 @@ describe("Playground tRPC Router", () => {
       });
 
       expect(result).toEqual(suggestion);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
     });
 
-    it("should fail if playground is not approved", async () => {
+    it("should throw TRPCError NOT_FOUND if playground is not approved", async () => {
       const ctx = createUserContext();
       configureMockUserAsRegularUser(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null); // not found because query filters by status=approved
@@ -1008,10 +1110,10 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.createEditSuggestion({ playgroundId: 1, title: "New" }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("should fail if playground does not exist", async () => {
+    it("should throw TRPCError NOT_FOUND if playground does not exist", async () => {
       const ctx = createUserContext();
       configureMockUserAsRegularUser(ctx.db);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
@@ -1019,10 +1121,10 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.createEditSuggestion({ playgroundId: 999 }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("should create suggestion equipment relations", async () => {
+    it("should deduplicate equipmentIds when creating suggestion equipment relations", async () => {
       const approvedPlayground = mockPlayground({ status: "approved" });
       const suggestion = { id: 1, playgroundId: 1, status: "pending" };
       const ctx = createUserContext();
@@ -1033,11 +1135,16 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await caller.playground.createEditSuggestion({
         playgroundId: 1,
-        equipmentIds: [1, 2, 3],
+        equipmentIds: [1, 2, 2, 3, 1],
       });
 
       // insert called twice: suggestion + equipment relations
       expect(ctx.db.insert).toHaveBeenCalledTimes(2);
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { suggestionId: 1, equipmentId: 1 },
+        { suggestionId: 1, equipmentId: 2 },
+        { suggestionId: 1, equipmentId: 3 },
+      ]);
     });
 
     it("should preserve both kept existing images and newly added images when removeImages is provided", async () => {
@@ -1165,7 +1272,7 @@ describe("Playground tRPC Router", () => {
       suggestionEquipment: [],
     };
 
-    it("should approve suggestion and apply changes to playground", async () => {
+    it("should approve suggestion and apply changes to playground inside a transaction", async () => {
       const approvedSuggestion = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
@@ -1179,6 +1286,7 @@ describe("Playground tRPC Router", () => {
       });
 
       expect(result?.status).toBe("approved");
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
       // update called twice: once for suggestion status, once for playground
       expect(ctx.db.update).toHaveBeenCalledTimes(2);
 
@@ -1288,6 +1396,23 @@ describe("Playground tRPC Router", () => {
       );
     });
 
+    it("should deduplicate equipmentIds when applying approved edit suggestion", async () => {
+      const suggestionWithEquipment = { ...mockSuggestion, equipmentIds: [2, 5, 2] };
+      const approvedSuggestion = { ...suggestionWithEquipment, status: "approved" };
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionWithEquipment);
+      ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
+
+      const caller = createCaller(ctx as any);
+      await caller.playground.reviewEditSuggestion({ id: 1, action: "approve" });
+
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { playgroundId: 1, equipmentId: 2 },
+        { playgroundId: 1, equipmentId: 5 },
+      ]);
+    });
+
     it("should reject suggestion with reason without modifying playground", async () => {
       const rejectedSuggestion = { ...mockSuggestion, status: "rejected" };
       const ctx = createUserContext();
@@ -1386,7 +1511,7 @@ describe("Playground tRPC Router", () => {
       expect(newImagesArg).not.toContain(removedGallery);
     });
 
-    it("should fail for already reviewed suggestion", async () => {
+    it("should throw TRPCError CONFLICT for already reviewed suggestion", async () => {
       const reviewed = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
@@ -1395,10 +1520,25 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.reviewEditSuggestion({ id: 1, action: "approve" }),
-      ).rejects.toThrow("already been reviewed");
+      ).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: expect.stringContaining("already been reviewed"),
+      });
     });
 
-    it("should fail for non-existent suggestion", async () => {
+    it("should throw TRPCError CONFLICT on concurrent review race (empty returning)", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
+      ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status = 'pending'
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.reviewEditSuggestion({ id: 1, action: "approve" }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+    });
+
+    it("should throw TRPCError NOT_FOUND for non-existent suggestion", async () => {
       const ctx = createUserContext();
       configureMockUserAsAdmin(ctx.db);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(null);
@@ -1406,7 +1546,10 @@ describe("Playground tRPC Router", () => {
       const caller = createCaller(ctx as any);
       await expect(
         caller.playground.reviewEditSuggestion({ id: 999, action: "approve" }),
-      ).rejects.toThrow("not found");
+      ).rejects.toMatchObject({
+        code: "NOT_FOUND",
+        message: expect.stringContaining("not found"),
+      });
     });
 
     it("should throw FORBIDDEN for non-admin user", async () => {
@@ -1485,7 +1628,7 @@ describe("Playground tRPC Router", () => {
 
   // ── getAllEditSuggestions (admin only) ──────────
   describe("getAllEditSuggestions", () => {
-    it("should return all suggestions with full relations", async () => {
+    it("should return bounded suggestions with full relations", async () => {
       const all = [
         { id: 1, status: "approved", playground: mockPlayground() },
         { id: 2, status: "pending", playground: mockPlayground({ id: 2 }) },
@@ -1499,6 +1642,33 @@ describe("Playground tRPC Router", () => {
 
       expect(result).toEqual(all);
       expect(result).toHaveLength(2);
+      expect(ctx.db.query.playgroundEditSuggestions.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 200, offset: 0 }),
+      );
+    });
+
+    it("should support pagination and status/playgroundId filters", async () => {
+      const filtered = [{ id: 2, status: "pending", playground: mockPlayground({ id: 5 }) }];
+      const ctx = createUserContext();
+      configureMockUserAsAdmin(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findMany.mockResolvedValue(filtered);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.getAllEditSuggestions({
+        limit: 20,
+        offset: 40,
+        status: "pending",
+        playgroundId: 5,
+      });
+
+      expect(result).toEqual(filtered);
+      expect(ctx.db.query.playgroundEditSuggestions.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 20,
+          offset: 40,
+          where: expect.anything(),
+        }),
+      );
     });
 
     it("should throw FORBIDDEN for non-admin user", async () => {
@@ -1507,6 +1677,127 @@ describe("Playground tRPC Router", () => {
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.getAllEditSuggestions()).rejects.toThrow(TRPCError);
+    });
+  });
+
+  // ── updateMySubmission (owner, pending only) ────
+  describe("updateMySubmission", () => {
+    const updateMyInput = {
+      id: 1,
+      title: "My Updated Submission",
+      latitude: 64.08,
+      longitude: -21.95,
+      municipality: "Reykjavík",
+      publiclyAccessible: true,
+      toddlerFriendly: false,
+      isSchoolGround: false,
+      schoolType: null,
+      hasSeating: true,
+      hasPicnicTable: false,
+      hasFencing: true,
+      hasGarbageCan: true,
+      hasBathroomNearby: false,
+      hasSoftPlayArea: false,
+      equipmentIds: [1, 2, 1],
+      images: ["/uploads/playgrounds/new.jpg"],
+      submitAnonymously: false,
+    };
+
+    it("should update pending submission inside a transaction and deduplicate equipmentIds", async () => {
+      const existing = mockPlayground({ status: "pending" });
+      const updated = mockPlayground({ status: "pending", title: "My Updated Submission" });
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.updateMySubmission(updateMyInput);
+
+      expect(result).toEqual(updated);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { playgroundId: 1, equipmentId: 1 },
+        { playgroundId: 1, equipmentId: 2 },
+      ]);
+    });
+
+    it("should throw TRPCError CONFLICT if submission was reviewed concurrently", async () => {
+      const existing = mockPlayground({ status: "pending" });
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status='pending' AND createdBy=userId
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.updateMySubmission(updateMyInput),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+    });
+
+    it("should throw TRPCError NOT_FOUND if submission is not found or not editable", async () => {
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(null);
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.updateMySubmission(updateMyInput),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    });
+  });
+
+  // ── updateMyEditSuggestion (owner, pending only) ─
+  describe("updateMyEditSuggestion", () => {
+    const updateSuggestionInput = {
+      id: 10,
+      playgroundId: 1,
+      title: "Revised Title",
+      equipmentIds: [3, 4, 3],
+    };
+
+    it("should update pending edit suggestion inside a transaction and deduplicate equipmentIds", async () => {
+      const existing = {
+        id: 10,
+        playgroundId: 1,
+        status: "pending",
+        createdById: "test-user-id",
+        playground: mockPlayground(),
+      };
+      const updated = { ...existing, title: "Revised Title", equipmentIds: [3, 4] };
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValueOnce(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.playground.updateMyEditSuggestion(updateSuggestionInput);
+
+      expect(result).toEqual(updated);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+      expect(ctx.db._mocks.values).toHaveBeenLastCalledWith([
+        { suggestionId: 10, equipmentId: 3 },
+        { suggestionId: 10, equipmentId: 4 },
+      ]);
+    });
+
+    it("should throw TRPCError CONFLICT if suggestion was reviewed concurrently", async () => {
+      const existing = {
+        id: 10,
+        playgroundId: 1,
+        status: "pending",
+        createdById: "test-user-id",
+        playground: mockPlayground(),
+      };
+      const ctx = createUserContext();
+      configureMockUserAsRegularUser(ctx.db);
+      ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValueOnce(existing);
+      ctx.db._mocks.returning.mockResolvedValueOnce([]);
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.updateMyEditSuggestion(updateSuggestionInput),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
     });
   });
 
@@ -1660,6 +1951,8 @@ describe("Playground tRPC Router", () => {
           images: [],
         }),
       );
+      // Row locked FOR UPDATE inside the transaction, unchanged since the read
+      ctx.db._mocks.selectFor.mockResolvedValueOnce([{ images: [], coverImage: null }]);
 
       const caller = createCaller(ctx as any);
       const result = await caller.playground.addPhotos({
@@ -1668,6 +1961,8 @@ describe("Playground tRPC Router", () => {
       });
 
       expect(result).toEqual({ status: "approved" });
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+      expect(ctx.db._mocks.selectFor).toHaveBeenCalledWith("update");
       expect(ctx.db.update).toHaveBeenCalledTimes(1);
       expect(ctx.db.insert).not.toHaveBeenCalled();
       expect(ctx.db._mocks.set).toHaveBeenCalledWith(
@@ -1676,6 +1971,23 @@ describe("Playground tRPC Router", () => {
           coverImage: validBlob1,
         }),
       );
+    });
+
+    it("should throw CONFLICT when photos changed between read and lock", async () => {
+      const ctx = createUserContext({ userId: "admin-1" });
+      configureMockUserAsAdmin(ctx.db, "admin-1");
+      ctx.db.query.playgrounds.findFirst.mockResolvedValue(
+        mockPlayground({ status: "approved", coverImage: null, images: [] }),
+      );
+      ctx.db._mocks.selectFor.mockResolvedValueOnce([
+        { images: [validBlob2], coverImage: validBlob2 },
+      ]);
+
+      const caller = createCaller(ctx as any);
+      await expect(
+        caller.playground.addPhotos({ id: 1, images: [validBlob1] }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(ctx.db.update).not.toHaveBeenCalled();
     });
 
     it("should reject adding photos that would exceed the total playground image cap", async () => {

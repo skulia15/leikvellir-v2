@@ -1,6 +1,6 @@
 // server/api/routers/playground.ts
 import { z } from "zod";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import {
@@ -17,7 +17,8 @@ import {
 import {
   AddPhotosSchema,
   CreatePlaygroundSchema,
-  PlaygroundNotFoundError,
+  EditSuggestionStatusSchema,
+  PlaygroundStatusSchema,
   ReviewPlaygroundSchema,
   CreateEditSuggestionSchema,
   UpdatePlaygroundSchema,
@@ -46,6 +47,62 @@ interface AdminCheckContext {
 async function isAdmin(ctx: AdminCheckContext, userId: string): Promise<boolean> {
   const currentUser = await getUserById(ctx, userId);
   return currentUser?.role === "admin" || currentUser?.role === "super_admin";
+}
+
+const DEFAULT_ADMIN_PAGE_LIMIT = 200;
+const MAX_ADMIN_PAGE_LIMIT = 500;
+
+const AdminPlaygroundListInputSchema = z
+  .object({
+    limit: z.number().int().min(1).max(MAX_ADMIN_PAGE_LIMIT).optional(),
+    offset: z.number().int().min(0).optional(),
+    status: PlaygroundStatusSchema.optional(),
+    search: z.string().trim().min(1).max(200).optional(),
+  })
+  .optional();
+
+const AdminEditSuggestionListInputSchema = z
+  .object({
+    limit: z.number().int().min(1).max(MAX_ADMIN_PAGE_LIMIT).optional(),
+    offset: z.number().int().min(0).optional(),
+    status: EditSuggestionStatusSchema.optional(),
+    playgroundId: z.number().int().positive().optional(),
+  })
+  .optional();
+
+function dedupeIds(ids: number[]): number[] {
+  return [...new Set(ids)];
+}
+
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
+function playgroundNotFoundError(id: number): TRPCError {
+  return new TRPCError({
+    code: "NOT_FOUND",
+    message: `Playground with id ${id} not found`,
+  });
+}
+
+function isPgForeignKeyViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { code?: unknown; cause?: { code?: unknown } };
+  return err.code === "23503" || err.cause?.code === "23503";
+}
+
+/** Rethrow TRPCErrors as-is; map FK violations (e.g. unknown equipment ids) to BAD_REQUEST. */
+function mapMutationError(error: unknown): never {
+  if (error instanceof TRPCError) {
+    throw error;
+  }
+  if (isPgForeignKeyViolation(error)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "One or more referenced records (such as equipment IDs) do not exist",
+    });
+  }
+  throw error instanceof Error ? error : new Error(String(error));
 }
 
 /** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
@@ -152,6 +209,7 @@ export const playgroundRouter = createTRPCRouter({
     .input(CreatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const uniqueEquipmentIds = dedupeIds(input.equipmentIds ?? []);
 
       logger.info("Creating playground", {
         component: "PlaygroundRouter",
@@ -160,66 +218,74 @@ export const playgroundRouter = createTRPCRouter({
         metadata: {
           title: input.title,
           imageCount: input.images?.length ?? 0,
-          equipmentCount: input.equipmentIds?.length ?? 0,
+          equipmentCount: uniqueEquipmentIds.length,
         },
       });
 
       try {
         const coverImage = input.images[0] ?? null;
+        // Built before the transaction: it downloads the images, and holding a
+        // pooled connection open across network fetches would starve the pool.
         const { coverImageBlur, imageBlurData } = await buildPlaygroundBlurData(
           coverImage,
           input.images,
         );
 
-        // Create playground first
-        const [newPlayground] = await ctx.db
-          .insert(playgrounds)
-          .values({
-            title: input.title,
-            latitude: input.latitude,
-            longitude: input.longitude,
-            municipality: input.municipality,
-            publiclyAccessible: input.publiclyAccessible,
-            toddlerFriendly: input.toddlerFriendly,
-            // School ground properties
-            isSchoolGround: input.isSchoolGround,
-            schoolType: input.schoolType,
-            // Amenity properties
-            hasSeating: input.hasSeating,
-            hasPicnicTable: input.hasPicnicTable,
-            hasFencing: input.hasFencing,
-            hasGarbageCan: input.hasGarbageCan,
-            hasBathroomNearby: input.hasBathroomNearby,
-            hasSoftPlayArea: input.hasSoftPlayArea,
-            submitAnonymously: input.submitAnonymously,
-            coverImage, // First image as cover
-            images: input.images,
-            coverImageBlur,
-            imageBlurData,
-            createdById: userId,
-            status: "pending", // New submissions default to pending
-          })
-          .returning();
+        const newPlayground = await ctx.db.transaction(async (tx) => {
+          const [created] = await tx
+            .insert(playgrounds)
+            .values({
+              title: input.title,
+              latitude: input.latitude,
+              longitude: input.longitude,
+              municipality: input.municipality,
+              publiclyAccessible: input.publiclyAccessible,
+              toddlerFriendly: input.toddlerFriendly,
+              // School ground properties
+              isSchoolGround: input.isSchoolGround,
+              schoolType: input.schoolType,
+              // Amenity properties
+              hasSeating: input.hasSeating,
+              hasPicnicTable: input.hasPicnicTable,
+              hasFencing: input.hasFencing,
+              hasGarbageCan: input.hasGarbageCan,
+              hasBathroomNearby: input.hasBathroomNearby,
+              hasSoftPlayArea: input.hasSoftPlayArea,
+              submitAnonymously: input.submitAnonymously,
+              coverImage, // First image as cover
+              images: input.images,
+              coverImageBlur,
+              imageBlurData,
+              createdById: userId,
+              status: "pending", // New submissions default to pending
+            })
+            .returning();
 
-        if (!newPlayground) {
-          const error = new Error("Failed to create playground - no record returned");
-          logDbError("playground_insert", error, {
-            component: "PlaygroundRouter",
-            action: "create_playground",
-            userId,
-          });
-          throw error;
-        }
+          if (!created) {
+            const error = new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create playground",
+            });
+            logDbError("playground_insert", error, {
+              component: "PlaygroundRouter",
+              action: "create_playground",
+              userId,
+            });
+            throw error;
+          }
 
-        // Add equipment relationships if any equipment selected
-        if (input.equipmentIds && input.equipmentIds.length > 0) {
-          const equipmentRelations = input.equipmentIds.map(equipmentId => ({
-            playgroundId: newPlayground.id,
-            equipmentId: equipmentId,
-          }));
+          // Same transaction, so an invalid equipment id rolls back the playground too
+          if (uniqueEquipmentIds.length > 0) {
+            await tx.insert(playgroundEquipment).values(
+              uniqueEquipmentIds.map((equipmentId) => ({
+                playgroundId: created.id,
+                equipmentId,
+              })),
+            );
+          }
 
-          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
-        }
+          return created;
+        });
 
         logger.info("Playground created successfully", {
           component: "PlaygroundRouter",
@@ -229,7 +295,7 @@ export const playgroundRouter = createTRPCRouter({
             playgroundId: newPlayground.id,
             title: newPlayground.title,
             imageCount: newPlayground.images?.length ?? 0,
-            equipmentCount: input.equipmentIds?.length ?? 0,
+            equipmentCount: uniqueEquipmentIds.length,
           },
         });
 
@@ -240,13 +306,19 @@ export const playgroundRouter = createTRPCRouter({
           title: newPlayground.title,
           municipality: newPlayground.municipality,
           imageCount: newPlayground.images?.length ?? 0,
-          equipmentCount: input.equipmentIds?.length ?? 0,
+          equipmentCount: uniqueEquipmentIds.length,
           submitterName: ctx.session.user.name,
           submitAnonymously: input.submitAnonymously,
         });
 
         return newPlayground;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        if (isPgForeignKeyViolation(error)) {
+          mapMutationError(error);
+        }
         const err = error instanceof Error ? error : new Error(String(error));
         logDbError("playground_creation", err, {
           component: "PlaygroundRouter",
@@ -267,48 +339,59 @@ export const playgroundRouter = createTRPCRouter({
       await requireAdmin(ctx, ctx.session.user.id);
       const { id, equipmentIds, ...updateData } = input;
 
-      // Get the current playground to compare image changes
-      const currentPlayground = await ctx.db.query.playgrounds.findFirst({
-        where: (playgrounds, { eq }) => eq(playgrounds.id, id),
-      });
+      let result;
+      try {
+        result = await ctx.db.transaction(async (tx) => {
+          // Get the current playground to compare image changes
+          const currentPlayground = await tx.query.playgrounds.findFirst({
+            where: (p, { eq: eqFn }) => eqFn(p.id, id),
+          });
 
-      if (!currentPlayground) {
-        throw new PlaygroundNotFoundError(id);
+          if (!currentPlayground) {
+            throw playgroundNotFoundError(id);
+          }
+
+          const [updatedPlayground] = await tx
+            .update(playgrounds)
+            .set({
+              ...updateData,
+              updatedAt: new Date(),
+            })
+            .where(eq(playgrounds.id, id))
+            .returning();
+
+          if (!updatedPlayground) {
+            throw playgroundNotFoundError(id);
+          }
+
+          // Delete + reinsert in the same transaction so a bad equipment id
+          // cannot leave the playground with its equipment wiped.
+          if (equipmentIds !== undefined) {
+            const uniqueEquipmentIds = dedupeIds(equipmentIds);
+
+            await tx
+              .delete(playgroundEquipment)
+              .where(eq(playgroundEquipment.playgroundId, id));
+
+            if (uniqueEquipmentIds.length > 0) {
+              await tx.insert(playgroundEquipment).values(
+                uniqueEquipmentIds.map((equipmentId) => ({
+                  playgroundId: id,
+                  equipmentId,
+                })),
+              );
+            }
+          }
+
+          return { currentPlayground, updatedPlayground };
+        });
+      } catch (error) {
+        mapMutationError(error);
       }
 
-      // Update playground data
-      const [updatedPlayground] = await ctx.db
-        .update(playgrounds)
-        .set({
-          ...updateData,
-          updatedAt: new Date(),
-        })
-        .where(eq(playgrounds.id, id))
-        .returning();
+      const { currentPlayground, updatedPlayground } = result;
 
-      if (!updatedPlayground) {
-        throw new PlaygroundNotFoundError(id);
-      }
-
-      // Update equipment relationships
-      if (equipmentIds !== undefined) {
-        // Remove existing equipment relationships
-        await ctx.db
-          .delete(playgroundEquipment)
-          .where(eq(playgroundEquipment.playgroundId, id));
-
-        // Add new equipment relationships if any
-        if (equipmentIds.length > 0) {
-          const equipmentRelations = equipmentIds.map(equipmentId => ({
-            playgroundId: id,
-            equipmentId: equipmentId,
-          }));
-
-          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
-        }
-      }
-
-      // Clean up orphaned files after successful update.
+      // Clean up orphaned files after the transaction commits.
       // Preserve current coverImage when omitted from partial update so it is not deleted.
       const oldImages = collectImages(
         currentPlayground.images,
@@ -334,13 +417,22 @@ export const playgroundRouter = createTRPCRouter({
       await requireAdmin(ctx, ctx.session.user.id);
       const { id, action, rejectionReason, equipmentIds, ...playgroundUpdates } = input;
 
-      // Get the current playground to compare image changes
+      // Read outside the transaction: placeholder generation below downloads
+      // images and must not hold a pooled connection. The conditional
+      // `status = 'pending'` update is what makes the review itself atomic.
       const currentPlayground = await ctx.db.query.playgrounds.findFirst({
-        where: (playgrounds, { eq }) => eq(playgrounds.id, id),
+        where: (p, { eq: eqFn }) => eqFn(p.id, id),
       });
 
       if (!currentPlayground) {
-        throw new PlaygroundNotFoundError(id);
+        throw playgroundNotFoundError(id);
+      }
+
+      if (currentPlayground.status !== "pending") {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Playground has already been reviewed",
+        });
       }
 
       type UpdateData = {
@@ -391,35 +483,47 @@ export const playgroundRouter = createTRPCRouter({
         );
       }
 
-      const [updatedPlayground] = await ctx.db
-        .update(playgrounds)
-        .set(updateData)
-        .where(eq(playgrounds.id, id))
-        .returning();
+      let updatedPlayground;
+      try {
+        updatedPlayground = await ctx.db.transaction(async (tx) => {
+          // Conditional guard: a concurrent review loses instead of overwriting
+          const [updated] = await tx
+            .update(playgrounds)
+            .set(updateData)
+            .where(and(eq(playgrounds.id, id), eq(playgrounds.status, "pending")))
+            .returning();
 
-      if (!updatedPlayground) {
-        throw new PlaygroundNotFoundError(id);
+          if (!updated) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Playground has already been reviewed",
+            });
+          }
+
+          if (equipmentIds !== undefined) {
+            const uniqueEquipmentIds = dedupeIds(equipmentIds);
+
+            await tx
+              .delete(playgroundEquipment)
+              .where(eq(playgroundEquipment.playgroundId, id));
+
+            if (uniqueEquipmentIds.length > 0) {
+              await tx.insert(playgroundEquipment).values(
+                uniqueEquipmentIds.map((equipmentId) => ({
+                  playgroundId: id,
+                  equipmentId,
+                })),
+              );
+            }
+          }
+
+          return updated;
+        });
+      } catch (error) {
+        mapMutationError(error);
       }
 
-      // Update equipment relationships if equipmentIds provided
-      if (equipmentIds !== undefined) {
-        // Remove existing equipment relationships
-        await ctx.db
-          .delete(playgroundEquipment)
-          .where(eq(playgroundEquipment.playgroundId, id));
-
-        // Add new equipment relationships if any
-        if (equipmentIds.length > 0) {
-          const equipmentRelations = equipmentIds.map(equipmentId => ({
-            playgroundId: id,
-            equipmentId: equipmentId,
-          }));
-
-          await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
-        }
-      }
-
-      // Clean up orphaned files after successful review/update
+      // Clean up orphaned files after the transaction commits
       if (action === "reject") {
         const allSubmissionImages = [
           ...collectImages(currentPlayground.images, currentPlayground.coverImage),
@@ -569,35 +673,52 @@ export const playgroundRouter = createTRPCRouter({
         .slice(0, input.limit);
     }),
 
-  getAllForAdmin: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx, ctx.session.user.id);
-    const playgroundList = await ctx.db.query.playgrounds.findMany({
-      orderBy: (playgrounds, { desc }) => [desc(playgrounds.createdAt)],
-      with: {
-        playgroundEquipment: {
-          with: {
-            equipment: true,
-          },
-        },
-        createdBy: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        reviewedBy: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+  getAllForAdmin: protectedProcedure
+    .input(AdminPlaygroundListInputSchema)
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx, ctx.session.user.id);
+      const conditions = [];
 
-    return playgroundList ?? null;
-  }),
+      if (input?.status) {
+        conditions.push(eq(playgrounds.status, input.status));
+      }
+      if (input?.search) {
+        const pattern = `%${escapeLikePattern(input.search)}%`;
+        conditions.push(
+          or(ilike(playgrounds.title, pattern), ilike(playgrounds.municipality, pattern)),
+        );
+      }
+
+      const playgroundList = await ctx.db.query.playgrounds.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        orderBy: (p, { desc }) => [desc(p.createdAt)],
+        limit: input?.limit ?? DEFAULT_ADMIN_PAGE_LIMIT,
+        offset: input?.offset ?? 0,
+        with: {
+          playgroundEquipment: {
+            with: {
+              equipment: true,
+            },
+          },
+          createdBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          reviewedBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return playgroundList ?? null;
+    }),
 
   getPendingSubmissions: protectedProcedure.query(async ({ ctx }) => {
     await requireAdmin(ctx, ctx.session.user.id);
@@ -725,11 +846,8 @@ export const playgroundRouter = createTRPCRouter({
           createdBy: sanitizedCreatedBy,
         };
       } catch (error) {
-        if (
-          error instanceof TRPCError ||
-          error instanceof PlaygroundNotFoundError
-        ) {
-          throw error; // Re-throw expected tRPC / custom errors
+        if (error instanceof TRPCError) {
+          throw error;
         }
 
         const err = error instanceof Error ? error : new Error(String(error));
@@ -746,31 +864,35 @@ export const playgroundRouter = createTRPCRouter({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       await requireAdmin(ctx, ctx.session.user.id);
-      // Get the playground first to access its images for cleanup
-      const playground = await ctx.db.query.playgrounds.findFirst({
-        where: (playgrounds, { eq }) => eq(playgrounds.id, input.id),
+
+      const { playground, deletedPlayground } = await ctx.db.transaction(async (tx) => {
+        // Get the playground first to access its images for cleanup
+        const existing = await tx.query.playgrounds.findFirst({
+          where: (p, { eq: eqFn }) => eqFn(p.id, input.id),
+        });
+
+        if (!existing) {
+          throw playgroundNotFoundError(input.id);
+        }
+
+        // Delete edit suggestions first (FK has no cascade in existing DB)
+        await tx
+          .delete(playgroundEditSuggestions)
+          .where(eq(playgroundEditSuggestions.playgroundId, input.id));
+
+        const [deleted] = await tx
+          .delete(playgrounds)
+          .where(eq(playgrounds.id, input.id))
+          .returning();
+
+        if (!deleted) {
+          throw playgroundNotFoundError(input.id);
+        }
+
+        return { playground: existing, deletedPlayground: deleted };
       });
 
-      if (!playground) {
-        throw new PlaygroundNotFoundError(input.id);
-      }
-
-      // Delete edit suggestions first (FK has no cascade in existing DB)
-      await ctx.db
-        .delete(playgroundEditSuggestions)
-        .where(eq(playgroundEditSuggestions.playgroundId, input.id));
-
-      // Delete the playground from database
-      const [deletedPlayground] = await ctx.db
-        .delete(playgrounds)
-        .where(eq(playgrounds.id, input.id))
-        .returning();
-
-      if (!deletedPlayground) {
-        throw new PlaygroundNotFoundError(input.id);
-      }
-
-      // Clean up all associated image files
+      // Clean up all associated image files after the transaction commits
       const allImages = collectImages(playground.images, playground.coverImage);
 
       // Delete all images (no new images since we're deleting the playground)
@@ -793,6 +915,8 @@ export const playgroundRouter = createTRPCRouter({
         removeCoverImage,
         ...suggestionData
       } = input;
+      const uniqueEquipmentIds =
+        equipmentIds !== undefined ? dedupeIds(equipmentIds) : undefined;
 
       logger.info("Creating edit suggestion", {
         component: "PlaygroundRouter",
@@ -800,7 +924,7 @@ export const playgroundRouter = createTRPCRouter({
         userId,
         metadata: {
           playgroundId,
-          equipmentCount: equipmentIds?.length ?? 0,
+          equipmentCount: uniqueEquipmentIds?.length ?? 0,
         },
       });
 
@@ -815,7 +939,10 @@ export const playgroundRouter = createTRPCRouter({
         });
 
         if (!existingPlayground) {
-          throw new Error("Playground not found or not approved for editing");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Playground not found or not approved for editing",
+          });
         }
 
         // Process image removal & merge with newly added images
@@ -832,32 +959,37 @@ export const playgroundRouter = createTRPCRouter({
           suggestionData.images = mergedImages;
         }
 
-        // Create the edit suggestion
-        const [newSuggestion] = await ctx.db
-          .insert(playgroundEditSuggestions)
-          .values({
-            playgroundId,
-            ...suggestionData,
-            coverImage: coverImageValue,
-            equipmentIds,
-            createdById: userId,
-            status: "pending",
-          })
-          .returning();
+        const newSuggestion = await ctx.db.transaction(async (tx) => {
+          const [created] = await tx
+            .insert(playgroundEditSuggestions)
+            .values({
+              playgroundId,
+              ...suggestionData,
+              coverImage: coverImageValue,
+              equipmentIds: uniqueEquipmentIds,
+              createdById: userId,
+              status: "pending",
+            })
+            .returning();
 
-        if (!newSuggestion) {
-          throw new Error("Failed to create edit suggestion");
-        }
+          if (!created) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create edit suggestion",
+            });
+          }
 
-        // Add equipment relationships if any equipment changes suggested
-        if (equipmentIds && equipmentIds.length > 0) {
-          const equipmentRelations = equipmentIds.map(equipmentId => ({
-            suggestionId: newSuggestion.id,
-            equipmentId: equipmentId,
-          }));
+          if (uniqueEquipmentIds && uniqueEquipmentIds.length > 0) {
+            await tx.insert(playgroundEditSuggestionEquipment).values(
+              uniqueEquipmentIds.map((equipmentId) => ({
+                suggestionId: created.id,
+                equipmentId,
+              })),
+            );
+          }
 
-          await ctx.db.insert(playgroundEditSuggestionEquipment).values(equipmentRelations);
-        }
+          return created;
+        });
 
         logger.info("Edit suggestion created successfully", {
           component: "PlaygroundRouter",
@@ -866,7 +998,7 @@ export const playgroundRouter = createTRPCRouter({
           metadata: {
             suggestionId: newSuggestion.id,
             playgroundId,
-            equipmentCount: equipmentIds?.length ?? 0,
+            equipmentCount: uniqueEquipmentIds?.length ?? 0,
             imagesRemoved: imagesRemovedCount,
             coverImageRemoved: removeCoverImage,
           },
@@ -895,6 +1027,12 @@ export const playgroundRouter = createTRPCRouter({
 
         return newSuggestion;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        if (isPgForeignKeyViolation(error)) {
+          mapMutationError(error);
+        }
         const err = error instanceof Error ? error : new Error(String(error));
         logDbError("edit_suggestion_creation", err, {
           component: "PlaygroundRouter",
@@ -946,35 +1084,30 @@ export const playgroundRouter = createTRPCRouter({
         });
 
         if (!editSuggestion) {
-          throw new Error("Edit suggestion not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Edit suggestion not found",
+          });
         }
 
         if (editSuggestion.status !== "pending") {
-          throw new Error("Edit suggestion has already been reviewed");
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Edit suggestion has already been reviewed",
+          });
         }
 
-        // Update the edit suggestion status
-        const [updatedSuggestion] = await ctx.db
-          .update(playgroundEditSuggestions)
-          .set({
-            status: action === "approve" ? "approved" : "rejected",
-            reviewedById: userId,
-            reviewedAt: new Date(),
-            rejectionReason: action === "reject" ? rejectionReason : null,
-          })
-          .where(eq(playgroundEditSuggestions.id, id))
-          .returning();
-
-        if (!updatedSuggestion) {
-          throw new Error("Failed to update edit suggestion");
-        }
+        // Everything the approval writes is resolved before the transaction:
+        // placeholder generation downloads images and must not hold a pooled
+        // connection. The conditional status guard below keeps it atomic.
+        const updateData: Record<string, unknown> = {
+          updatedAt: new Date(),
+        };
+        let images: string[] | undefined;
+        let resolvedEquipmentIds: number[] | undefined;
 
         // If approved, apply the changes to the playground (preferring admin finalValues overrides)
         if (action === "approve") {
-          const updateData: Record<string, unknown> = {
-            updatedAt: new Date(),
-          };
-
           const resolveField = <T>(
             override: T | undefined,
             suggested: T | null | undefined,
@@ -1060,7 +1193,7 @@ export const playgroundRouter = createTRPCRouter({
                 : editSuggestion.coverImage;
           }
 
-          const images = resolveField(finalValues?.images, editSuggestion.images);
+          images = resolveField(finalValues?.images, editSuggestion.images);
           if (images !== undefined) updateData.images = images;
 
           if (editSuggestion.coverImage !== null || editSuggestion.images !== null) {
@@ -1074,34 +1207,67 @@ export const playgroundRouter = createTRPCRouter({
             );
           }
 
-          // Update the playground
-          await ctx.db
-            .update(playgrounds)
-            .set(updateData)
-            .where(eq(playgrounds.id, editSuggestion.playgroundId));
-
-          // Update equipment if changed (preferring admin finalValues.equipmentIds)
-          const resolvedEquipmentIds = resolveField(
+          // Prefer admin finalValues.equipmentIds over the suggestion's
+          const equipmentOverride = resolveField(
             finalValues?.equipmentIds,
             editSuggestion.equipmentIds,
           );
-          if (resolvedEquipmentIds !== undefined) {
-            // Remove existing equipment relationships
-            await ctx.db
-              .delete(playgroundEquipment)
-              .where(eq(playgroundEquipment.playgroundId, editSuggestion.playgroundId));
+          resolvedEquipmentIds =
+            equipmentOverride !== undefined ? dedupeIds(equipmentOverride) : undefined;
+        }
 
-            // Add new equipment relationships if any
-            if (resolvedEquipmentIds.length > 0) {
-              const equipmentRelations = resolvedEquipmentIds.map(equipmentId => ({
-                playgroundId: editSuggestion.playgroundId,
-                equipmentId: equipmentId,
-              }));
+        const updatedSuggestion = await ctx.db.transaction(async (tx) => {
+          // Conditional guard: a concurrent review loses instead of applying twice
+          const [updated] = await tx
+            .update(playgroundEditSuggestions)
+            .set({
+              status: action === "approve" ? "approved" : "rejected",
+              reviewedById: userId,
+              reviewedAt: new Date(),
+              rejectionReason: action === "reject" ? rejectionReason : null,
+            })
+            .where(
+              and(
+                eq(playgroundEditSuggestions.id, id),
+                eq(playgroundEditSuggestions.status, "pending"),
+              ),
+            )
+            .returning();
 
-              await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+          if (!updated) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Edit suggestion has already been reviewed",
+            });
+          }
+
+          if (action === "approve") {
+            await tx
+              .update(playgrounds)
+              .set(updateData)
+              .where(eq(playgrounds.id, editSuggestion.playgroundId));
+
+            if (resolvedEquipmentIds !== undefined) {
+              await tx
+                .delete(playgroundEquipment)
+                .where(eq(playgroundEquipment.playgroundId, editSuggestion.playgroundId));
+
+              if (resolvedEquipmentIds.length > 0) {
+                await tx.insert(playgroundEquipment).values(
+                  resolvedEquipmentIds.map((equipmentId) => ({
+                    playgroundId: editSuggestion.playgroundId,
+                    equipmentId,
+                  })),
+                );
+              }
             }
           }
 
+          return updated;
+        });
+
+        // Image cleanup runs only after the transaction commits
+        if (action === "approve") {
           // Clean up any images removed by the approved edit suggestion (or dropped via finalValues)
           // while preserving everything still referenced by the live playground.
           const candidateImagesToClean = [
@@ -1161,6 +1327,12 @@ export const playgroundRouter = createTRPCRouter({
 
         return updatedSuggestion;
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        if (isPgForeignKeyViolation(error)) {
+          mapMutationError(error);
+        }
         const err = error instanceof Error ? error : new Error(String(error));
         logDbError("edit_suggestion_review", err, {
           component: "PlaygroundRouter",
@@ -1205,44 +1377,58 @@ export const playgroundRouter = createTRPCRouter({
     return pendingSuggestions ?? [];
   }),
 
-  getAllEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx, ctx.session.user.id);
-    const allSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
-      orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
-      with: {
-        playground: {
-          with: {
-            playgroundEquipment: {
-              with: {
-                equipment: true,
+  getAllEditSuggestions: protectedProcedure
+    .input(AdminEditSuggestionListInputSchema)
+    .query(async ({ ctx, input }) => {
+      await requireAdmin(ctx, ctx.session.user.id);
+      const conditions = [];
+
+      if (input?.status) {
+        conditions.push(eq(playgroundEditSuggestions.status, input.status));
+      }
+      if (input?.playgroundId !== undefined) {
+        conditions.push(eq(playgroundEditSuggestions.playgroundId, input.playgroundId));
+      }
+
+      const allSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        orderBy: (suggestions, { desc }) => [desc(suggestions.createdAt)],
+        limit: input?.limit ?? DEFAULT_ADMIN_PAGE_LIMIT,
+        offset: input?.offset ?? 0,
+        with: {
+          playground: {
+            with: {
+              playgroundEquipment: {
+                with: {
+                  equipment: true,
+                },
               },
             },
           },
-        },
-        createdBy: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
+          createdBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          reviewedBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          suggestionEquipment: {
+            with: {
+              equipment: true,
+            },
           },
         },
-        reviewedBy: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        suggestionEquipment: {
-          with: {
-            equipment: true,
-          },
-        },
-      },
-    });
+      });
 
-    return allSuggestions ?? [];
-  }),
+      return allSuggestions ?? [];
+    }),
 
   // ============================================
   // User's own submissions management endpoints
@@ -1347,35 +1533,52 @@ export const playgroundRouter = createTRPCRouter({
       // Get current images for cleanup
       const oldImages = collectImages(playground.images, playground.coverImage);
 
-      // Update playground data
-      const [updatedPlayground] = await ctx.db
-        .update(playgrounds)
-        .set({
-          ...updateData,
-          updatedAt: new Date(),
-        })
-        .where(eq(playgrounds.id, id))
-        .returning();
+      const uniqueEquipmentIds = dedupeIds(equipmentIds);
 
-      if (!updatedPlayground) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update playground",
+      let updatedPlayground;
+      try {
+        updatedPlayground = await ctx.db.transaction(async (tx) => {
+          // Re-check ownership + pending in the WHERE so an admin review that
+          // lands after the read above is not overwritten.
+          const [updated] = await tx
+            .update(playgrounds)
+            .set({
+              ...updateData,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(playgrounds.id, id),
+                eq(playgrounds.createdById, userId),
+                eq(playgrounds.status, "pending"),
+              ),
+            )
+            .returning();
+
+          if (!updated) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Playground has already been reviewed or modified",
+            });
+          }
+
+          await tx
+            .delete(playgroundEquipment)
+            .where(eq(playgroundEquipment.playgroundId, id));
+
+          if (uniqueEquipmentIds.length > 0) {
+            await tx.insert(playgroundEquipment).values(
+              uniqueEquipmentIds.map((equipmentId) => ({
+                playgroundId: id,
+                equipmentId,
+              })),
+            );
+          }
+
+          return updated;
         });
-      }
-
-      // Update equipment relationships
-      await ctx.db
-        .delete(playgroundEquipment)
-        .where(eq(playgroundEquipment.playgroundId, id));
-
-      if (equipmentIds.length > 0) {
-        const equipmentRelations = equipmentIds.map(equipmentId => ({
-          playgroundId: id,
-          equipmentId: equipmentId,
-        }));
-
-        await ctx.db.insert(playgroundEquipment).values(equipmentRelations);
+      } catch (error) {
+        mapMutationError(error);
       }
 
       // Clean up orphaned files, preserving existing coverImage if omitted
@@ -1447,37 +1650,55 @@ export const playgroundRouter = createTRPCRouter({
         suggestionData.images = mergedImages;
       }
 
-      // Update the suggestion
-      const [updatedSuggestion] = await ctx.db
-        .update(playgroundEditSuggestions)
-        .set({
-          ...suggestionData,
-          coverImage: coverImageValue,
-          equipmentIds,
-          updatedAt: new Date(),
-        })
-        .where(eq(playgroundEditSuggestions.id, id))
-        .returning();
+      const uniqueEquipmentIds =
+        equipmentIds !== undefined ? dedupeIds(equipmentIds) : undefined;
 
-      if (!updatedSuggestion) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update edit suggestion",
+      let updatedSuggestion;
+      try {
+        updatedSuggestion = await ctx.db.transaction(async (tx) => {
+          // Re-check ownership + pending in the WHERE so an admin review that
+          // lands after the read above is not overwritten.
+          const [updated] = await tx
+            .update(playgroundEditSuggestions)
+            .set({
+              ...suggestionData,
+              coverImage: coverImageValue,
+              equipmentIds: uniqueEquipmentIds,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(playgroundEditSuggestions.id, id),
+                eq(playgroundEditSuggestions.createdById, userId),
+                eq(playgroundEditSuggestions.status, "pending"),
+              ),
+            )
+            .returning();
+
+          if (!updated) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Edit suggestion has already been reviewed or modified",
+            });
+          }
+
+          await tx
+            .delete(playgroundEditSuggestionEquipment)
+            .where(eq(playgroundEditSuggestionEquipment.suggestionId, id));
+
+          if (uniqueEquipmentIds && uniqueEquipmentIds.length > 0) {
+            await tx.insert(playgroundEditSuggestionEquipment).values(
+              uniqueEquipmentIds.map((equipmentId) => ({
+                suggestionId: id,
+                equipmentId,
+              })),
+            );
+          }
+
+          return updated;
         });
-      }
-
-      // Update equipment relationships
-      await ctx.db
-        .delete(playgroundEditSuggestionEquipment)
-        .where(eq(playgroundEditSuggestionEquipment.suggestionId, id));
-
-      if (equipmentIds && equipmentIds.length > 0) {
-        const equipmentRelations = equipmentIds.map(equipmentId => ({
-          suggestionId: id,
-          equipmentId: equipmentId,
-        }));
-
-        await ctx.db.insert(playgroundEditSuggestionEquipment).values(equipmentRelations);
+      } catch (error) {
+        mapMutationError(error);
       }
 
       // Clean up any blobs removed from the pending edit suggestion
@@ -1562,15 +1783,43 @@ export const playgroundRouter = createTRPCRouter({
           playground.imageBlurData ?? {},
         );
 
-        await ctx.db
-          .update(playgrounds)
-          .set({
-            images: combinedImages,
-            coverImage,
-            ...blurData,
-            updatedAt: new Date(),
-          })
-          .where(eq(playgrounds.id, id));
+        await ctx.db.transaction(async (tx) => {
+          // Lock the row and confirm nobody changed the photos since the read
+          // above; otherwise a concurrent addPhotos would be silently lost.
+          // Placeholders were built before the transaction because that
+          // downloads images.
+          const [locked] = await tx
+            .select({ images: playgrounds.images, coverImage: playgrounds.coverImage })
+            .from(playgrounds)
+            .where(eq(playgrounds.id, id))
+            .for("update");
+
+          if (!locked) {
+            throw playgroundNotFoundError(id);
+          }
+
+          const lockedImages = locked.images ?? [];
+          if (
+            locked.coverImage !== playground.coverImage ||
+            lockedImages.length !== existingImages.length ||
+            lockedImages.some((img, i) => img !== existingImages[i])
+          ) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Playground photos changed while saving, please try again",
+            });
+          }
+
+          await tx
+            .update(playgrounds)
+            .set({
+              images: combinedImages,
+              coverImage,
+              ...blurData,
+              updatedAt: new Date(),
+            })
+            .where(eq(playgrounds.id, id));
+        });
 
         logger.info("Admin added photos directly to playground", {
           component: "PlaygroundRouter",

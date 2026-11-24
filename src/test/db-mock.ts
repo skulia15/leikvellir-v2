@@ -35,9 +35,17 @@ export function createMockDb() {
   const values = vi.fn(() => ({ returning }));
   const deleteWhere = vi.fn(() => ({ returning }));
 
-  // Select chain: db.select().from(table).where(cond)
-  const selectWhere = vi.fn().mockResolvedValue([]);
+  // Select chain: db.select().from(table).where(cond) and .where(cond).for("update")
+  const selectFor = vi.fn().mockResolvedValue([]);
+  const selectWhere = vi.fn(() => {
+    const promise = Promise.resolve([]) as Promise<unknown[]> & {
+      for: typeof selectFor;
+    };
+    promise.for = selectFor;
+    return promise;
+  });
   const from = vi.fn(() => ({ where: selectWhere }));
+  const execute = vi.fn().mockResolvedValue([]);
 
   const db = {
     query: queryMocks,
@@ -45,6 +53,8 @@ export function createMockDb() {
     update: vi.fn(() => ({ set })),
     delete: vi.fn(() => ({ where: deleteWhere })),
     select: vi.fn(() => ({ from })),
+    execute,
+    transaction: vi.fn(),
     // Expose inner mocks for fine-grained control in tests
     _mocks: {
       returning,
@@ -54,8 +64,16 @@ export function createMockDb() {
       deleteWhere,
       from,
       selectWhere,
+      selectFor,
+      execute,
     },
   };
+
+  db.transaction.mockImplementation(
+    async <T>(callback: (tx: typeof db) => Promise<T>): Promise<T> => {
+      return await callback(db);
+    },
+  );
 
   return db;
 }

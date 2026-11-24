@@ -94,7 +94,7 @@ describe("Users tRPC Router", () => {
 
   // ── getAll (super_admin only) ───────────────────
   describe("getAll", () => {
-    it("should return all users for super admin", async () => {
+    it("should return bounded list of users for super admin", async () => {
       const users = [mockUser({ id: "1", role: "super_admin" }), mockUser({ id: "2" })];
       const ctx = createUserContext();
       // protectedProcedure ban check
@@ -109,6 +109,35 @@ describe("Users tRPC Router", () => {
       const caller = createCaller(ctx as any);
       const result = await caller.users.getAll();
       expect(result).toEqual(users);
+      expect(ctx.db.query.users.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 200, offset: 0 }),
+      );
+    });
+
+    it("should pass custom pagination, role, and search filters to findMany", async () => {
+      const users = [mockUser({ id: "2", name: "Alice" })];
+      const ctx = createUserContext();
+      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
+      ctx.db.query.users.findFirst.mockResolvedValueOnce(
+        mockUser({ id: "test-user-id", role: "super_admin" }),
+      );
+      ctx.db.query.users.findMany.mockResolvedValueOnce(users);
+
+      const caller = createCaller(ctx as any);
+      const result = await caller.users.getAll({
+        limit: 25,
+        offset: 50,
+        role: "admin",
+        search: "Alice",
+      });
+      expect(result).toEqual(users);
+      expect(ctx.db.query.users.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 25,
+          offset: 50,
+          where: expect.anything(),
+        }),
+      );
     });
 
     it("should throw FORBIDDEN for regular admin", async () => {
@@ -142,13 +171,14 @@ describe("Users tRPC Router", () => {
 
   // ── updateRole (super_admin only) ───────────────
   describe("updateRole", () => {
-    it("should update user role successfully", async () => {
+    it("should update user role successfully inside a transaction", async () => {
       const updatedUser = mockUser({ id: "target-user", role: "admin" });
       const ctx = createUserContext();
       ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ role: "super_admin" }),
       );
+      ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([updatedUser]);
 
       const caller = createCaller(ctx as any);
@@ -157,6 +187,8 @@ describe("Users tRPC Router", () => {
         role: "admin",
       });
       expect(result).toEqual(updatedUser);
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+      expect(ctx.db.execute).toHaveBeenCalledTimes(1);
     });
 
     it("should throw FORBIDDEN for non-super-admin", async () => {
@@ -172,21 +204,21 @@ describe("Users tRPC Router", () => {
       ).rejects.toThrow(TRPCError);
     });
 
-    it("should prevent demoting the last super admin", async () => {
+    it("should prevent demoting the last super admin using SQL count()", async () => {
       const ctx = createUserContext();
       ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ role: "super_admin" }),
       );
-      // db.select().from(users).where(...) returns only 1 super_admin
-      ctx.db._mocks.selectWhere.mockResolvedValueOnce([
-        mockUser({ role: "super_admin" }),
-      ]);
+      // tx.select({ count: count() }).from(users).where(...) returns 1 super_admin
+      ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 1 }] as any);
 
       const caller = createCaller(ctx as any);
       await expect(
         caller.users.updateRole({ userId: "test-user-id", role: "user" }),
       ).rejects.toThrow("Cannot demote the last super admin");
+      expect(ctx.db.transaction).toHaveBeenCalledTimes(1);
+      expect(ctx.db.update).not.toHaveBeenCalled();
     });
 
     it("should allow demoting super_admin when other super_admins exist", async () => {
@@ -197,10 +229,7 @@ describe("Users tRPC Router", () => {
         mockUser({ role: "super_admin" }),
       );
       // Two super admins exist
-      ctx.db._mocks.selectWhere.mockResolvedValueOnce([
-        mockUser({ id: "1", role: "super_admin" }),
-        mockUser({ id: "2", role: "super_admin" }),
-      ]);
+      ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([demotedUser]);
 
       const caller = createCaller(ctx as any);
@@ -217,6 +246,7 @@ describe("Users tRPC Router", () => {
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ role: "super_admin" }),
       );
+      ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([]); // no user returned
 
       const caller = createCaller(ctx as any);

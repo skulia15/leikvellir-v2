@@ -160,6 +160,12 @@ export const playgrounds = createTable(
     municipalityIdx: index("playground_municipality_idx").on(example.municipality),
     isSchoolGroundIdx: index("playground_is_school_ground_idx").on(example.isSchoolGround),
     schoolTypeIdx: index("playground_school_type_idx").on(example.schoolType),
+    createdByIdx: index("playground_created_by_idx").on(example.createdById),
+    reviewedByIdx: index("playground_reviewed_by_idx").on(example.reviewedById),
+    statusCreatedAtIdx: index("playground_status_created_at_idx").on(
+      example.status,
+      example.createdAt,
+    ),
   }),
 );
 
@@ -220,6 +226,11 @@ export const playgroundEditSuggestions = createTable(
     playgroundIdIdx: index("playground_edit_suggestion_playground_id_idx").on(table.playgroundId),
     statusIdx: index("playground_edit_suggestion_status_idx").on(table.status),
     createdByIdx: index("playground_edit_suggestion_created_by_idx").on(table.createdById),
+    reviewedByIdx: index("playground_edit_suggestion_reviewed_by_idx").on(table.reviewedById),
+    statusCreatedAtIdx: index("playground_edit_suggestion_status_created_at_idx").on(
+      table.status,
+      table.createdAt,
+    ),
   }),
 );
 
@@ -345,6 +356,11 @@ export const users = createTable("user", {
   leaderboardNameUniq: uniqueIndex("user_leaderboard_name_uniq").on(
     table.leaderboardNameNormalized,
   ),
+  // Non-unique index so existing duplicate emails (if any) do not block migration;
+  // audit duplicates before promoting to a unique index.
+  emailIdx: index("user_email_idx").on(table.email),
+  roleIdx: index("user_role_idx").on(table.role),
+  isBannedIdx: index("user_is_banned_idx").on(table.isBanned),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
