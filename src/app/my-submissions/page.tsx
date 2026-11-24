@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
 import { getTranslation, getServerLocale } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 import MySubmissionsClient from "./_components/my-submissions-client";
 
 export const metadata: Metadata = {

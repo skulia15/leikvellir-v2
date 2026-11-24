@@ -15,7 +15,8 @@ import {
 } from "~/components/ui/card";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslation, getServerLocale, defaultLocale } from "~/lib/i18n/server";
+import { getTranslation, getServerLocale } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
 
 export const metadata: Metadata = generateSEOMetadata({
