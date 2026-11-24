@@ -59,7 +59,7 @@ describe("Users tRPC Router", () => {
       const user = mockUser();
       const ctx = createUserContext();
       // protectedProcedure ban check
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       // getCurrentUser queries the full user
       ctx.db.query.users.findFirst.mockResolvedValueOnce(user);
 
@@ -70,7 +70,7 @@ describe("Users tRPC Router", () => {
 
     it("should throw NOT_FOUND if user not in database", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.users.findFirst.mockResolvedValueOnce(null);
 
       const caller = createCaller(ctx as any);
@@ -85,7 +85,7 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for banned user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsBanned(ctx.db);
+      configureMockUserAsBanned(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.users.getCurrentUser()).rejects.toThrow(TRPCError);
@@ -97,12 +97,8 @@ describe("Users tRPC Router", () => {
     it("should return bounded list of users for super admin", async () => {
       const users = [mockUser({ id: "1", role: "super_admin" }), mockUser({ id: "2" })];
       const ctx = createUserContext();
-      // protectedProcedure ban check
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      // getAll queries current user for super_admin check
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ id: "test-user-id", role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       // getAll queries all users
       ctx.db.query.users.findMany.mockResolvedValueOnce(users);
 
@@ -117,10 +113,8 @@ describe("Users tRPC Router", () => {
     it("should pass custom pagination, role, and search filters to findMany", async () => {
       const users = [mockUser({ id: "2", name: "Alice" })];
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ id: "test-user-id", role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db.query.users.findMany.mockResolvedValueOnce(users);
 
       const caller = createCaller(ctx as any);
@@ -142,10 +136,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular admin", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
 
       const caller = createCaller(ctx as any);
       await expect(caller.users.getAll()).rejects.toThrow(TRPCError);
@@ -153,10 +145,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "user" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "user";
 
       const caller = createCaller(ctx as any);
       await expect(caller.users.getAll()).rejects.toThrow(TRPCError);
@@ -174,10 +164,8 @@ describe("Users tRPC Router", () => {
     it("should update user role successfully inside a transaction", async () => {
       const updatedUser = mockUser({ id: "target-user", role: "admin" });
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([updatedUser]);
 
@@ -193,10 +181,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-super-admin", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -206,10 +192,8 @@ describe("Users tRPC Router", () => {
 
     it("should prevent demoting the last super admin using SQL count()", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       // tx.select({ count: count() }).from(users).where(...) returns 1 super_admin
       ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 1 }] as any);
 
@@ -224,10 +208,8 @@ describe("Users tRPC Router", () => {
     it("should allow demoting super_admin when other super_admins exist", async () => {
       const demotedUser = mockUser({ id: "test-user-id", role: "admin" });
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       // Two super admins exist
       ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([demotedUser]);
@@ -242,10 +224,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent target user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db._mocks.selectWhere.mockResolvedValueOnce([{ count: 2 }] as any);
       ctx.db._mocks.returning.mockResolvedValueOnce([]); // no user returned
 
@@ -262,10 +242,8 @@ describe("Users tRPC Router", () => {
       const targetUser = mockUser({ id: "target", role: "user" });
       const bannedUser = { ...targetUser, isBanned: true };
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(targetUser);
       ctx.db._mocks.returning.mockResolvedValueOnce([bannedUser]);
 
@@ -281,10 +259,8 @@ describe("Users tRPC Router", () => {
       const targetUser = mockUser({ id: "target", role: "user" });
       const bannedUser = { ...targetUser, isBanned: true };
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(targetUser);
       ctx.db._mocks.returning.mockResolvedValueOnce([bannedUser]);
 
@@ -298,10 +274,8 @@ describe("Users tRPC Router", () => {
 
     it("should prevent self-banning", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ id: "test-user-id" }),
       );
@@ -314,10 +288,8 @@ describe("Users tRPC Router", () => {
 
     it("should prevent admin from banning another admin", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ id: "other-admin", role: "admin" }),
       );
@@ -332,10 +304,8 @@ describe("Users tRPC Router", () => {
       const targetAdmin = mockUser({ id: "admin-user", role: "admin" });
       const bannedAdmin = { ...targetAdmin, isBanned: true };
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(targetAdmin);
       ctx.db._mocks.returning.mockResolvedValueOnce([bannedAdmin]);
 
@@ -349,10 +319,8 @@ describe("Users tRPC Router", () => {
 
     it("should prevent banning a super admin", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "super_admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "super_admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(
         mockUser({ id: "other-super", role: "super_admin" }),
       );
@@ -365,10 +333,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent target user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(null);
 
       const caller = createCaller(ctx as any);
@@ -379,10 +345,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "user" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "user";
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -393,10 +357,8 @@ describe("Users tRPC Router", () => {
     it("should set isBanned, bannedAt, bannedById, and banReason", async () => {
       const targetUser = mockUser({ id: "target", role: "user" });
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db.query.users.findFirst.mockResolvedValueOnce(targetUser);
       ctx.db._mocks.returning.mockResolvedValueOnce([
         {
@@ -428,10 +390,8 @@ describe("Users tRPC Router", () => {
     it("should unban a user successfully", async () => {
       const unbannedUser = mockUser({ id: "target", isBanned: false });
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db._mocks.returning.mockResolvedValueOnce([unbannedUser]);
 
       const caller = createCaller(ctx as any);
@@ -441,10 +401,8 @@ describe("Users tRPC Router", () => {
 
     it("should clear all ban fields", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db._mocks.returning.mockResolvedValueOnce([mockUser()]);
 
       const caller = createCaller(ctx as any);
@@ -460,10 +418,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "user" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "user";
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -473,10 +429,8 @@ describe("Users tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent target user", async () => {
       const ctx = createUserContext();
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce(
-        mockUser({ role: "admin" }),
-      );
+      // role/ban state come from the database session
+      ctx.session.user.role = "admin";
       ctx.db._mocks.returning.mockResolvedValueOnce([]);
 
       const caller = createCaller(ctx as any);

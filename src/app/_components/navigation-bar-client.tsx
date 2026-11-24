@@ -17,20 +17,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { type Session } from "next-auth";
 import { useAdmin } from "~/lib/admin-context";
 import { PlaygroundEquipmentIcon } from "~/components/icons";
 import LanguageSwitcher from "~/components/ui/language-switcher";
 import { useT } from "~/lib/i18n";
 import { api } from "~/trpc/react";
 
-interface NavigationBarClientProps {
-    session: Session | null;
-}
-
-export default function NavigationBarClient({ session: serverSession }: NavigationBarClientProps) {
-    const { data: clientSession, status: sessionStatus } = useSession();
-    const session = clientSession || serverSession;
+export default function NavigationBarClient() {
+    const { data: session, status: sessionStatus } = useSession();
     const isSessionLoading = sessionStatus === "loading";
     const { isAdminMode, toggleAdminMode, userRole, canAccessAdmin, isLoading } = useAdmin();
     const t = useT();
@@ -212,13 +206,23 @@ export default function NavigationBarClient({ session: serverSession }: Navigati
                     <LanguageSwitcher />
                     {isSessionLoading ? (
                         <>
-                            {/* Desktop Loading Skeleton */}
-                            <div className="hidden md:flex items-center space-x-3">
-                                <Skeleton className="h-8 w-8 rounded-full" />
+                            {/* Loading placeholders render the signed-out buttons invisibly so the
+                                skeleton has their exact size (no layout jump for anonymous visitors,
+                                who are the common case on statically rendered pages). */}
+                            <div className="hidden md:block" aria-hidden>
+                                <Skeleton className="flex rounded-lg">
+                                    <Button variant="default" size="sm" tabIndex={-1} className="invisible">
+                                        <User className="mr-2 h-4 w-4" />
+                                        {t('navigation.signIn')}
+                                    </Button>
+                                </Skeleton>
                             </div>
-                            {/* Mobile Loading Skeleton */}
-                            <div className="md:hidden">
-                                <Skeleton className="h-8 w-8 rounded-md" />
+                            <div className="md:hidden" aria-hidden>
+                                <Skeleton className="flex rounded-lg">
+                                    <Button variant="outline" size="sm" tabIndex={-1} className="invisible">
+                                        <Menu className="h-4 w-4" />
+                                    </Button>
+                                </Skeleton>
                             </div>
                         </>
                     ) : session ? (

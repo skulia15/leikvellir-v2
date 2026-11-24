@@ -1,9 +1,9 @@
 import { eq, sql } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { ADMIN_ROLES, createTRPCRouter, protectedProcedure, publicProcedure, requireRole } from "~/server/api/trpc";
 import { equipment } from "~/server/db/schema";
 import { CreateEquipmentSchema, UpdateEquipmentSchema, DeleteEquipmentSchema, type EquipmentCategory, type MultilingualName } from "~/types";
 import { TRPCError } from "@trpc/server";
-import { users } from "~/server/db/schema";
+import { revalidatePublicPlaygroundPages } from "~/server/cache/revalidate";
 
 export const equipmentRouter = createTRPCRouter({
     // Get all active equipment (public)
@@ -34,17 +34,7 @@ export const equipmentRouter = createTRPCRouter({
 
     // Get all equipment including inactive (admin only)
     getAllAdmin: protectedProcedure.query(async ({ ctx }) => {
-        // Check if user is admin or super admin
-        const currentUser = await ctx.db.query.users.findFirst({
-            where: eq(users.id, ctx.session.user.id),
-        });
-
-        if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-            throw new TRPCError({
-                code: "FORBIDDEN",
-                message: "Only admins can access all equipment",
-            });
-        }
+        requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can access all equipment");
 
         return await ctx.db.query.equipment.findMany({
             orderBy: [equipment.category, sql`${equipment.name}->>'is'`],
@@ -83,17 +73,7 @@ export const equipmentRouter = createTRPCRouter({
     create: protectedProcedure
         .input(CreateEquipmentSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can create equipment",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can create equipment");
 
             const newEquipment = await ctx.db
                 .insert(equipment)
@@ -105,6 +85,7 @@ export const equipmentRouter = createTRPCRouter({
                 })
                 .returning();
 
+            revalidatePublicPlaygroundPages();
             return newEquipment[0];
         }),
 
@@ -112,17 +93,7 @@ export const equipmentRouter = createTRPCRouter({
     update: protectedProcedure
         .input(UpdateEquipmentSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can update equipment",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can update equipment");
 
             // Check if equipment exists
             const existingEquipment = await ctx.db.query.equipment.findFirst({
@@ -154,6 +125,7 @@ export const equipmentRouter = createTRPCRouter({
                 .where(eq(equipment.id, input.id))
                 .returning();
 
+            revalidatePublicPlaygroundPages();
             return updatedEquipment[0];
         }),
 
@@ -161,17 +133,7 @@ export const equipmentRouter = createTRPCRouter({
     delete: protectedProcedure
         .input(DeleteEquipmentSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can delete equipment",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can delete equipment");
 
             // Check if equipment exists
             const existingEquipment = await ctx.db.query.equipment.findFirst({
@@ -192,6 +154,7 @@ export const equipmentRouter = createTRPCRouter({
                 .where(eq(equipment.id, input.id))
                 .returning();
 
+            revalidatePublicPlaygroundPages();
             return deletedEquipment[0];
         }),
 
@@ -199,17 +162,7 @@ export const equipmentRouter = createTRPCRouter({
     restore: protectedProcedure
         .input(DeleteEquipmentSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can restore equipment",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can restore equipment");
 
             // Check if equipment exists
             const existingEquipment = await ctx.db.query.equipment.findFirst({
@@ -230,6 +183,7 @@ export const equipmentRouter = createTRPCRouter({
                 .where(eq(equipment.id, input.id))
                 .returning();
 
+            revalidatePublicPlaygroundPages();
             return restoredEquipment[0];
         }),
 }); 

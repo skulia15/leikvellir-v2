@@ -1,7 +1,10 @@
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient, publicApi } from "~/trpc/server";
 import { type Metadata, type Viewport } from "next";
 import HomeComponent from "~/app/_components/home-client";
 import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
+
+// ISR: static, regenerated at most every 5 min (mutations also purge via revalidatePath)
+export const revalidate = 300;
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -21,8 +24,8 @@ export default async function Home() {
   // client renders on the server; otherwise SSR emits no playground links.
   // getAll returns bare equipmentIds, so the catalog goes with it.
   await Promise.all([
-    api.playground.getAll.prefetch(),
-    api.equipment.getCatalog.prefetch(),
+    publicApi.playground.getAll.prefetch(),
+    publicApi.equipment.getCatalog.prefetch(),
   ]);
 
   return (

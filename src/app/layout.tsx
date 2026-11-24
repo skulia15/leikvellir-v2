@@ -5,8 +5,7 @@ import { type Metadata, type Viewport } from "next";
 import { Toaster } from "sonner";
 
 import NavigationBar from "./_components/navigation-bar";
-import { getServerAuthSession } from "~/server/auth";
-import { getServerLocale } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
 import { Providers } from "./_components/providers";
 import { Footer } from "./_components/footer";
 import { CookieConsentBanner } from "./_components/cookie-consent-banner";
@@ -30,14 +29,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+// No server session or locale-cookie read here: either would opt every route out of static
+// rendering. SessionProvider fetches the session client-side, and LanguageProvider switches to
+// the saved locale (and updates <html lang>) on mount.
+export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await getServerAuthSession();
-  const locale = await getServerLocale();
-
   return (
-    <html lang={locale} className={outfit.variable}>
+    <html lang={defaultLocale} className={outfit.variable}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Leiksvæði" />
@@ -46,7 +45,7 @@ export default async function RootLayout({
         <WebsiteSchema />
       </head>
       <body className="bg-background">
-        <Providers session={session} initialLocale={locale}>
+        <Providers>
           <LayoutClient>
             <SkipToContent />
             <NavigationBar />

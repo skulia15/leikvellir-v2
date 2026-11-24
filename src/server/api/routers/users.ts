@@ -1,6 +1,6 @@
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { ADMIN_ROLES, createTRPCRouter, protectedProcedure, requireRole } from "~/server/api/trpc";
 import { users } from "~/server/db/schema";
 import {
     UpdateUserRoleSchema,
@@ -48,17 +48,7 @@ export const usersRouter = createTRPCRouter({
     getAll: protectedProcedure
         .input(GetAllUsersInputSchema)
         .query(async ({ ctx, input }) => {
-            // Check if user is super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || currentUser.role !== "super_admin") {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only super admins can access user management",
-                });
-            }
+            requireRole(ctx.session.user, ["super_admin"], "Only super admins can access user management");
 
             const limit = input?.limit ?? DEFAULT_ADMIN_PAGE_LIMIT;
             const offset = input?.offset ?? 0;
@@ -86,17 +76,7 @@ export const usersRouter = createTRPCRouter({
     updateRole: protectedProcedure
         .input(UpdateUserRoleSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || currentUser.role !== "super_admin") {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only super admins can update user roles",
-                });
-            }
+            requireRole(ctx.session.user, ["super_admin"], "Only super admins can update user roles");
 
             return await ctx.db.transaction(async (tx) => {
                 // Prevent demoting the last super admin (serialized with transaction-scoped advisory lock)
@@ -155,17 +135,7 @@ export const usersRouter = createTRPCRouter({
     banUser: protectedProcedure
         .input(BanUserSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can ban users",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can ban users");
 
             return await ctx.db.transaction(async (tx) => {
                 // Get target user to check permissions atomically with the ban write
@@ -181,7 +151,7 @@ export const usersRouter = createTRPCRouter({
                 }
 
                 // Prevent banning other admins unless you're a super admin
-                if (targetUser.role === "admin" && currentUser.role !== "super_admin") {
+                if (targetUser.role === "admin" && ctx.session.user.role !== "super_admin") {
                     throw new TRPCError({
                         code: "FORBIDDEN",
                         message: "Only super admins can ban other admins",
@@ -230,17 +200,7 @@ export const usersRouter = createTRPCRouter({
     unbanUser: protectedProcedure
         .input(UnbanUserSchema)
         .mutation(async ({ ctx, input }) => {
-            // Check if user is admin or super admin
-            const currentUser = await ctx.db.query.users.findFirst({
-                where: eq(users.id, ctx.session.user.id),
-            });
-
-            if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "super_admin")) {
-                throw new TRPCError({
-                    code: "FORBIDDEN",
-                    message: "Only admins can unban users",
-                });
-            }
+            requireRole(ctx.session.user, ADMIN_ROLES, "Only admins can unban users");
 
             const unbannedUser = await ctx.db
                 .update(users)

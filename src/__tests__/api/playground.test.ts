@@ -97,7 +97,7 @@ describe("Playground tRPC Router", () => {
     it("should create playground with pending status", async () => {
       const created = mockPlayground({ status: "pending" });
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([created]);
 
       const caller = createCaller(ctx as any);
@@ -109,7 +109,7 @@ describe("Playground tRPC Router", () => {
 
     it("should set first image as cover image", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ status: "pending" })]);
 
       const caller = createCaller(ctx as any);
@@ -128,7 +128,7 @@ describe("Playground tRPC Router", () => {
     it("should persist submitAnonymously when set to true", async () => {
       const created = mockPlayground({ status: "pending", submitAnonymously: true });
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([created]);
 
       const caller = createCaller(ctx as any);
@@ -148,7 +148,7 @@ describe("Playground tRPC Router", () => {
 
     it("should handle empty equipmentIds (no equipment relations created)", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ status: "pending" })]);
 
       const caller = createCaller(ctx as any);
@@ -160,7 +160,7 @@ describe("Playground tRPC Router", () => {
 
     it("should create equipment relations when equipmentIds provided", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ id: 5, status: "pending" })]);
 
       const caller = createCaller(ctx as any);
@@ -173,7 +173,7 @@ describe("Playground tRPC Router", () => {
 
     it("should deduplicate equipmentIds before inserting relations", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ id: 5, status: "pending" })]);
 
       const caller = createCaller(ctx as any);
@@ -191,7 +191,7 @@ describe("Playground tRPC Router", () => {
 
     it("should map invalid equipmentId foreign key error (23503) to BAD_REQUEST", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ id: 5, status: "pending" })]);
       ctx.db._mocks.values
         .mockReturnValueOnce({ returning: ctx.db._mocks.returning })
@@ -211,7 +211,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for banned user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsBanned(ctx.db);
+      configureMockUserAsBanned(ctx);
       const caller = createCaller(ctx as any);
       await expect(caller.playground.create(validCreateInput)).rejects.toThrow(TRPCError);
     });
@@ -381,7 +381,7 @@ describe("Playground tRPC Router", () => {
         mockPlayground({ id: 3, status: "rejected" }),
       ];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findMany.mockResolvedValue(allPlaygrounds);
 
       const caller = createCaller(ctx as any);
@@ -397,7 +397,7 @@ describe("Playground tRPC Router", () => {
     it("should support pagination, status, and search filters", async () => {
       const filtered = [mockPlayground({ status: "pending" })];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findMany.mockResolvedValue(filtered);
 
       const caller = createCaller(ctx as any);
@@ -420,7 +420,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.getAllForAdmin()).rejects.toThrow(TRPCError);
@@ -432,7 +432,7 @@ describe("Playground tRPC Router", () => {
     it("should return only pending playgrounds", async () => {
       const pending = [mockPlayground({ status: "pending" })];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findMany.mockResolvedValue(pending);
 
       const caller = createCaller(ctx as any);
@@ -443,7 +443,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.getPendingSubmissions()).rejects.toThrow(TRPCError);
@@ -526,11 +526,7 @@ describe("Playground tRPC Router", () => {
         createdById: "creator-1",
         createdBy: { id: "creator-1", name: "Secret Submitter", email: "secret@test.com" },
       });
-      const ctx = createUserContext({ userId: "other-user-2" });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({
-        role: "user",
-        isBanned: false,
-      });
+      const ctx = createUserContext({userId: "other-user-2", role: "user", isBanned: false });
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
 
       const caller = createCaller(ctx as any);
@@ -563,11 +559,7 @@ describe("Playground tRPC Router", () => {
         createdById: "creator-1",
         createdBy: { id: "creator-1", name: "Creator Name", email: "creator@test.com" },
       });
-      const ctx = createUserContext({ userId: "admin-1" });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({
-        role: "admin",
-        isBanned: false,
-      });
+      const ctx = createUserContext({userId: "admin-1", role: "admin", isBanned: false });
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
 
       const caller = createCaller(ctx as any);
@@ -606,11 +598,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw NOT_FOUND for pending playground when caller is another regular user", async () => {
       const pending = mockPlayground({ status: "pending", createdById: "creator-1" });
-      const ctx = createUserContext({ userId: "other-user-2" });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({
-        role: "user",
-        isBanned: false,
-      });
+      const ctx = createUserContext({userId: "other-user-2", role: "user", isBanned: false });
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
 
       const caller = createCaller(ctx as any);
@@ -621,11 +609,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw NOT_FOUND for pending playground when caller is a banned admin", async () => {
       const pending = mockPlayground({ status: "pending", createdById: "creator-1" });
-      const ctx = createUserContext({ userId: "banned-admin" });
-      ctx.db.query.users.findFirst.mockResolvedValueOnce({
-        role: "admin",
-        isBanned: true,
-      });
+      const ctx = createUserContext({userId: "banned-admin", role: "admin", isBanned: true });
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
 
       const caller = createCaller(ctx as any);
@@ -660,11 +644,7 @@ describe("Playground tRPC Router", () => {
           createdById: "creator-1",
           createdBy: { id: "creator-1", name: "Creator", email: "creator@test.com" },
         });
-        const ctx = createUserContext({ userId: `${role}-1` });
-        ctx.db.query.users.findFirst.mockResolvedValueOnce({
-          role,
-          isBanned: false,
-        });
+        const ctx = createUserContext({ userId: `${role}-1`, role });
         ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
 
         const caller = createCaller(ctx as any);
@@ -711,7 +691,7 @@ describe("Playground tRPC Router", () => {
       const existing = mockPlayground();
       const updated = mockPlayground({ title: "Updated Playground" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -727,7 +707,7 @@ describe("Playground tRPC Router", () => {
       const existing = mockPlayground();
       const updated = mockPlayground();
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -746,7 +726,7 @@ describe("Playground tRPC Router", () => {
       const existing = mockPlayground({ images: ["/uploads/playgrounds/old.jpg"] });
       const updated = mockPlayground();
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -773,7 +753,7 @@ describe("Playground tRPC Router", () => {
         images: [galleryNewUrl],
       });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -805,7 +785,7 @@ describe("Playground tRPC Router", () => {
         images: [galleryUrl],
       });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -829,7 +809,7 @@ describe("Playground tRPC Router", () => {
       const existing = mockPlayground();
       const updated = mockPlayground({ title: "Updated Playground" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -841,7 +821,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -852,7 +832,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.update(updateInput)).rejects.toThrow(TRPCError);
@@ -865,7 +845,7 @@ describe("Playground tRPC Router", () => {
       const pending = mockPlayground({ status: "pending" });
       const approved = mockPlayground({ status: "approved" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([approved]);
 
@@ -893,7 +873,7 @@ describe("Playground tRPC Router", () => {
         coverImage: null,
       });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([rejected]);
 
@@ -921,7 +901,7 @@ describe("Playground tRPC Router", () => {
     it("should set reviewedById and reviewedAt", async () => {
       const pending = mockPlayground({ status: "pending" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground({ status: "approved" })]);
 
@@ -940,7 +920,7 @@ describe("Playground tRPC Router", () => {
     it("should apply optional field updates and deduplicate equipmentIds during review", async () => {
       const pending = mockPlayground({ status: "pending", title: "Old Title" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([mockPlayground()]);
 
@@ -968,7 +948,7 @@ describe("Playground tRPC Router", () => {
     it("should throw TRPCError CONFLICT if playground is already reviewed", async () => {
       const approved = mockPlayground({ status: "approved" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(approved);
 
       const caller = createCaller(ctx as any);
@@ -981,7 +961,7 @@ describe("Playground tRPC Router", () => {
     it("should throw TRPCError CONFLICT on concurrent review race (empty returning)", async () => {
       const pending = mockPlayground({ status: "pending" });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status = 'pending'
 
@@ -993,7 +973,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -1004,7 +984,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -1018,7 +998,7 @@ describe("Playground tRPC Router", () => {
     it("should delete playground inside a transaction and return deleted record", async () => {
       const playground = mockPlayground();
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
       ctx.db._mocks.returning.mockResolvedValueOnce([playground]);
 
@@ -1032,7 +1012,7 @@ describe("Playground tRPC Router", () => {
     it("should delete edit suggestions before playground", async () => {
       const playground = mockPlayground();
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
       ctx.db._mocks.returning.mockResolvedValueOnce([playground]);
 
@@ -1049,7 +1029,7 @@ describe("Playground tRPC Router", () => {
         coverImage: "/uploads/playgrounds/cover.jpg",
       });
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(playground);
       ctx.db._mocks.returning.mockResolvedValueOnce([playground]);
 
@@ -1064,7 +1044,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND for non-existent playground", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -1075,7 +1055,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.delete({ id: 1 })).rejects.toThrow(TRPCError);
@@ -1088,7 +1068,7 @@ describe("Playground tRPC Router", () => {
       const approvedPlayground = mockPlayground({ status: "approved" });
       const suggestion = { id: 1, playgroundId: 1, title: "Edited Title", status: "pending" };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
       ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
 
@@ -1104,7 +1084,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND if playground is not approved", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null); // not found because query filters by status=approved
 
       const caller = createCaller(ctx as any);
@@ -1115,7 +1095,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND if playground does not exist", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -1128,7 +1108,7 @@ describe("Playground tRPC Router", () => {
       const approvedPlayground = mockPlayground({ status: "approved" });
       const suggestion = { id: 1, playgroundId: 1, status: "pending" };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
       ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
 
@@ -1154,7 +1134,7 @@ describe("Playground tRPC Router", () => {
       });
       const suggestion = { id: 1, playgroundId: 1, status: "pending" };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
       ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
 
@@ -1179,7 +1159,7 @@ describe("Playground tRPC Router", () => {
       });
       const suggestion = { id: 1, playgroundId: 1, status: "pending" };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(approvedPlayground);
       ctx.db._mocks.returning.mockResolvedValueOnce([suggestion]);
 
@@ -1219,7 +1199,7 @@ describe("Playground tRPC Router", () => {
       };
       const updated = { ...existingSuggestion, coverImage: "" };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(existingSuggestion);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -1275,7 +1255,7 @@ describe("Playground tRPC Router", () => {
     it("should approve suggestion and apply changes to playground inside a transaction", async () => {
       const approvedSuggestion = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
       ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
 
@@ -1312,7 +1292,7 @@ describe("Playground tRPC Router", () => {
       };
       const approvedSuggestion = { ...suggestionWithChanges, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionWithChanges);
       ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
 
@@ -1354,7 +1334,7 @@ describe("Playground tRPC Router", () => {
       };
       const approvedSuggestion = { ...suggestionRemovingCover, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionRemovingCover);
       ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
 
@@ -1375,7 +1355,7 @@ describe("Playground tRPC Router", () => {
     it("should clear playground coverImage when finalValues.coverImage is explicitly null", async () => {
       const approvedSuggestion = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
       ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
 
@@ -1400,7 +1380,7 @@ describe("Playground tRPC Router", () => {
       const suggestionWithEquipment = { ...mockSuggestion, equipmentIds: [2, 5, 2] };
       const approvedSuggestion = { ...suggestionWithEquipment, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(suggestionWithEquipment);
       ctx.db._mocks.returning.mockResolvedValueOnce([approvedSuggestion]);
 
@@ -1416,7 +1396,7 @@ describe("Playground tRPC Router", () => {
     it("should reject suggestion with reason without modifying playground", async () => {
       const rejectedSuggestion = { ...mockSuggestion, status: "rejected" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
       ctx.db._mocks.returning.mockResolvedValueOnce([rejectedSuggestion]);
 
@@ -1450,7 +1430,7 @@ describe("Playground tRPC Router", () => {
         }),
       };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(
         suggestionWithPhotos,
       );
@@ -1489,7 +1469,7 @@ describe("Playground tRPC Router", () => {
         }),
       };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(
         suggestionRemovingPhoto,
       );
@@ -1514,7 +1494,7 @@ describe("Playground tRPC Router", () => {
     it("should throw TRPCError CONFLICT for already reviewed suggestion", async () => {
       const reviewed = { ...mockSuggestion, status: "approved" };
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(reviewed);
 
       const caller = createCaller(ctx as any);
@@ -1528,7 +1508,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError CONFLICT on concurrent review race (empty returning)", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(mockSuggestion);
       ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status = 'pending'
 
@@ -1540,7 +1520,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND for non-existent suggestion", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -1554,7 +1534,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -1585,7 +1565,7 @@ describe("Playground tRPC Router", () => {
       });
 
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(pending);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -1608,7 +1588,7 @@ describe("Playground tRPC Router", () => {
     it("should return pending suggestions with relations", async () => {
       const pending = [{ id: 1, status: "pending", playground: mockPlayground() }];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findMany.mockResolvedValue(pending);
 
       const caller = createCaller(ctx as any);
@@ -1619,7 +1599,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.getPendingEditSuggestions()).rejects.toThrow(TRPCError);
@@ -1634,7 +1614,7 @@ describe("Playground tRPC Router", () => {
         { id: 2, status: "pending", playground: mockPlayground({ id: 2 }) },
       ];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findMany.mockResolvedValue(all);
 
       const caller = createCaller(ctx as any);
@@ -1650,7 +1630,7 @@ describe("Playground tRPC Router", () => {
     it("should support pagination and status/playgroundId filters", async () => {
       const filtered = [{ id: 2, status: "pending", playground: mockPlayground({ id: 5 }) }];
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgroundEditSuggestions.findMany.mockResolvedValue(filtered);
 
       const caller = createCaller(ctx as any);
@@ -1673,7 +1653,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.playground.getAllEditSuggestions()).rejects.toThrow(TRPCError);
@@ -1707,7 +1687,7 @@ describe("Playground tRPC Router", () => {
       const existing = mockPlayground({ status: "pending" });
       const updated = mockPlayground({ status: "pending", title: "My Updated Submission" });
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -1725,7 +1705,7 @@ describe("Playground tRPC Router", () => {
     it("should throw TRPCError CONFLICT if submission was reviewed concurrently", async () => {
       const existing = mockPlayground({ status: "pending" });
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([]); // lost race on WHERE status='pending' AND createdBy=userId
 
@@ -1737,7 +1717,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw TRPCError NOT_FOUND if submission is not found or not editable", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValueOnce(null);
 
       const caller = createCaller(ctx as any);
@@ -1766,7 +1746,7 @@ describe("Playground tRPC Router", () => {
       };
       const updated = { ...existing, title: "Revised Title", equipmentIds: [3, 4] };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValueOnce(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -1790,7 +1770,7 @@ describe("Playground tRPC Router", () => {
         playground: mockPlayground(),
       };
       const ctx = createUserContext();
-      configureMockUserAsRegularUser(ctx.db);
+      configureMockUserAsRegularUser(ctx);
       ctx.db.query.playgroundEditSuggestions.findFirst.mockResolvedValueOnce(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([]);
 
@@ -1819,7 +1799,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw FORBIDDEN for banned user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsBanned(ctx.db);
+      configureMockUserAsBanned(ctx);
       const caller = createCaller(ctx as any);
 
       await expect(
@@ -1829,7 +1809,7 @@ describe("Playground tRPC Router", () => {
 
     it("should reject arbitrary non-allowlisted image URLs", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       const caller = createCaller(ctx as any);
 
       await expect(
@@ -1849,7 +1829,7 @@ describe("Playground tRPC Router", () => {
 
     it("should reject more than 8 photos in a single call", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       const caller = createCaller(ctx as any);
 
       const nineImages = Array.from(
@@ -1865,7 +1845,7 @@ describe("Playground tRPC Router", () => {
 
     it("should reject unapproved (pending/rejected) playgrounds", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(
         mockPlayground({ status: "pending" }),
       );
@@ -1881,7 +1861,7 @@ describe("Playground tRPC Router", () => {
 
     it("should route non-admin photo additions through playgroundEditSuggestions instead of direct update", async () => {
       const ctx = createUserContext({ userId: "regular-user-1" });
-      configureMockUserAsRegularUserForAdminRoute(ctx.db, "regular-user-1");
+      configureMockUserAsRegularUserForAdminRoute(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(
         mockPlayground({
           status: "approved",
@@ -1913,7 +1893,7 @@ describe("Playground tRPC Router", () => {
 
     it("should suggest coverImage for non-admin when approved playground has no coverImage yet", async () => {
       const ctx = createUserContext({ userId: "regular-user-2" });
-      configureMockUserAsRegularUserForAdminRoute(ctx.db, "regular-user-2");
+      configureMockUserAsRegularUserForAdminRoute(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(
         mockPlayground({
           status: "approved",
@@ -1943,7 +1923,7 @@ describe("Playground tRPC Router", () => {
 
     it("should allow admin to directly update approved playground photos", async () => {
       const ctx = createUserContext({ userId: "admin-1" });
-      configureMockUserAsAdmin(ctx.db, "admin-1");
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(
         mockPlayground({
           status: "approved",
@@ -1975,7 +1955,7 @@ describe("Playground tRPC Router", () => {
 
     it("should throw CONFLICT when photos changed between read and lock", async () => {
       const ctx = createUserContext({ userId: "admin-1" });
-      configureMockUserAsAdmin(ctx.db, "admin-1");
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.playgrounds.findFirst.mockResolvedValue(
         mockPlayground({ status: "approved", coverImage: null, images: [] }),
       );
@@ -1992,7 +1972,7 @@ describe("Playground tRPC Router", () => {
 
     it("should reject adding photos that would exceed the total playground image cap", async () => {
       const ctx = createUserContext({ userId: "admin-1" });
-      configureMockUserAsAdmin(ctx.db, "admin-1");
+      configureMockUserAsAdmin(ctx);
       const existing50 = Array.from(
         { length: 50 },
         (_, i) =>

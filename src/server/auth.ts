@@ -1,3 +1,4 @@
+import * as React from "react";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import {
   getServerSession,
@@ -240,7 +241,14 @@ export const authOptions: NextAuthOptions = {
 
 /**
  * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
+ * Wrapped in `React.cache()` so repeated calls within one server request (pages, tRPC context,
+ * route handlers) read cookies and hit the sessions table at most once.
  *
  * @see https://next-auth.js.org/configuration/nextjs
  */
-export const getServerAuthSession = () => getServerSession(authOptions);
+// react@18 only exports `cache` under the react-server condition (RSC, app route handlers);
+// fall back to an uncached call anywhere else (e.g. tests) rather than crashing on import.
+const cache: <T extends (...args: never[]) => unknown>(fn: T) => T =
+  (React as { cache?: <T>(fn: T) => T }).cache ?? ((fn) => fn);
+
+export const getServerAuthSession = cache(() => getServerSession(authOptions));

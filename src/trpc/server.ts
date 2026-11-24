@@ -11,6 +11,9 @@ import { createQueryClient } from "./query-client";
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
  * handling a tRPC call from a React Server Component.
+ *
+ * Reading `headers()` and the session opts the route into dynamic rendering, so only use `api` on
+ * routes that need request-scoped auth (admin, my-submissions, ...). Public pages use `publicApi`.
  */
 const createContext = cache(async () => {
   const headersList = await headers();
@@ -30,10 +33,29 @@ const createContext = cache(async () => {
   });
 });
 
+/**
+ * Request-independent context for public, read-only procedures. Never touches `headers()`,
+ * cookies or the session, so pages using it stay eligible for static generation / ISR.
+ * Protected procedures called through it throw UNAUTHORIZED.
+ */
+const createPublicContext = cache(() =>
+  createTRPCContext({
+    headers: new Headers({ "x-trpc-source": "rsc-static" }),
+    session: null,
+  }),
+);
+
 const getQueryClient = cache(createQueryClient);
 const caller = createCaller(createContext);
+const publicCaller = createCaller(createPublicContext);
 
 export const { trpc: api, HydrateClient } = createHydrationHelpers<AppRouter>(
   caller,
+  getQueryClient,
+);
+
+// Shares `getQueryClient`, so `HydrateClient` dehydrates prefetches from either caller.
+export const { trpc: publicApi } = createHydrationHelpers<AppRouter>(
+  publicCaller,
   getQueryClient,
 );

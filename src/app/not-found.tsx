@@ -1,11 +1,15 @@
+"use client";
+
+// Client component: reading the locale cookie here would make every route dynamic,
+// since not-found boundaries render as part of each page. LanguageProvider supplies the locale.
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AlertCircle, Home, Search } from "lucide-react";
-import { getTranslation, getServerLocale } from "~/lib/i18n/server";
+import { useT } from "~/lib/i18n";
 
-export default async function NotFound() {
-    const locale = await getServerLocale();
+export default function NotFound() {
+    const t = useT();
     return (
         <div className="flex items-center justify-center bg-background py-16">
             <div className="container mx-auto px-4">
@@ -14,26 +18,26 @@ export default async function NotFound() {
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
                             <AlertCircle className="h-8 w-8 text-destructive" />
                         </div>
-                        <CardTitle className="text-2xl">{getTranslation(locale, 'notFound.pageNotFound')}</CardTitle>
+                        <CardTitle className="text-2xl">{t('notFound.pageNotFound')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 text-center">
                         <div className="text-center">
                             <p className="text-lg font-medium text-foreground">404</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {getTranslation(locale, 'notFound.pageNotFoundDescription')}
+                                {t('notFound.pageNotFoundDescription')}
                             </p>
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
                             <Button asChild className="flex-1">
                                 <Link href="/">
                                     <Home className="mr-2 h-4 w-4" />
-                                    {getTranslation(locale, 'notFound.backToHome')}
+                                    {t('notFound.backToHome')}
                                 </Link>
                             </Button>
                             <Button asChild variant="outline" className="flex-1">
                                 <Link href="/playgrounds">
                                     <Search className="mr-2 h-4 w-4" />
-                                    {getTranslation(locale, 'notFound.browsePlaygrounds')}
+                                    {t('notFound.browsePlaygrounds')}
                                 </Link>
                             </Button>
                         </div>

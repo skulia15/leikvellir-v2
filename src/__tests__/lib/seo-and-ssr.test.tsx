@@ -138,8 +138,8 @@ const mockServerGetByIdPrefetch = vi.fn();
 const mockServerGetAll = vi.fn();
 const mockServerGetAllPrefetch = vi.fn();
 
-vi.mock("~/trpc/server", () => ({
-  api: {
+vi.mock("~/trpc/server", () => {
+  const api = {
     playground: {
       getById: Object.assign(
         (input: { id: number }) => mockServerGetById(input),
@@ -160,9 +160,14 @@ vi.mock("~/trpc/server", () => ({
     users: {
       getCurrentUser: vi.fn(),
     },
-  },
-  HydrateClient: ({ children }: { children: React.ReactNode }) => children,
-}));
+  };
+  // Public pages use the session-less `publicApi`; same mocks for both callers.
+  return {
+    api,
+    publicApi: api,
+    HydrateClient: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 // Mock server auth for route modules imported in metadata tests
 vi.mock("~/server/auth", () => ({

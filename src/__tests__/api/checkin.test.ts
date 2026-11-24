@@ -429,10 +429,9 @@ describe("checkIn.updateLeaderboardProfile", () => {
       query: {
         users: {
           findFirst: vi.fn().mockImplementation(() => {
-            // 1: protectedProcedure ban check, 2: existing name, 3: clash check
+            // 1: existing name, 2: clash check (ban state comes from the session)
             findCall += 1;
-            if (findCall === 1) return Promise.resolve({ id: "test-user-id", isBanned: false });
-            if (findCall === 2) return Promise.resolve({ leaderboardName: existingName });
+            if (findCall === 1) return Promise.resolve({ leaderboardName: existingName });
             return Promise.resolve(clashingUser);
           }),
         },

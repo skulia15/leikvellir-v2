@@ -13,8 +13,9 @@ export default async function ReviewPage() {
     }
 
     // Only admins and super admins can access review page
-    const currentUser = await api.users.getCurrentUser();
-    if (currentUser.role !== "admin" && currentUser.role !== "super_admin") {
+    // Role/ban state come from the (request-cached) database session — no extra query
+    const { role, isBanned } = session.user;
+    if (isBanned || (role !== "admin" && role !== "super_admin")) {
         redirect("/");
     }
 

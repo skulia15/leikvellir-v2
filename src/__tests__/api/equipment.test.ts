@@ -80,7 +80,7 @@ describe("Equipment tRPC Router", () => {
       ];
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findMany.mockResolvedValue(allEquipment);
 
       const caller = createCaller(ctx as any);
@@ -91,7 +91,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for regular user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.equipment.getAllAdmin()).rejects.toThrow(TRPCError);
@@ -109,7 +109,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for banned user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsBanned(ctx.db);
+      configureMockUserAsBanned(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.equipment.getAllAdmin()).rejects.toThrow(TRPCError);
@@ -177,7 +177,7 @@ describe("Equipment tRPC Router", () => {
       const created = { id: 1, ...validInput, isActive: true, description: null, image: null };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([created]);
 
       const caller = createCaller(ctx as any);
@@ -196,7 +196,7 @@ describe("Equipment tRPC Router", () => {
       const created = { id: 2, ...inputWithOptionals, isActive: true };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db._mocks.returning.mockResolvedValueOnce([created]);
 
       const caller = createCaller(ctx as any);
@@ -207,7 +207,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.equipment.create(validInput)).rejects.toThrow(TRPCError);
@@ -228,7 +228,7 @@ describe("Equipment tRPC Router", () => {
       const updated = { ...existing, name: { is: "New" } };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([updated]);
 
@@ -242,7 +242,7 @@ describe("Equipment tRPC Router", () => {
       const existing = { id: 1, name: { is: "Slide" }, category: "core_equipment", isActive: true };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([{ ...existing, name: { is: "Updated" } }]);
 
@@ -254,7 +254,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent equipment", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -265,7 +265,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(
@@ -281,7 +281,7 @@ describe("Equipment tRPC Router", () => {
       const deleted = { ...existing, isActive: false };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([deleted]);
 
@@ -293,7 +293,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent equipment", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -302,7 +302,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.equipment.delete({ id: 1 })).rejects.toThrow(TRPCError);
@@ -316,7 +316,7 @@ describe("Equipment tRPC Router", () => {
       const restored = { ...existing, isActive: true };
 
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(existing);
       ctx.db._mocks.returning.mockResolvedValueOnce([restored]);
 
@@ -328,7 +328,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw NOT_FOUND for non-existent equipment", async () => {
       const ctx = createUserContext();
-      configureMockUserAsAdmin(ctx.db);
+      configureMockUserAsAdmin(ctx);
       ctx.db.query.equipment.findFirst.mockResolvedValue(null);
 
       const caller = createCaller(ctx as any);
@@ -337,7 +337,7 @@ describe("Equipment tRPC Router", () => {
 
     it("should throw FORBIDDEN for non-admin user", async () => {
       const ctx = createUserContext();
-      configureMockUserAsRegularUserForAdminRoute(ctx.db);
+      configureMockUserAsRegularUserForAdminRoute(ctx);
 
       const caller = createCaller(ctx as any);
       await expect(caller.equipment.restore({ id: 1 })).rejects.toThrow(TRPCError);

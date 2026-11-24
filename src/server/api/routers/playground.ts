@@ -31,22 +31,26 @@ import { deleteOrphanedFiles } from "~/lib/file-cleanup";
 import { buildPlaygroundBlurData } from "~/lib/image-blur";
 import { calculateDistance } from "~/lib/geo-utils";
 import { logDbError, logger } from "~/lib/logging/logger";
-import { getUserById, type UserCache } from "~/server/api/current-user";
+import { type Session } from "next-auth";
+import { revalidatePublicPlaygroundPages } from "~/server/cache/revalidate";
 import {
   notifyNewEditSuggestion,
   notifyNewSubmission,
 } from "~/server/notifications/discord";
-import type { db as dbType } from "~/server/db";
 
 interface AdminCheckContext {
-  db: typeof dbType;
-  userCache?: UserCache;
+  session: Session | null;
 }
 
-/** Check whether the current user has admin or super_admin role. */
-async function isAdmin(ctx: AdminCheckContext, userId: string): Promise<boolean> {
-  const currentUser = await getUserById(ctx, userId);
-  return currentUser?.role === "admin" || currentUser?.role === "super_admin";
+/**
+ * Whether the session user is a non-banned admin or super_admin. Role and ban state come from
+ * the database session (users row loaded per request), so no extra query is needed.
+ */
+function isSessionAdmin(ctx: AdminCheckContext): boolean {
+  const user = ctx.session?.user;
+  return Boolean(
+    user && !user.isBanned && (user.role === "admin" || user.role === "super_admin"),
+  );
 }
 
 const DEFAULT_ADMIN_PAGE_LIMIT = 200;
@@ -106,8 +110,8 @@ function mapMutationError(error: unknown): never {
 }
 
 /** Verify the current user has admin or super_admin role. Throws FORBIDDEN if not. */
-async function requireAdmin(ctx: AdminCheckContext, userId: string) {
-  if (!(await isAdmin(ctx, userId))) {
+function requireAdmin(ctx: AdminCheckContext) {
+  if (!isSessionAdmin(ctx)) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Only admins can perform this action",
@@ -115,19 +119,6 @@ async function requireAdmin(ctx: AdminCheckContext, userId: string) {
   }
 }
 
-/** Check whether the given userId belongs to a non-banned admin or super_admin. */
-async function isAdminUser(
-  ctx: AdminCheckContext,
-  userId: string | undefined,
-): Promise<boolean> {
-  if (!userId) return false;
-  const currentUser = await getUserById(ctx, userId);
-  return Boolean(
-    currentUser &&
-      !currentUser.isBanned &&
-      (currentUser.role === "admin" || currentUser.role === "super_admin"),
-  );
-}
 
 /**
  * Sentinel value stored in playgroundEditSuggestions.coverImage to distinguish
@@ -336,7 +327,7 @@ export const playgroundRouter = createTRPCRouter({
   update: protectedProcedure
     .input(UpdatePlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
       const { id, equipmentIds, ...updateData } = input;
 
       let result;
@@ -408,13 +399,14 @@ export const playgroundRouter = createTRPCRouter({
         playgroundId: id,
       });
 
+      revalidatePublicPlaygroundPages(id);
       return updatedPlayground;
     }),
 
   review: protectedProcedure
     .input(ReviewPlaygroundSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
       const { id, action, rejectionReason, equipmentIds, ...playgroundUpdates } = input;
 
       // Read outside the transaction: placeholder generation below downloads
@@ -554,6 +546,7 @@ export const playgroundRouter = createTRPCRouter({
         });
       }
 
+      revalidatePublicPlaygroundPages(id);
       return updatedPlayground;
     }),
 
@@ -676,7 +669,7 @@ export const playgroundRouter = createTRPCRouter({
   getAllForAdmin: protectedProcedure
     .input(AdminPlaygroundListInputSchema)
     .query(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
       const conditions = [];
 
       if (input?.status) {
@@ -721,7 +714,7 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   getPendingSubmissions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx, ctx.session.user.id);
+    requireAdmin(ctx);
     const pendingPlaygrounds = await ctx.db.query.playgrounds.findMany({
       where: (playgrounds, { eq }) => eq(playgrounds.status, "pending"),
       orderBy: (playgrounds, { asc }) => [asc(playgrounds.createdAt)],
@@ -794,7 +787,7 @@ export const playgroundRouter = createTRPCRouter({
             playground.submitAnonymously ||
             playground.rejectionReason != null);
         const isAdmin = needsAdminCheck
-          ? await isAdminUser(ctx, sessionUserId)
+          ? isSessionAdmin(ctx)
           : false;
         const isAuthorizedForPrivateFields = isAdmin || isCreator;
 
@@ -863,7 +856,7 @@ export const playgroundRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
 
       const { playground, deletedPlayground } = await ctx.db.transaction(async (tx) => {
         // Get the playground first to access its images for cleanup
@@ -901,6 +894,7 @@ export const playgroundRouter = createTRPCRouter({
         playgroundId: input.id,
       });
 
+      revalidatePublicPlaygroundPages(input.id);
       return deletedPlayground;
     }),
 
@@ -1047,7 +1041,7 @@ export const playgroundRouter = createTRPCRouter({
   reviewEditSuggestion: protectedProcedure
     .input(ReviewEditSuggestionSchema)
     .mutation(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
       const userId = ctx.session.user.id;
       const { id, action, rejectionReason, finalValues } = input;
 
@@ -1325,6 +1319,9 @@ export const playgroundRouter = createTRPCRouter({
           },
         });
 
+        if (action === "approve") {
+          revalidatePublicPlaygroundPages(editSuggestion.playgroundId);
+        }
         return updatedSuggestion;
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -1345,7 +1342,7 @@ export const playgroundRouter = createTRPCRouter({
     }),
 
   getPendingEditSuggestions: protectedProcedure.query(async ({ ctx }) => {
-    await requireAdmin(ctx, ctx.session.user.id);
+    requireAdmin(ctx);
     const pendingSuggestions = await ctx.db.query.playgroundEditSuggestions.findMany({
       where: (suggestions, { eq }) => eq(suggestions.status, "pending"),
       orderBy: (suggestions, { asc }) => [asc(suggestions.createdAt)],
@@ -1380,7 +1377,7 @@ export const playgroundRouter = createTRPCRouter({
   getAllEditSuggestions: protectedProcedure
     .input(AdminEditSuggestionListInputSchema)
     .query(async ({ ctx, input }) => {
-      await requireAdmin(ctx, ctx.session.user.id);
+      requireAdmin(ctx);
       const conditions = [];
 
       if (input?.status) {
@@ -1772,7 +1769,7 @@ export const playgroundRouter = createTRPCRouter({
       }
 
       const combinedImages = [...existingImages, ...uniqueNewImages];
-      const callerIsAdmin = await isAdmin(ctx, userId);
+      const callerIsAdmin = isSessionAdmin(ctx);
 
       if (callerIsAdmin) {
         // Admins can directly update live approved playgrounds
@@ -1828,6 +1825,7 @@ export const playgroundRouter = createTRPCRouter({
           metadata: { playgroundId: id, addedCount: uniqueNewImages.length },
         });
 
+        revalidatePublicPlaygroundPages(id);
         return { status: "approved" as const };
       }
 

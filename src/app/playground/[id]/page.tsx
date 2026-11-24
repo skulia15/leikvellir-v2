@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import PlaygroundDetailClient from "~/app/_components/playground-detail-client";
 import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient, publicApi } from "~/trpc/server";
 import { generatePlaygroundMetadata } from "~/lib/seo/metadata";
 import { PlaygroundSchema, BreadcrumbSchema } from "~/lib/seo/structured-data";
 import { getBaseUrl } from "~/lib/seo/base-url";
@@ -25,8 +25,18 @@ function parsePlaygroundId(id: string): number | null {
   return parsed;
 }
 
+// ISR: rendered on first request, then served statically and regenerated at most every 5 min
+// (mutations also purge via revalidatePath)
+export const revalidate = 300;
+
+// Empty list = no pages built at deploy time; each id is rendered on demand and cached
+export function generateStaticParams() {
+  return [];
+}
+
+// Public (session-less) lookup so the page stays cacheable: only approved playgrounds resolve.
 const getPlaygroundById = cache(async (id: number) => {
-  return api.playground.getById({ id });
+  return publicApi.playground.getById({ id });
 });
 
 export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
@@ -41,12 +51,19 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
   try {
     playground = await getPlaygroundById(playgroundId);
   } catch {
-    notFound();
+    // Not publicly visible. It may still be a pending/rejected playground its creator or an
+    // admin can see, so let the client fetch it with the user's session; it renders the
+    // not-found page itself if that fails too. (Metadata marks this noindex.)
+    return (
+      <HydrateClient>
+        <PlaygroundDetailClient playgroundId={playgroundId} />
+      </HydrateClient>
+    );
   }
 
   // Nearby list is its own minimal query; the detail payload embeds its own
   // equipment, so no catalog or full getAll is needed on this page.
-  void api.playground.getNearby.prefetch({
+  void publicApi.playground.getNearby.prefetch({
     id: playground.id,
     latitude: playground.latitude,
     longitude: playground.longitude,

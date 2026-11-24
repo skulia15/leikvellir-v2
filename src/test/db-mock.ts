@@ -82,11 +82,15 @@ export type MockDb = ReturnType<typeof createMockDb>;
 
 // ---------- Context factories ----------
 
+type Role = "user" | "admin" | "super_admin";
+
 interface SessionUser {
   id: string;
   name: string;
   email: string;
   image: string | null;
+  role: Role;
+  isBanned: boolean;
 }
 
 interface MockSession {
@@ -116,6 +120,8 @@ export function createUserContext(overrides?: {
   userId?: string;
   userName?: string;
   email?: string;
+  role?: Role;
+  isBanned?: boolean;
 }) {
   const userId = overrides?.userId ?? "test-user-id";
   const db = createMockDb();
@@ -127,7 +133,9 @@ export function createUserContext(overrides?: {
         name: overrides?.userName ?? "Test User",
         email: overrides?.email ?? "user@test.com",
         image: null,
-      },
+        role: overrides?.role ?? "user",
+        isBanned: overrides?.isBanned ?? false,
+      } as SessionUser,
       expires: new Date(Date.now() + 86400000).toISOString(),
     },
     headers: new Headers(),
@@ -139,62 +147,40 @@ export function createUnauthenticatedContext() {
   return createMockContext({ session: null });
 }
 
-// ---------- DB mock configuration helpers ----------
-// These handle the sequential db.query.users.findFirst calls:
-//   1. protectedProcedure middleware → checks { isBanned }
-//   2. requireAdmin / inline role check → checks full user object
+// ---------- Session configuration helpers ----------
+// Role and ban state live on `ctx.session.user` (loaded by the database session callback),
+// so protectedProcedure and role checks no longer query the users table.
 
-/** Configure mock so protectedProcedure passes and requireAdmin passes (admin role) */
-export function configureMockUserAsAdmin(db: MockDb, userId = "test-user-id") {
-  db.query.users.findFirst
-    .mockResolvedValueOnce({ isBanned: false }) // protectedProcedure ban check
-    .mockResolvedValueOnce({
-      id: userId,
-      role: "admin",
-      isBanned: false,
-      name: "Admin User",
-      email: "admin@test.com",
-    }); // requireAdmin / inline role check
+type ContextWithSession = { session: { user: SessionUser } | null };
+
+function setSessionUser(ctx: ContextWithSession, patch: Partial<SessionUser>) {
+  if (!ctx.session) throw new Error("configureMockUser* requires an authenticated context");
+  Object.assign(ctx.session.user, patch);
 }
 
-/** Configure mock so protectedProcedure passes and requireAdmin passes (super_admin role) */
-export function configureMockUserAsSuperAdmin(
-  db: MockDb,
-  userId = "test-user-id",
-) {
-  db.query.users.findFirst
-    .mockResolvedValueOnce({ isBanned: false }) // protectedProcedure ban check
-    .mockResolvedValueOnce({
-      id: userId,
-      role: "super_admin",
-      isBanned: false,
-      name: "Super Admin",
-      email: "superadmin@test.com",
-    }); // requireAdmin / inline role check
+/** Admin role → protectedProcedure and admin checks pass */
+export function configureMockUserAsAdmin(ctx: ContextWithSession) {
+  setSessionUser(ctx, { role: "admin", isBanned: false });
 }
 
-/** Configure mock so protectedProcedure passes (regular user, no admin check) */
-export function configureMockUserAsRegularUser(db: MockDb) {
-  db.query.users.findFirst.mockResolvedValueOnce({ isBanned: false }); // protectedProcedure ban check only
+/** Super admin role */
+export function configureMockUserAsSuperAdmin(ctx: ContextWithSession) {
+  setSessionUser(ctx, { role: "super_admin", isBanned: false });
 }
 
-/** Configure mock so protectedProcedure passes, but requireAdmin/inline check fails (regular user role) */
+/** Regular user → protectedProcedure passes */
+export function configureMockUserAsRegularUser(ctx: ContextWithSession) {
+  setSessionUser(ctx, { role: "user", isBanned: false });
+}
+
+/** Regular user hitting an admin route → admin check fails with FORBIDDEN */
 export function configureMockUserAsRegularUserForAdminRoute(
-  db: MockDb,
-  userId = "test-user-id",
+  ctx: ContextWithSession,
 ) {
-  db.query.users.findFirst
-    .mockResolvedValueOnce({ isBanned: false }) // protectedProcedure ban check
-    .mockResolvedValueOnce({
-      id: userId,
-      role: "user",
-      isBanned: false,
-      name: "Regular User",
-      email: "user@test.com",
-    }); // requireAdmin / inline role check → will fail
+  setSessionUser(ctx, { role: "user", isBanned: false });
 }
 
-/** Configure mock so protectedProcedure throws FORBIDDEN (banned user) */
-export function configureMockUserAsBanned(db: MockDb) {
-  db.query.users.findFirst.mockResolvedValueOnce({ isBanned: true }); // protectedProcedure ban check → throws
+/** Banned user → protectedProcedure throws FORBIDDEN */
+export function configureMockUserAsBanned(ctx: ContextWithSession) {
+  setSessionUser(ctx, { isBanned: true });
 }

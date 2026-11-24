@@ -2,9 +2,12 @@ import { Suspense } from "react";
 import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
 import type { Metadata } from "next";
-import { api } from "~/trpc/server";
+import { publicApi } from "~/trpc/server";
 import { PlaygroundListSchema } from "~/lib/seo/structured-data";
 import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
+
+// ISR: static, regenerated at most every 5 min (mutations also purge via revalidatePath)
+export const revalidate = 300;
 
 export const metadata: Metadata = generateSEOMetadata({
     title: getTranslation(defaultLocale, 'playground.pageTitle'),
@@ -22,7 +25,7 @@ export const metadata: Metadata = generateSEOMetadata({
  */
 async function PlaygroundListStructuredData() {
     try {
-        const summaries = await api.playground.getSummaries();
+        const summaries = await publicApi.playground.getSummaries();
         if (summaries.length === 0) return null;
 
         return (

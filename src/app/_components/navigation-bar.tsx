@@ -1,8 +1,6 @@
-import { getServerAuthSession } from "~/server/auth";
 import NavigationBarClient from "./navigation-bar-client";
 
-export default async function NavigationBar() {
-  const session = await getServerAuthSession();
-
-  return <NavigationBarClient session={session} />;
+// Session is resolved client-side via SessionProvider so the root layout stays static.
+export default function NavigationBar() {
+  return <NavigationBarClient />;
 }

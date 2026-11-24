@@ -154,16 +154,8 @@ const config: NextConfig = {
           },
         ],
       },
-      // Optimize page caching for bfcache
-      {
-        source: "/(playground|playgrounds)/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=0, must-revalidate",
-          },
-        ],
-      },
+      // No Cache-Control override for /playground(s): ISR sets `s-maxage` so the CDN can cache
+      // them. (max-age=0 never affected bfcache; only no-store does.)
     ];
   },
 

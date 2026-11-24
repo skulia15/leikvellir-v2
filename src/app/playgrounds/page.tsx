@@ -1,4 +1,4 @@
-import { api, HydrateClient } from "~/trpc/server";
+import { HydrateClient, publicApi } from "~/trpc/server";
 import PlaygroundsPageClient from "~/app/_components/playgrounds-page-client";
 
 export default async function PlaygroundsPage() {
@@ -7,8 +7,8 @@ export default async function PlaygroundsPage() {
   // playground links for crawlers. loading.tsx still covers the wait.
   // getAll returns bare equipmentIds; the catalog resolves them client-side.
   await Promise.all([
-    api.playground.getAll.prefetch(),
-    api.equipment.getCatalog.prefetch(),
+    publicApi.playground.getAll.prefetch(),
+    publicApi.equipment.getCatalog.prefetch(),
   ]);
 
   return (

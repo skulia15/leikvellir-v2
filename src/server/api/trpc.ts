@@ -10,12 +10,13 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { eq } from "drizzle-orm";
+
+import { type Session } from "next-auth";
 
 import { getServerAuthSession } from "~/server/auth";
+import { type UserRole } from "~/types";
 import { db } from "~/server/db";
 import { createUserCache } from "~/server/api/current-user";
-import { users } from "~/server/db/schema";
 
 /**
  * 1. CONTEXT
@@ -29,16 +30,22 @@ import { users } from "~/server/db/schema";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = await getServerAuthSession();
+export const createTRPCContext = async (opts: {
+  headers: Headers;
+  session?: Session | null;
+}) => {
+  // Callers may pass a session explicitly (e.g. `null` for the static/public RSC caller) to
+  // skip reading cookies and the session lookup entirely.
+  const session =
+    opts.session !== undefined ? opts.session : await getServerAuthSession();
 
   return {
     db,
+    headers: opts.headers,
     session,
     // Scoped to this request so repeated permission checks across procedures
     // share one database round-trip. See ~/server/api/current-user.
     userCache: createUserCache(),
-    ...opts,
   };
 };
 
@@ -124,13 +131,8 @@ export const protectedProcedure = t.procedure
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    // Check if user is banned
-    const user = await ctx.db.query.users.findFirst({
-      where: eq(users.id, ctx.session.user.id),
-      columns: { isBanned: true },
-    });
-
-    if (user?.isBanned) {
+    // `isBanned` is loaded from the users table by the database session callback
+    if (ctx.session.user.isBanned) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Your account has been suspended",
@@ -144,3 +146,19 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Throws FORBIDDEN unless the session user has one of the given roles. Role comes from the
+ * request's database session (users row), so no extra query is needed.
+ */
+export function requireRole(
+  user: Session["user"],
+  roles: readonly UserRole[],
+  message = "Only admins can perform this action",
+) {
+  if (!roles.includes(user.role)) {
+    throw new TRPCError({ code: "FORBIDDEN", message });
+  }
+}
+
+export const ADMIN_ROLES = ["admin", "super_admin"] as const satisfies readonly UserRole[];
