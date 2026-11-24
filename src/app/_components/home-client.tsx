@@ -42,7 +42,6 @@ const MobileBottomSheet = dynamic(() => import("./mobile-bottom-sheet"), {
 import PlaygroundFilters, {
   type PlaygroundFilters as PlaygroundFiltersType,
 } from "./playground-filters";
-import { PlaygroundListSkeleton } from "./playground-card-skeleton";
 import { type Playground } from "~/types";
 import { type UserLocation } from "~/lib/geo-utils";
 import { useT } from "~/lib/i18n";
@@ -106,9 +105,11 @@ export default function HomeClient() {
     initialSelectedPlayground ? 1 : 0,
   );
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  // undefined until the map reports its viewport, so the list falls back to
+  // all playgrounds and SSR HTML contains real playground links.
   const [visiblePlaygrounds, setVisiblePlaygrounds] = useState<
-    (Playground & { distance?: number | null })[]
-  >([]);
+    (Playground & { distance?: number | null })[] | undefined
+  >(undefined);
   const [totalVisibleCount, setTotalVisibleCount] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [actualDrawerHeight, setActualDrawerHeight] = useState(0);
@@ -121,7 +122,6 @@ export default function HomeClient() {
   const sheetHandleRef = useRef<MobileBottomSheetHandle | null>(null);
   const flyToSeqRef = useRef(0);
   const lastWrittenQueryRef = useRef<string | null>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Record in-app navigation so playground detail Back button returns to "/"
   useEffect(() => {
@@ -201,17 +201,6 @@ export default function HomeClient() {
       window.removeEventListener("resize", schedule);
     };
   }, [isMobile, currentSnapIndex]);
-
-  // Handle initial loading state
-  useEffect(() => {
-    if (playgrounds) {
-      // Small delay to show skeleton briefly even if data loads very quickly
-      const timer = setTimeout(() => {
-        setIsInitialLoading(false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [playgrounds]);
 
   // Check if mobile
   useEffect(() => {
@@ -301,7 +290,7 @@ export default function HomeClient() {
 
   // Header count: the number of results actually in view, or a placeholder
   // while the map is still establishing its bounds.
-  const isCountReady = !isInitialLoading && hasMapReported;
+  const isCountReady = hasMapReported;
   const resultCountHeader = (
     <div
       className="flex items-center gap-2.5"
@@ -310,7 +299,7 @@ export default function HomeClient() {
     >
       {isCountReady ? (
         <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-semibold tabular-nums">
-          {visiblePlaygrounds.length}
+          {visiblePlaygrounds?.length ?? 0}
         </span>
       ) : (
         <span
@@ -389,20 +378,16 @@ export default function HomeClient() {
   // Playground list content (without filters — filters are placed separately)
   const playgroundListContent = (
     <DataErrorBoundary fallback={DataErrorFallback}>
-      {isInitialLoading ? (
-        <PlaygroundListSkeleton count={6} />
-      ) : (
-        <PlaygroundList
-          filters={filters}
-          userLocation={userLocation}
-          selectedPlayground={selectedPlayground}
-          onPlaygroundSelect={handleListPlaygroundSelect}
-          visiblePlaygrounds={visiblePlaygrounds}
-          totalVisibleCount={totalVisibleCount}
-          onClearFilters={() => setFilters({})}
-          scrollToSelectedSeq={scrollToSelectedSeq}
-        />
-      )}
+      <PlaygroundList
+        filters={filters}
+        userLocation={userLocation}
+        selectedPlayground={selectedPlayground}
+        onPlaygroundSelect={handleListPlaygroundSelect}
+        visiblePlaygrounds={visiblePlaygrounds}
+        totalVisibleCount={totalVisibleCount}
+        onClearFilters={() => setFilters({})}
+        scrollToSelectedSeq={scrollToSelectedSeq}
+      />
     </DataErrorBoundary>
   );
 
@@ -410,20 +395,16 @@ export default function HomeClient() {
   const desktopSidebarContent = (
     <DataErrorBoundary fallback={DataErrorFallback}>
       <PlaygroundFilters filters={filters} onFiltersChange={setFilters} />
-      {isInitialLoading ? (
-        <PlaygroundListSkeleton count={6} />
-      ) : (
-        <PlaygroundList
-          filters={filters}
-          userLocation={userLocation}
-          selectedPlayground={selectedPlayground}
-          onPlaygroundSelect={handleListPlaygroundSelect}
-          visiblePlaygrounds={visiblePlaygrounds}
-          totalVisibleCount={totalVisibleCount}
-          onClearFilters={() => setFilters({})}
-          scrollToSelectedSeq={scrollToSelectedSeq}
-        />
-      )}
+      <PlaygroundList
+        filters={filters}
+        userLocation={userLocation}
+        selectedPlayground={selectedPlayground}
+        onPlaygroundSelect={handleListPlaygroundSelect}
+        visiblePlaygrounds={visiblePlaygrounds}
+        totalVisibleCount={totalVisibleCount}
+        onClearFilters={() => setFilters({})}
+        scrollToSelectedSeq={scrollToSelectedSeq}
+      />
     </DataErrorBoundary>
   );
 

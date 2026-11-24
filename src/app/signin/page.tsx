@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getServerAuthSession } from "~/server/auth";
 import { redirect } from "next/navigation";
 import SignInClient from "./_components/signin-client";
@@ -17,7 +18,11 @@ export default async function SignInPage() {
     );
 }
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "Skrá inn | Leiksvæði",
     description: "Skráðu þig inn á Leiksvæði til að bæta við leiksvæðum, deila myndum og hjálpa til við að kortleggja leiksvæði á Íslandi.",
+    robots: {
+        index: false,
+        follow: false,
+    },
 };

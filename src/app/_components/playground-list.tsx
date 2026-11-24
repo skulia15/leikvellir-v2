@@ -44,17 +44,6 @@ export default function PlaygroundList({
   const equipmentLookup = useEquipmentLookup();
   const t = useT();
 
-  // Track playground IDs for smooth animations
-  const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<
-    (Playground & { distance?: number | null })[]
-  >([]);
-  const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(
-    new Set(),
-  );
-  const displayedRef = useRef<(Playground & { distance?: number | null })[]>([]);
-  const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
-  const lastScrolledSeqRef = useRef<number>(0);
-
   const filteredAndSortedPlaygrounds = useMemo(() => {
     // Use visible playgrounds if provided, otherwise fall back to all playgrounds
     if (visiblePlaygrounds) {
@@ -70,6 +59,20 @@ export default function PlaygroundList({
     // Sort by distance using shared utility
     return sortPlaygroundsByDistance(filtered, userLocation);
   }, [playgrounds, filters, userLocation, visiblePlaygrounds, equipmentLookup]);
+
+  // Track playground IDs for smooth animations. Initialized from the current
+  // list so the SSR HTML contains real playground links, not an empty list.
+  const [displayedPlaygrounds, setDisplayedPlaygrounds] = useState<
+    (Playground & { distance?: number | null })[]
+  >(() => filteredAndSortedPlaygrounds);
+  const [exitingPlaygrounds, setExitingPlaygrounds] = useState<Set<number>>(
+    new Set(),
+  );
+  const displayedRef = useRef<(Playground & { distance?: number | null })[]>(
+    filteredAndSortedPlaygrounds,
+  );
+  const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+  const lastScrolledSeqRef = useRef<number>(0);
 
   // Handle playground list animations with staggered timing.
   // The currently-rendered list is mirrored in a ref so this effect depends only

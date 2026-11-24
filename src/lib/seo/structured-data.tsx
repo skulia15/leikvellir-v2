@@ -117,6 +117,7 @@ interface PlaygroundSchemaProps {
     municipality?: string | null;
     latitude: number;
     longitude: number;
+    coverImage?: string | null;
     images?: string[] | null;
     createdAt: Date;
     updatedAt?: Date | null;
@@ -124,6 +125,11 @@ interface PlaygroundSchemaProps {
 }
 
 export function PlaygroundSchema({ playground }: PlaygroundSchemaProps) {
+  const allImages = [
+    ...(playground.coverImage ? [playground.coverImage] : []),
+    ...(playground.images ?? []),
+  ].filter((img, index, arr) => Boolean(img) && arr.indexOf(img) === index);
+
   const playgroundData = {
     '@context': 'https://schema.org',
     '@type': 'Playground',
@@ -143,8 +149,8 @@ export function PlaygroundSchema({ playground }: PlaygroundSchemaProps) {
         addressCountry: 'IS'
       }
     }),
-    ...(playground.images?.length && {
-      image: playground.images.map(image => ({
+    ...(allImages.length > 0 && {
+      image: allImages.map(image => ({
         '@type': 'ImageObject',
         url: image,
         caption: playground.name

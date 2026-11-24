@@ -1,12 +1,15 @@
 import { api, HydrateClient } from "~/trpc/server";
 import PlaygroundsPageClient from "~/app/_components/playgrounds-page-client";
 
-export default function PlaygroundsPage() {
-  // Not awaited: it seeds the dehydrated cache so the client does not refetch
-  // the list, without holding up the shell. loading.tsx covers the wait.
-  void api.playground.getAll.prefetch();
+export default async function PlaygroundsPage() {
+  // Awaited so the dehydrated cache already holds the list when the client
+  // renders on the server; otherwise SSR emits only a skeleton with no
+  // playground links for crawlers. loading.tsx still covers the wait.
   // getAll returns bare equipmentIds; the catalog resolves them client-side.
-  void api.equipment.getCatalog.prefetch();
+  await Promise.all([
+    api.playground.getAll.prefetch(),
+    api.equipment.getCatalog.prefetch(),
+  ]);
 
   return (
     <HydrateClient>

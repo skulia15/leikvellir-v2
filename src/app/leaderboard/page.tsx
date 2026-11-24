@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import { api } from "~/trpc/server";
 import { getServerLocale, getTranslation } from "~/lib/i18n/server";
+import { defaultLocale } from "~/lib/i18n/config";
+import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
 import LeaderboardClient from "./_components/leaderboard-client";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: getTranslation(defaultLocale, "leaderboard.title"),
+  description: getTranslation(defaultLocale, "leaderboard.description"),
+  path: "/leaderboard",
+});
 
 /**
  * Unlike /my-submissions this page does NOT redirect signed-out visitors:

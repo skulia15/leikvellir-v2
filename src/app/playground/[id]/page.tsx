@@ -1,8 +1,9 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import PlaygroundDetailClient from "~/app/_components/playground-detail-client";
 import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
-import { api } from "~/trpc/server";
+import { api, HydrateClient } from "~/trpc/server";
 import { generatePlaygroundMetadata } from "~/lib/seo/metadata";
 import { PlaygroundSchema, BreadcrumbSchema } from "~/lib/seo/structured-data";
 import { getBaseUrl } from "~/lib/seo/base-url";
@@ -11,31 +12,41 @@ interface PlaygroundPageProps {
   params: Promise<{ id: string }>;
 }
 
+const PLAYGROUND_ID_PATTERN = /^\d+$/;
+
+function parsePlaygroundId(id: string): number | null {
+  if (!PLAYGROUND_ID_PATTERN.test(id)) {
+    return null;
+  }
+  const parsed = Number(id);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
+const getPlaygroundById = cache(async (id: number) => {
+  return api.playground.getById({ id });
+});
+
 export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
   const { id } = await params;
-  const playgroundId = parseInt(id);
+  const playgroundId = parsePlaygroundId(id);
 
-  if (isNaN(playgroundId)) {
+  if (playgroundId === null) {
     notFound();
   }
 
-  // Get playground data for structured data
   let playground;
   try {
-    playground = await api.playground.getById({ id: playgroundId });
+    playground = await getPlaygroundById(playgroundId);
   } catch {
     notFound();
   }
 
-  // Prefetch the data on the server for better performance
-  try {
-    void api.playground.getById.prefetch({ id: playgroundId });
-    // The detail payload embeds its own equipment records, but the page also
-    // renders the nearby-playgrounds list off getAll, which does not.
-    void api.equipment.getCatalog.prefetch();
-  } catch {
-    // If prefetch fails, let the client handle it
-  }
+  // The detail payload embeds its own equipment records, but the page also
+  // renders the nearby-playgrounds list off getAll, which does not.
+  void api.equipment.getCatalog.prefetch();
 
   const BASE_URL = getBaseUrl();
 
@@ -43,7 +54,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
   // This must match the image order in playground-detail.tsx
   const displayImages = [
     ...(playground.coverImage ? [playground.coverImage] : []),
-    ...(playground.images ?? [])
+    ...(playground.images ?? []),
   ].filter((img, index, arr) => arr.indexOf(img) === index);
   const firstImage = displayImages[0];
 
@@ -84,6 +95,7 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
           municipality: playground.municipality,
           latitude: playground.latitude,
           longitude: playground.longitude,
+          coverImage: playground.coverImage,
           images: playground.images,
           createdAt: playground.createdAt,
           updatedAt: playground.updatedAt,
@@ -95,11 +107,16 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
         items={[
           { name: 'Heim', url: BASE_URL },
           { name: 'Leiksvæði', url: `${BASE_URL}/playgrounds` },
-          { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` }
+          { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` },
         ]}
       />
 
-      <PlaygroundDetailClient playgroundId={playgroundId} />
+      <HydrateClient>
+        <PlaygroundDetailClient
+          playgroundId={playgroundId}
+          initialPlayground={playground}
+        />
+      </HydrateClient>
     </>
   );
 }
@@ -107,27 +124,30 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PlaygroundPageProps) {
   const { id } = await params;
-  const playgroundId = parseInt(id);
+  const playgroundId = parsePlaygroundId(id);
 
-  if (isNaN(playgroundId)) {
+  if (playgroundId === null) {
     return {
       title: getTranslation(defaultLocale, 'playground.notFound'),
+      robots: { index: false, follow: false },
     };
   }
 
   try {
-    const playground = await api.playground.getById({ id: playgroundId });
+    const playground = await getPlaygroundById(playgroundId);
     return generatePlaygroundMetadata({
       id: playground.id.toString(),
       name: playground.title,
       municipality: playground.municipality,
       latitude: playground.latitude,
       longitude: playground.longitude,
+      coverImage: playground.coverImage,
       images: playground.images,
     });
   } catch {
     return {
       title: getTranslation(defaultLocale, 'playground.notFound'),
+      robots: { index: false, follow: false },
     };
   }
 }

@@ -13,8 +13,17 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslation, getServerLocale } from "~/lib/i18n/server";
+import { getTranslation, getServerLocale, defaultLocale } from "~/lib/i18n/server";
+import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: `${getTranslation(defaultLocale, 'playground.submitNewPlayground')} | Leiksvæði`,
+  exactTitle: true,
+  description: getTranslation(defaultLocale, 'playground.signInToSubmitPlayground'),
+  path: '/create-playground',
+});
 
 export default async function CreatePlayground() {
     const locale = await getServerLocale();

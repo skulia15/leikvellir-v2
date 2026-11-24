@@ -13,7 +13,7 @@ import { CookieConsentBanner } from "./_components/cookie-consent-banner";
 import { MainContent } from "./_components/main-content";
 import { FloatingFeedbackButton } from "~/components/ui/floating-feedback-button";
 import { LayoutClient } from "./_components/layout-client";
-import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
+import { generateRootMetadata } from "~/lib/seo/metadata";
 import { OrganizationSchema, WebsiteSchema } from "~/lib/seo/structured-data";
 
 const outfit = Outfit({
@@ -22,7 +22,7 @@ const outfit = Outfit({
   display: "swap",
 });
 
-export const metadata: Metadata = generateSEOMetadata();
+export const metadata: Metadata = generateRootMetadata();
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
 import { getTranslation, getServerLocale } from "~/lib/i18n/server";
 import MySubmissionsClient from "./_components/my-submissions-client";
+
+export const metadata: Metadata = {
+    title: `${getTranslation(defaultLocale, 'mySubmissions.title')} | Leiksvæði`,
+    description: getTranslation(defaultLocale, 'mySubmissions.description'),
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
 
 export default async function MySubmissionsPage() {
     const locale = await getServerLocale();

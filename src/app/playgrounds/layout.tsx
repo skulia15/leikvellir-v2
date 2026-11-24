@@ -3,12 +3,15 @@ import { getTranslation } from "~/lib/i18n/server";
 import { defaultLocale } from "~/lib/i18n/config";
 import type { Metadata } from "next";
 import { api } from "~/trpc/server";
-import { PlaygroundListSchema, FAQSchema } from "~/lib/seo/structured-data";
+import { PlaygroundListSchema } from "~/lib/seo/structured-data";
+import { generateMetadata as generateSEOMetadata } from "~/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = generateSEOMetadata({
     title: getTranslation(defaultLocale, 'playground.pageTitle'),
+    exactTitle: true,
     description: getTranslation(defaultLocale, 'playground.pageDescription'),
-};
+    path: '/playgrounds',
+});
 
 /**
  * JSON-LD listing every approved playground.
@@ -42,27 +45,11 @@ export default function PlaygroundsLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const faqQuestions = [
-        {
-            question: getTranslation(defaultLocale, 'playground.faq.findNearby'),
-            answer: getTranslation(defaultLocale, 'playground.faq.findNearbyAnswer'),
-        },
-        {
-            question: getTranslation(defaultLocale, 'playground.faq.whatIsRolo'),
-            answer: getTranslation(defaultLocale, 'playground.faq.whatIsRoloAnswer'),
-        },
-        {
-            question: getTranslation(defaultLocale, 'playground.faq.addPlayground'),
-            answer: getTranslation(defaultLocale, 'playground.faq.addPlaygroundAnswer'),
-        },
-    ];
-
     return (
         <>
             <Suspense fallback={null}>
                 <PlaygroundListStructuredData />
             </Suspense>
-            <FAQSchema questions={faqQuestions} />
             {children}
         </>
     );

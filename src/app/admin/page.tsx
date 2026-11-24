@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
@@ -38,7 +39,11 @@ export default async function AdminPage() {
     );
 }
 
-export const metadata = {
+export const metadata: Metadata = {
     title: getTranslation(defaultLocale, 'admin.adminDashboardTitle'),
     description: getTranslation(defaultLocale, 'admin.adminDashboardMetaDescription'),
-}; 
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
