@@ -3,6 +3,7 @@ import {
   getServerSession,
   type DefaultSession,
   type NextAuthOptions,
+  type Profile,
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
 import DiscordProvider from "next-auth/providers/discord";
@@ -20,6 +21,43 @@ import {
   verificationTokens,
 } from "~/server/db/schema";
 
+/**
+ * Checks whether the incoming OAuth provider explicitly confirms that the
+ * user's email address is verified.
+ *
+ * - Google (OIDC): `profile.email_verified === true`
+ * - Discord: `profile.verified === true`
+ * - Facebook and any unknown providers: returns `false` because verified email
+ *   ownership is not reliably guaranteed.
+ */
+export function isOAuthEmailVerified(
+  provider: string,
+  profile?: Profile,
+  expectedEmail?: string,
+): boolean {
+  if (!profile) {
+    return false;
+  }
+
+  const rawProfile = profile as Record<string, unknown>;
+
+  if (
+    expectedEmail &&
+    typeof rawProfile.email === "string" &&
+    rawProfile.email.toLowerCase() !== expectedEmail.toLowerCase()
+  ) {
+    return false;
+  }
+
+  switch (provider) {
+    case "google":
+      return rawProfile.email_verified === true;
+    case "discord":
+      return rawProfile.verified === true;
+    default:
+      return false;
+  }
+}
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -49,13 +87,18 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    async signIn({ user, account }) {
-      // If no account or email, allow (should not happen with OAuth)
+    async signIn({ user, account, profile }) {
+      // Defense in depth: block if the adapter hydrated a banned user directly
+      if ((user as { isBanned?: boolean }).isBanned) {
+        return false;
+      }
+
+      // If no account or email, allow NextAuth's default handling
       if (!account || !user.email) {
         return true;
       }
 
-      // Only handle OAuth providers (not credentials)
+      // Only handle OAuth providers (not credentials/email)
       if (account.type !== "oauth") {
         return true;
       }
@@ -69,37 +112,54 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        // If user exists and has accounts from other providers
-        if (existingUser && existingUser.accounts.length > 0) {
-          // Check if this specific provider account already exists
-          const existingAccount = existingUser.accounts.find(
-            (acc) => acc.provider === account.provider && acc.providerAccountId === account.providerAccountId
-          );
-
-          // If the account doesn't exist, link it to the existing user
-          if (!existingAccount) {
-            await db.insert(accounts).values({
-              userId: existingUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              refresh_token: account.refresh_token,
-              access_token: account.access_token,
-              expires_at: account.expires_at,
-              token_type: account.token_type,
-              scope: account.scope,
-              id_token: account.id_token,
-              session_state: account.session_state,
-            });
-
-          }
+        // Brand-new user: allow NextAuth adapter to create user & link account
+        if (!existingUser) {
+          return true;
         }
+
+        // Never link a new OAuth provider to or allow sign-in for a banned user
+        if (existingUser.isBanned) {
+          return false;
+        }
+
+        // Check if this specific provider account is already linked
+        const existingAccount = existingUser.accounts.find(
+          (acc) =>
+            acc.provider === account.provider &&
+            acc.providerAccountId === account.providerAccountId,
+        );
+
+        // Already linked to this user: normal sign-in
+        if (existingAccount) {
+          return true;
+        }
+
+        // Cross-provider (or unlinked) OAuth sign-in matching an existing email:
+        // Only allow automatic linking when the incoming OAuth provider
+        // explicitly confirms email verification.
+        if (!isOAuthEmailVerified(account.provider, profile, user.email)) {
+          return "/signin?error=OAuthAccountNotLinked";
+        }
+
+        await db.insert(accounts).values({
+          userId: existingUser.id,
+          type: account.type,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+          refresh_token: account.refresh_token,
+          access_token: account.access_token,
+          expires_at: account.expires_at,
+          token_type: account.token_type,
+          scope: account.scope,
+          id_token: account.id_token,
+          session_state: account.session_state,
+        });
 
         return true;
       } catch (error) {
         console.error("Error in signIn callback:", error);
-        // If there's an error, still allow sign in to avoid blocking users
-        return true;
+        // Fail closed on unexpected errors during account lookup/linking
+        return false;
       }
     },
     session: ({ session, user }) => {
@@ -133,6 +193,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/signin",
+    error: "/signin",
   },
   providers: [
     // Google provider (only if credentials are available)

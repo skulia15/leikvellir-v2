@@ -49,7 +49,8 @@
     "termsAndPrivacy": "Með því að skrá þig inn samþykkir þú þjónustuskilmála okkar og persónuverndarstefnu",
     "authenticationFailed": "Auðkenning mistókst. Vinsamlegast reyndu aftur.",
     "authenticationCallback": "Villa í auðkenningarferlinu.",
-    "accountLinking": "Reikningar hafa verið tengdir. Vinsamlegast reyndu að skrá þig inn aftur.",
+    "accountLinking": "Reikningur með þessu netfangi er þegar til. Vinsamlegast skráðu þig inn með sama þjónustuaðila og þú notaðir upphaflega.",
+    "accessDenied": "Aðgangi hafnað. Þú hefur ekki heimild til að skrá þig inn.",
     "emailSignInFailed": "Innskráning með tölvupósti mistókst.",
     "invalidCredentials": "Ógilt auðkenni.",
     "failedToSignIn": "Ekki tókst að skrá þig inn með {{provider}}. Vinsamlegast reyndu aftur."

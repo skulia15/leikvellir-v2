@@ -49,7 +49,8 @@
     "termsAndPrivacy": "Logując się, akceptujesz nasze warunki usługi i politykę prywatności",
     "authenticationFailed": "Uwierzytelnianie nie powiodło się. Spróbuj ponownie.",
     "authenticationCallback": "Błąd wywołania zwrotnego uwierzytelniania.",
-    "accountLinking": "Łączenie kont w toku. Spróbuj zalogować się ponownie.",
+    "accountLinking": "Konto z tym adresem e-mail już istnieje. Zaloguj się za pomocą dostawcy użytego pierwotnie.",
+    "accessDenied": "Odmowa dostępu. Nie masz uprawnień do logowania się.",
     "emailSignInFailed": "Logowanie przez e-mail nie powiodło się.",
     "invalidCredentials": "Nieprawidłowe dane uwierzytelniające.",
     "failedToSignIn": "Nie udało się zalogować z {{provider}}. Spróbuj ponownie."

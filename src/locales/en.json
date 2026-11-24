@@ -49,7 +49,8 @@
     "termsAndPrivacy": "By signing in, you agree to our terms of service and privacy policy",
     "authenticationFailed": "Authentication failed. Please try again.",
     "authenticationCallback": "Authentication callback failed.",
-    "accountLinking": "Account linking in progress. Please try signing in again.",
+    "accountLinking": "An account with this email already exists. Please sign in with the provider you originally used.",
+    "accessDenied": "Access denied. You do not have permission to sign in.",
     "emailSignInFailed": "Email sign-in failed.",
     "invalidCredentials": "Invalid credentials provided.",
     "failedToSignIn": "Failed to sign in with {{provider}}. Please try again."

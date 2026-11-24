@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DiscordIcon, FacebookIcon, GoogleIcon } from "~/components/icons";
 import { Button } from "~/components/ui/button";
@@ -17,7 +17,9 @@ export default function SignInClient() {
     const t = useT();
 
     // Show error message if there's an authentication error
-    if (error) {
+    useEffect(() => {
+        if (!error) return;
+
         let errorMessage = t('auth.authenticationFailed');
         switch (error) {
             case "OAuthSignin":
@@ -32,6 +34,9 @@ export default function SignInClient() {
             case "OAuthAccountNotLinked":
                 errorMessage = t('auth.accountLinking');
                 break;
+            case "AccessDenied":
+                errorMessage = t('auth.accessDenied');
+                break;
             case "EmailSignin":
                 errorMessage = t('auth.emailSignInFailed');
                 break;
@@ -42,7 +47,7 @@ export default function SignInClient() {
                 errorMessage = t('auth.authenticationFailed');
         }
         toast.error(errorMessage);
-    }
+    }, [error, t]);
 
     const handleSignIn = async (provider: string) => {
         try {
