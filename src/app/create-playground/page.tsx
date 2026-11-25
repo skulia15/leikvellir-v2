@@ -24,6 +24,7 @@ export const metadata: Metadata = generateSEOMetadata({
   exactTitle: true,
   description: getTranslation(defaultLocale, 'playground.signInToSubmitPlayground'),
   path: '/create-playground',
+  noIndex: true,
 });
 
 export default async function CreatePlayground() {

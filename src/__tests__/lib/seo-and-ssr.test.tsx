@@ -328,12 +328,8 @@ describe("SEO metadata & canonical isolation", () => {
     expect(cookiesPage.metadata.alternates?.canonical).toBe(`${BASE_URL}/cookies`);
     expect(cookiesPage.metadata.openGraph?.url).toBe(`${BASE_URL}/cookies`);
 
-    expect(createPlaygroundPage.metadata.alternates?.canonical).toBe(
-      `${BASE_URL}/create-playground`,
-    );
-    expect(createPlaygroundPage.metadata.openGraph?.url).toBe(
-      `${BASE_URL}/create-playground`,
-    );
+    expect(createPlaygroundPage.metadata.alternates?.canonical).toBeUndefined();
+    expect(createPlaygroundPage.metadata.robots).toEqual({ index: false, follow: false });
 
     expect(signinPage.metadata.robots).toEqual({ index: false, follow: false });
     expect(mySubmissionsPage.metadata.robots).toEqual({ index: false, follow: false });
