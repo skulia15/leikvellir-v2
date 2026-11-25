@@ -1,5 +1,7 @@
 # Leiksvæði 🏞️
 
+**Live: [leiksvæði.is](https://xn--leiksvi-rxa4g.is)**
+
 A modern web application for discovering and mapping playgrounds in Iceland. Built with the T3 Stack, Leiksvæði helps parents and families find the perfect playground for their children with detailed information about accessibility, age-appropriateness, and location data.
 
 ## 🚀 Features
