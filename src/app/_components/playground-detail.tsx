@@ -58,6 +58,7 @@ import { PlaygroundEquipmentIcon } from "~/components/icons";
 import { getBcp47Locale, useT, useLocale } from "~/lib/i18n";
 import { getEquipmentDisplayName } from "~/lib/multilingual-utils";
 import { formatIcelandicLocation } from "~/lib/icelandic-declension";
+import { municipalityPath } from "~/lib/municipality-slug";
 import {
   getBackFallbackPath,
   hasRecordedInAppNavigation,
@@ -701,7 +702,7 @@ export default function PlaygroundDetail({
             <>
               <span className="text-muted-foreground">·</span>
               <Link
-                href={`/playgrounds?municipality=${encodeURIComponent(playground.municipality)}`}
+                href={municipalityPath(playground.municipality)}
                 className="text-sm text-primary hover:underline"
               >
                 {t('playground.moreInMunicipality', { municipality: currentLanguage === 'is' ? formatIcelandicLocation(playground.municipality) : playground.municipality })}

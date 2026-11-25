@@ -3,6 +3,8 @@ import { db } from '~/server/db';
 import { playgrounds } from '~/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { getBaseUrl } from '~/lib/seo/base-url';
+import { MIN_INDEXABLE_PLAYGROUNDS, municipalityPath } from '~/lib/municipality-slug';
+import { getMunicipalities } from '~/server/queries/municipalities';
 
 // Rendered per request: at build time there is no database access on the
 // Workers build (postgres.js uses `cloudflare:sockets`), and a prerendered
@@ -24,6 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE_URL}/playgrounds`,
       lastModified: new Date(),
       changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/leiksvaedi`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
@@ -70,7 +78,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    return [...staticPages, ...playgroundPages];
+    let municipalityPages: MetadataRoute.Sitemap = [];
+    try {
+      const municipalities = await getMunicipalities();
+      municipalityPages = municipalities
+        .filter((m) => m.playgroundCount >= MIN_INDEXABLE_PLAYGROUNDS)
+        .map((m) => ({
+          url: `${BASE_URL}${municipalityPath(m.name)}`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.8,
+        }));
+    } catch (error) {
+      console.error('Error listing municipalities for sitemap:', error);
+    }
+
+    return [...staticPages, ...municipalityPages, ...playgroundPages];
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Return just static pages if database query fails

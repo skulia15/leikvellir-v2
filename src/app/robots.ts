@@ -1,8 +1,8 @@
 import { type MetadataRoute } from 'next';
-import { env } from '~/env';
+import { getBaseUrl } from '~/lib/seo/base-url';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = env.NEXT_PUBLIC_BASE_URL || 'https://leiksvæði.is';
+  const baseUrl = getBaseUrl();
 
   return {
     rules: [

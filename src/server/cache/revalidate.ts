@@ -12,6 +12,7 @@ export function revalidatePublicPlaygroundPages(playgroundId?: number) {
   try {
     revalidatePath("/");
     revalidatePath("/playgrounds");
+    revalidatePath("/leiksvaedi/[slug]", "page");
     if (playgroundId !== undefined) {
       revalidatePath(`/playground/${playgroundId}`);
     } else {

@@ -7,6 +7,7 @@ import { HydrateClient, publicApi } from "~/trpc/server";
 import { generatePlaygroundMetadata } from "~/lib/seo/metadata";
 import { PlaygroundSchema, BreadcrumbSchema } from "~/lib/seo/structured-data";
 import { getBaseUrl } from "~/lib/seo/base-url";
+import { municipalityPath } from "~/lib/municipality-slug";
 
 interface PlaygroundPageProps {
   params: Promise<{ id: string }>;
@@ -94,6 +95,9 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
         items={[
           { name: 'Heim', url: BASE_URL },
           { name: 'Leiksvæði', url: `${BASE_URL}/playgrounds` },
+          ...(playground.municipality?.trim()
+            ? [{ name: playground.municipality.trim(), url: `${BASE_URL}${municipalityPath(playground.municipality)}` }]
+            : []),
           { name: playground.title, url: `${BASE_URL}/playground/${playground.id}` },
         ]}
       />

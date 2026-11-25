@@ -1,16 +1,17 @@
 import { env } from '~/env';
 
 /**
- * Get the correct base URL for the application
- * Handles different environments: development, Vercel deployments, and production
+ * Normalizes a base URL to its ASCII origin: an internationalized host like
+ * `leiksvæði.is` becomes its punycode form `xn--leiksvi-rxa4g.is`, and any
+ * trailing slash or path is dropped. Sitemaps, canonical links and robots.txt
+ * must use RFC 3986 URLs, which allow only ASCII hosts.
  */
-export function getBaseUrl(): string {
-  // Always use configured base URL in production
-  if (process.env.NODE_ENV === 'production' && env.NEXT_PUBLIC_BASE_URL) {
-    return env.NEXT_PUBLIC_BASE_URL;
-  }
+export function toAsciiOrigin(url: string): string {
+  return new URL(url).origin;
+}
 
-  // Check if we have a configured base URL (for any environment)
+function resolveBaseUrl(): string {
+  // A configured base URL wins in every environment
   if (env.NEXT_PUBLIC_BASE_URL) {
     return env.NEXT_PUBLIC_BASE_URL;
   }
@@ -27,4 +28,12 @@ export function getBaseUrl(): string {
 
   // Production fallback - use your actual domain
   return 'https://leiksvæði.is';
+}
+
+/**
+ * Get the correct base URL for the application
+ * Handles different environments: development, Vercel deployments, and production
+ */
+export function getBaseUrl(): string {
+  return toAsciiOrigin(resolveBaseUrl());
 }

@@ -210,14 +210,20 @@ interface PlaygroundListSchemaProps {
     name: string;
     municipality?: string | null;
   }>;
+  name?: string;
+  description?: string;
 }
 
-export function PlaygroundListSchema({ playgrounds }: PlaygroundListSchemaProps) {
+export function PlaygroundListSchema({
+  playgrounds,
+  name = 'Leiksvæði á Íslandi',
+  description = 'Listi yfir leiksvæði á Íslandi',
+}: PlaygroundListSchemaProps) {
   const listData = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Leiksvæði á Íslandi',
-    description: 'Listi yfir leiksvæði á Íslandi',
+    name,
+    description,
     numberOfItems: playgrounds.length,
     itemListElement: playgrounds.slice(0, 100).map((playground, index) => ({
       '@type': 'ListItem',
